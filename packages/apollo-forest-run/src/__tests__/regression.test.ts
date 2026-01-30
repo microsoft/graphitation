@@ -830,6 +830,167 @@ test("treats incorrect list items as empty objects", () => {
   expect(data.complete).toBe(false);
 });
 
+test("does not crash when object diff is applied to list field with key collision", () => {
+  // Schema (valid):
+  // type ParentInfo { id: ID! items: [ChildItem!] note: String }
+  // type ChildItem { id: ID! details: ParentInfo }
+  // type Query { parentInfo: ParentInfo childItem: ChildItem }
+  const listQuery = gql`
+    {
+      parentInfo {
+        id
+        items {
+          id
+        }
+      }
+    }
+  `;
+  const objectQuery = gql`
+    {
+      childItem {
+        id
+        details {
+          # id
+          note
+        }
+      }
+    }
+  `;
+
+  const cache = new ForestRun({
+    dataIdFromObject: (object: any) => object.id,
+  });
+
+  cache.write({
+    query: listQuery,
+    result: {
+      parentInfo: {
+        __typename: "ParentInfo",
+        id: "1",
+        items: [
+          {
+            __typename: "ChildItem",
+            id: "1",
+          },
+        ],
+      },
+    },
+  });
+
+  cache.write({
+    query: objectQuery,
+    result: {
+      childItem: {
+        __typename: "ChildItem",
+        id: "1",
+        details: {
+          // id: "2",
+          note: "old",
+        },
+      },
+    },
+  });
+
+  // This currently throws inside updateObject (assert on non-object base).
+  const run = () =>
+    cache.write({
+      query: objectQuery,
+      result: {
+        childItem: {
+          __typename: "ChildItem",
+          id: "1",
+          details: {
+            // id: "2",
+            note: "new",
+          },
+        },
+      },
+    });
+
+  expect(run).not.toThrow();
+});
+
+test("matches apollo InMemoryCache behavior on incorrect cache overwrites", () => {
+  const listQuery = gql`
+    query ListQuery {
+      container {
+        __typename
+        id
+        entries {
+          __typename
+          note
+        }
+      }
+    }
+  `;
+  const objectQuery = gql`
+    query ObjectQuery {
+      container {
+        __typename
+        id
+        entries {
+          __typename
+          note
+        }
+      }
+    }
+  `;
+
+  const forestRun = new ForestRun();
+
+  const op1 = {
+    container: {
+      __typename: "Container",
+      id: "1",
+      entries: [
+        {
+          __typename: "Entry",
+          note: "old",
+        },
+      ],
+    },
+  };
+  const op2 = {
+    container: {
+      __typename: "Container",
+      id: "1",
+      entries: {
+        __typename: "Entry",
+        note: "old",
+      },
+    },
+  };
+  const op3 = {
+    container: {
+      __typename: "Container",
+      id: "1",
+      entries: {
+        __typename: "Entry",
+        note: "new",
+      },
+    },
+  };
+
+  forestRun.write({ query: listQuery, result: op1 });
+  forestRun.write({ query: objectQuery, result: op2 });
+  forestRun.write({ query: objectQuery, result: op3 });
+
+  const forestList = forestRun.read({ query: listQuery, optimistic: true });
+  const forestObj = forestRun.read({ query: objectQuery, optimistic: true });
+
+  // This is what InMemoryCache produces for both queries
+  const apolloCompatibleResult = {
+    container: {
+      __typename: "Container",
+      id: "1",
+      entries: { __typename: "Entry", note: "new" },
+    },
+  };
+
+  expect(forestList).toEqual(apolloCompatibleResult);
+  expect(forestObj).toEqual(apolloCompatibleResult);
+});
+
 test("consistent root-level __typename in optimistic response 1", () => {
   const query = gql`
     {

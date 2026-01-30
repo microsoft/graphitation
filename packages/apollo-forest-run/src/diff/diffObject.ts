@@ -336,6 +336,15 @@ function diffValueInternal(
       ? undefined
       : Difference.createReplacement(base, model);
   }
+  // ApolloCompat: wrong structural writes are still acceptable by Apollo client (instead of throwing errors)
+  if (Value.isCompositeValue(base) || Value.isCompositeValue(model)) {
+    if (!Value.isCompositeValue(base) || !Value.isCompositeValue(model)) {
+      return Difference.createReplacement(base, model);
+    }
+    if (base.kind !== model.kind) {
+      return Difference.createReplacement(base, model);
+    }
+  }
   switch (base.kind) {
     case ValueKind.CompositeNull: {
       assert(!currentDiff);
