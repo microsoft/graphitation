@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Thu, 04 Dec 2025 13:24:07 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 30 Jan 2026 11:13:23 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.20.5
+
+Fri, 30 Jan 2026 11:13:23 GMT
+
+### Patches
+
+- fix(apollo-forest-run): apollo-compatible behavior for corrupt writes (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.20.4
 

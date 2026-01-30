@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Fri, 30 Jan 2026 11:13:23 GMT",
+      "version": "0.20.5",
+      "tag": "@graphitation/apollo-forest-run_v0.20.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "1b84b04dcb7b00f240223c0de368415b5ae27782",
+            "comment": "fix(apollo-forest-run): apollo-compatible behavior for corrupt writes"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 04 Dec 2025 13:24:07 GMT",
       "version": "0.20.4",
       "tag": "@graphitation/apollo-forest-run_v0.20.4",
