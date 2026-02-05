@@ -70,18 +70,17 @@ describe(graphql, () => {
     // returns the same TemplateStringsArray, so we get the same cached document.
 
     const doc1 = graphql`
-        query TestQueryWithFragment {
-          ...SomeFragment
-        }
-        ${SomeFragment}
-      `
+      query TestQueryWithFragment {
+        ...SomeFragment
+      }
+      ${SomeFragment}
+    `;
     const doc2 = graphql`
-        query TestQueryWithFragment {
-          ...SomeFragment
-        }
-        ${SomeFragment}
-      `;
+      query TestQueryWithFragment {
+        ...SomeFragment
+      }
+      ${SomeFragment}
+    `;
     expect(doc1).toBe(doc2);
   });
-
 });
