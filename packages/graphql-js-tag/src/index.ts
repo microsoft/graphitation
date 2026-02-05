@@ -2,9 +2,10 @@ import { parse } from "graphql";
 import type { DocumentNode } from "graphql";
 import invariant from "invariant";
 
-// The same cache as Apollo Client's `graphql-tag` package. https://github.com/apollographql/graphql-tag/blob/main/src/index.ts#L10
-// A map docString -> graphql document
-const docCache = new Map<string, DocumentNode>();
+// The similiar cache as Apollo Client's `graphql-tag` package. https://github.com/apollographql/graphql-tag/blob/main/src/index.ts#L10
+// A map docString -> array of cached entries with their fragments
+type CacheEntry = { fragments: DocumentNode[]; result: DocumentNode };
+const docCache = new Map<string, CacheEntry[]>();
 
 /**
  * This tagged template function is used to capture a single GraphQL document, such as an operation or a fragment. When
@@ -54,11 +55,21 @@ export function graphql(
     "Interpolations are only allowed at the end of the template.",
   );
 
-  const cached = docCache.get(document[0]);
-  if (cached) {
-    return cached;
+  const cacheEntries = docCache.get(document[0]);
+
+  // We are also handling the case where the same document is used with different interpolated fragments.
+  if (cacheEntries) {
+    for (const entry of cacheEntries) {
+      const areReferencesEqual = entry.fragments.every(
+        (frag, i) => frag === fragments[i],
+      );
+      if (areReferencesEqual) {
+        return entry.result;
+      }
+    }
   }
 
+  // Parse and create new document
   const documentNode = parse(document[0], { noLocation: true });
   const definitions = new Set(documentNode.definitions);
   fragments.forEach((doc) =>
@@ -69,6 +80,12 @@ export function graphql(
     definitions: Array.from(definitions),
   };
 
-  docCache.set(document[0], result);
+  if (cacheEntries) {
+    // Operation was already cached, but with different fragment interpolations. Add a new cache entry for this combination of fragments.
+    cacheEntries.push({ fragments, result });
+  } else {
+    docCache.set(document[0], [{ fragments, result }]);
+  }
+
   return result;
 }

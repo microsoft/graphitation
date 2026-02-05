@@ -83,4 +83,42 @@ describe(graphql, () => {
     `;
     expect(doc1).toBe(doc2);
   });
+
+  it("should return different documents for fragment definitions with the same name but different content", () => {
+    const HackyFragment = graphql`
+      fragment SomeFragment on SomeType {
+        id
+        name
+      }
+    `;
+    const doc1 = graphql`
+      query TestQueryWithFragment {
+        ...SomeFragment
+      }
+      ${SomeFragment}
+    `;
+    const doc2 = graphql`
+      query TestQueryWithFragment {
+        ...SomeFragment
+      }
+      ${HackyFragment}
+    `;
+    expect(doc1).not.toBe(doc2);
+  });
+
+  it("should return the same document for the same template literal without any fragments", () => {
+    const SomeFragment1 = graphql`
+      fragment SomeFragment on SomeType {
+        id
+        name
+      }
+    `;
+    const SomeFragment2 = graphql`
+      fragment SomeFragment on SomeType {
+        id
+        name
+      }
+    `;
+    expect(SomeFragment1).toBe(SomeFragment2);
+  });
 });
