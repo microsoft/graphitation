@@ -60,9 +60,9 @@ export function graphql(
   // We are also handling the case where the same document is used with different interpolated fragments.
   if (cacheEntries) {
     for (const entry of cacheEntries) {
-      const areReferencesEqual = entry.fragments.every(
-        (frag, i) => frag === fragments[i],
-      );
+      const areReferencesEqual =
+        entry.fragments.length === fragments.length &&
+        entry.fragments.every((frag, i) => frag === fragments[i]);
       if (areReferencesEqual) {
         return entry.result;
       }
