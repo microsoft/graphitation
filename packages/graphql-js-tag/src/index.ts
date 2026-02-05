@@ -2,6 +2,10 @@ import { parse } from "graphql";
 import type { DocumentNode } from "graphql";
 import invariant from "invariant";
 
+// The same cache as Apollo Client's `graphql-tag` package. https://github.com/apollographql/graphql-tag/blob/main/src/index.ts#L10
+// A map docString -> graphql document
+const docCache = new Map<string, DocumentNode>();
+
 /**
  * This tagged template function is used to capture a single GraphQL document, such as an operation or a fragment. When
  * a document refers to fragments, those should be interpolated as trailing components, but *no* other interpolation is
@@ -49,10 +53,22 @@ export function graphql(
     document.map((s) => s.trim()).filter((s) => s.length > 0).length === 1,
     "Interpolations are only allowed at the end of the template.",
   );
+
+  const cached = docCache.get(document[0]);
+  if (cached) {
+    return cached;
+  }
+
   const documentNode = parse(document[0], { noLocation: true });
   const definitions = new Set(documentNode.definitions);
   fragments.forEach((doc) =>
     doc.definitions.forEach((def) => definitions.add(def)),
   );
-  return { kind: "Document", definitions: Array.from(definitions) };
+  const result: DocumentNode = {
+    kind: "Document",
+    definitions: Array.from(definitions),
+  };
+
+  docCache.set(document[0], result);
+  return result;
 }

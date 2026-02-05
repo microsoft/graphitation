@@ -63,4 +63,25 @@ describe(graphql, () => {
     const expected = SomeFragment.definitions[0];
     expect(actual).toBe(expected);
   });
+
+  it("should return the same document for the same template literal", () => {
+    // This is important for Apollo Client 3.8+ which uses reference equality.
+    // When a component renders multiple times, the same template literal
+    // returns the same TemplateStringsArray, so we get the same cached document.
+
+    const doc1 = graphql`
+        query TestQueryWithFragment {
+          ...SomeFragment
+        }
+        ${SomeFragment}
+      `
+    const doc2 = graphql`
+        query TestQueryWithFragment {
+          ...SomeFragment
+        }
+        ${SomeFragment}
+      `;
+    expect(doc1).toBe(doc2);
+  });
+
 });
