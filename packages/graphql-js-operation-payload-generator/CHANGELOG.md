@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-js-operation-payload-generator
 
-<!-- This log was last generated on Wed, 02 Apr 2025 11:43:32 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 06 Feb 2026 12:41:07 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.13.1
+
+Fri, 06 Feb 2026 12:41:07 GMT
+
+### Patches
+
+- Bump @graphitation/graphql-js-tag to v0.11.0
 
 ## 0.13.0
 

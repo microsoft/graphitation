@@ -2,6 +2,27 @@
   "name": "@graphitation/apollo-mock-client",
   "entries": [
     {
+      "date": "Fri, 06 Feb 2026 12:41:07 GMT",
+      "version": "0.12.2",
+      "tag": "@graphitation/apollo-mock-client_v0.12.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-mock-client",
+            "comment": "Bump @graphitation/graphql-js-tag to v0.11.0",
+            "commit": "not available"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-mock-client",
+            "comment": "Bump @graphitation/graphql-js-operation-payload-generator to v0.13.1",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 30 Sep 2025 06:26:46 GMT",
       "version": "0.12.1",
       "tag": "@graphitation/apollo-mock-client_v0.12.1",

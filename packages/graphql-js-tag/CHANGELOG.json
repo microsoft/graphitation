@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-js-tag",
   "entries": [
     {
+      "date": "Fri, 06 Feb 2026 12:41:06 GMT",
+      "version": "0.11.0",
+      "tag": "@graphitation/graphql-js-tag_v0.11.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "pavelglac@gmail.com",
+            "package": "@graphitation/graphql-js-tag",
+            "commit": "b4216e5f260a25c43dea95df418b935af90b74d8",
+            "comment": "add document cache for graphql tag"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 02 Apr 2025 11:43:32 GMT",
       "version": "0.10.0",
       "tag": "@graphitation/graphql-js-tag_v0.10.0",
