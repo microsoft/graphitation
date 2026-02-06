@@ -2,6 +2,11 @@ import { parse } from "graphql";
 import type { DocumentNode } from "graphql";
 import invariant from "invariant";
 
+// The similiar cache as Apollo Client's `graphql-tag` package. https://github.com/apollographql/graphql-tag/blob/main/src/index.ts#L10
+// A map docString -> array of cached entries with their fragments
+type CacheEntry = { fragments: DocumentNode[]; result: DocumentNode };
+const docCache = new Map<string, CacheEntry[]>();
+
 /**
  * This tagged template function is used to capture a single GraphQL document, such as an operation or a fragment. When
  * a document refers to fragments, those should be interpolated as trailing components, but *no* other interpolation is
@@ -49,10 +54,38 @@ export function graphql(
     document.map((s) => s.trim()).filter((s) => s.length > 0).length === 1,
     "Interpolations are only allowed at the end of the template.",
   );
+
+  const cacheEntries = docCache.get(document[0]);
+
+  // We are also handling the case where the same document is used with different interpolated fragments.
+  if (cacheEntries) {
+    for (const entry of cacheEntries) {
+      const areReferencesEqual =
+        entry.fragments.length === fragments.length &&
+        entry.fragments.every((frag, i) => frag === fragments[i]);
+      if (areReferencesEqual) {
+        return entry.result;
+      }
+    }
+  }
+
+  // Parse and create new document
   const documentNode = parse(document[0], { noLocation: true });
   const definitions = new Set(documentNode.definitions);
   fragments.forEach((doc) =>
     doc.definitions.forEach((def) => definitions.add(def)),
   );
-  return { kind: "Document", definitions: Array.from(definitions) };
+  const result: DocumentNode = {
+    kind: "Document",
+    definitions: Array.from(definitions),
+  };
+
+  if (cacheEntries) {
+    // Operation was already cached, but with different fragment interpolations. Add a new cache entry for this combination of fragments.
+    cacheEntries.push({ fragments, result });
+  } else {
+    docCache.set(document[0], [{ fragments, result }]);
+  }
+
+  return result;
 }
