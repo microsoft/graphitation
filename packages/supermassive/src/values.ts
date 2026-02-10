@@ -14,12 +14,12 @@ import {
   DirectiveDefinitionTuple,
   FieldDefinition,
   getFieldArguments,
-  getDirectiveName,
+  getDirectiveDefinitionName,
   getInputDefaultValue,
   getInputValueTypeReference,
   isDefined,
   isInputType,
-  getDirectiveArguments,
+  getDirectiveDefinitionArgs,
 } from "./schema/definition";
 import { valueFromAST } from "./utilities/valueFromAST";
 import { coerceInputValue } from "./utilities/coerceInputValue";
@@ -172,7 +172,7 @@ export function getArgumentValues(
   const argumentDefs =
     node.kind === Kind.FIELD
       ? getFieldArguments(def as FieldDefinition)
-      : getDirectiveArguments(def as DirectiveDefinitionTuple);
+      : getDirectiveDefinitionArgs(def as DirectiveDefinitionTuple);
   if (!argumentDefs) {
     return coercedValues;
   }
@@ -282,7 +282,7 @@ export function getDirectiveValues(
   directiveDef: DirectiveDefinitionTuple,
   node: { directives?: ReadonlyArray<DirectiveNode> },
 ): undefined | { [argument: string]: unknown } {
-  const name = getDirectiveName(directiveDef);
+  const name = getDirectiveDefinitionName(directiveDef);
 
   // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
   const directiveNode = node.directives?.find(

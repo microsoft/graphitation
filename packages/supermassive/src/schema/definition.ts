@@ -18,56 +18,83 @@ const enum TypeKind {
 
 export type ScalarTypeDefinitionTuple = [
   kind: TypeKind.SCALAR,
-  // directives?: DirectiveTuple[], // TODO ?
+  metadata?: TypeDefinitionMetadata,
 ];
+
+const enum ScalarKeys {
+  metadata = 1,
+}
+
+export type Description = {
+  value: string;
+  block?: boolean;
+};
+export interface TypeDefinitionMetadata {
+  directives?: DirectiveTuple[];
+  description?: Description;
+}
+
+export type EnumTypeDefinitionMetadata = TypeDefinitionMetadata & {
+  values?: Record<string, TypeDefinitionMetadata>;
+};
+
+export type DirectiveDefinitionMetadata = {
+  repeatable?: boolean;
+  description?: Description;
+};
 
 export type ObjectTypeDefinitionTuple = [
   kind: TypeKind.OBJECT,
   fields: FieldDefinitionRecord,
   interfaces?: TypeName[],
-  // directives?: DirectiveTuple[],
+  metadata?: TypeDefinitionMetadata,
 ];
 const enum ObjectKeys {
   fields = 1,
   interfaces = 2,
+  metadata = 3,
 }
 
 export type InterfaceTypeDefinitionTuple = [
   kind: TypeKind.INTERFACE,
   fields: FieldDefinitionRecord,
   interfaces?: TypeName[],
-  // directives?: DirectiveTuple[],
+  metadata?: TypeDefinitionMetadata,
 ];
 const enum InterfaceKeys {
   fields = 1,
   interfaces = 2,
+  metadata = 3,
 }
 
 export type UnionTypeDefinitionTuple = [
   kind: TypeKind.UNION,
   types: TypeName[],
-  // directives?: DirectiveTuple[],
+  metadata?: TypeDefinitionMetadata,
 ];
 const enum UnionKeys {
   types = 1,
+  metadata = 2,
 }
 
 export type EnumTypeDefinitionTuple = [
   kind: TypeKind.ENUM,
   values: string[],
-  // directives?: DirectiveTuple[],
+  metadata?: EnumTypeDefinitionMetadata,
 ];
 const enum EnumKeys {
   values = 1,
+  metadata = 2,
 }
 
 export type InputObjectTypeDefinitionTuple = [
   kind: TypeKind.INPUT,
   fields: InputValueDefinitionRecord,
-  // directives?: DirectiveTuple[],
+  metadata?: TypeDefinitionMetadata,
 ];
 const enum InputObjectKeys {
   fields = 1,
+  metadata = 2,
 }
 
 export type TypeDefinitionTuple =
@@ -85,12 +112,14 @@ export type CompositeTypeTuple =
 
 export type FieldDefinitionTuple = [
   type: TypeReference,
-  arguments: InputValueDefinitionRecord,
-  // directives?: DirectiveTuple[],
+  // TODO should I really do it ?
+  arguments?: InputValueDefinitionRecord,
+  metadata?: TypeDefinitionMetadata,
 ];
 const enum FieldKeys {
   type = 0,
   arguments = 1,
+  metadata = 2,
 }
 export type FieldDefinition = TypeReference | FieldDefinitionTuple;
 export type FieldDefinitionRecord = Record<string, FieldDefinition>;
@@ -98,7 +127,7 @@ export type FieldDefinitionRecord = Record<string, FieldDefinition>;
 export type InputValueDefinitionTuple = [
   type: TypeReference,
   defaultValue: unknown,
-  // directives?: DirectiveTuple[],
+  metadata?: DirectiveDefinitionMetadata,
 ];
 const enum InputValueKeys {
   type = 0,
@@ -155,19 +184,28 @@ const DirectiveLocationToGraphQL = {
 } as const;
 
 export type DirectiveName = string;
+
 export type DirectiveTuple = [
   name: DirectiveName,
-  arguments: Record<string, unknown>, // JS values (cannot be a variable inside schema definition, so it is fine)
+  arguments?: Record<string, unknown>, // JS values (cannot be a variable inside schema definition, so it is fine)
 ];
 export type DirectiveDefinitionTuple = [
   name: DirectiveName,
   locations: DirectiveLocation[],
   arguments?: InputValueDefinitionRecord,
+  metadata?: DirectiveDefinitionMetadata,
 ];
+
 const enum DirectiveKeys {
+  name = 0,
+  arguments = 1,
+}
+
+const enum DirectiveDefinitionKeys {
   name = 0,
   locations = 1,
   arguments = 2,
+  metadata = 3,
 }
 
 export type TypeDefinitionsRecord = Record<TypeName, TypeDefinitionTuple>;
@@ -187,6 +225,40 @@ export type SchemaDefinitions = {
 
 const typeNameMetaFieldDef: FieldDefinition = "String";
 const specifiedScalarDefinition: ScalarTypeDefinitionTuple = [TypeKind.SCALAR];
+
+export function getTypeDefinitionMetadataIndex(
+  typeDefinition: TypeDefinitionTuple,
+): number | undefined {
+  if (isObjectTypeDefinition(typeDefinition)) {
+    return ObjectKeys.metadata;
+  } else if (isScalarTypeDefinition(typeDefinition)) {
+    return ScalarKeys.metadata;
+  } else if (isEnumTypeDefinition(typeDefinition)) {
+    return EnumKeys.metadata;
+  } else if (isInterfaceTypeDefinition(typeDefinition)) {
+    return InterfaceKeys.metadata;
+  } else if (isInputObjectTypeDefinition(typeDefinition)) {
+    return InputObjectKeys.metadata;
+  } else if (isUnionTypeDefinition(typeDefinition)) {
+    return UnionKeys.metadata;
+  }
+}
+
+export function getTypeDefinitionMetadata(typeDefinition: TypeDefinitionTuple) {
+  if (isObjectTypeDefinition(typeDefinition)) {
+    return getObjectTypeMetadata(typeDefinition);
+  } else if (isScalarTypeDefinition(typeDefinition)) {
+    return getScalarTypeMetadata(typeDefinition);
+  } else if (isEnumTypeDefinition(typeDefinition)) {
+    return getEnumMetadata(typeDefinition);
+  } else if (isInterfaceTypeDefinition(typeDefinition)) {
+    return getInterfaceTypeMetadata(typeDefinition);
+  } else if (isInputObjectTypeDefinition(typeDefinition)) {
+    return getInputTypeMetadata(typeDefinition);
+  } else if (isUnionTypeDefinition(typeDefinition)) {
+    return getUnionTypeMetadata(typeDefinition);
+  }
+}
 
 export function findObjectType(
   defs: SchemaDefinitions,
@@ -421,14 +493,16 @@ export function isSubType(
   return false;
 }
 
-export function getDirectiveName(tuple: DirectiveDefinitionTuple): string {
-  return tuple[DirectiveKeys.name];
+export function getDirectiveDefinitionName(
+  tuple: DirectiveDefinitionTuple,
+): string {
+  return tuple[DirectiveDefinitionKeys.name];
 }
 
-export function getDirectiveLocations(
+export function getDirectiveDefinitionLocations(
   tuple: DirectiveDefinitionTuple,
 ): DirectiveLocation[] {
-  return tuple[DirectiveKeys.locations];
+  return tuple[DirectiveDefinitionKeys.locations];
 }
 
 export function encodeDirectiveLocation(
@@ -518,6 +592,12 @@ export function getFieldArgs(
   return Array.isArray(field) ? field[FieldKeys.arguments] : undefined;
 }
 
+export function getFieldMetadata(
+  field: FieldDefinition,
+): TypeDefinitionMetadata | undefined {
+  return Array.isArray(field) ? field[FieldKeys.metadata] : undefined;
+}
+
 export function setFieldArgs(
   field: FieldDefinitionTuple,
   args: InputValueDefinitionRecord,
@@ -526,62 +606,125 @@ export function setFieldArgs(
   return args;
 }
 
+export function setFieldDirectives(
+  field: FieldDefinitionTuple,
+  args: TypeDefinitionMetadata,
+): TypeDefinitionMetadata {
+  field[FieldKeys.metadata] = args;
+  return args;
+}
+
 export function getEnumValues(tuple: EnumTypeDefinitionTuple): string[] {
   return tuple[EnumKeys.values];
+}
+
+export function getEnumMetadata(
+  tuple: EnumTypeDefinitionTuple,
+): EnumTypeDefinitionMetadata | undefined {
+  return tuple[EnumKeys.metadata];
 }
 
 export function getDirectiveDefinitionArgs(
   directive: DirectiveDefinitionTuple,
 ): InputValueDefinitionRecord | undefined {
-  return directive[DirectiveKeys.arguments];
+  return Array.isArray(directive)
+    ? directive[DirectiveDefinitionKeys.arguments]
+    : undefined;
 }
 
 export function setDirectiveDefinitionArgs(
   directive: DirectiveDefinitionTuple,
   args: InputValueDefinitionRecord,
 ): InputValueDefinitionRecord {
-  directive[DirectiveKeys.arguments] = args;
+  directive[DirectiveDefinitionKeys.arguments] = args;
   return args;
 }
 
 export function createUnionTypeDefinition(
   types: TypeName[],
+  metadata?: TypeDefinitionMetadata,
 ): UnionTypeDefinitionTuple {
+  if (metadata) {
+    return [TypeKind.UNION, types, metadata];
+  }
+
   return [TypeKind.UNION, types];
 }
 
 export function createInterfaceTypeDefinition(
   fields: FieldDefinitionRecord,
   interfaces?: TypeName[],
+  metadata?: TypeDefinitionMetadata,
 ): InterfaceTypeDefinitionTuple {
-  return interfaces?.length
-    ? [TypeKind.INTERFACE, fields, interfaces]
-    : [TypeKind.INTERFACE, fields];
+  if (!interfaces?.length && !metadata) {
+    return [TypeKind.INTERFACE, fields];
+  }
+
+  if (interfaces?.length && !metadata) {
+    return [TypeKind.INTERFACE, fields, interfaces];
+  }
+
+  return [TypeKind.INTERFACE, fields, interfaces, metadata];
 }
 
 export function createObjectTypeDefinition(
   fields: FieldDefinitionRecord,
   interfaces?: TypeName[],
+  metadata?: TypeDefinitionMetadata,
 ): ObjectTypeDefinitionTuple {
-  return interfaces?.length
-    ? [TypeKind.OBJECT, fields, interfaces]
-    : [TypeKind.OBJECT, fields];
+  if (!interfaces?.length && !metadata) {
+    return [TypeKind.OBJECT, fields];
+  }
+
+  if (interfaces?.length && !metadata) {
+    return [TypeKind.OBJECT, fields, interfaces];
+  }
+
+  return [TypeKind.OBJECT, fields, interfaces, metadata];
 }
 
 export function createInputObjectTypeDefinition(
   fields: InputValueDefinitionRecord,
+  metadata?: TypeDefinitionMetadata,
 ): InputObjectTypeDefinitionTuple {
+  if (metadata) {
+    return [TypeKind.INPUT, fields, metadata];
+  }
+
   return [TypeKind.INPUT, fields];
 }
 
 export function createEnumTypeDefinition(
   values: string[],
+  metadata?: EnumTypeDefinitionMetadata,
 ): EnumTypeDefinitionTuple {
+  if (metadata) {
+    return [TypeKind.ENUM, values, metadata];
+  }
+
   return [TypeKind.ENUM, values];
 }
 
-export function createScalarTypeDefinition(): ScalarTypeDefinitionTuple {
+export function createScalarTypeDefinition(
+  metadata?: TypeDefinitionMetadata,
+): ScalarTypeDefinitionTuple {
+  if (metadata) {
+    return [TypeKind.SCALAR, metadata];
+  }
+
   return [TypeKind.SCALAR];
+}
+
+export function getScalarTypeMetadata(
+  def: ScalarTypeDefinitionTuple,
+): TypeDefinitionMetadata | undefined {
+  return def[ScalarKeys.metadata];
+}
+
+export function getObjectTypeMetadata(
+  def: ObjectTypeDefinitionTuple,
+): TypeDefinitionMetadata | undefined {
+  return def[ObjectKeys.metadata];
 }
 
 export function getObjectTypeInterfaces(
@@ -596,10 +739,28 @@ export function getInterfaceTypeInterfaces(
   return def[InterfaceKeys.interfaces] ?? [];
 }
 
+export function getInterfaceTypeMetadata(
+  def: InterfaceTypeDefinitionTuple,
+): TypeDefinitionMetadata | undefined {
+  return def[InterfaceKeys.metadata];
+}
+
+export function getInputTypeMetadata(
+  def: InputObjectTypeDefinitionTuple,
+): TypeDefinitionMetadata | undefined {
+  return def[InputObjectKeys.metadata];
+}
+
 export function getUnionTypeMembers(
   tuple: UnionTypeDefinitionTuple,
 ): TypeName[] {
   return tuple[UnionKeys.types];
+}
+
+export function getUnionTypeMetadata(
+  def: UnionTypeDefinitionTuple,
+): TypeDefinitionMetadata | undefined {
+  return def[UnionKeys.metadata];
 }
 
 export function getFieldArguments(
@@ -608,8 +769,12 @@ export function getFieldArguments(
   return Array.isArray(def) ? def[FieldKeys.arguments] : undefined;
 }
 
-export function getDirectiveArguments(
+export function getDirectiveDefinitionMetadata(
   def: DirectiveDefinitionTuple,
-): InputValueDefinitionRecord | undefined {
-  return Array.isArray(def) ? def[DirectiveKeys.arguments] : undefined;
+): DirectiveDefinitionMetadata | undefined {
+  return Array.isArray(def) ? def[DirectiveDefinitionKeys.metadata] : undefined;
+}
+
+export function getDirectiveName(tuple: DirectiveTuple): string {
+  return tuple[DirectiveKeys.name];
 }

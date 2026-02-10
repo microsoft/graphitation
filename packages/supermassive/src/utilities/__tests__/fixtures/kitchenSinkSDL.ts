@@ -155,6 +155,26 @@ export const kitchenSinkSDL = gql`
 
   directive @myRepeatableDir(name: String!) repeatable on OBJECT | INTERFACE
 
+  directive @onType on OBJECT
+
+  directive @onObject(arg: String!) on OBJECT
+
+  directive @onUnion on UNION
+
+  directive @onField on FIELD
+
+  directive @onEnumValue on ENUM_VALUE
+
+  directive @onInterface on INTERFACE
+
+  directive @onScalar on SCALAR
+
+  directive @onEnum on ENUM
+
+  directive @oneOf on INPUT_OBJECT
+
+  directive @onInputObject on INPUT_OBJECT
+
   extend schema @onSchema
 
   extend schema @onSchema {
