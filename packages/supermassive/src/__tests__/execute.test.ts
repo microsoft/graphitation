@@ -490,4 +490,31 @@ describe("executeWithoutSchema - regression tests", () => {
     expect(infoAtCallTime?.fieldNodes[0].name.value).toEqual("foo");
     expect(infoAtCallTime?.fieldNodes[1].name.value).toEqual("foo");
   });
+
+  it("Executing mutation without type definitions and/or resolver should throw", async () => {
+    const schemaFragment = {
+      schemaId: "test",
+      definitions: { types: {} },
+      resolvers: {},
+    };
+    const document = parse(
+      `mutation DownloadFile { downloadFile { downloadUrl } }`,
+    );
+
+    const result = await executeWithoutSchema({
+      document,
+      schemaFragment,
+    });
+
+    // Note: there used to be a discrepancy in the results based on whether schemaFramentLoader provided or not.
+    const result1 = await executeWithoutSchema({
+      document,
+      schemaFragment,
+      schemaFragmentLoader: (currentFragment) =>
+        Promise.resolve({ mergedFragment: currentFragment }),
+    });
+
+    expect(result).toStrictEqual(result1);
+    expect(result).toMatchSnapshot();
+  });
 });

@@ -460,6 +460,10 @@ function executeFieldsSerially(
       }
       if (isPromise(result)) {
         return result.then((resolvedResult: unknown) => {
+          if (resolvedResult === undefined) {
+            return results;
+          }
+
           results[responseName] = resolvedResult;
           return results;
         });
@@ -560,14 +564,23 @@ function executeField(
     );
   }
 
+  const isRootField =
+    parentTypeName === "Mutation" || parentTypeName === "Query";
+  const unknownFieldErrorMessage = `${parentTypeName}.${fieldName} is not defined`;
+
   const loading = requestSchemaFragment(exeContext, {
     kind: "ReturnType",
     parentTypeName,
     fieldName,
   });
   if (!loading) {
+    if (isRootField) {
+      throw locatedError(new Error(unknownFieldErrorMessage), fieldGroup);
+    }
+
     return undefined;
   }
+
   return loading.then(() => {
     const fieldDef = Definitions.getField(
       exeContext.schemaFragment.definitions,
@@ -585,6 +598,11 @@ function executeField(
         incrementalDataRecord,
       );
     }
+
+    if (isRootField) {
+      throw locatedError(new Error(unknownFieldErrorMessage), fieldGroup);
+    }
+
     return undefined;
   });
 }
