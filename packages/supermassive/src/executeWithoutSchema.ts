@@ -460,6 +460,10 @@ function executeFieldsSerially(
       }
       if (isPromise(result)) {
         return result.then((resolvedResult: unknown) => {
+          if (resolvedResult === undefined) {
+            return results;
+          }
+
           results[responseName] = resolvedResult;
           return results;
         });
@@ -566,8 +570,10 @@ function executeField(
     fieldName,
   });
   if (!loading) {
+    throwIfRootField(parentTypeName, fieldName, fieldGroup, "typeDefinition");
     return undefined;
   }
+
   return loading.then(() => {
     const fieldDef = Definitions.getField(
       exeContext.schemaFragment.definitions,
@@ -585,8 +591,29 @@ function executeField(
         incrementalDataRecord,
       );
     }
+
+    throwIfRootField(parentTypeName, fieldName, fieldGroup, "typeDefinition");
     return undefined;
   });
+}
+
+function throwIfRootField(
+  parentTypeName: string,
+  fieldName: string,
+  fieldGroup: FieldGroup,
+  validationTarget: "typeDefinition" | "resolver",
+) {
+  const isRootField =
+    parentTypeName === "Mutation" || parentTypeName === "Query";
+  if (isRootField) {
+    const message =
+      validationTarget === "typeDefinition"
+        ? `Type definition for ${parentTypeName}.${fieldName} is missing`
+        : validationTarget === "resolver"
+        ? `Resolver for ${parentTypeName}.${fieldName} is missing`
+        : "Unexpected validation target";
+    throw locatedError(new Error(message), fieldGroup);
+  }
 }
 
 function requestSchemaFragment(
@@ -999,6 +1026,18 @@ function resolveAndCompleteField(
 
   const isDefaultResolverUsed =
     resolveFn === exeContext.fieldResolver || fieldName === "__typename";
+
+  if (resolveFn === exeContext.fieldResolver && typeof source === "undefined") {
+    /**
+     * Resolving a root field with default resolver makes operation look succsessful, even though nothing was actually done.
+     * This leads to problems that are hard to debug, especially for mutations.
+     *
+     * NOTE1: executing Mutation.__typename or Query.__typename with default resolver is fine
+     * NOTE2: source check is required to account for systems like Grats that work exclusively on default resolvers
+     */
+    throwIfRootField(parentTypeName, fieldName, fieldGroup, "resolver");
+  }
+
   const hooks = exeContext.fieldExecutionHooks;
   let hookContext: unknown = undefined;
 

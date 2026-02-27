@@ -1,5 +1,23 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`executeWithoutSchema - regression tests Executing mutation without resolver should return error 1`] = `
+{
+  "data": null,
+  "errors": [
+    [GraphQLError: Resolver for Mutation.downloadFile is missing],
+  ],
+}
+`;
+
+exports[`executeWithoutSchema - regression tests Executing mutation without type definitions return error 1`] = `
+{
+  "data": null,
+  "errors": [
+    [GraphQLError: Type definition for Mutation.downloadFile is missing],
+  ],
+}
+`;
+
 exports[`graphql-js snapshot check to ensure test stability Advanced Default value 1`] = `
 {
   "data": {
