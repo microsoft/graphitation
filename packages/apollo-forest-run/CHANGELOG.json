@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Fri, 06 Mar 2026 15:33:57 GMT",
+      "version": "0.20.6",
+      "tag": "@graphitation/apollo-forest-run_v0.20.6",
+      "comments": {
+        "patch": [
+          {
+            "author": "celiac@microsoft.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "98fe8853cc20feb8f004905c70726940f381996d",
+            "comment": "upgrade minimatch 3.1.3"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 30 Jan 2026 11:13:23 GMT",
       "version": "0.20.5",
       "tag": "@graphitation/apollo-forest-run_v0.20.5",
