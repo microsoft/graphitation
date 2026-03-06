@@ -31,11 +31,6 @@ wrapTransform(
   IRTransforms.printTransforms,
   retainConnectionDirectiveTransform,
 );
-wrapTransform(
-  "connectionTransform",
-  IRTransforms.commonTransforms,
-  emitApolloClientConnectionTransform,
-);
 
 async function main() {
   const argv = await yargs
@@ -127,6 +122,11 @@ async function main() {
         default: false,
         type: "boolean",
       },
+      transformConnectionDirective: {
+        demandOption: false,
+        default: true,
+        type: "boolean",
+      },
     })
     .help().argv;
 
@@ -139,6 +139,13 @@ async function main() {
     // TODO: Moving this up in the list might potentially optimize the query further
     IRTransforms.printTransforms.push(annotateFragmentReferenceTransform);
     IRTransforms.commonTransforms.unshift(enableNodeWatchQueryTransform);
+  }
+  if (argv.transformConnectionDirective) {
+    wrapTransform(
+      "connectionTransform",
+      IRTransforms.commonTransforms,
+      emitApolloClientConnectionTransform,
+    );
   }
 
   const ductTapeCompilerLanguagePlugin = await pluginFactory(argv);

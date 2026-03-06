@@ -176,7 +176,14 @@ export function keyFromConnectionDirective(
     return undefined;
   }
   const key = connectionDirective.args.get("key");
-  const filterKeys = connectionDirective.args.get("filter");
+
+  // apollo-relay compat:
+  //   Apollo expects: @connection(key="Foo", filter: ["orderBy"])
+  //   Relay expects:  @connection(key="Foo", filters: ["orderBy"])
+  // We support both "filter" and "filters" for compatibility with both styles of directive usage.
+  const filterKeys =
+    connectionDirective.args.get("filter") ??
+    connectionDirective.args.get("filters");
 
   if (Array.isArray(filterKeys) && filterKeys.length > 0) {
     const filteredArgs = filterKeys.reduce((acc, key) => {

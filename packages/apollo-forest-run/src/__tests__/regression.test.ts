@@ -532,6 +532,62 @@ test("properly compares complex arguments in @connection directive", () => {
   expect(complete).toEqual(true);
 });
 
+test("@connection directive with relay-style 'filters' separates results by filtered arg values", () => {
+  // "limit" arg differs between queries but is NOT in filters, so it should be ignored for keying.
+  // Only "orderBy" (which IS in filters) should distinguish the two connection results.
+  const query1 = gql`
+    {
+      foo(orderBy: "name", limit: 10)
+        @connection(key: "foo", filters: ["orderBy"]) {
+        edges {
+          cursor
+        }
+      }
+    }
+  `;
+  const query2 = gql`
+    {
+      foo(orderBy: "name", limit: 20)
+        @connection(key: "foo", filters: ["orderBy"]) {
+        edges {
+          cursor
+        }
+      }
+    }
+  `;
+  const query3 = gql`
+    {
+      foo(orderBy: "date", limit: 10)
+        @connection(key: "foo", filters: ["orderBy"]) {
+        edges {
+          cursor
+        }
+      }
+    }
+  `;
+  const result1 = { foo: { edges: [{ cursor: "byName" }] } };
+  const result2 = { foo: { edges: [{ cursor: "byNamePage2" }] } };
+  const result3 = { foo: { edges: [{ cursor: "byDate" }] } };
+  const cache = new ForestRun();
+
+  cache.write({ query: query1, result: result1 });
+  cache.write({ query: query2, result: result2 });
+  cache.write({ query: query3, result: result3 });
+
+  const diff1 = cache.diff({ query: query1, optimistic: true });
+  const diff2 = cache.diff({ query: query2, optimistic: true });
+  const diff3 = cache.diff({ query: query3, optimistic: true });
+
+  // query1 and query2 share the same orderBy so they should resolve to the same (latest) result.
+  // query3 has a different orderBy so it gets its own result.
+  expect(diff1.result).toEqual(result2);
+  expect(diff1.complete).toEqual(true);
+  expect(diff2.result).toEqual(result2);
+  expect(diff2.complete).toEqual(true);
+  expect(diff3.result).toEqual(result3);
+  expect(diff3.complete).toEqual(true);
+});
+
 test("should not notify immediately canceled watches", () => {
   const query = gql`
     {
