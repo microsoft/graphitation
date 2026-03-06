@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape-compiler
 
-<!-- This log was last generated on Fri, 06 Feb 2026 12:41:07 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 06 Mar 2026 20:27:05 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.9.0
+
+Fri, 06 Mar 2026 20:27:05 GMT
+
+### Minor changes
+
+- Make transform for connection directive optional (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 1.8.13
 

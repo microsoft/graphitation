@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Fri, 06 Mar 2026 20:27:05 GMT",
+      "version": "0.21.0",
+      "tag": "@graphitation/apollo-forest-run_v0.21.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "133f33751088292d38420c493753de6a36271473",
+            "comment": "Support \"filter\" and \"filters\" argument variants on Apollo \"connection\" directive"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 06 Mar 2026 15:33:57 GMT",
       "version": "0.20.6",
       "tag": "@graphitation/apollo-forest-run_v0.20.6",

@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-react-relay-duct-tape-compiler",
   "entries": [
     {
+      "date": "Fri, 06 Mar 2026 20:27:05 GMT",
+      "version": "1.9.0",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.9.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "commit": "133f33751088292d38420c493753de6a36271473",
+            "comment": "Make transform for connection directive optional"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 06 Feb 2026 12:41:07 GMT",
       "version": "1.8.13",
       "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.8.13",
