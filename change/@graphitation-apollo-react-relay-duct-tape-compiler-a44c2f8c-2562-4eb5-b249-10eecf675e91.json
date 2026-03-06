@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Make transform for connection directive optional",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape-compiler",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
