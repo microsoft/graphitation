@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "upgrade minimatch 3.1.3",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "celiac@microsoft.com",
+  "dependentChangeType": "patch"
+}
