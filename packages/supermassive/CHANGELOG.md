@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Tue, 06 Jan 2026 13:26:11 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 09 Mar 2026 15:22:57 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.15.0
+
+Mon, 09 Mar 2026 15:22:57 GMT
+
+### Minor changes
+
+- throw on executing undefined root field (dsamsonov@microsoft.com)
 
 ## 3.14.1
 

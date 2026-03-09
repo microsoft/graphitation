@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Mon, 09 Mar 2026 15:22:57 GMT",
+      "version": "3.15.0",
+      "tag": "@graphitation/supermassive_v3.15.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "dsamsonov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "2c35ba6cbb27613fa05909fcb3c439e118655afd",
+            "comment": "throw on executing undefined root field"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 06 Jan 2026 13:26:11 GMT",
       "version": "3.14.1",
       "tag": "@graphitation/supermassive_v3.14.1",
