@@ -45,6 +45,7 @@
     "@babel/traverse": "^7.23.0",
     "micromatch": "^4.0.8",
     "braces": "^3.0.3",
-    "cross-spawn": "^7.0.5"
+    "cross-spawn": "^7.0.5",
+    "serialize-javascript": "^7.0.4"
   }
 }
