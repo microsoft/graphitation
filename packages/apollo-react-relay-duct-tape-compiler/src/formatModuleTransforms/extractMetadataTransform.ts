@@ -217,10 +217,12 @@ function extractFilterVariableDefaults(
     "Expected connection directive to have arguments",
   );
   const filterVariableDefaults = new Map<string, any>();
-  const [, filters] = connectionDirective.arguments;
+  const filters = connectionDirective.arguments.find(
+    (arg) => arg.name.value === "filter" || arg.name.value === "filters",
+  );
   if (filters) {
     invariant(
-      filters.name.value === "filter" && filters.value.kind === "ListValue",
+      filters.value.kind === "ListValue",
       "Expected filters argument to be a list of field arguments",
     );
     const fieldArgumentNames = filters.value.values.map((value) => {

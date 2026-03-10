@@ -140,13 +140,13 @@ async function main() {
     IRTransforms.printTransforms.push(annotateFragmentReferenceTransform);
     IRTransforms.commonTransforms.unshift(enableNodeWatchQueryTransform);
   }
-  if (argv.transformConnectionDirective) {
-    wrapTransform(
-      "connectionTransform",
-      IRTransforms.commonTransforms,
-      emitApolloClientConnectionTransform,
-    );
-  }
+  wrapTransform(
+    "connectionTransform",
+    IRTransforms.commonTransforms,
+    emitApolloClientConnectionTransform({
+      renameFiltersArgument: argv.transformConnectionDirective,
+    }),
+  );
 
   const ductTapeCompilerLanguagePlugin = await pluginFactory(argv);
 

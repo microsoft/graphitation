@@ -9,12 +9,20 @@ const { TestSchema, parseGraphQLText } = require("relay-test-utils-internal");
 
 const ExtendedSchema = TestSchema.extend([SCHEMA_EXTENSION]);
 
-function transform(text: string) {
+function transform(
+  text: string,
+  opts: { renameFiltersArgument?: boolean } = {},
+) {
+  const { renameFiltersArgument = true } = opts;
   const { definitions } = parseGraphQLText(ExtendedSchema, text);
 
   const transformedText = new CompilerContext(ExtendedSchema)
     .addAll(definitions)
-    .applyTransforms([emitApolloClientConnectionTransform(connectionTransform)])
+    .applyTransforms([
+      emitApolloClientConnectionTransform({ renameFiltersArgument })(
+        connectionTransform,
+      ),
+    ])
     .documents()
     .map((doc) => (Printer.print as any)(ExtendedSchema, doc))
     .join("\n");
@@ -39,6 +47,46 @@ describe(emitApolloClientConnectionTransform, () => {
     expect(transform(text)).toMatchInlineSnapshot(`
       "fragment SomeConnectionFragment on User {
         comments(first: $commentCount, after: $commentCursor) @connection(key: "SomeUser_comments", filter: ["foo"]) {
+          edges {
+            node {
+              canViewerComment
+            }
+            ... on CommentsEdge {
+              cursor
+              node {
+                __typename
+              }
+            }
+          }
+          pageInfo {
+            ... on PageInfo {
+              endCursor
+              hasNextPage
+            }
+          }
+        }
+      }
+      "
+    `);
+  });
+
+  it("keeps 'filters' argument name when renameFiltersArgument is false", () => {
+    const text = `
+      fragment SomeConnectionFragment on User {
+        comments(first: $commentCount, after: $commentCursor) @connection(key: "SomeUser_comments", filters: ["foo"]) {
+          edges {
+            node {
+              canViewerComment
+            }
+          }
+        }
+      }
+    `;
+
+    expect(transform(text, { renameFiltersArgument: false }))
+      .toMatchInlineSnapshot(`
+      "fragment SomeConnectionFragment on User {
+        comments(first: $commentCount, after: $commentCursor) @connection(key: "SomeUser_comments", filters: ["foo"]) {
           edges {
             node {
               canViewerComment
