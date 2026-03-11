@@ -1,0 +1,64 @@
+query PostPreloader($postId: ID!, $first: Int!, $after: String) {
+  ...PostHeaderFragment
+  ...CommentsListFragment
+}
+
+fragment PostHeaderFragment on Query {
+  post(id: $postId) {
+    id
+    title
+    subtitle
+    publishedAt
+    coverImageUrl
+    author {
+      id
+      name
+      avatarUrl
+      bio
+    }
+    tags {
+      id
+      name
+      slug
+    }
+    stats {
+      viewCount
+      likeCount
+      commentCount
+    }
+  }
+}
+
+fragment CommentsListFragment on Query {
+  post(id: $postId) {
+    id
+    comments(first: $first, after: $after) {
+      edges {
+        node {
+          id
+          body
+          createdAt
+          author {
+            id
+            name
+            avatarUrl
+          }
+          reactions {
+            id
+            type
+            user {
+              id
+              name
+            }
+          }
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      totalCount
+    }
+  }
+}
