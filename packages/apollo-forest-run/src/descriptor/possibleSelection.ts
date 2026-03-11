@@ -26,6 +26,11 @@ import type {
 } from "./types";
 import { accumulate, getOrCreate } from "../jsutils/map";
 import { assert, assertNever } from "../jsutils/assert";
+import {
+  hashString,
+  combineHash,
+  accumulateHash,
+} from "../jsutils/selectionHash";
 
 export type Context = Readonly<{
   fragmentMap: FragmentMap;
@@ -366,6 +371,13 @@ function completeSelections(
   for (const selection of next) {
     completeSelections(context, selection, depth + 1);
   }
+
+  // Compute structural hashes bottom-up (children already completed above)
+  for (const selection of possibleSelections.values()) {
+    if (selection.structuralHash !== 0) continue; // already hashed (shared selection)
+    selection.structuralHash = computeStructuralHash(selection);
+  }
+
   return possibleSelections;
 }
 
@@ -729,6 +741,7 @@ function copySelection(
     fieldQueue: [],
     experimentalAlias: selection.experimentalAlias,
     depth: selection.depth,
+    structuralHash: 0,
   };
   for (const [field, aliases] of selection.fields.entries()) {
     copy.fields.set(field, [...aliases]);
@@ -756,8 +769,56 @@ function copySelection(
   return copy;
 }
 
+/**
+ * Compute an order-independent structural hash of a PossibleSelection.
+ * Hashes: field names, dataKeys, arg names, non-inclusion directive names,
+ * child selection hashes, and spread names.
+ * Does NOT hash arg/directive values (those depend on variables, handled at resolve time).
+ */
+function computeStructuralHash(selection: PossibleSelection): number {
+  let hash = 0;
+
+  for (const [fieldName, entries] of selection.fields) {
+    // Per-field hash: order-dependent across entries (they're compared by index)
+    let fieldHash = hashString(fieldName);
+    for (const entry of entries) {
+      fieldHash = combineHash(fieldHash, hashString(entry.dataKey));
+
+      // Hash arg names (sorted for stability — same args in different AST order should match)
+      if (entry.args?.size) {
+        const argNames = [...entry.args.keys()].sort();
+        for (const argName of argNames) {
+          fieldHash = combineHash(fieldHash, hashString(argName));
+        }
+      }
+
+      // Note: non-inclusion directive names+values are hashed in the resolved hash
+      // (they may have variable-dependent arg values)
+
+      // Hash child selection structure (already computed bottom-up)
+      if (entry.selection) {
+        for (const [typeName, childSel] of entry.selection) {
+          fieldHash = combineHash(
+            fieldHash,
+            typeName ? hashString(typeName) : 0,
+          );
+          fieldHash = combineHash(fieldHash, childSel.structuralHash);
+        }
+      }
+    }
+    // Accumulate order-independently across field names
+    hash = accumulateHash(hash, fieldHash);
+  }
+
+  // Note: spreads are NOT hashed — they're only relevant for skippedSpreads
+  // which is handled in the resolved hash. Non-skipped spreads are already
+  // accounted for via merged fields.
+
+  return hash || 1; // Avoid 0 which means "not yet computed"
+}
+
 function createEmptySelection(): PossibleSelection {
-  return { fields: new Map(), fieldQueue: [], depth: -1 };
+  return { fields: new Map(), fieldQueue: [], depth: -1, structuralHash: 0 };
 }
 
 function getFragmentAlias(node: FragmentSpreadNode): string | undefined {

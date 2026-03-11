@@ -11,6 +11,7 @@ import type {
 import type {
   NodeKey,
   OperationDescriptor,
+  OperationId,
   ResolvedSelection,
 } from "../descriptor/types";
 import type { IndexedForest } from "../forest/types";
@@ -110,6 +111,7 @@ export function findRecyclableChunk(
   selection: ResolvedSelection,
   includeDeleted = false,
   dirtyNodes?: DirtyNodeMap,
+  coveringOperationIds?: Set<OperationId>,
 ): NodeChunk | undefined {
   if (typeof ref !== "string") {
     return undefined; // TODO?
@@ -128,9 +130,24 @@ export function findRecyclableChunk(
       continue;
     }
     const tree = layer.trees.get(operation.id);
+    let checkedInLayer = tree ? 1 : 0;
     for (const chunk of tree?.nodes.get(ref) ?? EMPTY_ARRAY) {
       if (resolvedSelectionsAreEqual(chunk.selection, selection)) {
         return chunk;
+      }
+    }
+    // Check covering operations' trees for recyclable chunks
+    if (coveringOperationIds) {
+      for (const coverId of coveringOperationIds) {
+        if (coverId === operation.id) continue;
+        const coverTree = layer.trees.get(coverId);
+        if (!coverTree) continue;
+        checkedInLayer++;
+        for (const chunk of coverTree.nodes.get(ref) ?? EMPTY_ARRAY) {
+          if (resolvedSelectionsAreEqual(chunk.selection, selection)) {
+            return chunk;
+          }
+        }
       }
     }
     if (tree?.incompleteChunks.size) {
@@ -139,7 +156,7 @@ export function findRecyclableChunk(
       //   If we move to lower layers - we may accidentally skip the actual data in this layer.
       return undefined;
     }
-    if (totalTreesWithNode - (tree ? 1 : 0) > 0) {
+    if (totalTreesWithNode - checkedInLayer > 0) {
       // Cannot recycle chunks from lower layers if there is another partially matching chunks in this layer
       //   which may contain data having precedence over lower layers.
       return undefined;
@@ -196,6 +213,7 @@ export const createChunkMatcher =
     layers: IndexedForest[],
     includeDeleted = false,
     dirtyNodes?: DirtyNodeMap | undefined,
+    coveringOperationIds?: Set<OperationId>,
   ): ChunkMatcher =>
   (
     ref: GraphValueReference,
@@ -209,6 +227,7 @@ export const createChunkMatcher =
       selection,
       includeDeleted,
       dirtyNodes,
+      coveringOperationIds,
     );
 
 export const createChunkProvider =

@@ -7,6 +7,7 @@ export function addTree(forest: IndexedForest, tree: IndexedTree) {
   trees.set(tree.operation.id, tree);
 
   trackTreeNodes(forest, tree);
+  trackCovers(forest, tree);
 }
 
 export function replaceTree(forest: IndexedForest, tree: IndexedTree) {
@@ -14,6 +15,7 @@ export function replaceTree(forest: IndexedForest, tree: IndexedTree) {
   trees.set(tree.operation.id, tree);
 
   trackTreeNodes(forest, tree);
+  trackCovers(forest, tree);
 }
 
 export function trackTreeNodes(forest: IndexedForest, tree: IndexedTree) {
@@ -25,5 +27,18 @@ export function trackTreeNodes(forest: IndexedForest, tree: IndexedTree) {
       operationsByNodes.set(nodeKey, seenIn);
     }
     seenIn.add(tree.operation.id);
+  }
+}
+
+function trackCovers(forest: IndexedForest, tree: IndexedTree) {
+  const { covers } = tree.operation;
+  if (!covers.length) return;
+  for (const name of covers) {
+    let ops = forest.coveredBy.get(name);
+    if (!ops) {
+      ops = new Set();
+      forest.coveredBy.set(name, ops);
+    }
+    ops.add(tree.operation.id);
   }
 }

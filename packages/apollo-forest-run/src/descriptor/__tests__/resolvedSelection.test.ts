@@ -1565,6 +1565,141 @@ describe(resolvedSelectionsAreEqual, () => {
       expect(resolvedSelectionsAreEqual(selA, selB)).toBe(false);
     });
   });
+
+  // --- Group H: Hardcoded vs variable args (hash edge cases) ---
+
+  describe("cross-document: hardcoded vs variable args", () => {
+    it("returns true for hardcoded arg matching resolved variable arg", () => {
+      const opA = createTestOperation('query A { foo(arg: "hello") }');
+      const opB = createTestOperation("query B($x: String!) { foo(arg: $x) }", {
+        x: "hello",
+      });
+      const selA = resolveSelection(opA, opA.possibleSelections, null);
+      const selB = resolveSelection(opB, opB.possibleSelections, null);
+
+      expect(resolvedSelectionsAreEqual(selA, selB)).toBe(true);
+    });
+
+    it("returns false for hardcoded arg not matching resolved variable arg", () => {
+      const opA = createTestOperation('query A { foo(arg: "hello") }');
+      const opB = createTestOperation("query B($x: String!) { foo(arg: $x) }", {
+        x: "world",
+      });
+      const selA = resolveSelection(opA, opA.possibleSelections, null);
+      const selB = resolveSelection(opB, opB.possibleSelections, null);
+
+      expect(resolvedSelectionsAreEqual(selA, selB)).toBe(false);
+    });
+
+    it("returns true for nested hardcoded arg matching variable arg", () => {
+      const opA = createTestOperation(
+        "query A { foo { bar(limit: 10) { id } } }",
+      );
+      const opB = createTestOperation(
+        "query B($n: Int!) { foo { bar(limit: $n) { id } } }",
+        { n: 10 },
+      );
+      const selA = resolveSelection(opA, opA.possibleSelections, null);
+      const selB = resolveSelection(opB, opB.possibleSelections, null);
+
+      expect(resolvedSelectionsAreEqual(selA, selB)).toBe(true);
+    });
+
+    it("returns false for nested hardcoded arg not matching variable arg", () => {
+      const opA = createTestOperation(
+        "query A { foo { bar(limit: 10) { id } } }",
+      );
+      const opB = createTestOperation(
+        "query B($n: Int!) { foo { bar(limit: $n) { id } } }",
+        { n: 20 },
+      );
+      const selA = resolveSelection(opA, opA.possibleSelections, null);
+      const selB = resolveSelection(opB, opB.possibleSelections, null);
+
+      expect(resolvedSelectionsAreEqual(selA, selB)).toBe(false);
+    });
+
+    it("returns true for multiple args: mix of hardcoded and variable", () => {
+      const opA = createTestOperation('query A { foo(a: "x", b: 42) }');
+      const opB = createTestOperation(
+        "query B($v: String!) { foo(a: $v, b: 42) }",
+        { v: "x" },
+      );
+      const selA = resolveSelection(opA, opA.possibleSelections, null);
+      const selB = resolveSelection(opB, opB.possibleSelections, null);
+
+      expect(resolvedSelectionsAreEqual(selA, selB)).toBe(true);
+    });
+  });
+
+  // --- Group I: Field order and structural equivalence ---
+
+  describe("cross-document: field order independence", () => {
+    it("returns true for same fields in different source order", () => {
+      const opA = createTestOperation("query A { foo bar baz }");
+      const opB = createTestOperation("query B { baz foo bar }");
+      const selA = resolveSelection(opA, opA.possibleSelections, null);
+      const selB = resolveSelection(opB, opB.possibleSelections, null);
+
+      expect(resolvedSelectionsAreEqual(selA, selB)).toBe(true);
+    });
+
+    it("returns true for nested fields in different source order", () => {
+      const opA = createTestOperation("query A { foo { a b } bar }");
+      const opB = createTestOperation("query B { bar foo { b a } }");
+      const selA = resolveSelection(opA, opA.possibleSelections, null);
+      const selB = resolveSelection(opB, opB.possibleSelections, null);
+
+      expect(resolvedSelectionsAreEqual(selA, selB)).toBe(true);
+    });
+  });
+
+  // --- Group I-b: Input object arg with different key order ---
+
+  describe("cross-document: input object arg key order", () => {
+    it("returns true when input object args have same keys in different order", () => {
+      const opA = createTestOperation(
+        "query A($f: Filter!) { items(filter: $f) }",
+        { f: { status: "active", limit: 10 } },
+      );
+      const opB = createTestOperation(
+        "query B($f: Filter!) { items(filter: $f) }",
+        { f: { limit: 10, status: "active" } },
+      );
+      const selA = resolveSelection(opA, opA.possibleSelections, null);
+      const selB = resolveSelection(opB, opB.possibleSelections, null);
+
+      expect(resolvedSelectionsAreEqual(selA, selB)).toBe(true);
+    });
+
+    it("returns false when input object args have different values", () => {
+      const opA = createTestOperation(
+        "query A($f: Filter!) { items(filter: $f) }",
+        { f: { status: "active", limit: 10 } },
+      );
+      const opB = createTestOperation(
+        "query B($f: Filter!) { items(filter: $f) }",
+        { f: { status: "archived", limit: 10 } },
+      );
+      const selA = resolveSelection(opA, opA.possibleSelections, null);
+      const selB = resolveSelection(opB, opB.possibleSelections, null);
+
+      expect(resolvedSelectionsAreEqual(selA, selB)).toBe(false);
+    });
+  });
+
+  // --- Group J: No-arg vs with-arg same field name ---
+
+  describe("cross-document: arg presence mismatch", () => {
+    it("returns false when one doc has args and the other does not", () => {
+      const opA = createTestOperation("query A { foo }");
+      const opB = createTestOperation('query B { foo(arg: "x") }');
+      const selA = resolveSelection(opA, opA.possibleSelections, null);
+      const selB = resolveSelection(opB, opB.possibleSelections, null);
+
+      expect(resolvedSelectionsAreEqual(selA, selB)).toBe(false);
+    });
+  });
 });
 
 describe(fieldEntriesAreEqual, () => {

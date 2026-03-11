@@ -25,6 +25,7 @@ import { valueFromASTUntyped } from "graphql";
 import { equal } from "@wry/equality";
 import { assert } from "../jsutils/assert";
 import { createArgumentDefs } from "./possibleSelection";
+import { hashString, combineHash, hashValue } from "../jsutils/selectionHash";
 
 const EMPTY_ARRAY = Object.freeze([]);
 const EMPTY_MAP = new Map();
@@ -126,11 +127,111 @@ export function resolveSelection(
 
     if (resolvedSelection !== selection) {
       selectionOperations.set(resolvedSelection, operation);
+    } else {
+      // No runtime changes - resolved hash equals structural hash (free)
+      resolvedSelection.resolvedHash = selection.structuralHash;
     }
 
     map.set(typeName, resolvedSelection);
   }
   return resolvedSelection;
+}
+
+function computeResolvedHash(
+  operation: OperationDescriptor,
+  selection: ResolvedSelection,
+): number {
+  let hash = selection.structuralHash;
+
+  // Mix in resolved arg values (handles both hardcoded and variable args)
+  if (selection.normalizedFields?.size) {
+    for (const [, entry] of selection.normalizedFields) {
+      if (typeof entry === "string") {
+        hash = combineHash(hash, hashString(entry));
+      } else {
+        hash = combineHash(hash, hashString(entry.name));
+        for (const [argName, argVal] of entry.args) {
+          hash = combineHash(hash, hashString(argName));
+          hash = combineHash(hash, hashValue(argVal));
+        }
+        if (typeof entry.keyArgs === "string") {
+          hash = combineHash(hash, hashString(entry.keyArgs));
+        } else if (entry.keyArgs) {
+          for (const k of entry.keyArgs) {
+            hash = combineHash(hash, hashString(k));
+          }
+        }
+      }
+    }
+  }
+
+  // Mix in resolved non-inclusion directive values
+  if (selection.fieldsToNormalize?.length) {
+    const variables = operation.variablesWithDefaults;
+    for (const field of selection.fieldsToNormalize) {
+      for (const ref of field.__refs) {
+        if (!ref.node.directives) continue;
+        for (const dir of ref.node.directives) {
+          const name = dir.name.value;
+          if (name === "skip" || name === "include") continue;
+          hash = combineHash(hash, hashString(name));
+          if (dir.arguments?.length) {
+            for (const arg of dir.arguments) {
+              hash = combineHash(hash, hashString(arg.name.value));
+              const val = valueFromASTUntyped(arg.value, variables);
+              hash = combineHash(hash, hashValue(val));
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Mix in skipped fields
+  if (selection.skippedFields?.size) {
+    for (const field of selection.skippedFields) {
+      hash = combineHash(hash, hashString(field.dataKey));
+    }
+  }
+
+  // Mix in skipped spreads
+  if (selection.skippedSpreads?.size) {
+    for (const spread of selection.skippedSpreads) {
+      hash = combineHash(hash, hashString(spread.name));
+    }
+  }
+
+  // Mix in child resolved hashes for fields with variable-dependent descendants
+  if (selection.fieldsWithSelections) {
+    for (const fieldName of selection.fieldsWithSelections) {
+      const fields = selection.fields.get(fieldName);
+      if (!fields) continue;
+      for (const field of fields) {
+        if (!field.selection) continue;
+        for (const typeName of field.selection.keys()) {
+          const childResolved = resolveSelection(
+            operation,
+            field.selection,
+            typeName,
+          );
+          hash = combineHash(hash, getResolvedHash(childResolved));
+        }
+      }
+    }
+  }
+
+  return hash >>> 0;
+}
+
+/** Lazily compute resolved hash on first cross-doc comparison */
+function getResolvedHash(selection: ResolvedSelection): number {
+  if (selection.resolvedHash !== undefined) {
+    return selection.resolvedHash;
+  }
+  const op = selectionOperations.get(selection);
+  assert(op);
+  selection.resolvedHash = computeResolvedHash(op, selection);
+  return selection.resolvedHash;
 }
 
 export function resolvedSelectionsAreEqual(
@@ -143,7 +244,10 @@ export function resolvedSelectionsAreEqual(
   if (a.fields === b.fields) {
     return sameDocSelectionsAreEqual(a, b);
   }
-  return crossDocSelectionsAreEqual(a, b);
+  // Cross-doc: structural hash is deterministic from doc structure, so inequality is definitive
+  if (a.structuralHash !== b.structuralHash) return false;
+  // Structure matches - compare resolved hash (computed lazily, includes variable-dependent state)
+  return getResolvedHash(a) === getResolvedHash(b);
 }
 
 function sameDocSelectionsAreEqual(
@@ -192,154 +296,6 @@ function sameDocSelectionsAreEqual(
           if (!resolvedSelectionsAreEqual(childA, childB)) return false;
         }
       }
-    }
-  }
-  return true;
-}
-
-// Bug 1 fix: structural comparison for cross-document selections
-function crossDocSelectionsAreEqual(
-  a: ResolvedSelection,
-  b: ResolvedSelection,
-): boolean {
-  if (a.fields.size !== b.fields.size) return false;
-
-  // Both empty: can't meaningfully compare (content may be in typed selections)
-  if (a.fields.size === 0) return false;
-
-  const aOp = selectionOperations.get(a);
-  const bOp = selectionOperations.get(b);
-  const aVars = aOp?.variablesWithDefaults ?? {};
-  const bVars = bOp?.variablesWithDefaults ?? {};
-
-  for (const [name, aEntries] of a.fields) {
-    const bEntries = b.fields.get(name);
-    if (!bEntries || aEntries.length !== bEntries.length) return false;
-
-    for (let i = 0; i < aEntries.length; i++) {
-      const aField = aEntries[i];
-      const bField = bEntries[i];
-
-      if (aField.dataKey !== bField.dataKey) return false;
-
-      // Compare normalized entries (handles variable-dependent args)
-      const aNorm = a.normalizedFields?.get(aField);
-      const bNorm = b.normalizedFields?.get(bField);
-      if ((aNorm === undefined) !== (bNorm === undefined)) return false;
-      if (aNorm && bNorm && !fieldEntriesAreEqual(aNorm, bNorm)) return false;
-
-      // Compare skip/include status
-      if (
-        (a.skippedFields?.has(aField) ?? false) !==
-        (b.skippedFields?.has(bField) ?? false)
-      )
-        return false;
-
-      // Compare non-inclusion directives (e.g. @customDeprecated, @connection)
-      if (!fieldDirectivesMatch(aField, bField, aVars, bVars)) return false;
-
-      // Compare child selections
-      if (
-        !childPossibleSelectionsAreEqual(
-          aField.selection,
-          bField.selection,
-          aOp,
-          bOp,
-        )
-      )
-        return false;
-    }
-  }
-
-  // Compare skippedSpreads by name (cross-doc SpreadInfo objects differ)
-  if (a.skippedSpreads?.size !== b.skippedSpreads?.size) return false;
-  if (a.skippedSpreads && b.skippedSpreads) {
-    for (const aSpread of a.skippedSpreads) {
-      let found = false;
-      for (const bSpread of b.skippedSpreads) {
-        if (aSpread.name === bSpread.name) {
-          found = true;
-          break;
-        }
-      }
-      if (!found) return false;
-    }
-  }
-
-  return true;
-}
-
-function fieldDirectivesMatch(
-  aField: FieldInfo,
-  bField: FieldInfo,
-  aVars: VariableValues,
-  bVars: VariableValues,
-): boolean {
-  const aDirs = aField.__refs
-    .flatMap((r) => r.node.directives ?? EMPTY_ARRAY)
-    .filter((d: DirectiveNode) => !isInclusionDirective(d));
-  const bDirs = bField.__refs
-    .flatMap((r) => r.node.directives ?? EMPTY_ARRAY)
-    .filter((d: DirectiveNode) => !isInclusionDirective(d));
-  if (aDirs.length === 0 && bDirs.length === 0) return true;
-  if (aDirs.length !== bDirs.length) return false;
-
-  const aResolved = resolveDirectiveValues(aDirs, aVars);
-  const bResolved = resolveDirectiveValues(bDirs, bVars);
-  if (aResolved.size !== bResolved.size) return false;
-  for (const [name, aVal] of aResolved) {
-    const bVal = bResolved.get(name);
-    if (!bVal) return false;
-    if (!argumentsAreEqual(aVal.args, bVal.args)) return false;
-  }
-  return true;
-}
-
-function childPossibleSelectionsAreEqual(
-  aSel: PossibleSelections | undefined,
-  bSel: PossibleSelections | undefined,
-  aOp: OperationDescriptor | undefined,
-  bOp: OperationDescriptor | undefined,
-): boolean {
-  if (aSel === bSel) return true;
-  if (!aSel || !bSel) return false;
-  if (aSel.size !== bSel.size) return false;
-
-  for (const [typeName] of aSel) {
-    if (!bSel.has(typeName)) return false;
-
-    if (aOp && bOp) {
-      const childA = resolveSelection(aOp, aSel, typeName);
-      const childB = resolveSelection(bOp, bSel, typeName);
-      if (!resolvedSelectionsAreEqual(childA, childB)) return false;
-    } else {
-      // No operations available — pure structural comparison
-      const aPossible = aSel.get(typeName)!;
-      const bPossible = bSel.get(typeName)!;
-      if (!fieldMapsAreStructurallyEqual(aPossible.fields, bPossible.fields))
-        return false;
-    }
-  }
-  return true;
-}
-
-function fieldMapsAreStructurallyEqual(a: FieldMap, b: FieldMap): boolean {
-  if (a === b) return true;
-  if (a.size !== b.size) return false;
-  for (const [name, aEntries] of a) {
-    const bEntries = b.get(name);
-    if (!bEntries || aEntries.length !== bEntries.length) return false;
-    for (let i = 0; i < aEntries.length; i++) {
-      if (aEntries[i].dataKey !== bEntries[i].dataKey) return false;
-      if (
-        !childPossibleSelectionsAreEqual(
-          aEntries[i].selection,
-          bEntries[i].selection,
-          undefined,
-          undefined,
-        )
-      )
-        return false;
     }
   }
   return true;

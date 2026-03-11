@@ -36,6 +36,7 @@ export function createTestForest(): IndexedForest {
     operationsByNodes: new Map(),
     operationsWithErrors: new Set(),
     deletedNodes: new Set(),
+    coveredBy: new Map(),
   };
 }
 

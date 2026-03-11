@@ -1,4 +1,4 @@
-query PostPreloader($postId: ID!, $first: Int!, $after: String) {
+query PostPreloader($postId: ID!, $first: Int!, $after: String) @cache(covers: ["CommentsList", "PostHeader"]) {
   ...PostHeaderFragment
   ...CommentsListFragment
 }
