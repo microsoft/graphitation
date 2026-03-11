@@ -1,6 +1,7 @@
 import type {
   FieldName,
   OperationDescriptor,
+  OperationId,
   VariableValues,
 } from "../descriptor/types";
 import type { ObjectChunk, ObjectDraft, SourceObject } from "../values/types";
@@ -78,10 +79,13 @@ export function read<TData>(
   // FIXME: this may break with optimistic layers - partialReadResults should be per layer?
   if (outputTree.incompleteChunks.size) {
     store.partialReadResults.add(outputTree.operation);
+    let missing: MissingFieldError[] | undefined;
     return {
       result: outputTree.result.data as TData,
-      complete: false,
-      missing: [reportFirstMissingField(outputTree)],
+      complete: false as const,
+      get missing() {
+        return (missing ??= [reportFirstMissingField(outputTree)]);
+      },
       dangling: outputTree.danglingReferences,
     };
   }
@@ -260,7 +264,8 @@ function growOutputTree(
     }
   }
   if (!dataTree) {
-    dataTree = growDataTree(env, forest, operation);
+    const coveringIds = getCoveringOperationIds(forest, operation);
+    dataTree = growDataTree(env, forest, operation, coveringIds);
     addTree(forest, dataTree);
   }
   const tree = applyTransformations(
@@ -290,10 +295,40 @@ function growOutputTree(
   return { outputTree: tree, dirtyNodes: new Map() };
 }
 
+function getCoveringOperationIds(
+  forest: DataForest | OptimisticLayer,
+  operation: OperationDescriptor,
+): Set<OperationId> | undefined {
+  let ids: Set<OperationId> | undefined;
+
+  // Forward: find ops that cover us (reading CommentsList → Preloader)
+  const opName = operation.definition.name?.value;
+  if (opName) {
+    const forwardIds = forest.coveredBy?.get(opName);
+    if (forwardIds?.size) {
+      ids = new Set(forwardIds);
+    }
+  }
+
+  // Reverse: find ops that we cover (reading Preloader → CommentsList, PostHeader)
+  if (operation.covers.length) {
+    for (const tree of forest.trees.values()) {
+      const treeName = tree.operation.definition.name?.value;
+      if (treeName && operation.covers.includes(treeName)) {
+        if (!ids) ids = new Set();
+        ids.add(tree.operation.id);
+      }
+    }
+  }
+
+  return ids?.size ? ids : undefined;
+}
+
 function growDataTree(
   env: CacheEnv,
   forest: DataForest | OptimisticLayer,
   operationDescriptor: OperationDescriptor,
+  coveringOperationIds?: Set<OperationId>,
 ): DataTree {
   const { possibleSelections, rootNodeKey, rootType } = operationDescriptor;
 
@@ -303,7 +338,10 @@ function growDataTree(
     rootNodeKey,
     rootType,
   );
-  hydrateDraft(env, rootDraft, createChunkProvider([forest]));
+  const chunkMatcher = coveringOperationIds
+    ? createChunkMatcher([forest], false, undefined, coveringOperationIds)
+    : undefined;
+  hydrateDraft(env, rootDraft, createChunkProvider([forest]), chunkMatcher);
 
   // ApolloCompat: mostly added for tests
   if (
