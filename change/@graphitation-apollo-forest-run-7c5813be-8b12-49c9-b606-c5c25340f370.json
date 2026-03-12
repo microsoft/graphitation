@@ -1,7 +1,0 @@
-{
-  "type": "none",
-  "comment": "Revert commits d6232a0b..2285d88d (cross-operation selection, preloader optimization, alpha publish, CI fixes)",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "vrazuvaev@microsoft.com_msteamsmdb",
-  "dependentChangeType": "none"
-}

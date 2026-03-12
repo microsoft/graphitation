@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Thu, 12 Mar 2026 13:08:20 GMT",
+      "version": "0.21.0",
+      "tag": "@graphitation/apollo-forest-run_v0.21.0",
+      "comments": {
+        "none": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "ac4dc32d5ee8a74a646a559f3330d16e0efa15f5",
+            "comment": "Revert commits d6232a0b..2285d88d (cross-operation selection, preloader optimization, alpha publish, CI fixes)"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 06 Mar 2026 20:27:05 GMT",
       "version": "0.21.0",
       "tag": "@graphitation/apollo-forest-run_v0.21.0",
