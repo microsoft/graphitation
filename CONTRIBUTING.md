@@ -57,4 +57,4 @@ yarn lint
 1. Open the `graphitation-release` pipeline in Azure DevOps and run it from the branch you want to release from.
 2. Turn on **Publish as prerelease from current branch**.
 3. The pipeline will publish using `prerelease` npm dist-tag and use your selected branch as the beachball target branch automatically.
-4. Every time you want to release a new prerelease version use `yarn change` and select `prelease`. To avoid patching dependent packages set `dependentChangeType` to `none` manually in `.changes` files.
+4. Every time you want to release a new prerelease version use `yarn change` and select `prerelease`. To avoid patching dependent packages set `dependentChangeType` to `none` manually in `.changes` files.
