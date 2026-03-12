@@ -66,7 +66,8 @@ extends:
                 displayName: Configure git for release
               - script: |
                   if [ "${{ parameters.prerelease }}" = "true" ]; then
-                    yarn beachball publish -t prerelease -y -n $(ossNpmToken) --access public --no-push --keep-change-files
+                    releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
+                    yarn beachball -b "$releaseBranch" publish -t prerelease -y -n $(ossNpmToken) --access public --no-push --keep-change-files
                   else
                     yarn release -y -n $(ossNpmToken) --access public --no-push --keep-change-files
                   fi
@@ -82,7 +83,8 @@ extends:
                   workingFile: ".npmrc"
               - script: |
                   if [ "${{ parameters.prerelease }}" = "true" ]; then
-                    yarn beachball publish -t prerelease -y --registry $(adoNpmFeedBaseUrl)
+                    releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
+                    yarn beachball -b "$releaseBranch" publish -t prerelease -y --registry $(adoNpmFeedBaseUrl)
                   else
                     yarn release -y --registry $(adoNpmFeedBaseUrl)
                   fi
