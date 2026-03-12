@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2019",
+    "lib": ["ES2019", "DOM", "ESNext.Disposable"],
     "module": "ES6",
     "moduleResolution": "Node",
     "declaration": true,
