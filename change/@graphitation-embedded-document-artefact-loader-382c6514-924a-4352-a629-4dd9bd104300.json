@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "updating dependencies",
-  "packageName": "@graphitation/embedded-document-artefact-loader",
-  "email": "celiac@microsoft.com",
-  "dependentChangeType": "patch"
-}
