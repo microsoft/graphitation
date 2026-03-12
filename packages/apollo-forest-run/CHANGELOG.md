@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Fri, 06 Mar 2026 20:27:05 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 12 Mar 2026 11:37:25 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.22.0-alpha.2
+
+Thu, 12 Mar 2026 11:37:25 GMT
+
+### Changes
+
+- proper cross-operation selection comparison (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.21.0
 

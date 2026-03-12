@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Thu, 12 Mar 2026 11:37:25 GMT",
+      "version": "0.22.0-alpha.2",
+      "tag": "@graphitation/apollo-forest-run_v0.22.0-alpha.2",
+      "comments": {
+        "prerelease": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "c5b74b59c223d5ec7d0a53475909627c5ad852e3",
+            "comment": "proper cross-operation selection comparison"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 06 Mar 2026 20:27:05 GMT",
       "version": "0.21.0",
       "tag": "@graphitation/apollo-forest-run_v0.21.0",

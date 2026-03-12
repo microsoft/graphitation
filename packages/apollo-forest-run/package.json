@@ -1,7 +1,7 @@
 {
   "name": "@graphitation/apollo-forest-run",
   "license": "MIT",
-  "version": "0.22.0-alpha.1",
+  "version": "0.22.0-alpha.2",
   "main": "./src/index.ts",
   "repository": {
     "type": "git",
