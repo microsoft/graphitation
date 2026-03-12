@@ -3,6 +3,12 @@ trigger:
   - main
   - alloy/relay-apollo-duct-tape
 
+parameters:
+  - name: prerelease
+    displayName: Publish as prerelease from current branch
+    type: boolean
+    default: false
+
 variables:
   - group: InfoSec-SecurityResults
   - name: tags
@@ -58,7 +64,13 @@ extends:
                   git config user.name "Graphitation Service Account"
                   git fetch --depth=2
                 displayName: Configure git for release
-              - script: yarn release -y -n $(ossNpmToken) --access public --no-push --keep-change-files
+              - script: |
+                  if [ "${{ parameters.prerelease }}" = "true" ]; then
+                    releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
+                    yarn beachball -b "$releaseBranch" publish -t prerelease -y -n $(ossNpmToken) --access public --no-push --keep-change-files
+                  else
+                    yarn release -y -n $(ossNpmToken) --access public --no-push --keep-change-files
+                  fi
                 displayName: Release to the npm registry
               - script: |
                   git restore .
@@ -69,7 +81,13 @@ extends:
               - task: npmAuthenticate@0
                 inputs:
                   workingFile: ".npmrc"
-              - script: yarn release -y --registry $(adoNpmFeedBaseUrl)
+              - script: |
+                  if [ "${{ parameters.prerelease }}" = "true" ]; then
+                    releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
+                    yarn beachball -b "$releaseBranch" publish -t prerelease -y --registry $(adoNpmFeedBaseUrl)
+                  else
+                    yarn release -y --registry $(adoNpmFeedBaseUrl)
+                  fi
                 displayName: Release to the ado npm feed
               - task: 1ES.PublishPipelineArtifact@1
                 displayName: 📒 Publish Manifest
