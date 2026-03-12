@@ -41,13 +41,11 @@ export function hashValue(val: unknown): number {
         }
         return h;
       }
-      // Object: sort keys for stability
+      // Object: order-independent accumulation (no sort needed)
       const obj = val as Record<string, unknown>;
-      const keys = Object.keys(obj).sort();
       let h = 0x5a5a5a5a;
-      for (const k of keys) {
-        h = combineHash(h, hashString(k));
-        h = combineHash(h, hashValue(obj[k]));
+      for (const k of Object.keys(obj)) {
+        h = accumulateHash(h, combineHash(hashString(k), hashValue(obj[k])));
       }
       return h;
     }
