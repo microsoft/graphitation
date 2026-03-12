@@ -7,7 +7,6 @@ import type {
   KeySpecifier,
   NormalizedFieldEntry,
   OperationDescriptor,
-  PossibleSelection,
   PossibleSelections,
   ResolvedSelection,
   TypeName,
@@ -25,16 +24,9 @@ import { valueFromASTUntyped } from "graphql";
 import { equal } from "@wry/equality";
 import { assert } from "../jsutils/assert";
 import { createArgumentDefs } from "./possibleSelection";
-import { hashString, combineHash, hashValue } from "../jsutils/selectionHash";
 
 const EMPTY_ARRAY = Object.freeze([]);
 const EMPTY_MAP = new Map();
-
-// Maps resolved selection wrappers to their source operations (for recursive child comparison)
-const selectionOperations = new WeakMap<
-  ResolvedSelection,
-  OperationDescriptor
->();
 
 /**
  * Returns selection descriptor for the provided typeName. Enriches possible selection for this type with metadata that
@@ -56,31 +48,12 @@ export function resolveSelection(
   }
   let resolvedSelection = map.get(typeName);
   if (!resolvedSelection) {
-    let effectiveTypeName = typeName;
-    let selection =
+    const selection =
       possibleSelections.get(typeName) ?? possibleSelections.get(null);
     assert(selection);
 
-    // When null selection is empty but root type selection exists, fall through to it.
-    // This handles queries where all fields come from typed fragment spreads (e.g. fragment F on Query).
-    if (
-      typeName === null &&
-      selection.fields.size === 0 &&
-      possibleSelections.size > 1
-    ) {
-      const rootSelection = possibleSelections.get(operation.rootType);
-      if (rootSelection) {
-        selection = rootSelection;
-        effectiveTypeName = operation.rootType;
-      }
-    }
-
     const normalizedFields = selection.fieldsToNormalize?.length
-      ? normalizeFields(
-          operation,
-          selection.fieldsToNormalize,
-          effectiveTypeName,
-        )
+      ? normalizeFields(operation, selection.fieldsToNormalize, typeName)
       : undefined;
 
     const skippedFields = selection.fieldsWithDirectives?.length
@@ -105,162 +78,45 @@ export function resolveSelection(
       ? selection.fieldQueue.filter((field) => !skippedFields.has(field))
       : selection.fieldQueue;
 
-    const hasLocalChanges =
+    resolvedSelection =
       normalizedFields ||
       skippedFields?.size ||
       skippedSpreads?.size ||
-      fieldQueue !== selection.fieldQueue;
-
-    if (hasLocalChanges) {
-      resolvedSelection = {
-        ...selection,
-        fieldQueue,
-        normalizedFields,
-        skippedFields,
-        skippedSpreads,
-      };
-    } else if (hasVariableDependentDescendants(selection)) {
-      resolvedSelection = { ...selection, fieldQueue };
-    } else {
-      resolvedSelection = selection;
-    }
-
-    if (resolvedSelection !== selection) {
-      selectionOperations.set(resolvedSelection, operation);
-    } else {
-      // No runtime changes - resolved hash equals structural hash (free)
-      resolvedSelection.resolvedHash = selection.structuralHash;
-    }
+      fieldQueue !== selection.fieldQueue
+        ? {
+            ...selection,
+            fieldQueue,
+            normalizedFields,
+            skippedFields,
+            skippedSpreads,
+          }
+        : selection;
 
     map.set(typeName, resolvedSelection);
   }
   return resolvedSelection;
 }
 
-function computeResolvedHash(
-  operation: OperationDescriptor,
-  selection: ResolvedSelection,
-): number {
-  let hash = selection.structuralHash;
-
-  // Mix in resolved arg values (handles both hardcoded and variable args)
-  if (selection.normalizedFields?.size) {
-    for (const [, entry] of selection.normalizedFields) {
-      if (typeof entry === "string") {
-        hash = combineHash(hash, hashString(entry));
-      } else {
-        hash = combineHash(hash, hashString(entry.name));
-        for (const [argName, argVal] of entry.args) {
-          hash = combineHash(hash, hashString(argName));
-          hash = combineHash(hash, hashValue(argVal));
-        }
-        if (typeof entry.keyArgs === "string") {
-          hash = combineHash(hash, hashString(entry.keyArgs));
-        } else if (entry.keyArgs) {
-          for (const k of entry.keyArgs) {
-            hash = combineHash(hash, hashString(k));
-          }
-        }
-      }
-    }
-  }
-
-  // Mix in resolved non-inclusion directive values
-  if (selection.fieldsToNormalize?.length) {
-    const variables = operation.variablesWithDefaults;
-    for (const field of selection.fieldsToNormalize) {
-      for (const ref of field.__refs) {
-        if (!ref.node.directives) continue;
-        for (const dir of ref.node.directives) {
-          const name = dir.name.value;
-          if (name === "skip" || name === "include") continue;
-          hash = combineHash(hash, hashString(name));
-          if (dir.arguments?.length) {
-            for (const arg of dir.arguments) {
-              hash = combineHash(hash, hashString(arg.name.value));
-              const val = valueFromASTUntyped(arg.value, variables);
-              hash = combineHash(hash, hashValue(val));
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // Mix in skipped fields
-  if (selection.skippedFields?.size) {
-    for (const field of selection.skippedFields) {
-      hash = combineHash(hash, hashString(field.dataKey));
-    }
-  }
-
-  // Mix in skipped spreads
-  if (selection.skippedSpreads?.size) {
-    for (const spread of selection.skippedSpreads) {
-      hash = combineHash(hash, hashString(spread.name));
-    }
-  }
-
-  // Mix in child resolved hashes for fields with variable-dependent descendants
-  if (selection.fieldsWithSelections) {
-    for (const fieldName of selection.fieldsWithSelections) {
-      const fields = selection.fields.get(fieldName);
-      if (!fields) continue;
-      for (const field of fields) {
-        if (!field.selection) continue;
-        for (const typeName of field.selection.keys()) {
-          const childResolved = resolveSelection(
-            operation,
-            field.selection,
-            typeName,
-          );
-          hash = combineHash(hash, getResolvedHash(childResolved));
-        }
-      }
-    }
-  }
-
-  return hash >>> 0;
-}
-
-/** Lazily compute resolved hash on first cross-doc comparison */
-function getResolvedHash(selection: ResolvedSelection): number {
-  if (selection.resolvedHash !== undefined) {
-    return selection.resolvedHash;
-  }
-  const op = selectionOperations.get(selection);
-  assert(op);
-  selection.resolvedHash = computeResolvedHash(op, selection);
-  return selection.resolvedHash;
-}
-
 export function resolvedSelectionsAreEqual(
   a: ResolvedSelection,
   b: ResolvedSelection,
-): boolean {
+) {
   if (a === b) {
     return true;
   }
-  if (a.fields === b.fields) {
-    return sameDocSelectionsAreEqual(a, b);
+  if (a.fields !== b.fields) {
+    // Note: this will always return false for operations with different documents.
+    //   E.g. "query A { foo }" and "query B { foo }" have the same selection, but will return `false` here.
+    //   This is OK for our current purposes with current perf requirements.
+    return false;
   }
-  // Cross-doc: structural hash is deterministic from doc structure, so inequality is definitive
-  if (a.structuralHash !== b.structuralHash) return false;
-  // Structure matches - compare resolved hash (computed lazily, includes variable-dependent state)
-  return getResolvedHash(a) === getResolvedHash(b);
-}
-
-function sameDocSelectionsAreEqual(
-  a: ResolvedSelection,
-  b: ResolvedSelection,
-): boolean {
   if (a.skippedFields?.size !== b.skippedFields?.size) {
     return false;
   }
   assert(a.normalizedFields?.size === b.normalizedFields?.size);
 
-  for (const [alias, aNormalized] of a.normalizedFields?.entries() ??
-    EMPTY_ARRAY) {
+  const aNormalizedFields = a.normalizedFields?.entries() ?? EMPTY_ARRAY;
+  for (const [alias, aNormalized] of aNormalizedFields) {
     const bNormalized = b.normalizedFields?.get(alias);
     assert(aNormalized && bNormalized);
     if (!fieldEntriesAreEqual(aNormalized, bNormalized)) {
@@ -272,57 +128,9 @@ function sameDocSelectionsAreEqual(
       return false;
     }
   }
-  // Bug 3 fix: compare skippedSpreads
-  if (a.skippedSpreads?.size !== b.skippedSpreads?.size) {
-    return false;
-  }
-  for (const aSpread of a.skippedSpreads ?? EMPTY_ARRAY) {
-    if (!b.skippedSpreads?.has(aSpread)) {
-      return false;
-    }
-  }
-  // Bug 2 fix: recursively compare child selections
-  const aOp = selectionOperations.get(a);
-  const bOp = selectionOperations.get(b);
-  if (aOp && bOp && a.fieldsWithSelections) {
-    for (const fieldName of a.fieldsWithSelections) {
-      const fields = a.fields.get(fieldName);
-      if (!fields) continue;
-      for (const field of fields) {
-        if (!field.selection) continue;
-        for (const typeName of field.selection.keys()) {
-          const childA = resolveSelection(aOp, field.selection, typeName);
-          const childB = resolveSelection(bOp, field.selection, typeName);
-          if (!resolvedSelectionsAreEqual(childA, childB)) return false;
-        }
-      }
-    }
-  }
+  // FIXME: this is not enough, we must also check all child selections are equal. It requires some descriptor-level
+  //   aggregation of all possible fields / directives with variables
   return true;
-}
-
-function hasVariableDependentDescendants(
-  selection: PossibleSelection,
-): boolean {
-  if (!selection.fieldsWithSelections) return false;
-  for (const fieldName of selection.fieldsWithSelections) {
-    const fields = selection.fields.get(fieldName);
-    if (!fields) continue;
-    for (const field of fields) {
-      if (!field.selection) continue;
-      for (const [, childSel] of field.selection) {
-        if (
-          childSel.fieldsToNormalize?.length ||
-          childSel.fieldsWithDirectives?.length ||
-          childSel.spreadsWithDirectives?.length ||
-          hasVariableDependentDescendants(childSel)
-        ) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
 }
 
 export function resolveNormalizedField(

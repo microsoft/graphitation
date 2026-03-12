@@ -2,7 +2,6 @@ pr: none
 trigger:
   - main
   - alloy/relay-apollo-duct-tape
-  - vladar/forest-run-read-optimization
 
 variables:
   - group: InfoSec-SecurityResults
@@ -48,7 +47,7 @@ extends:
             steps:
               - checkout: self
                 persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
-                fetchDepth: 200
+                fetchDepth: 2
               - script: yarn
                 displayName: yarn
               - script: |
@@ -57,7 +56,7 @@ extends:
               - script: |
                   git config user.email "gql-svc@microsoft.com"
                   git config user.name "Graphitation Service Account"
-                  git fetch --depth=200
+                  git fetch --depth=2
                 displayName: Configure git for release
               - script: yarn release -y -n $(ossNpmToken) --access public --no-push --keep-change-files
                 displayName: Release to the npm registry
