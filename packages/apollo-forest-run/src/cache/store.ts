@@ -32,7 +32,6 @@ export function createStore(_: CacheEnv): Store {
     mutations: new Set<OperationDescriptor>(),
     operationsWithDanglingRefs: new Map(),
     deletedNodes: new Set(),
-    coveredBy: new Map(),
   };
 
   const optimisticReadResults = new Map<
@@ -175,7 +174,6 @@ export function createOptimisticLayer(
     mutations: new Set(),
     operationsWithDanglingRefs: new Map(),
     deletedNodes: new Set(),
-    coveredBy: new Map(),
     replay,
   };
 }
@@ -355,7 +353,6 @@ export function resetStore(store: Store): void {
   dataForest.operationsWithErrors.clear();
   dataForest.operationsWithDanglingRefs.clear();
   dataForest.readResults.clear();
-  dataForest.coveredBy.clear();
   operations.clear();
   optimisticReadResults.clear();
   optimisticLayers.length = 0;
