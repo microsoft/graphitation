@@ -1964,6 +1964,11 @@
     "@n1ru4l/push-pull-async-iterable-iterator" "^3.1.0"
     meros "^1.1.4"
 
+"@graphitation/apollo-forest-run@*":
+  version "0.21.0"
+  resolved "https://registry.yarnpkg.com/@graphitation/apollo-forest-run/-/apollo-forest-run-0.21.0.tgz#2f0b7ab14e6edac7efb5af5fe773ad949da12bd3"
+  integrity sha512-Q+lvMHMbRbNDJWRYTbo192XEty0l3rCNLNvg53ZnAY4iBB8JkUYNU4MFvg1h97RlAhge4yN8trYD0e39mWl/cQ==
+
 "@graphitation/supermassive-ast@*":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@graphitation/supermassive-ast/-/supermassive-ast-2.0.0.tgz#d49155c6b7213811d99b8609d496d6c460a4d1e2"
