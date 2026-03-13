@@ -52,10 +52,8 @@ yarn test
 yarn lint
 ```
 
-## Releasing versions
+## Releasing versions including prerelease versions
 
 1. Open the `graphitation-release` pipeline in Azure DevOps and run it from the branch you want to release from.
-2. The pipeline always targets your selected branch as the beachball branch.
-3. If the branch is `main`, packages are published with the default npm dist-tag (`latest`).
-4. If the branch is not `main`, packages are published with the `alpha` npm dist-tag automatically.
-5. Every time you want to release a new alpha version use `yarn change` and select `prerelease`. To avoid patching dependent packages set `dependentChangeType` to `none` manually in `.changes` files.
+1. If the branch is `main`, packages are published with the default npm dist-tag (`latest`).
+1. If the branch is not `main`, packages are published with the `alpha` npm dist-tag automatically.
