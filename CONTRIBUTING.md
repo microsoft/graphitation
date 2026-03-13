@@ -52,19 +52,17 @@ yarn test
 yarn lint
 ```
 
-## Releasing alpha versions
+## Releasing canary versions
 
-Generraly you need to only run pipeline [microsoft.graphitation](https://dev.azure.com/DomoreexpGithub/Github_Pipelines/_build?definitionId=8) and that is all.
+Run pipeline [microsoft.graphitation](https://dev.azure.com/DomoreexpGithub/Github_Pipelines/_build?definitionId=8) from your branch.
 
-Here described detailed steps of the release process:
+1. Generate change files: `yarn change`
+2. Run the pipeline from your branch in Azure DevOps
+3. Pipeline uses `beachball canary` to publish versions like `0.21.1-canary.0` with the `canary` dist-tag
+4. Install via `npm i @graphitation/PACKAGE@canary`
 
-1. Make sure you have generated change files for your changes using `yarn change` command.
-1. In Azure DevOps run pipeline [microsoft.graphitation](https://dev.azure.com/DomoreexpGithub/Github_Pipelines/_build?definitionId=8)
-1. Pipeline automatically adds the `alpha` tag and prefix to the version.
-1. The package will be published to npm with the `alpha` tag, so you can install it using `npm i @graphitation/PACKAGE@VERSION-alpha.XX`
-1. Bot push the bump commit to the branch.
+Notes:
 
-The core logic is `-b "$releaseBranch" -t alpha --prerelease-prefix alpha` flags for beachball publish command which are added in the [graphitation-release.yml](.azure-devops/graphitation-release.yml#L66) pipeline.
-
-
-
+- Change files are required (they determine _which_ packages to publish) but the change type is ignored — **canary always bumps as a prerelease patch**.
+- Canary versions auto-increment by checking the npm registry, so repeated runs are safe.
+- See [graphitation-release.yml](.azure-devops/graphitation-release.yml) for details.
