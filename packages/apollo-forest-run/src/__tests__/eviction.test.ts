@@ -303,3 +303,250 @@ it("should warn exactly once for the same warning", () => {
 
   // notably: "query TestB" is NOT logged
 });
+
+it("auto-evicts all partitions when global autoEvict is true", () => {
+  const cache = new ForestRun({
+    maxOperationCount: 1,
+    autoEvict: true,
+    unstable_partitionConfig: {
+      partitionKey: (o) => o.operation.debugName,
+      partitions: {
+        "query a": { maxOperationCount: 1 },
+        "query b": { maxOperationCount: 1 },
+      },
+    },
+  });
+  const a = gql`
+    query a($i: Int) {
+      foo(i: $i)
+    }
+  `;
+  const b = gql`
+    query b($i: Int) {
+      bar(i: $i)
+    }
+  `;
+
+  cache.write({ query: a, variables: { i: 0 }, result: { foo: 0 } });
+  cache.write({ query: a, variables: { i: 1 }, result: { foo: 1 } });
+  cache.write({ query: a, variables: { i: 2 }, result: { foo: 2 } });
+  cache.write({ query: b, variables: { i: 0 }, result: { bar: 0 } });
+  cache.write({ query: b, variables: { i: 1 }, result: { bar: 1 } });
+  cache.write({ query: b, variables: { i: 2 }, result: { bar: 2 } });
+
+  // Both partitions should be auto-evicted (global autoEvict: true)
+  expect(
+    cache.read({ query: a, variables: { i: 0 }, optimistic: true }),
+  ).toEqual(null);
+  expect(
+    cache.read({ query: a, variables: { i: 2 }, optimistic: true }),
+  ).toEqual({ foo: 2 });
+  expect(
+    cache.read({ query: b, variables: { i: 0 }, optimistic: true }),
+  ).toEqual(null);
+  expect(
+    cache.read({ query: b, variables: { i: 2 }, optimistic: true }),
+  ).toEqual({ bar: 2 });
+});
+
+it("per-partition autoEvict: false prevents auto-eviction for that partition when global autoEvict is true", () => {
+  const cache = new ForestRun({
+    maxOperationCount: 1,
+    autoEvict: true,
+    unstable_partitionConfig: {
+      partitionKey: (o) => o.operation.debugName,
+      partitions: {
+        "query a": { maxOperationCount: 1, autoEvict: true },
+        "query b": { maxOperationCount: 1, autoEvict: false },
+      },
+    },
+  });
+  const a = gql`
+    query a($i: Int) {
+      foo(i: $i)
+    }
+  `;
+  const b = gql`
+    query b($i: Int) {
+      bar(i: $i)
+    }
+  `;
+
+  cache.write({ query: a, variables: { i: 0 }, result: { foo: 0 } });
+  cache.write({ query: a, variables: { i: 1 }, result: { foo: 1 } });
+  cache.write({ query: a, variables: { i: 2 }, result: { foo: 2 } });
+  cache.write({ query: b, variables: { i: 0 }, result: { bar: 0 } });
+  cache.write({ query: b, variables: { i: 1 }, result: { bar: 1 } });
+  cache.write({ query: b, variables: { i: 2 }, result: { bar: 2 } });
+
+  // Partition "a" should be auto-evicted (autoEvict: true)
+  expect(
+    cache.read({ query: a, variables: { i: 0 }, optimistic: true }),
+  ).toEqual(null);
+  expect(
+    cache.read({ query: a, variables: { i: 2 }, optimistic: true }),
+  ).toEqual({ foo: 2 });
+  // Partition "b" should NOT be auto-evicted (autoEvict: false overrides global)
+  expect(
+    cache.read({ query: b, variables: { i: 0 }, optimistic: true }),
+  ).toEqual({ bar: 0 });
+  expect(
+    cache.read({ query: b, variables: { i: 2 }, optimistic: true }),
+  ).toEqual({ bar: 2 });
+});
+
+it("does not auto-evict any partition when global autoEvict is false", () => {
+  const cache = new ForestRun({
+    maxOperationCount: 1,
+    autoEvict: false,
+    unstable_partitionConfig: {
+      partitionKey: (o) => o.operation.debugName,
+      partitions: {
+        "query a": { maxOperationCount: 1, autoEvict: true },
+        "query b": { maxOperationCount: 1 },
+      },
+    },
+  });
+  const a = gql`
+    query a($i: Int) {
+      foo(i: $i)
+    }
+  `;
+  const b = gql`
+    query b($i: Int) {
+      bar(i: $i)
+    }
+  `;
+
+  cache.write({ query: a, variables: { i: 0 }, result: { foo: 0 } });
+  cache.write({ query: a, variables: { i: 1 }, result: { foo: 1 } });
+  cache.write({ query: a, variables: { i: 2 }, result: { foo: 2 } });
+  cache.write({ query: b, variables: { i: 0 }, result: { bar: 0 } });
+  cache.write({ query: b, variables: { i: 1 }, result: { bar: 1 } });
+  cache.write({ query: b, variables: { i: 2 }, result: { bar: 2 } });
+
+  // Global autoEvict: false prevents all auto-eviction,
+  // even if per-partition autoEvict is true
+  const resultA0 = cache.read({
+    query: a,
+    variables: { i: 0 },
+    optimistic: true,
+  });
+  const resultA2 = cache.read({
+    query: a,
+    variables: { i: 2 },
+    optimistic: true,
+  });
+  const resultB0 = cache.read({
+    query: b,
+    variables: { i: 0 },
+    optimistic: true,
+  });
+  const resultB2 = cache.read({
+    query: b,
+    variables: { i: 2 },
+    optimistic: true,
+  });
+
+  expect(resultA0).toEqual({ foo: 0 }); // NOT evicted (global autoEvict: false)
+  expect(resultA2).toEqual({ foo: 2 }); // kept
+  expect(resultB0).toEqual({ bar: 0 }); // NOT evicted (global autoEvict: false)
+  expect(resultB2).toEqual({ bar: 2 }); // kept
+});
+
+it("gc() evicts all partitions regardless of per-partition autoEvict", () => {
+  const cache = new ForestRun({
+    maxOperationCount: 1,
+    autoEvict: false,
+    unstable_partitionConfig: {
+      partitionKey: (o) => o.operation.debugName,
+      partitions: {
+        "query a": { maxOperationCount: 1, autoEvict: false },
+        "query b": { maxOperationCount: 1, autoEvict: false },
+      },
+    },
+  });
+  const a = gql`
+    query a($i: Int) {
+      foo(i: $i)
+    }
+  `;
+  const b = gql`
+    query b($i: Int) {
+      bar(i: $i)
+    }
+  `;
+
+  cache.write({ query: a, variables: { i: 0 }, result: { foo: 0 } });
+  cache.write({ query: a, variables: { i: 1 }, result: { foo: 1 } });
+  cache.write({ query: b, variables: { i: 0 }, result: { bar: 0 } });
+  cache.write({ query: b, variables: { i: 1 }, result: { bar: 1 } });
+
+  // No auto-eviction should have happened (all 4 entries still present)
+  expect(cache.getStats().treeCount).toBe(4);
+
+  // Manual gc() should evict all partitions regardless of autoEvict: false
+  cache.gc();
+
+  // Each partition had 2 items with maxOperationCount: 1, so oldest evicted from each
+  // a/i=0 (oldest) evicted, a/i=1 (newest) kept
+  // b/i=0 (oldest) evicted, b/i=1 (newest) kept
+  expect(
+    cache.read({ query: a, variables: { i: 0 }, optimistic: true }),
+  ).toEqual(null);
+  expect(
+    cache.read({ query: a, variables: { i: 1 }, optimistic: true }),
+  ).toEqual({ foo: 1 });
+  expect(
+    cache.read({ query: b, variables: { i: 0 }, optimistic: true }),
+  ).toEqual(null);
+  expect(
+    cache.read({ query: b, variables: { i: 1 }, optimistic: true }),
+  ).toEqual({ bar: 1 });
+});
+
+it("per-partition autoEvict: true does not override global autoEvict: false", () => {
+  // Global autoEvict: false prevents all auto-eviction
+  const cache = new ForestRun({
+    maxOperationCount: 1,
+    autoEvict: false,
+    unstable_partitionConfig: {
+      partitionKey: (o) => o.operation.debugName,
+      partitions: {
+        "query a": { maxOperationCount: 1, autoEvict: true },
+      },
+    },
+  });
+  const a = gql`
+    query a($i: Int) {
+      foo(i: $i)
+    }
+  `;
+  const b = gql`
+    query b($i: Int) {
+      bar(i: $i)
+    }
+  `;
+
+  cache.write({ query: a, variables: { i: 0 }, result: { foo: 0 } });
+  cache.write({ query: a, variables: { i: 1 }, result: { foo: 1 } });
+  cache.write({ query: a, variables: { i: 2 }, result: { foo: 2 } });
+  // "query b" is not configured, goes to __default__ partition
+  cache.write({ query: b, variables: { i: 0 }, result: { bar: 0 } });
+  cache.write({ query: b, variables: { i: 1 }, result: { bar: 1 } });
+  cache.write({ query: b, variables: { i: 2 }, result: { bar: 2 } });
+
+  // No auto-eviction since global autoEvict is false
+  expect(
+    cache.read({ query: a, variables: { i: 0 }, optimistic: true }),
+  ).toEqual({ foo: 0 });
+  expect(
+    cache.read({ query: a, variables: { i: 2 }, optimistic: true }),
+  ).toEqual({ foo: 2 });
+  expect(
+    cache.read({ query: b, variables: { i: 0 }, optimistic: true }),
+  ).toEqual({ bar: 0 });
+  expect(
+    cache.read({ query: b, variables: { i: 2 }, optimistic: true }),
+  ).toEqual({ bar: 2 });
+});

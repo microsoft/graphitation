@@ -70,10 +70,14 @@ export function maybeEvictOldData(env: CacheEnv, store: Store): OperationId[] {
   ) {
     return [];
   }
-  return evictOldData(env, store);
+  return evictOldData(env, store, true);
 }
 
-export function evictOldData(env: CacheEnv, store: Store): OperationId[] {
+export function evictOldData(
+  env: CacheEnv,
+  store: Store,
+  isAutoEvict?: boolean,
+): OperationId[] {
   assert(env.maxOperationCount);
   const { dataForest, atime } = store;
 
@@ -113,9 +117,17 @@ export function evictOldData(env: CacheEnv, store: Store): OperationId[] {
 
   // Process each partition
   for (const [partition, evictableOperationIds] of partitionsOps) {
-    const maxCount =
-      env.partitionConfig?.partitions[partition]?.maxOperationCount ??
-      env.maxOperationCount;
+    const partitionConf = env.partitionConfig?.partitions[partition];
+
+    // During auto-eviction, respect per-partition and global autoEvict settings
+    if (isAutoEvict) {
+      const partitionAutoEvict = partitionConf?.autoEvict ?? env.autoEvict;
+      if (!partitionAutoEvict) {
+        continue;
+      }
+    }
+
+    const maxCount = partitionConf?.maxOperationCount ?? env.maxOperationCount;
 
     if (evictableOperationIds.length <= maxCount) {
       continue; // No eviction needed for this partition

@@ -38,6 +38,7 @@ export type PartitionConfig = {
   partitions: {
     [key: string]: {
       maxOperationCount: number;
+      autoEvict?: boolean;
     };
   };
   partitionKey: (operation: IndexedTree) => string | null;
