@@ -1,0 +1,29 @@
+{
+  "post": {
+    "__typename": "Post",
+    "id": "post_1",
+    "title": "Understanding the Event Loop: A Deep Dive into Asynchronous JavaScript",
+    "subtitle": "How microtasks, macrotasks, and rendering interleave in modern browsers",
+    "publishedAt": "2024-01-15T09:30:00.000Z",
+    "coverImageUrl": "https://images.example.com/covers/event-loop-deep-dive.jpg",
+    "author": {
+      "__typename": "User",
+      "id": "user_author_1",
+      "name": "Elena Kowalski",
+      "avatarUrl": "https://avatars.example.com/user_author_1.jpg",
+      "bio": "Staff engineer at Acme Corp. Writing about JavaScript internals, performance, and developer tooling."
+    },
+    "tags": [
+      { "__typename": "Tag", "id": "tag_1", "name": "JavaScript", "slug": "javascript" },
+      { "__typename": "Tag", "id": "tag_2", "name": "Performance", "slug": "performance" },
+      { "__typename": "Tag", "id": "tag_3", "name": "Browser Internals", "slug": "browser-internals" },
+      { "__typename": "Tag", "id": "tag_4", "name": "Async Programming", "slug": "async-programming" }
+    ],
+    "stats": {
+      "__typename": "PostStats",
+      "viewCount": 12847,
+      "likeCount": 342,
+      "commentCount": 87
+    }
+  }
+}

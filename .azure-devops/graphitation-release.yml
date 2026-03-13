@@ -63,7 +63,7 @@ extends:
                   if [ "${BUILD_SOURCEBRANCH}" = "refs/heads/main" ]; then
                     yarn beachball publish -b "$releaseBranch" -t latest -y -n $(ossNpmToken) --access public --no-push --keep-change-files
                   else
-                    yarn beachball publish -b "$releaseBranch" -t alpha --prerelease-prefix alpha -y -n $(ossNpmToken) --access public --no-push --keep-change-files
+                    yarn beachball canary -b "$releaseBranch" -t canary -y -n $(ossNpmToken) --access public
                   fi
                 displayName: Release to the npm registry
               - script: |
@@ -81,7 +81,7 @@ extends:
                   if [ "${BUILD_SOURCEBRANCH}" = "refs/heads/main" ]; then
                     yarn beachball publish -b "$releaseBranch" -t latest -y --registry $(adoNpmFeedBaseUrl)
                   else
-                    yarn beachball publish -b "$releaseBranch" -t alpha --prerelease-prefix alpha -y --registry $(adoNpmFeedBaseUrl)
+                    yarn beachball canary -b "$releaseBranch" -t canary -y --registry $(adoNpmFeedBaseUrl)
                   fi
                 displayName: Release to the ado npm feed
               - task: 1ES.PublishPipelineArtifact@1

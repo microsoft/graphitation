@@ -327,4 +327,81 @@ export const scenarios = [
       };
     },
   },
+  {
+    name: "read-list-from-preloader",
+    prepare: (ctx: ScenarioContext) => {
+      const { operations, CacheFactory, configuration } = ctx;
+      const cache = new CacheFactory(configuration);
+      const preloader = operations["post-preloader"];
+      const list = operations["comments-list"];
+      const variables = { postId: "post_1", first: 40, after: null };
+
+      cache.writeQuery({
+        query: preloader.query,
+        data: preloader.data["post-preloader"],
+        variables,
+      });
+
+      return {
+        run() {
+          return cache.readQuery({ query: list.query, variables });
+        },
+      };
+    },
+  },
+  {
+    name: "read-header-from-preloader",
+    prepare: (ctx: ScenarioContext) => {
+      const { operations, CacheFactory, configuration } = ctx;
+      const cache = new CacheFactory(configuration);
+      const preloader = operations["post-preloader"];
+      const header = operations["post-header"];
+      const writeVars = { postId: "post_1", first: 40, after: null };
+      const readVars = { postId: "post_1" };
+
+      cache.writeQuery({
+        query: preloader.query,
+        data: preloader.data["post-preloader"],
+        variables: writeVars,
+      });
+
+      return {
+        run() {
+          return cache.readQuery({ query: header.query, variables: readVars });
+        },
+      };
+    },
+  },
+  {
+    name: "read-preloader-from-parts",
+    prepare: (ctx: ScenarioContext) => {
+      const { operations, CacheFactory, configuration } = ctx;
+      const cache = new CacheFactory(configuration);
+      const preloader = operations["post-preloader"];
+      const list = operations["comments-list"];
+      const header = operations["post-header"];
+      const listVars = { postId: "post_1", first: 40, after: null };
+      const headerVars = { postId: "post_1" };
+
+      cache.writeQuery({
+        query: list.query,
+        data: list.data["comments-list"],
+        variables: listVars,
+      });
+      cache.writeQuery({
+        query: header.query,
+        data: header.data["post-header"],
+        variables: headerVars,
+      });
+
+      return {
+        run() {
+          return cache.readQuery({
+            query: preloader.query,
+            variables: listVars,
+          });
+        },
+      };
+    },
+  },
 ] as const satisfies Scenario[];

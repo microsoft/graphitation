@@ -1983,6 +1983,7 @@ function chunkPerField(env: DiffEnv, sourceChunk: ObjectChunk): ObjectChunk[] {
           fieldsWithSelections: selection.fieldsWithSelections?.includes(name)
             ? [name]
             : [],
+          structuralHash: 0,
         },
       ],
     ]);
