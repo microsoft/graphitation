@@ -54,7 +54,17 @@ yarn lint
 
 ## Releasing alpha versions
 
-1. Add a branch which will be releasing alpha version to .azure-devops\graphitation-release.yml into `trigger`
-2. Change `release` script in the root package json to `yarn beachball publish -t alpha`,
-3. Modify package.json of the package you want to release to x.x.x-alpha.0
-4. Every time you want to release a new version use `yarn change` and select `prelease`. To avoid patching of dependent packages set `dependentChangeType` to `none` manually in .changes directory
+Generraly you need to only run pipeline [microsoft.graphitation](https://dev.azure.com/DomoreexpGithub/Github_Pipelines/_build?definitionId=8) and that is all.
+
+Here described detailed steps of the release process:
+
+1. Make sure you have generated change files for your changes using `yarn change` command.
+1. In Azure DevOps run pipeline [microsoft.graphitation](https://dev.azure.com/DomoreexpGithub/Github_Pipelines/_build?definitionId=8)
+1. Pipeline automatically adds the `alpha` tag and prefix to the version.
+1. The package will be published to npm with the `alpha` tag, so you can install it using `npm i @graphitation/PACKAGE@VERSION-alpha.XX`
+1. Bot push the bump commit to the branch.
+
+The core logic is `-b "$releaseBranch" -t alpha --prerelease-prefix alpha` flags for beachball publish command which are added in the [graphitation-release.yml](.azure-devops/graphitation-release.yml#L66) pipeline.
+
+
+
