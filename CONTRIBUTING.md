@@ -63,6 +63,6 @@ Run pipeline [microsoft.graphitation](https://dev.azure.com/DomoreexpGithub/Gith
 
 Notes:
 
-- Change files are required (they determine _which_ packages to publish) but the change type is ignored — **canary always bumps as a prerelease patch**.
+- Change files are required — they determine _which_ packages to publish and the change type _is_ respected for the base bump (e.g. `minor` on `0.21.0` → `0.22.0`). Canary then adds an extra prerelease patch on top, so the final version is `0.22.1-canary.0`.
 - Canary versions auto-increment by checking the npm registry, so repeated runs are safe.
 - See [graphitation-release.yml](.azure-devops/graphitation-release.yml) for details.
