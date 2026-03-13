@@ -1,5 +1,5 @@
 import type { LoaderDefinitionFunction } from "webpack";
-import { SourceMapGenerator } from "source-map-js";
+import { SourceMapGenerator, RawSourceMap } from "source-map-js";
 import { transform } from "./transform";
 import { applySourceMap } from "./source-map-utils";
 
@@ -32,17 +32,18 @@ const webpackLoader: LoaderDefinitionFunction<Options> = function (
   const transformed = transform(source, this.resourcePath, sourceMap, options);
 
   if (transformed && sourceMap && inputSourceMap) {
+    const sourceMapJSON = sourceMap.toJSON() as RawSourceMap & { file: string };
     callback(
       null,
       transformed,
       applySourceMap(
         this.resourcePath,
         inputSourceMap as string,
-        sourceMap.toJSON(),
-      ).toJSON(),
+        sourceMapJSON,
+      ).toJSON() as RawSourceMap & { file: string },
     );
   } else if (transformed && sourceMap) {
-    callback(null, transformed, sourceMap.toJSON());
+    callback(null, transformed, sourceMap.toJSON() as RawSourceMap & { file: string });
   } else if (transformed) {
     callback(null, transformed, inputSourceMap);
   } else {
