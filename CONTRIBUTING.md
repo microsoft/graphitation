@@ -56,4 +56,4 @@ yarn lint
 
 1. Open the `graphitation-release` pipeline in Azure DevOps and run it from the branch you want to release from.
 1. If the branch is `main`, packages are published with the default npm dist-tag (`latest`).
-1. If the branch is not `main`, packages are published with the `alpha` npm dist-tag automatically.
+1. If the branch is not `main`, packages are published with the `alpha` npm dist-tag automatically and the version is suffixed with `-alpha.x` (where x is the number of prerelease versions published for that package).

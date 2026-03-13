@@ -1,7 +1,6 @@
 pr: none
 trigger:
   - main
-  - alloy/relay-apollo-duct-tape
 
 variables:
   - group: InfoSec-SecurityResults
@@ -48,6 +47,9 @@ extends:
               - checkout: self
                 persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
                 fetchDepth: 2
+              - script: |
+                  releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
+                  echo "Release branch: $releaseBranch"
               - script: yarn
                 displayName: yarn
               - script: |
@@ -64,7 +66,7 @@ extends:
                   if [ "${BUILD_SOURCEBRANCH}" = "refs/heads/main" ]; then
                     yarn beachball publish -b "$releaseBranch" -y -n $(ossNpmToken) --access public --no-push --keep-change-files
                   else
-                    yarn beachball publish -b "$releaseBranch" -t alpha -y -n $(ossNpmToken) --access public --no-push --keep-change-files
+                    yarn beachball publish -b "$releaseBranch" -t alpha --prerelease-prefix alpha -y -n $(ossNpmToken) --access public --no-push --keep-change-files
                   fi
                 displayName: Release to the npm registry
               - script: |
@@ -82,7 +84,7 @@ extends:
                   if [ "${BUILD_SOURCEBRANCH}" = "refs/heads/main" ]; then
                     yarn beachball publish -b "$releaseBranch" -y --registry $(adoNpmFeedBaseUrl)
                   else
-                    yarn beachball publish -b "$releaseBranch" -t alpha -y --registry $(adoNpmFeedBaseUrl)
+                    yarn beachball publish -b "$releaseBranch" -t alpha --prerelease-prefix alpha -y --registry $(adoNpmFeedBaseUrl)
                   fi
                 displayName: Release to the ado npm feed
               - task: 1ES.PublishPipelineArtifact@1
