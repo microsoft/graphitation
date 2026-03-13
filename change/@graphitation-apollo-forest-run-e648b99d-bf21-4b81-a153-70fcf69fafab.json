@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "optimize a \"preloader pattern\" where one operation explicitly covers selection of several other operations",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
