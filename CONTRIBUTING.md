@@ -52,9 +52,8 @@ yarn test
 yarn lint
 ```
 
-## Releasing alpha versions
+## Releasing versions including prerelease versions
 
-1. Add a branch which will be releasing alpha version to .azure-devops\graphitation-release.yml into `trigger`
-2. Change `release` script in the root package json to `yarn beachball publish -t alpha`,
-3. Modify package.json of the package you want to release to x.x.x-alpha.0
-4. Every time you want to release a new version use `yarn change` and select `prelease`. To avoid patching of dependent packages set `dependentChangeType` to `none` manually in .changes directory
+1. Open the `graphitation-release` pipeline in Azure DevOps and run it from the branch you want to release from.
+1. If the branch is `main`, packages are published with the default npm dist-tag (`latest`).
+1. If the branch is not `main`, packages are published with the `alpha` npm dist-tag automatically and the version is suffixed with `-alpha.x` (where x is the number of prerelease versions published for that package).

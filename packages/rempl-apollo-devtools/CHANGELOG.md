@@ -1,8 +1,16 @@
 # Change Log - @graphitation/rempl-apollo-devtools
 
-<!-- This log was last generated on Fri, 06 Mar 2026 20:27:06 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 13 Mar 2026 10:34:02 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 2.1.7-alpha.0
+
+Fri, 13 Mar 2026 10:34:02 GMT
+
+### Patches
+
+- test release (pavelglac@gmail.com)
 
 ## 2.1.6
 

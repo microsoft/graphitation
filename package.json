@@ -17,9 +17,9 @@
     "lint": "lage lint --continue",
     "lage": "lage",
     "ci": "yarn lage build types test lint && yarn checkchange",
-    "beachball": "beachball -b origin/main",
-    "change": "yarn beachball change",
-    "checkchange": "yarn beachball check",
+    "beachball": "beachball",
+    "change": "yarn beachball -b origin/main change",
+    "checkchange": "yarn beachball -b origin/main check",
     "release": "yarn beachball publish -t latest",
     "postinstall": "patch-package"
   },
