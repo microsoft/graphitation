@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Mon, 09 Mar 2026 15:22:57 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 16 Mar 2026 17:10:12 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.15.1
+
+Mon, 16 Mar 2026 17:10:12 GMT
+
+### Patches
+
+- fix: allows for partial data in case resolver or type definition is missing (dsamsonov@microsoft.com)
 
 ## 3.15.0
 

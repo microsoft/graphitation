@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Mon, 16 Mar 2026 17:10:12 GMT",
+      "version": "3.15.1",
+      "tag": "@graphitation/supermassive_v3.15.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "dsamsonov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "8bdacf83d8b6ab340a7b00cd46f3e0a553abf2e4",
+            "comment": "fix: allows for partial data in case resolver or type definition is missing"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 09 Mar 2026 15:22:57 GMT",
       "version": "3.15.0",
       "tag": "@graphitation/supermassive_v3.15.0",
