@@ -20,6 +20,64 @@ exports[`executeWithoutSchema - regression tests Executing mutation without type
 }
 `;
 
+exports[`executeWithoutSchema - regression tests Executing subscription without type definitions and schemaFragmentLoader still NOT returning requested schema part 1`] = `
+{
+  "errors": [
+    [GraphQLError: Unexpected error value: "Type definition for Subscription.newFileEvent is missing"],
+  ],
+}
+`;
+
+exports[`executeWithoutSchema - regression tests Executing subscription without type definitions and without schema fragment loader 1`] = `
+{
+  "errors": [
+    [GraphQLError: Unexpected error value: "Type definition for Subscription.newFileEvent is missing"],
+  ],
+}
+`;
+
+exports[`executeWithoutSchema - regression tests Executing subscription without type definitions but SchemaFragmentLoader getting requested schema part 1`] = `
+[
+  {
+    "data": {
+      "newFileEvent": {
+        "id": "file-1",
+        "name": "document.pdf",
+      },
+    },
+  },
+  {
+    "data": {
+      "newFileEvent": {
+        "id": "file-2",
+        "name": "image.png",
+      },
+    },
+  },
+]
+`;
+
+exports[`executeWithoutSchema - regression tests Executing subscription without type definitions but SchemaFragmentLoader will provide needed schema part 1`] = `
+[
+  {
+    "data": {
+      "newFileEvent": {
+        "id": "file-1",
+        "name": "document.pdf",
+      },
+    },
+  },
+  {
+    "data": {
+      "newFileEvent": {
+        "id": "file-2",
+        "name": "image.png",
+      },
+    },
+  },
+]
+`;
+
 exports[`executeWithoutSchema - regression tests Missing resolver should allow for partial data 1`] = `
 {
   "data": {
