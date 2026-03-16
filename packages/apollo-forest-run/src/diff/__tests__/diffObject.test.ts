@@ -9,6 +9,8 @@ import {
   MissingModelFieldsError,
   DiffErrorKind,
   DiffEnv,
+  FieldEntryDifference,
+  CompositeListDifference,
 } from "../types";
 import {
   completeObject,
@@ -1730,6 +1732,97 @@ describe("diff against base with missing fields", () => {
 
 describe("kitchen-sink", () => {
   // Place for edge-cases and regressions that are hard to categorize otherwise
+
+  test("detects list item changes when base chunks have different selections", () => {
+    const forestEnv = { objectKey: (obj: any) => obj.id };
+    const diffEnv = {};
+
+    // Op1: narrow selection on list items (only foo)
+    const doc1 = gql`
+      query {
+        items {
+          __typename
+          foo
+        }
+      }
+    `;
+
+    // Op2: wider selection (foo + bar)
+    const doc2 = gql`
+      query {
+        items {
+          __typename
+          foo
+          bar
+        }
+      }
+    `;
+
+    const op1 = createTestOperation(doc1);
+    const op2 = createTestOperation(doc2);
+
+    // Base chunk 1 (op1): items with foo only
+    const baseChunk1 = indexObject(
+      forestEnv,
+      op1,
+      {
+        items: [
+          { __typename: "Item", foo: "changed" },
+          { __typename: "Item", foo: "same" },
+        ],
+      } as unknown as SourceObject,
+      op1.possibleSelections,
+    ).value;
+
+    // Base chunk 2 (op2): items with foo + bar
+    const baseChunk2 = indexObject(
+      forestEnv,
+      op2,
+      {
+        items: [
+          { __typename: "Item", foo: "changed", bar: "same" },
+          { __typename: "Item", foo: "same", bar: "old" },
+        ],
+      } as unknown as SourceObject,
+      op2.possibleSelections,
+    ).value;
+
+    // Model (op2): item 0 foo changed, item 1 bar changed
+    const modelChunk = indexObject(
+      forestEnv,
+      op2,
+      {
+        items: [
+          { __typename: "Item", foo: "original", bar: "same" },
+          { __typename: "Item", foo: "same", bar: "new" },
+        ],
+      } as unknown as SourceObject,
+      op2.possibleSelections,
+    ).value;
+
+    const base = createObjectAggregate([baseChunk1, baseChunk2]);
+    const model = createObjectAggregate([modelChunk]);
+
+    const result = diffObject(base, model, diffEnv);
+
+    expect(result.difference).toBeDefined();
+    assert(result.difference);
+    expect(isDirty(result.difference)).toBe(true);
+
+    // Drill into the list diff to verify item 1's bar change was detected
+    const itemsFieldDiff = result.difference.fieldState.get(
+      "items",
+    ) as FieldEntryDifference;
+    expect(itemsFieldDiff).toBeDefined();
+
+    const listDiff = itemsFieldDiff.state as CompositeListDifference;
+    expect(listDiff).toBeDefined();
+
+    // Item 0's foo change should be dirty
+    expect(listDiff.dirtyItems?.has(0)).toBe(true);
+    // Item 1's bar change should also be dirty (missed due to enqueueListItem bug)
+    expect(listDiff.dirtyItems?.has(1)).toBe(true);
+  });
 });
 
 function keyToEntity(keyOrOther: string | unknown) {

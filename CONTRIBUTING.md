@@ -54,10 +54,8 @@ yarn lint
 
 ## Releasing canary versions
 
-Run pipeline [microsoft.graphitation](https://dev.azure.com/DomoreexpGithub/Github_Pipelines/_build?definitionId=8) from your branch.
-
 1. Generate change files: `yarn change`
-2. Run the pipeline from your branch in Azure DevOps
+2. Run pipeline [microsoft.graphitation](https://dev.azure.com/DomoreexpGithub/Github_Pipelines/_build?definitionId=8) from your branch
 3. Pipeline uses `beachball canary` to publish versions like `0.21.1-canary.0` with the `canary` dist-tag
 4. Install via `npm i @graphitation/PACKAGE@canary`
 

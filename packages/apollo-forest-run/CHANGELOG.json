@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Mon, 16 Mar 2026 14:29:08 GMT",
+      "version": "0.21.1",
+      "tag": "@graphitation/apollo-forest-run_v0.21.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "aa480e2c41d35c32a43e77ef19262e84d714f21a",
+            "comment": "fix enqueueListItem deleting instead of adding to itemQueue"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 12 Mar 2026 13:08:20 GMT",
       "version": "0.21.0",
       "tag": "@graphitation/apollo-forest-run_v0.21.0",

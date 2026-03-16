@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Fri, 06 Mar 2026 20:27:05 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 16 Mar 2026 14:29:08 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.21.1
+
+Mon, 16 Mar 2026 14:29:08 GMT
+
+### Patches
+
+- fix enqueueListItem deleting instead of adding to itemQueue (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.21.0
 
