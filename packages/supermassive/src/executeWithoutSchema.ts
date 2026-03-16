@@ -737,7 +737,7 @@ function executeSubscriptionImpl(
 
   if (!loading) {
     throw locatedError(
-      `The subscription field "${fieldName}" is not defined.`,
+      `Type definition for ${rootTypeName}.${fieldName} is missing`,
       fieldGroup,
     );
   }
@@ -761,7 +761,7 @@ function executeSubscriptionImpl(
     }
 
     throw locatedError(
-      `The subscription field "${fieldName}" is not defined.`,
+      `Type definition for ${rootTypeName}.${fieldName} is missing`,
       fieldGroup,
     );
   });
