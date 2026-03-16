@@ -36,27 +36,6 @@ exports[`executeWithoutSchema - regression tests Executing subscription without 
 }
 `;
 
-exports[`executeWithoutSchema - regression tests Executing subscription without type definitions but SchemaFragmentLoader getting requested schema part 1`] = `
-[
-  {
-    "data": {
-      "newFileEvent": {
-        "id": "file-1",
-        "name": "document.pdf",
-      },
-    },
-  },
-  {
-    "data": {
-      "newFileEvent": {
-        "id": "file-2",
-        "name": "image.png",
-      },
-    },
-  },
-]
-`;
-
 exports[`executeWithoutSchema - regression tests Executing subscription without type definitions but SchemaFragmentLoader will provide needed schema part 1`] = `
 [
   {
