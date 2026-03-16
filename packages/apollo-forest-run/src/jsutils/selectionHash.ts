@@ -4,6 +4,15 @@
  * Order-independent at the field level (uses commutative accumulation).
  */
 
+const TYPE_STRING = 1;
+const TYPE_NUMBER = 2;
+const TYPE_BOOLEAN = 3;
+const TYPE_BIGINT = 4;
+
+// Reusable buffers for reading float64 bits as two uint32 values
+const f64Buf = new Float64Array(1);
+const u32Buf = new Uint32Array(f64Buf.buffer);
+
 export function hashString(s: string): number {
   let h = 0x811c9dc5; // FNV offset basis
   for (let i = 0; i < s.length; i++) {
@@ -28,11 +37,18 @@ export function hashValue(val: unknown): number {
   if (val === null || val === undefined) return 0;
   switch (typeof val) {
     case "string":
-      return hashString(val);
-    case "number":
-      return val | 0;
+      return combineHash(TYPE_STRING, hashString(val));
+    case "number": {
+      f64Buf[0] = val;
+      return combineHash(TYPE_NUMBER, combineHash(u32Buf[0], u32Buf[1]));
+    }
     case "boolean":
-      return val ? 1 : 0;
+      return combineHash(TYPE_BOOLEAN, val ? 1 : 0);
+    case "bigint": {
+      const n = Number(val);
+      f64Buf[0] = n;
+      return combineHash(TYPE_BIGINT, combineHash(u32Buf[0], u32Buf[1]));
+    }
     default: {
       if (Array.isArray(val)) {
         let h = 0xa5a5a5a5;
@@ -40,6 +56,16 @@ export function hashValue(val: unknown): number {
           h = combineHash(h, hashValue(val[i]));
         }
         return h;
+      }
+      // Objects with numeric valueOf (e.g. Date) — hash by primitive value
+      if (
+        typeof (val as { valueOf?: unknown }).valueOf === "function" &&
+        (val as { valueOf: () => unknown }).valueOf !== Object.prototype.valueOf
+      ) {
+        const prim = (val as { valueOf: () => unknown }).valueOf();
+        if (typeof prim === "number" || typeof prim === "string") {
+          return hashValue(prim);
+        }
       }
       // Object: order-independent accumulation (no sort needed)
       const obj = val as Record<string, unknown>;
