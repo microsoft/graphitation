@@ -372,10 +372,11 @@ function completeSelections(
     completeSelections(context, selection, depth + 1);
   }
 
-  // Compute structural hashes bottom-up (children already completed above)
+  // Compute structural hashes and complex descendants bottom-up (children already completed above)
   for (const selection of possibleSelections.values()) {
     if (selection.structuralHash !== 0) continue; // already hashed (shared selection)
     selection.structuralHash = computeStructuralHash(selection);
+    computeHasDescendantsToResolve(selection);
   }
 
   return possibleSelections;
@@ -815,6 +816,29 @@ function computeStructuralHash(selection: PossibleSelection): number {
   // accounted for via merged fields.
 
   return hash || 1; // Avoid 0 which means "not yet computed"
+}
+
+function computeHasDescendantsToResolve(selection: PossibleSelection) {
+  if (!selection.fieldsWithSelections) return;
+
+  for (const fieldName of selection.fieldsWithSelections) {
+    const fields = selection.fields.get(fieldName);
+    if (!fields) continue;
+    for (const field of fields) {
+      if (!field.selection) continue;
+      for (const [, childSel] of field.selection) {
+        if (
+          childSel.fieldsToNormalize?.length ||
+          childSel.fieldsWithDirectives?.length ||
+          childSel.spreadsWithDirectives?.length ||
+          childSel.hasDescendantsToResolve
+        ) {
+          selection.hasDescendantsToResolve = true;
+          return;
+        }
+      }
+    }
+  }
 }
 
 function createEmptySelection(): PossibleSelection {

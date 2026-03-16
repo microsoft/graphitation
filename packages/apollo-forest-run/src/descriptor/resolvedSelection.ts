@@ -7,7 +7,6 @@ import type {
   KeySpecifier,
   NormalizedFieldEntry,
   OperationDescriptor,
-  PossibleSelection,
   PossibleSelections,
   ResolvedSelection,
   TypeName,
@@ -111,7 +110,7 @@ export function resolveSelection(
       skippedSpreads?.size ||
       fieldQueue !== selection.fieldQueue;
 
-    if (hasLocalChanges) {
+    if (hasLocalChanges || selection.hasDescendantsToResolve) {
       resolvedSelection = {
         ...selection,
         fieldQueue,
@@ -119,16 +118,9 @@ export function resolveSelection(
         skippedFields,
         skippedSpreads,
       };
-    } else if (hasVariableDependentDescendants(selection)) {
-      resolvedSelection = { ...selection, fieldQueue };
-    } else {
-      resolvedSelection = selection;
-    }
-
-    if (resolvedSelection !== selection) {
       selectionOperations.set(resolvedSelection, operation);
     } else {
-      // No runtime changes - resolved hash equals structural hash (free)
+      resolvedSelection = selection;
       resolvedSelection.resolvedHash = selection.structuralHash;
     }
 
@@ -154,21 +146,14 @@ function computeResolvedHash(
           hash = combineHash(hash, hashString(argName));
           hash = combineHash(hash, hashValue(argVal));
         }
-        if (typeof entry.keyArgs === "string") {
-          hash = combineHash(hash, hashString(entry.keyArgs));
-        } else if (entry.keyArgs) {
-          for (const k of entry.keyArgs) {
-            hash = combineHash(hash, hashString(k));
-          }
-        }
       }
     }
   }
 
-  // Mix in resolved non-inclusion directive values
-  if (selection.fieldsToNormalize?.length) {
+  // Mix in resolved non-inclusion directive values (e.g. @connection)
+  if (selection.fieldsWithDirectives?.length) {
     const variables = operation.variablesWithDefaults;
-    for (const field of selection.fieldsToNormalize) {
+    for (const field of selection.fieldsWithDirectives) {
       for (const ref of field.__refs) {
         if (!ref.node.directives) continue;
         for (const dir of ref.node.directives) {
@@ -201,20 +186,29 @@ function computeResolvedHash(
     }
   }
 
-  // Mix in child resolved hashes for fields with variable-dependent descendants
+  // Mix in child resolved hashes (only for types already resolved during traversal)
   if (selection.fieldsWithSelections) {
     for (const fieldName of selection.fieldsWithSelections) {
       const fields = selection.fields.get(fieldName);
       if (!fields) continue;
       for (const field of fields) {
         if (!field.selection) continue;
-        for (const typeName of field.selection.keys()) {
-          const childResolved = resolveSelection(
-            operation,
-            field.selection,
-            typeName,
-          );
-          hash = combineHash(hash, getResolvedHash(childResolved));
+        const resolved = operation.selections.get(field.selection);
+        if (resolved) {
+          // Use only types that were actually encountered at runtime
+          for (const [, childResolved] of resolved) {
+            hash = combineHash(hash, getResolvedHash(childResolved));
+          }
+        } else {
+          // Child not yet traversed — resolve all possible types as fallback
+          for (const typeName of field.selection.keys()) {
+            const childResolved = resolveSelection(
+              operation,
+              field.selection,
+              typeName,
+            );
+            hash = combineHash(hash, getResolvedHash(childResolved));
+          }
         }
       }
     }
@@ -241,88 +235,8 @@ export function resolvedSelectionsAreEqual(
   if (a === b) {
     return true;
   }
-  if (a.fields === b.fields) {
-    return sameDocSelectionsAreEqual(a, b);
-  }
-  // Cross-doc: structural hash is deterministic from doc structure, so inequality is definitive
   if (a.structuralHash !== b.structuralHash) return false;
-  // Structure matches - compare resolved hash (computed lazily, includes variable-dependent state)
   return getResolvedHash(a) === getResolvedHash(b);
-}
-
-function sameDocSelectionsAreEqual(
-  a: ResolvedSelection,
-  b: ResolvedSelection,
-): boolean {
-  if (a.skippedFields?.size !== b.skippedFields?.size) {
-    return false;
-  }
-  assert(a.normalizedFields?.size === b.normalizedFields?.size);
-
-  for (const [alias, aNormalized] of a.normalizedFields?.entries() ??
-    EMPTY_ARRAY) {
-    const bNormalized = b.normalizedFields?.get(alias);
-    assert(aNormalized && bNormalized);
-    if (!fieldEntriesAreEqual(aNormalized, bNormalized)) {
-      return false;
-    }
-  }
-  for (const aSkipped of a.skippedFields ?? EMPTY_ARRAY) {
-    if (!b.skippedFields?.has(aSkipped)) {
-      return false;
-    }
-  }
-  // Bug 3 fix: compare skippedSpreads
-  if (a.skippedSpreads?.size !== b.skippedSpreads?.size) {
-    return false;
-  }
-  for (const aSpread of a.skippedSpreads ?? EMPTY_ARRAY) {
-    if (!b.skippedSpreads?.has(aSpread)) {
-      return false;
-    }
-  }
-  // Bug 2 fix: recursively compare child selections
-  const aOp = selectionOperations.get(a);
-  const bOp = selectionOperations.get(b);
-  if (aOp && bOp && a.fieldsWithSelections) {
-    for (const fieldName of a.fieldsWithSelections) {
-      const fields = a.fields.get(fieldName);
-      if (!fields) continue;
-      for (const field of fields) {
-        if (!field.selection) continue;
-        for (const typeName of field.selection.keys()) {
-          const childA = resolveSelection(aOp, field.selection, typeName);
-          const childB = resolveSelection(bOp, field.selection, typeName);
-          if (!resolvedSelectionsAreEqual(childA, childB)) return false;
-        }
-      }
-    }
-  }
-  return true;
-}
-
-function hasVariableDependentDescendants(
-  selection: PossibleSelection,
-): boolean {
-  if (!selection.fieldsWithSelections) return false;
-  for (const fieldName of selection.fieldsWithSelections) {
-    const fields = selection.fields.get(fieldName);
-    if (!fields) continue;
-    for (const field of fields) {
-      if (!field.selection) continue;
-      for (const [, childSel] of field.selection) {
-        if (
-          childSel.fieldsToNormalize?.length ||
-          childSel.fieldsWithDirectives?.length ||
-          childSel.spreadsWithDirectives?.length ||
-          hasVariableDependentDescendants(childSel)
-        ) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
 }
 
 export function resolveNormalizedField(

@@ -1700,6 +1700,57 @@ describe(resolvedSelectionsAreEqual, () => {
       expect(resolvedSelectionsAreEqual(selA, selB)).toBe(false);
     });
   });
+
+  it("does not resolve unseen types during cross-doc hash computation", () => {
+    const queryA = `
+      query A($id: ID!) {
+        node(id: $id) {
+          ... on User { name }
+          ... on Post { title }
+          ... on Comment { body }
+        }
+      }
+    `;
+    const queryB = `
+      query B($id: ID!) {
+        node(id: $id) {
+          ... on User { name }
+          ... on Post { title }
+          ... on Comment { body }
+        }
+      }
+    `;
+    const opA = createTestOperation(queryA, { id: "1" });
+    const opB = createTestOperation(queryB, { id: "1" });
+
+    // Only resolve "User" type for child selections (simulating runtime traversal)
+    const nodeFieldA = getFieldInfo(opA.possibleSelections, ["node"]);
+    const nodeFieldB = getFieldInfo(opB.possibleSelections, ["node"]);
+
+    resolveSelection(opA, opA.possibleSelections, null);
+    resolveSelection(opA, nodeFieldA.selection!, "User");
+
+    resolveSelection(opB, opB.possibleSelections, null);
+    resolveSelection(opB, nodeFieldB.selection!, "User");
+
+    const selA = resolveSelection(opA, opA.possibleSelections, null);
+    const selB = resolveSelection(opB, opB.possibleSelections, null);
+
+    // Cross-doc comparison triggers computeResolvedHash
+    resolvedSelectionsAreEqual(selA, selB);
+
+    // Verify: only "User" (and possibly null) should be in selections for node's possibleSelections.
+    // "Post" and "Comment" should NOT have been resolved.
+    const resolvedTypesA = opA.selections.get(nodeFieldA.selection!);
+    const resolvedTypesB = opB.selections.get(nodeFieldB.selection!);
+
+    for (const [typeName] of resolvedTypesA ?? []) {
+      expect(["User", null]).toContain(typeName);
+    }
+    for (const [typeName] of resolvedTypesB ?? []) {
+      expect(["User", null]).toContain(typeName);
+    }
+  });
 });
 
 describe(fieldEntriesAreEqual, () => {

@@ -152,6 +152,8 @@ export type PossibleSelection = {
   experimentalAlias?: FragmentAlias;
   experimentalAliasedFragments?: Map<FragmentAlias, PossibleSelection>;
 
+  hasDescendantsToResolve?: boolean; // true if any descendant has fieldsToNormalize, fieldsWithDirectives, or spreadsWithDirectives
+
   structuralHash: number; // Order-independent hash of field structure (names, dataKeys, arg names, child hashes)
 };
 
