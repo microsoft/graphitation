@@ -791,6 +791,126 @@ test("should keep a single result for multiple operations with the same key vari
   expect(statsAfterDiff.treeCount).toBe(2);
 });
 
+test("merge policy with keyArgs: watch sees correct edges after paginated writes", () => {
+  const cache = new ForestRun({
+    typePolicies: {
+      Query: {
+        fields: {
+          search: {
+            keyArgs: (args: Record<string, any> | null) => {
+              return args?.query?.toLowerCase();
+            },
+            merge: (existing: any, incoming: any, { args }: any) => {
+              const merged = existing ? { ...existing } : {};
+              merged.edges = existing?.edges ? existing.edges.slice(0) : [];
+
+              if (args?.after) {
+                merged.edges.push(...incoming.edges);
+              } else if (args?.before) {
+                merged.edges.unshift(...incoming.edges);
+              } else {
+                merged.edges = incoming.edges;
+              }
+              merged.totalCount = incoming.totalCount;
+              return merged;
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const query = gql`
+    query (
+      $query: String!
+      $after: String
+      $first: Int
+      $before: String
+      $last: Int
+    ) {
+      search(
+        query: $query
+        after: $after
+        first: $first
+        before: $before
+        last: $last
+      ) {
+        edges {
+          __typename
+          node
+        }
+        totalCount
+      }
+    }
+  `;
+
+  const notifications: any[] = [];
+  const firstVars = { query: "Basquiat", first: 3 };
+  cache.watch({
+    query,
+    variables: firstVars,
+    optimistic: true,
+    callback: (diff) => notifications.push(diff.result),
+  });
+
+  // Write page 1
+  cache.write({
+    query,
+    variables: firstVars,
+    result: {
+      search: {
+        edges: [
+          { __typename: "E", node: "A" },
+          { __typename: "E", node: "B" },
+          { __typename: "E", node: "C" },
+        ],
+        totalCount: 10,
+      },
+    },
+  });
+  expect(notifications.length).toBe(1);
+  expect((notifications[0] as any).search.edges.length).toBe(3);
+
+  // Write page 2 (forward)
+  cache.write({
+    query,
+    variables: { query: "Basquiat", after: "curC", first: 3 },
+    result: {
+      search: {
+        edges: [
+          { __typename: "E", node: "D" },
+          { __typename: "E", node: "E" },
+          { __typename: "E", node: "F" },
+        ],
+        totalCount: 10,
+      },
+    },
+  });
+  expect(notifications.length).toBe(2);
+  expect((notifications[1] as any).search.edges.length).toBe(6);
+
+  // Write page 3 (backward, lowercase query = same keyArgs)
+  cache.write({
+    query,
+    variables: { query: "basquiat", before: "curD", last: 2 },
+    result: {
+      search: {
+        edges: [
+          { __typename: "E", node: "B2" },
+          { __typename: "E", node: "C2" },
+        ],
+        totalCount: 10,
+      },
+    },
+  });
+
+  // Watcher should see merged result: B2, C2 prepended to [A,B,C,D,E,F] = 8 edges
+  // Bug: without keyArgs-aware hash, watcher's selection doesn't match the
+  // new write's selection (different args hash), so notification uses stale data
+  expect(notifications.length).toBe(3);
+  expect((notifications[2] as any).search.edges.length).toBe(8);
+});
+
 test("bad manual writes shouldn't cause invariant violation", () => {
   const query = gql`
     {

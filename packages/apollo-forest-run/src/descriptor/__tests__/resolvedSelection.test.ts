@@ -2,6 +2,7 @@ import {
   createTestOperation,
   getFieldInfo,
 } from "../../__tests__/helpers/descriptor";
+import { createTestOperationWithEnv } from "../../__tests__/helpers/descriptor";
 import { assert } from "../../jsutils/assert";
 import {
   resolveSelection,
@@ -1699,6 +1700,81 @@ describe(resolvedSelectionsAreEqual, () => {
 
       expect(resolvedSelectionsAreEqual(selA, selB)).toBe(false);
     });
+  });
+
+  it("treats selections as equal when keyArgs match but other args differ", () => {
+    const query = `
+      query ($query: String!, $after: String, $first: Int, $before: String, $last: Int) {
+        search(query: $query, after: $after, first: $first, before: $before, last: $last) {
+          edges { node }
+        }
+      }
+    `;
+    const env = {
+      keyArgs: (
+        _typeName: string,
+        fieldName: string,
+        args?: Map<string, unknown>,
+      ) => {
+        if (fieldName === "search" && args) {
+          return String(args.get("query")).toLowerCase();
+        }
+        return undefined;
+      },
+    };
+
+    const opA = createTestOperationWithEnv(env, query, {
+      query: "Basquiat",
+      first: 3,
+    });
+    const opB = createTestOperationWithEnv(env, query, {
+      query: "basquiat",
+      before: "cursor",
+      last: 2,
+    });
+
+    // Must use "Query" typeName so keyArgs function is invoked
+    const selA = resolveSelection(opA, opA.possibleSelections, "Query");
+    const selB = resolveSelection(opB, opB.possibleSelections, "Query");
+
+    // Same keyArgs ("basquiat") — pagination args (after/before/first/last) are ignored
+    expect(resolvedSelectionsAreEqual(selA, selB)).toBe(true);
+  });
+
+  it("treats selections as not equal when keyArgs differ", () => {
+    const query = `
+      query ($query: String!, $first: Int) {
+        search(query: $query, first: $first) {
+          edges { node }
+        }
+      }
+    `;
+    const env = {
+      keyArgs: (
+        _typeName: string,
+        fieldName: string,
+        args?: Map<string, unknown>,
+      ) => {
+        if (fieldName === "search" && args) {
+          return String(args.get("query")).toLowerCase();
+        }
+        return undefined;
+      },
+    };
+
+    const opA = createTestOperationWithEnv(env, query, {
+      query: "Basquiat",
+      first: 3,
+    });
+    const opB = createTestOperationWithEnv(env, query, {
+      query: "Turrell",
+      first: 3,
+    });
+
+    const selA = resolveSelection(opA, opA.possibleSelections, "Query");
+    const selB = resolveSelection(opB, opB.possibleSelections, "Query");
+
+    expect(resolvedSelectionsAreEqual(selA, selB)).toBe(false);
   });
 
   it("does not resolve unseen types during cross-doc hash computation", () => {

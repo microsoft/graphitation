@@ -135,11 +135,23 @@ function computeResolvedHash(
 ): number {
   let hash = selection.structuralHash;
 
-  // Mix in resolved arg values (handles both hardcoded and variable args)
+  // Mix in resolved arg values. When keyArgs is defined, only hash the keyArgs
+  // (not all args) to match fieldEntriesAreEqual semantics — pagination args
+  // like after/before/first/last should not affect selection equality.
   if (selection.normalizedFields?.size) {
     for (const [, entry] of selection.normalizedFields) {
       if (typeof entry === "string") {
         hash = combineHash(hash, hashString(entry));
+      } else if (typeof entry.keyArgs === "string") {
+        hash = combineHash(hash, hashString(entry.name));
+        hash = combineHash(hash, hashString(entry.keyArgs));
+      } else if (entry.keyArgs) {
+        hash = combineHash(hash, hashString(entry.name));
+        for (const k of entry.keyArgs) {
+          hash = combineHash(hash, hashString(k));
+          const val = entry.args.get(k);
+          if (val !== undefined) hash = combineHash(hash, hashValue(val));
+        }
       } else {
         hash = combineHash(hash, hashString(entry.name));
         for (const [argName, argVal] of entry.args) {
