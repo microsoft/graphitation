@@ -8,6 +8,7 @@ import { makeSchema } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
 import { createExecutionUtils } from "../__testUtils__/execute";
 import { executeWithoutSchema } from "../executeWithoutSchema";
+import type { FieldDefinitionRecord } from "../schema/definition";
 import { encodeASTSchema } from "../utilities/encodeASTSchema";
 import { ResolveInfo } from "../types";
 
@@ -518,16 +519,66 @@ describe("executeWithoutSchema - regression tests", () => {
     expect(result).toMatchSnapshot();
   });
 
-  test("Executing mutation without resolver should return error", async () => {
-    const schemaFragment = {
+  function makeIncompleteSchemaFragment() {
+    return {
       schemaId: "test",
       definitions: encodeASTSchema(
-        parse(`type Mutation { downloadFile: DownloadFileResult }`),
+        parse(`
+        type Mutation { 
+          downloadFile: DownloadFileResult
+          fooBar: Boolean 
+        }
+      `),
       )[0],
-      resolvers: {},
+      resolvers: {
+        Mutation: {
+          fooBar: () => true,
+        },
+      },
     };
+  }
+
+  test("Executing mutation without resolver should return error", async () => {
+    const schemaFragment = makeIncompleteSchemaFragment();
     const document = parse(
       `mutation DownloadFile { downloadFile { downloadUrl } }`,
+    );
+
+    const result = await executeWithoutSchema({
+      document,
+      schemaFragment,
+    });
+
+    expect(result).toMatchSnapshot();
+  });
+
+  test("Missing resolver should allow for partial data", async () => {
+    const schemaFragment = makeIncompleteSchemaFragment();
+    const document = parse(
+      `mutation DownloadFile {
+        fooBar
+        downloadFile { downloadUrl }
+      }`,
+    );
+
+    const result = await executeWithoutSchema({
+      document,
+      schemaFragment,
+    });
+
+    expect(result).toMatchSnapshot();
+  });
+
+  test("Missing type definition should allow for partial data", async () => {
+    const schemaFragment = makeIncompleteSchemaFragment();
+    delete (
+      schemaFragment.definitions.types.Mutation[1] as FieldDefinitionRecord
+    )?.downloadFile;
+    const document = parse(
+      `mutation DownloadFile {
+        fooBar
+        downloadFile { downloadUrl }
+      }`,
     );
 
     const result = await executeWithoutSchema({

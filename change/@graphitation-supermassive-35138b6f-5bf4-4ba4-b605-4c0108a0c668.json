@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "fix: allows for partial data in case resolver or type definition is missing",
+  "packageName": "@graphitation/supermassive",
+  "email": "dsamsonov@microsoft.com",
+  "dependentChangeType": "patch"
+}

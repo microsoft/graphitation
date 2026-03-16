@@ -570,7 +570,13 @@ function executeField(
     fieldName,
   });
   if (!loading) {
-    throwIfRootField(parentTypeName, fieldName, fieldGroup, "typeDefinition");
+    handleMissingSchemaError(
+      exeContext,
+      undefined,
+      fieldGroup,
+      path,
+      incrementalDataRecord,
+    );
     return undefined;
   }
 
@@ -592,28 +598,15 @@ function executeField(
       );
     }
 
-    throwIfRootField(parentTypeName, fieldName, fieldGroup, "typeDefinition");
+    handleMissingSchemaError(
+      exeContext,
+      undefined,
+      fieldGroup,
+      path,
+      incrementalDataRecord,
+    );
     return undefined;
   });
-}
-
-function throwIfRootField(
-  parentTypeName: string,
-  fieldName: string,
-  fieldGroup: FieldGroup,
-  validationTarget: "typeDefinition" | "resolver",
-) {
-  const isRootField =
-    parentTypeName === "Mutation" || parentTypeName === "Query";
-  if (isRootField) {
-    const message =
-      validationTarget === "typeDefinition"
-        ? `Type definition for ${parentTypeName}.${fieldName} is missing`
-        : validationTarget === "resolver"
-        ? `Resolver for ${parentTypeName}.${fieldName} is missing`
-        : "Unexpected validation target";
-    throw locatedError(new Error(message), fieldGroup);
-  }
 }
 
 function requestSchemaFragment(
@@ -976,7 +969,7 @@ export function buildResolveInfo(
 function handleFieldError(
   rawError: unknown,
   exeContext: ExecutionContext,
-  returnTypeRef: TypeReference,
+  returnTypeRef: TypeReference | undefined,
   fieldGroup: FieldGroup,
   path: Path,
   incrementalDataRecord: IncrementalDataRecord | undefined,
@@ -985,7 +978,7 @@ function handleFieldError(
 
   // If the field type is non-nullable, then it is resolved without any
   // protection from errors, however it still properly locates the error.
-  if (isNonNullType(returnTypeRef)) {
+  if (returnTypeRef && isNonNullType(returnTypeRef)) {
     throw error;
   }
 
@@ -994,6 +987,37 @@ function handleFieldError(
   // Otherwise, error protection is applied, logging the error and resolving
   // a null value for this field if one is encountered.
   errors.push(error);
+}
+
+function handleMissingSchemaError(
+  exeContext: ExecutionContext,
+  returnTypeRef: TypeReference | undefined,
+  fieldGroup: FieldGroup,
+  path: Path,
+  incrementalDataRecord: IncrementalDataRecord | undefined,
+) {
+  const parentTypeName = path.typename;
+  // subscriptions have separate execution flow in executeSubscriptionImpl
+  const isRootField =
+    parentTypeName === "Mutation" || parentTypeName === "Query";
+  if (!isRootField) {
+    return;
+  }
+
+  const fieldName = path.key;
+  const message = !returnTypeRef
+    ? `Type definition for ${parentTypeName}.${fieldName} is missing`
+    : `Resolver for ${parentTypeName}.${fieldName} is missing`;
+  const error = new Error(message);
+
+  handleFieldError(
+    error,
+    exeContext,
+    returnTypeRef,
+    fieldGroup,
+    path,
+    incrementalDataRecord,
+  );
 }
 
 function resolveAndCompleteField(
@@ -1035,7 +1059,13 @@ function resolveAndCompleteField(
      * NOTE1: executing Mutation.__typename or Query.__typename with default resolver is fine
      * NOTE2: source check is required to account for systems like Grats that work exclusively on default resolvers
      */
-    throwIfRootField(parentTypeName, fieldName, fieldGroup, "resolver");
+    handleMissingSchemaError(
+      exeContext,
+      returnTypeRef,
+      fieldGroup,
+      path,
+      incrementalDataRecord,
+    );
   }
 
   const hooks = exeContext.fieldExecutionHooks;

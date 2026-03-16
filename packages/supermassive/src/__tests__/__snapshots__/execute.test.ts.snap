@@ -2,7 +2,9 @@
 
 exports[`executeWithoutSchema - regression tests Executing mutation without resolver should return error 1`] = `
 {
-  "data": null,
+  "data": {
+    "downloadFile": null,
+  },
   "errors": [
     [GraphQLError: Resolver for Mutation.downloadFile is missing],
   ],
@@ -11,7 +13,30 @@ exports[`executeWithoutSchema - regression tests Executing mutation without reso
 
 exports[`executeWithoutSchema - regression tests Executing mutation without type definitions return error 1`] = `
 {
-  "data": null,
+  "data": {},
+  "errors": [
+    [GraphQLError: Type definition for Mutation.downloadFile is missing],
+  ],
+}
+`;
+
+exports[`executeWithoutSchema - regression tests Missing resolver should allow for partial data 1`] = `
+{
+  "data": {
+    "downloadFile": null,
+    "fooBar": true,
+  },
+  "errors": [
+    [GraphQLError: Resolver for Mutation.downloadFile is missing],
+  ],
+}
+`;
+
+exports[`executeWithoutSchema - regression tests Missing type definition should allow for partial data 1`] = `
+{
+  "data": {
+    "fooBar": true,
+  },
   "errors": [
     [GraphQLError: Type definition for Mutation.downloadFile is missing],
   ],
