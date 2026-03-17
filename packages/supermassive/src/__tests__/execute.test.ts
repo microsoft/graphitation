@@ -589,7 +589,7 @@ describe("executeWithoutSchema - regression tests", () => {
     expect(result).toMatchSnapshot();
   });
 
-  test("Executing subscription without type definitions and without schema fragment loader", async () => {
+  test("Should fail while executing subscription without type definitions and without schema fragment loader", async () => {
     const schemaFragment = {
       schemaId: "test",
       definitions: { types: {} },
@@ -614,7 +614,7 @@ describe("executeWithoutSchema - regression tests", () => {
     expect(result).toMatchSnapshot();
   });
 
-  test("Executing subscription without type definitions and schemaFragmentLoader still NOT returning requested schema part", async () => {
+  test("Should fail when executing subscription without type definitions and schemaFragmentLoader still NOT returning requested schema part", async () => {
     const schemaFragment = {
       schemaId: "test",
       definitions: { types: {} },

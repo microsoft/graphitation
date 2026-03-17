@@ -749,20 +749,20 @@ function executeSubscriptionImpl(
       fieldName,
     );
 
-    if (fieldDef !== undefined) {
-      return runSubscriptionResolver(
-        exeContext,
-        fieldDef,
-        fieldName,
+    if (fieldDef === undefined) {
+      throw locatedError(
+        `Type definition for ${rootTypeName}.${fieldName} is missing`,
         fieldGroup,
-        responseName,
-        rootTypeName,
       );
     }
 
-    throw locatedError(
-      `Type definition for ${rootTypeName}.${fieldName} is missing`,
+    return runSubscriptionResolver(
+      exeContext,
+      fieldDef,
+      fieldName,
       fieldGroup,
+      responseName,
+      rootTypeName,
     );
   });
 }
@@ -774,7 +774,7 @@ function runSubscriptionResolver(
   fieldGroup: FieldGroup,
   responseName: string,
   rootTypeName: string,
-): AsyncIterable<unknown> | Promise<AsyncIterable<unknown>> {
+): PromiseOrValue<AsyncIterable<unknown>> {
   const { rootValue, schemaFragment } = exeContext;
   const returnTypeRef = Definitions.getFieldTypeReference(fieldDef);
   const resolveFn =

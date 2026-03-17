@@ -80,6 +80,22 @@ exports[`executeWithoutSchema - regression tests Missing type definition should 
 }
 `;
 
+exports[`executeWithoutSchema - regression tests Should fail when executing subscription without type definitions and schemaFragmentLoader still NOT returning requested schema part 1`] = `
+{
+  "errors": [
+    [GraphQLError: Unexpected error value: "Type definition for Subscription.newFileEvent is missing"],
+  ],
+}
+`;
+
+exports[`executeWithoutSchema - regression tests Should fail while executing subscription without type definitions and without schema fragment loader 1`] = `
+{
+  "errors": [
+    [GraphQLError: Unexpected error value: "Type definition for Subscription.newFileEvent is missing"],
+  ],
+}
+`;
+
 exports[`graphql-js snapshot check to ensure test stability Advanced Default value 1`] = `
 {
   "data": {
