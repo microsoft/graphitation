@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Tue, 17 Mar 2026 10:18:09 GMT",
+      "version": "3.15.2",
+      "tag": "@graphitation/supermassive_v3.15.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/supermassive",
+            "commit": "ca8dfa12f9b69e8286ee12776914f6a54eac16c6",
+            "comment": "[HOTFIX] schema loader added to subscriptions"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 16 Mar 2026 17:10:12 GMT",
       "version": "3.15.1",
       "tag": "@graphitation/supermassive_v3.15.1",
