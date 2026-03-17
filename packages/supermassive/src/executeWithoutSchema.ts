@@ -701,7 +701,7 @@ function afterFieldSubscribeHandle(
 function executeSubscriptionImpl(
   exeContext: ExecutionContext,
 ): PromiseOrValue<AsyncIterable<unknown>> {
-  const { operation, rootValue, schemaFragment } = exeContext;
+  const { operation, schemaFragment } = exeContext;
   const rootTypeName = getOperationRootTypeName(operation);
   const { groupedFieldSet } = collectFields(exeContext, rootTypeName);
 
@@ -718,13 +718,64 @@ function executeSubscriptionImpl(
     fieldName,
   );
 
-  if (!fieldDef) {
+  if (fieldDef) {
+    return runSubscriptionResolver(
+      exeContext,
+      fieldDef,
+      fieldName,
+      fieldGroup,
+      responseName,
+      rootTypeName,
+    );
+  }
+
+  const loading = requestSchemaFragment(exeContext, {
+    kind: "ReturnType",
+    parentTypeName: rootTypeName,
+    fieldName,
+  });
+
+  if (!loading) {
     throw locatedError(
-      `The subscription field "${fieldName}" is not defined.`,
+      `Type definition for ${rootTypeName}.${fieldName} is missing`,
       fieldGroup,
     );
   }
 
+  return loading.then(() => {
+    const fieldDef = Definitions.getField(
+      schemaFragment.definitions,
+      rootTypeName,
+      fieldName,
+    );
+
+    if (fieldDef === undefined) {
+      throw locatedError(
+        `Type definition for ${rootTypeName}.${fieldName} is missing`,
+        fieldGroup,
+      );
+    }
+
+    return runSubscriptionResolver(
+      exeContext,
+      fieldDef,
+      fieldName,
+      fieldGroup,
+      responseName,
+      rootTypeName,
+    );
+  });
+}
+
+function runSubscriptionResolver(
+  exeContext: ExecutionContext,
+  fieldDef: FieldDefinition,
+  fieldName: string,
+  fieldGroup: FieldGroup,
+  responseName: string,
+  rootTypeName: string,
+): PromiseOrValue<AsyncIterable<unknown>> {
+  const { rootValue, schemaFragment } = exeContext;
   const returnTypeRef = Definitions.getFieldTypeReference(fieldDef);
   const resolveFn =
     Resolvers.getSubscriptionFieldResolver(
