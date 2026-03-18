@@ -9,7 +9,34 @@ import {
   resolvedSelectionsAreEqual,
   fieldEntriesAreEqual,
 } from "../resolvedSelection";
-import { Key, KeySpecifier, NormalizedFieldEntry } from "../types";
+import {
+  Key,
+  KeySpecifier,
+  NormalizedFieldEntry,
+  OperationDescriptor,
+  PossibleSelections,
+} from "../types";
+
+/** Resolve all children of a selection tree (simulates what indexing does) */
+function resolveAllChildren(
+  op: OperationDescriptor,
+  possibleSelections: PossibleSelections,
+) {
+  for (const [typeName, selection] of possibleSelections) {
+    resolveSelection(op, possibleSelections, typeName);
+    if (selection.fieldsWithSelections) {
+      for (const fieldName of selection.fieldsWithSelections) {
+        const fields = selection.fields.get(fieldName);
+        if (!fields) continue;
+        for (const field of fields) {
+          if (field.selection) {
+            resolveAllChildren(op, field.selection);
+          }
+        }
+      }
+    }
+  }
+}
 
 describe(resolveSelection, () => {
   it("keeps original static selection for operations without variables", () => {
@@ -1144,6 +1171,8 @@ describe(resolvedSelectionsAreEqual, () => {
       `;
       const opA = createTestOperation(query, { inc: true });
       const opB = createTestOperation(query, { inc: false });
+      resolveAllChildren(opA, opA.possibleSelections);
+      resolveAllChildren(opB, opB.possibleSelections);
       const selA = resolveSelection(opA, opA.possibleSelections, null);
       const selB = resolveSelection(opB, opB.possibleSelections, null);
 
@@ -1161,6 +1190,8 @@ describe(resolvedSelectionsAreEqual, () => {
       `;
       const opA = createTestOperation(query, { skip: true });
       const opB = createTestOperation(query, { skip: false });
+      resolveAllChildren(opA, opA.possibleSelections);
+      resolveAllChildren(opB, opB.possibleSelections);
       const selA = resolveSelection(opA, opA.possibleSelections, null);
       const selB = resolveSelection(opB, opB.possibleSelections, null);
 
@@ -1177,6 +1208,8 @@ describe(resolvedSelectionsAreEqual, () => {
       `;
       const opA = createTestOperation(query, { x: 1 });
       const opB = createTestOperation(query, { x: 2 });
+      resolveAllChildren(opA, opA.possibleSelections);
+      resolveAllChildren(opB, opB.possibleSelections);
       const selA = resolveSelection(opA, opA.possibleSelections, null);
       const selB = resolveSelection(opB, opB.possibleSelections, null);
 
@@ -1195,6 +1228,8 @@ describe(resolvedSelectionsAreEqual, () => {
       `;
       const opA = createTestOperation(query, { inc: true });
       const opB = createTestOperation(query, { inc: false });
+      resolveAllChildren(opA, opA.possibleSelections);
+      resolveAllChildren(opB, opB.possibleSelections);
       const selA = resolveSelection(opA, opA.possibleSelections, null);
       const selB = resolveSelection(opB, opB.possibleSelections, null);
 
@@ -1213,6 +1248,8 @@ describe(resolvedSelectionsAreEqual, () => {
       `;
       const opA = createTestOperation(query, { x: "active" });
       const opB = createTestOperation(query, { x: "archived" });
+      resolveAllChildren(opA, opA.possibleSelections);
+      resolveAllChildren(opB, opB.possibleSelections);
       const selA = resolveSelection(opA, opA.possibleSelections, null);
       const selB = resolveSelection(opB, opB.possibleSelections, null);
 
@@ -1229,6 +1266,8 @@ describe(resolvedSelectionsAreEqual, () => {
       `;
       const opA = createTestOperation(query, { inc: true });
       const opB = createTestOperation(query, { inc: true });
+      resolveAllChildren(opA, opA.possibleSelections);
+      resolveAllChildren(opB, opB.possibleSelections);
       const selA = resolveSelection(opA, opA.possibleSelections, null);
       const selB = resolveSelection(opB, opB.possibleSelections, null);
 
@@ -1250,6 +1289,8 @@ describe(resolvedSelectionsAreEqual, () => {
       `;
       const opA = createTestOperation(query, { inc: true });
       const opB = createTestOperation(query, { inc: false });
+      resolveAllChildren(opA, opA.possibleSelections);
+      resolveAllChildren(opB, opB.possibleSelections);
       const selA = resolveSelection(opA, opA.possibleSelections, null);
       const selB = resolveSelection(opB, opB.possibleSelections, null);
 
@@ -1376,6 +1417,8 @@ describe(resolvedSelectionsAreEqual, () => {
       `;
       const opA = createTestOperation(query, { inc: true });
       const opB = createTestOperation(query, { inc: false });
+      resolveAllChildren(opA, opA.possibleSelections);
+      resolveAllChildren(opB, opB.possibleSelections);
       const selA = resolveSelection(opA, opA.possibleSelections, "User");
       const selB = resolveSelection(opB, opB.possibleSelections, "User");
 
@@ -1390,6 +1433,8 @@ describe(resolvedSelectionsAreEqual, () => {
       `;
       const opA = createTestOperation(query, { cursor: "abc" });
       const opB = createTestOperation(query, { cursor: "xyz" });
+      resolveAllChildren(opA, opA.possibleSelections);
+      resolveAllChildren(opB, opB.possibleSelections);
       const selA = resolveSelection(opA, opA.possibleSelections, "User");
       const selB = resolveSelection(opB, opB.possibleSelections, "User");
 
@@ -1479,6 +1524,8 @@ describe(resolvedSelectionsAreEqual, () => {
       `;
       const opA = createTestOperation(query, { inc: true });
       const opB = createTestOperation(query, { inc: false });
+      resolveAllChildren(opA, opA.possibleSelections);
+      resolveAllChildren(opB, opB.possibleSelections);
       const selA = resolveSelection(opA, opA.possibleSelections, null);
       const selB = resolveSelection(opB, opB.possibleSelections, null);
 
@@ -1499,6 +1546,8 @@ describe(resolvedSelectionsAreEqual, () => {
       `;
       const opA = createTestOperation(query, { x: "aaa" });
       const opB = createTestOperation(query, { x: "bbb" });
+      resolveAllChildren(opA, opA.possibleSelections);
+      resolveAllChildren(opB, opB.possibleSelections);
       const selA = resolveSelection(opA, opA.possibleSelections, null);
       const selB = resolveSelection(opB, opB.possibleSelections, null);
 
@@ -1542,6 +1591,8 @@ describe(resolvedSelectionsAreEqual, () => {
       `;
       const opA = createTestOperation(query, { inc: true });
       const opB = createTestOperation(query, { inc: false });
+      resolveAllChildren(opA, opA.possibleSelections);
+      resolveAllChildren(opB, opB.possibleSelections);
       const selA = resolveSelection(opA, opA.possibleSelections, null);
       const selB = resolveSelection(opB, opB.possibleSelections, null);
 
@@ -1614,6 +1665,8 @@ describe(resolvedSelectionsAreEqual, () => {
         "query B($n: Int!) { foo { bar(limit: $n) { id } } }",
         { n: 20 },
       );
+      resolveAllChildren(opA, opA.possibleSelections);
+      resolveAllChildren(opB, opB.possibleSelections);
       const selA = resolveSelection(opA, opA.possibleSelections, null);
       const selB = resolveSelection(opB, opB.possibleSelections, null);
 
@@ -1775,6 +1828,160 @@ describe(resolvedSelectionsAreEqual, () => {
     const selB = resolveSelection(opB, opB.possibleSelections, "Query");
 
     expect(resolvedSelectionsAreEqual(selA, selB)).toBe(false);
+  });
+
+  it("returns false for cross-doc selections with different type spreads", () => {
+    const queryA = `query Foo { node { id, ... on Foo { name } } }`;
+    const queryB = `query Bar { node { id, ... on Bar { name } } }`;
+
+    const opA = createTestOperation(queryA);
+    const opB = createTestOperation(queryB);
+
+    const selA = resolveSelection(opA, opA.possibleSelections, null);
+    const selB = resolveSelection(opB, opB.possibleSelections, null);
+
+    expect(resolvedSelectionsAreEqual(selA, selB)).toBe(false);
+  });
+
+  it("returns false for root selections when child has shared type but different other spreads", () => {
+    const queryA = `
+      query A {
+        node {
+          ... on TypeA { a }
+          ... on TypeB { b }
+          ... on Shared { shared }
+        }
+      }
+    `;
+    const queryB = `
+      query B {
+        node {
+          ... on TypeC { c }
+          ... on TypeD { d }
+          ... on Shared { shared }
+        }
+      }
+    `;
+
+    const opA = createTestOperation(queryA);
+    const opB = createTestOperation(queryB);
+
+    const selA = resolveSelection(opA, opA.possibleSelections, null);
+    const selB = resolveSelection(opB, opB.possibleSelections, null);
+
+    expect(resolvedSelectionsAreEqual(selA, selB)).toBe(false);
+  });
+
+  it("returns false for cross-doc nested selections with different child type spreads", () => {
+    const queryA = `query A { node { id, ... on Foo { name } } }`;
+    const queryB = `query B { node { id, ... on Bar { name } } }`;
+
+    const opA = createTestOperation(queryA);
+    const opB = createTestOperation(queryB);
+
+    const nodeFieldA = getFieldInfo(opA.possibleSelections, ["node"]);
+    const nodeFieldB = getFieldInfo(opB.possibleSelections, ["node"]);
+
+    resolveSelection(opA, nodeFieldA.selection!, "Foo");
+    resolveSelection(opB, nodeFieldB.selection!, "Bar");
+
+    const selA = resolveSelection(opA, opA.possibleSelections, null);
+    const selB = resolveSelection(opB, opB.possibleSelections, null);
+
+    expect(resolvedSelectionsAreEqual(selA, selB)).toBe(false);
+  });
+
+  it("detects inequality when new union type is resolved with different variables", () => {
+    // Two ops with same query shape but different variables.
+    // Initially both only encounter "User". Then one encounters "Post" which has
+    // a variable-dependent arg — equality must update to reflect the new child.
+    const opA = createTestOperation(
+      `query A($x: Int!) {
+        node {
+          ... on User { name }
+          ... on Post { title(limit: $x) }
+        }
+      }`,
+      { x: 10 },
+    );
+    const opB = createTestOperation(
+      `query B($x: Int!) {
+        node {
+          ... on User { name }
+          ... on Post { title(limit: $x) }
+        }
+      }`,
+      { x: 20 },
+    );
+
+    const nodeFieldA = getFieldInfo(opA.possibleSelections, ["node"]);
+    const nodeFieldB = getFieldInfo(opB.possibleSelections, ["node"]);
+
+    // Both ops only see "User" type initially
+    resolveSelection(opA, opA.possibleSelections, null);
+    resolveSelection(opA, nodeFieldA.selection!, "User");
+
+    resolveSelection(opB, opB.possibleSelections, null);
+    resolveSelection(opB, nodeFieldB.selection!, "User");
+
+    const selA = resolveSelection(opA, opA.possibleSelections, null);
+    const selB = resolveSelection(opB, opB.possibleSelections, null);
+
+    // Equal: both have only User resolved, User has no variable deps
+    expect(resolvedSelectionsAreEqual(selA, selB)).toBe(true);
+
+    // opA now encounters "Post" (which has variable-dependent arg limit=$x)
+    resolveSelection(opA, nodeFieldA.selection!, "Post");
+
+    // Not equal: opA has Post (limit=10), opB doesn't have Post yet
+    expect(resolvedSelectionsAreEqual(selA, selB)).toBe(false);
+
+    // opB also encounters "Post" (limit=20)
+    resolveSelection(opB, nodeFieldB.selection!, "Post");
+
+    // Still not equal: different variable values (10 vs 20)
+    expect(resolvedSelectionsAreEqual(selA, selB)).toBe(false);
+  });
+
+  it("stays equal when new union type resolved without variables", () => {
+    // Without variables, resolving a new union type for one operation should not
+    // affect equality — the selection structure is the same regardless of which
+    // concrete types have been encountered at runtime.
+    const opA = createTestOperation(`
+      query A {
+        node {
+          ... on User { name }
+          ... on Post { title }
+        }
+      }
+    `);
+    const opB = createTestOperation(`
+      query B {
+        node {
+          ... on User { name }
+          ... on Post { title }
+        }
+      }
+    `);
+
+    const nodeFieldA = getFieldInfo(opA.possibleSelections, ["node"]);
+    const nodeFieldB = getFieldInfo(opB.possibleSelections, ["node"]);
+
+    // Both resolve User only
+    resolveSelection(opA, opA.possibleSelections, null);
+    resolveSelection(opA, nodeFieldA.selection!, "User");
+    resolveSelection(opB, opB.possibleSelections, null);
+    resolveSelection(opB, nodeFieldB.selection!, "User");
+
+    const selA = resolveSelection(opA, opA.possibleSelections, null);
+    const selB = resolveSelection(opB, opB.possibleSelections, null);
+
+    expect(resolvedSelectionsAreEqual(selA, selB)).toBe(true);
+
+    // opA encounters Post — equality should not change (no variables, same structure)
+    resolveSelection(opA, nodeFieldA.selection!, "Post");
+
+    expect(resolvedSelectionsAreEqual(selA, selB)).toBe(true);
   });
 
   it("does not resolve unseen types during cross-doc hash computation", () => {

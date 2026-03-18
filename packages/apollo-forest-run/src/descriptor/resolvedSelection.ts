@@ -24,7 +24,12 @@ import { valueFromASTUntyped } from "graphql";
 import { equal } from "@wry/equality";
 import { assert } from "../jsutils/assert";
 import { createArgumentDefs } from "./possibleSelection";
-import { hashString, combineHash, hashValue } from "../jsutils/selectionHash";
+import {
+  hashString,
+  combineHash,
+  hashValue,
+  UNINITIALIZED_HASH,
+} from "../jsutils/selectionHash";
 
 const EMPTY_ARRAY = Object.freeze([]);
 const EMPTY_MAP = new Map();
@@ -117,11 +122,14 @@ export function resolveSelection(
         normalizedFields,
         skippedFields,
         skippedSpreads,
+        resolvedHash: UNINITIALIZED_HASH,
       };
       selectionOperations.set(resolvedSelection, operation);
+
+      // New child may change parent hashes — invalidate existing cloned selections
+      invalidateResolvedHashes(operation);
     } else {
       resolvedSelection = selection;
-      resolvedSelection.resolvedHash = selection.structuralHash;
     }
 
     map.set(typeName, resolvedSelection);
@@ -129,8 +137,24 @@ export function resolveSelection(
   return resolvedSelection;
 }
 
+/** Reset resolvedHash on cloned resolved selections for this operation.
+ *  Only cloned selections (those in selectionOperations WeakMap) are operation-specific.
+ *  Non-cloned selections are shared PossibleSelections whose hash is deterministic. */
+function invalidateResolvedHashes(operation: OperationDescriptor): void {
+  for (const typeMap of operation.selections.values()) {
+    for (const sel of typeMap.values()) {
+      if (
+        sel.resolvedHash !== UNINITIALIZED_HASH &&
+        selectionOperations.has(sel)
+      ) {
+        sel.resolvedHash = UNINITIALIZED_HASH;
+      }
+    }
+  }
+}
+
 function computeResolvedHash(
-  operation: OperationDescriptor,
+  operation: OperationDescriptor | undefined,
   selection: ResolvedSelection,
 ): number {
   let hash = selection.structuralHash;
@@ -164,6 +188,7 @@ function computeResolvedHash(
 
   // Mix in resolved non-inclusion directive values (e.g. @connection)
   if (selection.fieldsWithDirectives?.length) {
+    assert(operation);
     const variables = operation.variablesWithDefaults;
     for (const field of selection.fieldsWithDirectives) {
       for (const ref of field.__refs) {
@@ -198,28 +223,28 @@ function computeResolvedHash(
     }
   }
 
-  // Mix in child resolved hashes (only for types already resolved during traversal)
+  // Mix in children hashes (including type keys)
   if (selection.fieldsWithSelections) {
     for (const fieldName of selection.fieldsWithSelections) {
       const fields = selection.fields.get(fieldName);
       if (!fields) continue;
       for (const field of fields) {
         if (!field.selection) continue;
-        const resolved = operation.selections.get(field.selection);
-        if (resolved) {
-          // Use only types that were actually encountered at runtime
-          for (const [, childResolved] of resolved) {
-            hash = combineHash(hash, getResolvedHash(childResolved));
+        const resolvedMap = operation?.selections.get(field.selection);
+        for (const [typeName] of field.selection) {
+          // Hash type key so that different type spreads are distinguished
+          if (typeName !== null) {
+            hash = combineHash(hash, hashString(typeName));
           }
-        } else {
-          // Child not yet traversed — resolve all possible types as fallback
-          for (const typeName of field.selection.keys()) {
-            const childResolved = resolveSelection(
-              operation,
-              field.selection,
-              typeName,
-            );
-            hash = combineHash(hash, getResolvedHash(childResolved));
+          // For variable-dependent selections, use operation.selections to find resolved children
+          // For non-variable selections, use PossibleSelection directly (it IS the resolved selection)
+          const child =
+            resolvedMap?.get(typeName) ??
+            (!selection.hasDescendantsToResolve
+              ? field.selection.get(typeName) ?? field.selection.get(null)
+              : undefined);
+          if (child) {
+            hash = combineHash(hash, getResolvedHash(child, operation));
           }
         }
       }
@@ -230,23 +255,40 @@ function computeResolvedHash(
 }
 
 /** Lazily compute resolved hash on first cross-doc comparison */
-function getResolvedHash(selection: ResolvedSelection): number {
-  if (selection.resolvedHash !== undefined) {
+function getResolvedHash(
+  selection: ResolvedSelection,
+  operation?: OperationDescriptor,
+): number {
+  if (
+    selection.resolvedHash !== undefined &&
+    selection.resolvedHash !== UNINITIALIZED_HASH
+  ) {
     return selection.resolvedHash;
   }
-  const op = selectionOperations.get(selection);
-  assert(op);
-  selection.resolvedHash = computeResolvedHash(op, selection);
-  return selection.resolvedHash;
+  if (
+    !selection.normalizedFields &&
+    !selection.skippedFields &&
+    !selection.skippedSpreads &&
+    !selection.fieldsWithDirectives &&
+    !selection.fieldsWithSelections
+  ) {
+    selection.resolvedHash = selection.structuralHash;
+    return selection.resolvedHash;
+  }
+  const op = operation ?? selectionOperations.get(selection);
+  const hash = computeResolvedHash(op, selection);
+  // Only cache when we have a complete picture (operation available for child hashing)
+  if (op) {
+    selection.resolvedHash = hash;
+  }
+  return hash;
 }
 
 export function resolvedSelectionsAreEqual(
   a: ResolvedSelection,
   b: ResolvedSelection,
 ): boolean {
-  if (a === b) {
-    return true;
-  }
+  if (a === b) return true;
   if (a.structuralHash !== b.structuralHash) return false;
   return getResolvedHash(a) === getResolvedHash(b);
 }

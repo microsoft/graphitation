@@ -30,6 +30,7 @@ import {
   hashString,
   combineHash,
   accumulateHash,
+  UNINITIALIZED_HASH,
 } from "../jsutils/selectionHash";
 
 export type Context = Readonly<{
@@ -374,7 +375,7 @@ function completeSelections(
 
   // Compute structural hashes and complex descendants bottom-up (children already completed above)
   for (const selection of possibleSelections.values()) {
-    if (selection.structuralHash !== 0) continue; // already hashed (shared selection)
+    if (selection.structuralHash !== UNINITIALIZED_HASH) continue; // already hashed (shared selection)
     selection.structuralHash = computeStructuralHash(selection);
     computeHasDescendantsToResolve(selection);
   }
@@ -742,7 +743,7 @@ function copySelection(
     fieldQueue: [],
     experimentalAlias: selection.experimentalAlias,
     depth: selection.depth,
-    structuralHash: 0,
+    structuralHash: UNINITIALIZED_HASH,
   };
   for (const [field, aliases] of selection.fields.entries()) {
     copy.fields.set(field, [...aliases]);
@@ -772,8 +773,8 @@ function copySelection(
 
 /**
  * Compute an order-independent structural hash of a PossibleSelection.
- * Hashes: field names, dataKeys, arg names, non-inclusion directive names,
- * child selection hashes, and spread names.
+ * Hashes own fields only: field names, dataKeys, arg names.
+ * Does NOT hash children or type names (those are handled in the resolved hash).
  * Does NOT hash arg/directive values (those depend on variables, handled at resolve time).
  */
 function computeStructuralHash(selection: PossibleSelection): number {
@@ -786,36 +787,20 @@ function computeStructuralHash(selection: PossibleSelection): number {
       fieldHash = combineHash(fieldHash, hashString(entry.dataKey));
 
       // Hash arg names (sorted for stability — same args in different AST order should match)
+      // FIXME: no need to sort? separate argHash that is order-dependent and combine with fieldHash in an order-independent way?
       if (entry.args?.size) {
         const argNames = [...entry.args.keys()].sort();
         for (const argName of argNames) {
           fieldHash = combineHash(fieldHash, hashString(argName));
         }
       }
-
-      // Note: non-inclusion directive names+values are hashed in the resolved hash
-      // (they may have variable-dependent arg values)
-
-      // Hash child selection structure (already computed bottom-up)
-      if (entry.selection) {
-        for (const [typeName, childSel] of entry.selection) {
-          fieldHash = combineHash(
-            fieldHash,
-            typeName ? hashString(typeName) : 0,
-          );
-          fieldHash = combineHash(fieldHash, childSel.structuralHash);
-        }
-      }
     }
     // Accumulate order-independently across field names
     hash = accumulateHash(hash, fieldHash);
   }
+  // TODO: fieldsWithDirectives + spreadsWithDirectives should also affect structural hash (only directives + arg names)
 
-  // Note: spreads are NOT hashed — they're only relevant for skippedSpreads
-  // which is handled in the resolved hash. Non-skipped spreads are already
-  // accounted for via merged fields.
-
-  return hash || 1; // Avoid 0 which means "not yet computed"
+  return hash;
 }
 
 function computeHasDescendantsToResolve(selection: PossibleSelection) {
@@ -842,7 +827,7 @@ function computeHasDescendantsToResolve(selection: PossibleSelection) {
 }
 
 function createEmptySelection(): PossibleSelection {
-  return { fields: new Map(), fieldQueue: [], depth: -1, structuralHash: 0 };
+  return { fields: new Map(), fieldQueue: [], depth: -1, structuralHash: UNINITIALIZED_HASH };
 }
 
 function getFragmentAlias(node: FragmentSpreadNode): string | undefined {

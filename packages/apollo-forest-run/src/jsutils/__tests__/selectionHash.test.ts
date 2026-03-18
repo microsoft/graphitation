@@ -161,15 +161,30 @@ describe("hashValue", () => {
     expect(hashValue(new Date("2024-01-01"))).not.toBe(hashValue({}));
   });
 
-  test("custom valueOf object hashes by primitive", () => {
-    const a = { valueOf: () => 42 };
-    const b = { valueOf: () => 99 };
-    expect(hashValue(a)).not.toBe(hashValue(b));
-    expect(hashValue(a)).toBe(hashValue({ valueOf: () => 42 }));
+  test("Date hashes by timestamp, not object keys", () => {
+    const a = new Date("2024-01-01");
+    const b = new Date("2024-01-01");
+    const c = new Date("2025-06-15");
+    expect(hashValue(a)).toBe(hashValue(b));
+    expect(hashValue(a)).not.toBe(hashValue(c));
   });
 
-  test("plain object ignores default valueOf", () => {
-    // Plain objects should still hash by keys, not valueOf
+  test("custom valueOf objects hash by keys, not primitive", () => {
+    // Custom valueOf is NOT used for hashing (only Date is special-cased)
+    const a = { valueOf: () => 42 };
+    const b = { valueOf: () => 99 };
+    // Both have same keys ("valueOf") so they hash the same by keys
+    expect(hashValue(a)).toBe(hashValue(b));
+  });
+
+  test("plain object hashes by keys", () => {
     expect(hashValue({ x: 1 })).not.toBe(hashValue({ y: 1 }));
+  });
+
+  test("bigint hashes correctly for values exceeding Number precision", () => {
+    const a = BigInt("9007199254740993"); // 2^53 + 1
+    const b = BigInt("9007199254740994"); // 2^53 + 2
+    // These would collide with Number() conversion but not with toString()
+    expect(hashValue(a)).not.toBe(hashValue(b));
   });
 });

@@ -2,7 +2,15 @@
  * Lightweight hash utilities for PossibleSelection structural hashing.
  * Uses FNV-1a-inspired mixing for combining string hashes and numbers.
  * Order-independent at the field level (uses commutative accumulation).
+ *
+ * All hash functions return uint32 values (0 to 4294967295) via `>>> 0`.
  */
+
+/** Sentinel for uninitialized hash fields.
+ *  - Outside uint32 range (0 to 2^32-1), so no collision with `>>> 0` outputs.
+ *  - Outside V8 SMI range, so the property starts as "double" representation
+ *    avoiding SMI→Double hidden class transition when real hashes are stored. */
+export const UNINITIALIZED_HASH = 0x100000000;
 
 const TYPE_STRING = 1;
 const TYPE_NUMBER = 2;
@@ -44,11 +52,8 @@ export function hashValue(val: unknown): number {
     }
     case "boolean":
       return combineHash(TYPE_BOOLEAN, val ? 1 : 0);
-    case "bigint": {
-      const n = Number(val);
-      f64Buf[0] = n;
-      return combineHash(TYPE_BIGINT, combineHash(u32Buf[0], u32Buf[1]));
-    }
+    case "bigint":
+      return combineHash(TYPE_BIGINT, hashString(val.toString()));
     default: {
       if (Array.isArray(val)) {
         let h = 0xa5a5a5a5;
@@ -57,15 +62,10 @@ export function hashValue(val: unknown): number {
         }
         return h;
       }
-      // Objects with numeric valueOf (e.g. Date) — hash by primitive value
-      if (
-        typeof (val as { valueOf?: unknown }).valueOf === "function" &&
-        (val as { valueOf: () => unknown }).valueOf !== Object.prototype.valueOf
-      ) {
-        const prim = (val as { valueOf: () => unknown }).valueOf();
-        if (typeof prim === "number" || typeof prim === "string") {
-          return hashValue(prim);
-        }
+      // Date: hash by numeric timestamp
+      if (val instanceof Date) {
+        f64Buf[0] = val.getTime();
+        return combineHash(TYPE_NUMBER, combineHash(u32Buf[0], u32Buf[1]));
       }
       // Object: order-independent accumulation (no sort needed)
       const obj = val as Record<string, unknown>;
