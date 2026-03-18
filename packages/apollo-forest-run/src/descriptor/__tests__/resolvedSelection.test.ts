@@ -1984,6 +1984,44 @@ describe(resolvedSelectionsAreEqual, () => {
     expect(resolvedSelectionsAreEqual(selA, selB)).toBe(true);
   });
 
+  it("caches resolvedHash for non-cloned selections after comparison", () => {
+    // Regression: non-cloned selections (no variables) must cache resolvedHash.
+    // Without caching, every comparison recomputes the entire subtree hash.
+    const opA = createTestOperation(`
+      query A {
+        node {
+          ... on User { name }
+          ... on Post { title }
+        }
+      }
+    `);
+    const opB = createTestOperation(`
+      query B {
+        node {
+          ... on User { name }
+          ... on Post { title }
+        }
+      }
+    `);
+
+    resolveAllChildren(opA, opA.possibleSelections);
+    resolveAllChildren(opB, opB.possibleSelections);
+    const selA = resolveSelection(opA, opA.possibleSelections, null);
+    const selB = resolveSelection(opB, opB.possibleSelections, null);
+
+    // Before comparison: no cached hash
+    expect(selA.resolvedHash).toBeUndefined();
+    expect(selB.resolvedHash).toBeUndefined();
+
+    resolvedSelectionsAreEqual(selA, selB);
+
+    // After comparison: hash must be cached (not undefined/UNINITIALIZED_HASH)
+    expect(typeof selA.resolvedHash).toBe("number");
+    expect(typeof selB.resolvedHash).toBe("number");
+    expect(selA.resolvedHash).toBeGreaterThanOrEqual(0);
+    expect(selB.resolvedHash).toBeGreaterThanOrEqual(0);
+  });
+
   it("does not resolve unseen types during cross-doc hash computation", () => {
     const queryA = `
       query A($id: ID!) {

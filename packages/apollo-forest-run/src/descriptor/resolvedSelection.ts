@@ -277,10 +277,10 @@ function getResolvedHash(
   }
   const op = operation ?? selectionOperations.get(selection);
   const hash = computeResolvedHash(op, selection);
-  // Only cache when we have a complete picture (operation available for child hashing)
-  if (op) {
-    selection.resolvedHash = hash;
-  }
+  // Cache the hash. For non-cloned selections (no op), the hash is deterministic
+  // from PossibleSelections structure. For cloned selections, it's operation-specific
+  // and invalidated by invalidateResolvedHashes when new types are resolved.
+  selection.resolvedHash = hash;
   return hash;
 }
 
