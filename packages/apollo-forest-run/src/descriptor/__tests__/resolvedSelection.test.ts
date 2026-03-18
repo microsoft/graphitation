@@ -1984,9 +1984,9 @@ describe(resolvedSelectionsAreEqual, () => {
     expect(resolvedSelectionsAreEqual(selA, selB)).toBe(true);
   });
 
-  it("caches resolvedHash for non-cloned selections after comparison", () => {
-    // Regression: non-cloned selections (no variables) must cache resolvedHash.
-    // Without caching, every comparison recomputes the entire subtree hash.
+  it("caches resolvedHash for non-cloned selections at resolve time", () => {
+    // Non-cloned selections (no variables) must cache resolvedHash eagerly
+    // at resolve time, not lazily at comparison time.
     const opA = createTestOperation(`
       query A {
         node {
@@ -2009,17 +2009,14 @@ describe(resolvedSelectionsAreEqual, () => {
     const selA = resolveSelection(opA, opA.possibleSelections, null);
     const selB = resolveSelection(opB, opB.possibleSelections, null);
 
-    // Before comparison: no cached hash
-    expect(selA.resolvedHash).toBeUndefined();
-    expect(selB.resolvedHash).toBeUndefined();
-
-    resolvedSelectionsAreEqual(selA, selB);
-
-    // After comparison: hash must be cached (not undefined/UNINITIALIZED_HASH)
+    // Hash is cached eagerly at resolve time (not deferred to comparison)
     expect(typeof selA.resolvedHash).toBe("number");
     expect(typeof selB.resolvedHash).toBe("number");
     expect(selA.resolvedHash).toBeGreaterThanOrEqual(0);
     expect(selB.resolvedHash).toBeGreaterThanOrEqual(0);
+
+    // Comparison should still work correctly
+    expect(resolvedSelectionsAreEqual(selA, selB)).toBe(true);
   });
 
   it("does not resolve unseen types during cross-doc hash computation", () => {

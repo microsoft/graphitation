@@ -130,6 +130,12 @@ export function resolveSelection(
       invalidateResolvedHashes(operation);
     } else {
       resolvedSelection = selection;
+      // Eagerly compute and cache resolved hash for non-cloned selections.
+      // These have no variable dependencies (hasDescendantsToResolve is false),
+      // so the hash is deterministic and can be computed once and shared.
+      if (resolvedSelection.resolvedHash === undefined) {
+        getResolvedHash(resolvedSelection, operation);
+      }
     }
 
     map.set(typeName, resolvedSelection);
