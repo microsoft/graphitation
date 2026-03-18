@@ -827,7 +827,12 @@ function computeHasDescendantsToResolve(selection: PossibleSelection) {
 }
 
 function createEmptySelection(): PossibleSelection {
-  return { fields: new Map(), fieldQueue: [], depth: -1, structuralHash: UNINITIALIZED_HASH };
+  return {
+    fields: new Map(),
+    fieldQueue: [],
+    depth: -1,
+    structuralHash: UNINITIALIZED_HASH,
+  };
 }
 
 function getFragmentAlias(node: FragmentSpreadNode): string | undefined {
