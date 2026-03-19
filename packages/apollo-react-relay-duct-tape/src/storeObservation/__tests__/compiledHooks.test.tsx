@@ -701,13 +701,13 @@ describe.each([
     );
 
     describe("when refetching", () => {
-      let onCompleted: jest.Mock;
+      let onComplete: jest.Mock;
       let disposable: Disposable;
 
       beforeEach(() => {
         const [_data, refetch] = last(returnedResults());
-        onCompleted = jest.fn();
-        disposable = refetch({ avatarSize: 42 }, { onCompleted });
+        onComplete = jest.fn();
+        disposable = refetch({ avatarSize: 42 }, { onComplete });
       });
 
       it("can be cancelled", () => {
@@ -758,6 +758,26 @@ describe.each([
         });
 
         it("invokes the onComplete callback without error", () => {
+          expect(onComplete).toHaveBeenCalledWith(null);
+        });
+
+        it("supports the deprecated onCompleted callback alias", async () => {
+          const [_data, refetch] = last(returnedResults());
+          const onCompleted = jest.fn();
+
+          await act(async () => {
+            refetch({ avatarSize: 43 }, { onCompleted });
+            client.mock.resolveMostRecentOperation((operation) =>
+              MockPayloadGenerator.generate(operation, {
+                Node: () => ({
+                  id: 42,
+                  avatarUrl: `avatarUrl-with-size-${operation.request.variables.avatarSize}`,
+                }),
+              }),
+            );
+            await new Promise((resolve) => setTimeout(resolve, 0));
+          });
+
           expect(onCompleted).toHaveBeenCalledWith(null);
         });
       });
@@ -770,7 +790,7 @@ describe.each([
         });
 
         it("invokes the onComplete callback when an error occurs", () => {
-          expect(onCompleted).toHaveBeenCalledWith(error);
+          expect(onComplete).toHaveBeenCalledWith(error);
         });
 
         it("does not update the fragment reference request variables for future requests", async () => {
@@ -1062,6 +1082,19 @@ describe.each([
       });
 
       it("invokes the onComplete callback when an error occurs", async () => {
+        const onComplete = jest.fn();
+        const error = new Error("oh noes");
+
+        const { loadNext } = last(forwardUsePaginationFragmentResult);
+        await act(async () => {
+          loadNext(1, { onComplete });
+          await client.mock.rejectMostRecentOperation(error);
+        });
+
+        expect(onComplete).toHaveBeenCalledWith(error);
+      });
+
+      it("supports deprecated onCompleted callback alias when an error occurs", async () => {
         const onCompleted = jest.fn();
         const error = new Error("oh noes");
 
@@ -1194,13 +1227,13 @@ describe.each([
       });
 
       describe("and having received the response", () => {
-        let onCompleted: jest.Mock;
+        let onComplete: jest.Mock;
 
         beforeEach(async () => {
-          onCompleted = jest.fn();
+          onComplete = jest.fn();
           await act(async () => {
             const { loadNext } = last(forwardUsePaginationFragmentResult);
-            loadNext(1, { onCompleted });
+            loadNext(1, { onComplete });
 
             // Introduce a slight delay before resolving the request as a
             // regression test with a pagination requst being disposed early.
@@ -1273,7 +1306,7 @@ describe.each([
         });
 
         it("invokes the onComplete callback without error", () => {
-          expect(onCompleted).toHaveBeenCalledWith(null);
+          expect(onComplete).toHaveBeenCalledWith(null);
         });
       });
     });

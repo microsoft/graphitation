@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Align pagination/refetch completion callback option with Relay by supporting `onComplete` and keeping `onCompleted` as a deprecated alias.",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape",
+  "dependentChangeType": "patch",
+  "email": "vikaskumar@microsoft.com"
+}
