@@ -570,13 +570,6 @@ function executeField(
     fieldName,
   });
   if (!loading) {
-    handleMissingSchemaError(
-      exeContext,
-      undefined,
-      fieldGroup,
-      path,
-      incrementalDataRecord,
-    );
     return undefined;
   }
 
@@ -597,14 +590,6 @@ function executeField(
         incrementalDataRecord,
       );
     }
-
-    handleMissingSchemaError(
-      exeContext,
-      undefined,
-      fieldGroup,
-      path,
-      incrementalDataRecord,
-    );
     return undefined;
   });
 }
@@ -1040,37 +1025,6 @@ function handleFieldError(
   errors.push(error);
 }
 
-function handleMissingSchemaError(
-  exeContext: ExecutionContext,
-  returnTypeRef: TypeReference | undefined,
-  fieldGroup: FieldGroup,
-  path: Path,
-  incrementalDataRecord: IncrementalDataRecord | undefined,
-) {
-  const parentTypeName = path.typename;
-  // subscriptions have separate execution flow in executeSubscriptionImpl
-  const isRootField =
-    parentTypeName === "Mutation" || parentTypeName === "Query";
-  if (!isRootField) {
-    return;
-  }
-
-  const fieldName = path.key;
-  const message = !returnTypeRef
-    ? `Type definition for ${parentTypeName}.${fieldName} is missing`
-    : `Resolver for ${parentTypeName}.${fieldName} is missing`;
-  const error = new Error(message);
-
-  handleFieldError(
-    error,
-    exeContext,
-    returnTypeRef,
-    fieldGroup,
-    path,
-    incrementalDataRecord,
-  );
-}
-
 function resolveAndCompleteField(
   exeContext: ExecutionContext,
   parentTypeName: string,
@@ -1101,23 +1055,6 @@ function resolveAndCompleteField(
 
   const isDefaultResolverUsed =
     resolveFn === exeContext.fieldResolver || fieldName === "__typename";
-
-  if (resolveFn === exeContext.fieldResolver && typeof source === "undefined") {
-    /**
-     * Resolving a root field with default resolver makes operation look succsessful, even though nothing was actually done.
-     * This leads to problems that are hard to debug, especially for mutations.
-     *
-     * NOTE1: executing Mutation.__typename or Query.__typename with default resolver is fine
-     * NOTE2: source check is required to account for systems like Grats that work exclusively on default resolvers
-     */
-    handleMissingSchemaError(
-      exeContext,
-      returnTypeRef,
-      fieldGroup,
-      path,
-      incrementalDataRecord,
-    );
-  }
 
   const hooks = exeContext.fieldExecutionHooks;
   let hookContext: unknown = undefined;
