@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-codegen-supermassive-schema-extraction-plugin
 
-<!-- This log was last generated on Tue, 17 Mar 2026 10:18:09 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 19 Mar 2026 18:12:21 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 2.1.23
+
+Thu, 19 Mar 2026 18:12:21 GMT
+
+### Patches
+
+- Bump @graphitation/supermassive to v3.15.3
 
 ## 2.1.22
 

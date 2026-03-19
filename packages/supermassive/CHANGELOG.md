@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Tue, 17 Mar 2026 10:18:09 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 19 Mar 2026 18:12:21 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.15.3
+
+Thu, 19 Mar 2026 18:12:21 GMT
+
+### Patches
+
+- revert: errors on missing types/resolvers (dsamsonov@microsoft.com)
 
 ## 3.15.2
 

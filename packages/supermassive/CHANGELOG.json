@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Thu, 19 Mar 2026 18:12:21 GMT",
+      "version": "3.15.3",
+      "tag": "@graphitation/supermassive_v3.15.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "dsamsonov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "4526d8c2847cec11b17aae8af3b60bf607a40fb2",
+            "comment": "revert: errors on missing types/resolvers"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 17 Mar 2026 10:18:09 GMT",
       "version": "3.15.2",
       "tag": "@graphitation/supermassive_v3.15.2",
