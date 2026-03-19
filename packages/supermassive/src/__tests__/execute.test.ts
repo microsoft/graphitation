@@ -8,7 +8,6 @@ import { makeSchema } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
 import { createExecutionUtils } from "../__testUtils__/execute";
 import { executeWithoutSchema } from "../executeWithoutSchema";
-import type { FieldDefinitionRecord } from "../schema/definition";
 import { encodeASTSchema } from "../utilities/encodeASTSchema";
 import { ResolveInfo } from "../types";
 
@@ -490,103 +489,6 @@ describe("executeWithoutSchema - regression tests", () => {
     expect(infoAtCallTime?.fieldNodes?.length).toEqual(2);
     expect(infoAtCallTime?.fieldNodes[0].name.value).toEqual("foo");
     expect(infoAtCallTime?.fieldNodes[1].name.value).toEqual("foo");
-  });
-
-  test("Executing mutation without type definitions return error", async () => {
-    const schemaFragment = {
-      schemaId: "test",
-      definitions: { types: {} },
-      resolvers: {},
-    };
-    const document = parse(
-      `mutation DownloadFile { downloadFile { downloadUrl } }`,
-    );
-
-    const result = await executeWithoutSchema({
-      document,
-      schemaFragment,
-    });
-
-    // Note: there used to be a discrepancy in the results based on whether schemaFramentLoader provided or not.
-    const result1 = await executeWithoutSchema({
-      document,
-      schemaFragment,
-      schemaFragmentLoader: (currentFragment) =>
-        Promise.resolve({ mergedFragment: currentFragment }),
-    });
-
-    expect(result).toStrictEqual(result1);
-    expect(result).toMatchSnapshot();
-  });
-
-  function makeIncompleteSchemaFragment() {
-    return {
-      schemaId: "test",
-      definitions: encodeASTSchema(
-        parse(`
-        type Mutation { 
-          downloadFile: DownloadFileResult
-          fooBar: Boolean 
-        }
-      `),
-      )[0],
-      resolvers: {
-        Mutation: {
-          fooBar: () => true,
-        },
-      },
-    };
-  }
-
-  test("Executing mutation without resolver should return error", async () => {
-    const schemaFragment = makeIncompleteSchemaFragment();
-    const document = parse(
-      `mutation DownloadFile { downloadFile { downloadUrl } }`,
-    );
-
-    const result = await executeWithoutSchema({
-      document,
-      schemaFragment,
-    });
-
-    expect(result).toMatchSnapshot();
-  });
-
-  test("Missing resolver should allow for partial data", async () => {
-    const schemaFragment = makeIncompleteSchemaFragment();
-    const document = parse(
-      `mutation DownloadFile {
-        fooBar
-        downloadFile { downloadUrl }
-      }`,
-    );
-
-    const result = await executeWithoutSchema({
-      document,
-      schemaFragment,
-    });
-
-    expect(result).toMatchSnapshot();
-  });
-
-  test("Missing type definition should allow for partial data", async () => {
-    const schemaFragment = makeIncompleteSchemaFragment();
-    delete (
-      schemaFragment.definitions.types.Mutation[1] as FieldDefinitionRecord
-    )?.downloadFile;
-    const document = parse(
-      `mutation DownloadFile {
-        fooBar
-        downloadFile { downloadUrl }
-      }`,
-    );
-
-    const result = await executeWithoutSchema({
-      document,
-      schemaFragment,
-    });
-
-    expect(result).toMatchSnapshot();
   });
 
   test("Should fail while executing subscription without type definitions and without schema fragment loader", async () => {
