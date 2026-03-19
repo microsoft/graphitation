@@ -7,6 +7,7 @@ import {
   type ExtractMinimalViableSchemaResult,
 } from "@graphitation/supermassive";
 import { NearOperationFileConfig, SupportedResolvers } from ".";
+import { getObjectTypeInterfaces } from "@graphitation/supermassive/src/schema/definition";
 
 export type ResolversPerOperation = {
   [key: string]: {
@@ -192,9 +193,11 @@ function getResolverMetadata(mergedDefinitions: SchemaDefinitions) {
     }
   }
 
-  for (const [type, [typeKind, fields, interfaces]] of Object.entries(
+  for (const [type, typeDefinitionTuple] of Object.entries(
     mergedDefinitions.types,
   )) {
+    const [typeKind, fields] = typeDefinitionTuple;
+
     if (typeKind === TypeKind.ENUM) {
       continue;
     }
@@ -221,16 +224,19 @@ function getResolverMetadata(mergedDefinitions: SchemaDefinitions) {
       }
     }
 
-    if (interfaces?.length) {
-      for (const interfaceName of interfaces) {
-        const fields = interfaceFields[interfaceName];
-        if (!fields) {
-          continue;
-        }
-        for (const field of fields) {
-          resolverMetadata[type] ??= [];
-          if (!resolverMetadata[type].includes(field)) {
-            resolverMetadata[type].push(field);
+    if (typeKind === TypeKind.OBJECT) {
+      const interfaces = getObjectTypeInterfaces(typeDefinitionTuple);
+      if (interfaces?.length) {
+        for (const interfaceName of interfaces) {
+          const fields = interfaceFields[interfaceName];
+          if (!fields) {
+            continue;
+          }
+          for (const field of fields) {
+            resolverMetadata[type] ??= [];
+            if (!resolverMetadata[type].includes(field)) {
+              resolverMetadata[type].push(field);
+            }
           }
         }
       }
