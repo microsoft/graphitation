@@ -20,8 +20,18 @@ export type RefetchFn<Variables extends object = object> = (
 ) => Disposable;
 
 export interface RefetchOptions {
+  onComplete?: (error: Error | null) => void;
+  /**
+   * @deprecated Use `onComplete` to match the Relay API.
+   */
   onCompleted?: (error: Error | null) => void;
   fetchPolicy?: FetchPolicy;
+}
+
+function getOnCompleteCallback(
+  options?: Pick<RefetchOptions, "onComplete" | "onCompleted">,
+): ((error: Error | null) => void) | undefined {
+  return options?.onComplete ?? options?.onCompleted;
 }
 
 /**
@@ -109,7 +119,8 @@ export function useCompiledRefetchableFragment(
                 if (options?.UNSTABLE_onCompletedWithData) {
                   options.UNSTABLE_onCompletedWithData(error || null, data);
                 } else {
-                  options?.onCompleted?.(error || null); // Public callback fires only when finished loading
+                  // Public callback fires only when finished loading.
+                  getOnCompleteCallback(options)?.(error || null);
                 }
               }
               if (!error) {
@@ -144,7 +155,7 @@ export function useCompiledRefetchableFragment(
             if (options?.UNSTABLE_onCompletedWithData) {
               options.UNSTABLE_onCompletedWithData(error, null);
             } else {
-              options?.onCompleted?.(error);
+              getOnCompleteCallback(options)?.(error);
             }
           },
         );
