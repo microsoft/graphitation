@@ -666,3 +666,69 @@ describe("createMockClient with cacheFactory", () => {
     expect(Object.keys(possibleTypes).length).toBeGreaterThan(0);
   });
 });
+
+describe("createMockClient with ForestRun cache", () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { ForestRun } = require("@graphitation/apollo-forest-run");
+
+  it("should work with ForestRun cache via cacheFactory", () => {
+    const client = createMockClient(schema, {
+      cacheFactory: (possibleTypes) =>
+        new ForestRun({ possibleTypes }),
+    });
+    expect(client.cache).toBeInstanceOf(ForestRun);
+  });
+
+  it("should resolve a query when using ForestRun cache", async () => {
+    const TestQuery = graphql`
+      query ForestRunCacheTestQuery($id: ID = "<default>") {
+        user: node(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const client = createMockClient(schema, {
+      cacheFactory: (possibleTypes) =>
+        new ForestRun({ possibleTypes }),
+    });
+
+    const TestComponent: React.FC = () => {
+      const { data: props, error } = useQuery<{
+        user: { id: string; name: string };
+      }>(TestQuery as any);
+      if (props) {
+        return (
+          `My id ${props.user.id} and name is ${props.user.name}` as any
+        );
+      } else if (error) {
+        return <div id="error">{error.message}</div>;
+      }
+      return <div id="loading">Loading...</div>;
+    };
+
+    let testComponentTree!: ReactTestRenderer.ReactTestRenderer;
+    ReactTestRenderer.act(() => {
+      testComponentTree = ReactTestRenderer.create(
+        <ApolloProvider client={client}>
+          <TestComponent />
+        </ApolloProvider>,
+      );
+    });
+
+    // Should render loading state
+    expect(() => {
+      testComponentTree.root.find((node) => node.props.id === "loading");
+    }).not.toThrow();
+
+    await ReactTestRenderer.act(() =>
+      client.mock.resolveMostRecentOperation((operation) =>
+        MockPayloadGenerator.generate(operation),
+      ),
+    );
+
+    // Should render data from resolved operation
+    expect(testComponentTree).toMatchSnapshot();
+  });
+});
