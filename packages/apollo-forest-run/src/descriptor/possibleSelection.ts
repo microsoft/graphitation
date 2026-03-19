@@ -773,8 +773,7 @@ function copySelection(
 
 /**
  * Compute an order-independent structural hash of a PossibleSelection.
- * Hashes own fields only: field names, dataKeys, arg names.
- * Does NOT hash children or type names (those are handled in the resolved hash).
+ * Hashes: field names, dataKeys, arg names, child type names, child structural hashes.
  * Does NOT hash arg/directive values (those depend on variables, handled at resolve time).
  */
 function computeStructuralHash(selection: PossibleSelection): number {
@@ -792,6 +791,17 @@ function computeStructuralHash(selection: PossibleSelection): number {
         const argNames = [...entry.args.keys()].sort();
         for (const argName of argNames) {
           fieldHash = combineHash(fieldHash, hashString(argName));
+        }
+      }
+
+      // Hash child selection structure (already computed bottom-up)
+      if (entry.selection) {
+        for (const [typeName, childSel] of entry.selection) {
+          fieldHash = combineHash(
+            fieldHash,
+            typeName ? hashString(typeName) : 0,
+          );
+          fieldHash = combineHash(fieldHash, childSel.structuralHash);
         }
       }
     }

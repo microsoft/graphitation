@@ -1984,9 +1984,9 @@ describe(resolvedSelectionsAreEqual, () => {
     expect(resolvedSelectionsAreEqual(selA, selB)).toBe(true);
   });
 
-  it("caches resolvedHash for non-cloned selections at resolve time", () => {
-    // Non-cloned selections (no variables) must cache resolvedHash eagerly
-    // at resolve time, not lazily at comparison time.
+  it("sets resolvedHash to structuralHash for non-cloned selections at resolve time", () => {
+    // Non-cloned selections (no variables) get resolvedHash = structuralHash
+    // immediately at resolve time, avoiding lazy computation during comparison.
     const opA = createTestOperation(`
       query A {
         node {
@@ -2009,11 +2009,9 @@ describe(resolvedSelectionsAreEqual, () => {
     const selA = resolveSelection(opA, opA.possibleSelections, null);
     const selB = resolveSelection(opB, opB.possibleSelections, null);
 
-    // Hash is cached eagerly at resolve time (not deferred to comparison)
-    expect(typeof selA.resolvedHash).toBe("number");
-    expect(typeof selB.resolvedHash).toBe("number");
-    expect(selA.resolvedHash).toBeGreaterThanOrEqual(0);
-    expect(selB.resolvedHash).toBeGreaterThanOrEqual(0);
+    // Hash is set to structuralHash at resolve time
+    expect(selA.resolvedHash).toBe(selA.structuralHash);
+    expect(selB.resolvedHash).toBe(selB.structuralHash);
 
     // Comparison should still work correctly
     expect(resolvedSelectionsAreEqual(selA, selB)).toBe(true);
