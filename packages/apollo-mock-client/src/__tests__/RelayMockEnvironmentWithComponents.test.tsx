@@ -14,6 +14,7 @@ import { buildSchema, DocumentNode } from "graphql";
 import * as ReactTestRenderer from "react-test-renderer";
 import {
   ApolloProvider,
+  InMemoryCache,
   useMutation,
   useQuery,
   useSubscription,
@@ -631,5 +632,37 @@ describe("ReactRelayTestMocker with Containers", () => {
         "should render component with the error",
       );
     });
+  });
+});
+
+describe("createMockClient with cacheFactory", () => {
+  it("should use the default InMemoryCache when no cacheFactory is provided", () => {
+    const client = createMockClient(schema);
+    expect(client.cache).toBeInstanceOf(InMemoryCache);
+  });
+
+  it("should use the cache returned by cacheFactory when provided", () => {
+    const cacheFactory = jest.fn(
+      (possibleTypes: Record<string, string[]>) =>
+        new InMemoryCache({ possibleTypes }),
+    );
+    const client = createMockClient(schema, { cacheFactory });
+    expect(cacheFactory).toHaveBeenCalledTimes(1);
+    expect(cacheFactory).toHaveBeenCalledWith(
+      expect.objectContaining({}),
+    );
+    expect(client.cache).toBeInstanceOf(InMemoryCache);
+  });
+
+  it("should pass possibleTypes derived from the schema to cacheFactory", () => {
+    const cacheFactory = jest.fn(
+      (possibleTypes: Record<string, string[]>) =>
+        new InMemoryCache({ possibleTypes }),
+    );
+    createMockClient(schema, { cacheFactory });
+    const possibleTypes = cacheFactory.mock.calls[0][0];
+    expect(typeof possibleTypes).toBe("object");
+    // The test schema has abstract types (e.g. Node interface), so possibleTypes should not be empty
+    expect(Object.keys(possibleTypes).length).toBeGreaterThan(0);
   });
 });
