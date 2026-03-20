@@ -66,7 +66,7 @@ export function describeOperation(
     rootNodeKey: effectiveRootNodeKey,
     selections: new Map(),
     keyVariables: getKeyVars(documentDescriptor.definition),
-    covers: getCovers(documentDescriptor.definition),
+    covers: getCovers(documentDescriptor.definition, variablesWithDefaults),
     historySize: env.historyConfig
       ? getHistorySize(documentDescriptor.definition, variables, env)
       : 0,
@@ -137,7 +137,10 @@ function getKeyVars(doc: OperationDefinitionNode): VariableName[] | null {
 
 const EMPTY_COVERS: string[] = Object.freeze([]) as unknown as string[];
 
-function getCovers(doc: OperationDefinitionNode): string[] {
+function getCovers(
+  doc: OperationDefinitionNode,
+  variables: VariableValues,
+): string[] {
   const directive = doc.directives?.find((d) => d.name.value === "cache");
   const astValue = directive?.arguments?.find(
     (arg) => arg.name.value === "covers",
@@ -145,10 +148,14 @@ function getCovers(doc: OperationDefinitionNode): string[] {
   if (!astValue) {
     return EMPTY_COVERS;
   }
-  const value = valueFromASTUntyped(astValue);
+  const value = valueFromASTUntyped(astValue, variables);
+  if (value === undefined) {
+    return EMPTY_COVERS;
+  }
   if (
     !Array.isArray(value) ||
-    value.some((variable) => typeof variable !== "string")
+    !value.length ||
+    value.some((variable) => typeof variable !== "string" || variable === "")
   ) {
     throw new Error(
       'Could not extract covers. Expected directive format: @cache(covers: ["Op1", "Op2"]), ' +

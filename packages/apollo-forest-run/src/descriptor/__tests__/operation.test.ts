@@ -559,3 +559,85 @@ describe(applyDefaultValues, () => {
     });
   });
 });
+
+describe("@cache(covers)", () => {
+  const describeOp = (query: string, variables = {}) => {
+    const document = parse(query);
+    const docDescriptor = describeDocument(document);
+    const resultTree = describeResultTree(docDescriptor);
+    return describeOperation({}, docDescriptor, resultTree, variables);
+  };
+
+  it("extracts covers from @cache directive", () => {
+    const op = describeOp(`
+      query Preloader @cache(covers: ["DetailQuery", "ListQuery"]) { field }
+    `);
+    expect(op.covers).toEqual(["DetailQuery", "ListQuery"]);
+  });
+
+  it("sets covers to empty frozen array when no @cache directive", () => {
+    const op = describeOp(`query MyQuery { field }`);
+    expect(op.covers).toEqual([]);
+    expect(Object.isFrozen(op.covers)).toBe(true);
+  });
+
+  it("sets covers to empty frozen array when @cache has no covers arg", () => {
+    const op = describeOp(`query MyQuery @cache(keyVars: ["v1"]) { field }`);
+    expect(op.covers).toEqual([]);
+    expect(op.keyVariables).toEqual(["v1"]);
+  });
+
+  it("throws when covers has non-string values", () => {
+    expect(() =>
+      describeOp(`query Q @cache(covers: ["Op1", 42]) { field }`),
+    ).toThrowError(/Could not extract covers/);
+  });
+
+  it("throws when covers is not a list", () => {
+    expect(() =>
+      describeOp(`query Q @cache(covers: "Op1") { field }`),
+    ).toThrowError(/Could not extract covers/);
+  });
+
+  it("throws when covers is an empty list", () => {
+    expect(() =>
+      describeOp(`query Q @cache(covers: []) { field }`),
+    ).toThrowError(/Could not extract covers/);
+  });
+
+  it("throws when covers contains empty strings", () => {
+    expect(() =>
+      describeOp(`query Q @cache(covers: ["Op1", ""]) { field }`),
+    ).toThrowError(/Could not extract covers/);
+  });
+
+  it("returns empty covers when variable is not provided", () => {
+    const op = describeOp(
+      `query Preloader($ops: [String!]) @cache(covers: $ops) { field }`,
+    );
+    expect(op.covers).toEqual([]);
+  });
+
+  it("resolves covers from variables", () => {
+    const op = describeOp(
+      `query Preloader($ops: [String!]) @cache(covers: $ops) { field }`,
+      { ops: ["DetailQuery", "ListQuery"] },
+    );
+    expect(op.covers).toEqual(["DetailQuery", "ListQuery"]);
+  });
+
+  it("resolves covers from variable with default value", () => {
+    const op = describeOp(
+      `query Preloader($ops: [String!] = ["DefaultOp"]) @cache(covers: $ops) { field }`,
+    );
+    expect(op.covers).toEqual(["DefaultOp"]);
+  });
+
+  it("supports both keyVars and covers in same @cache directive", () => {
+    const op = describeOp(
+      `query Preloader @cache(keyVars: ["id"], covers: ["Detail"]) { field }`,
+    );
+    expect(op.keyVariables).toEqual(["id"]);
+    expect(op.covers).toEqual(["Detail"]);
+  });
+});

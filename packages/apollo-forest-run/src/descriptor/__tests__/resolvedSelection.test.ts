@@ -2067,6 +2067,52 @@ describe(resolvedSelectionsAreEqual, () => {
       expect(["User", null]).toContain(typeName);
     }
   });
+
+  it("covers variable does not affect root selection equality", () => {
+    const query = `
+      query Preloader($ops: [String!]) @cache(covers: $ops) {
+        foo
+        bar
+      }
+    `;
+    const opA = createTestOperation(query, { ops: ["DetailQuery"] });
+    const opB = createTestOperation(query, { ops: ["ListQuery", "Other"] });
+    const opC = createTestOperation(query, {});
+
+    const selA = resolveSelection(opA, opA.possibleSelections, null);
+    const selB = resolveSelection(opB, opB.possibleSelections, null);
+    const selC = resolveSelection(opC, opC.possibleSelections, null);
+
+    expect(resolvedSelectionsAreEqual(selA, selB)).toBe(true);
+    expect(resolvedSelectionsAreEqual(selA, selC)).toBe(true);
+    expect(resolvedSelectionsAreEqual(selB, selC)).toBe(true);
+  });
+
+  it("covers variable does not affect nested selection equality", () => {
+    const query = `
+      query Preloader($ops: [String!]) @cache(covers: $ops) {
+        items {
+          id
+          name
+        }
+      }
+    `;
+    const opA = createTestOperation(query, { ops: ["DetailQuery"] });
+    const opB = createTestOperation(query, { ops: ["ListQuery", "Other"] });
+
+    resolveSelection(opA, opA.possibleSelections, null);
+    resolveSelection(opB, opB.possibleSelections, null);
+
+    const itemsFieldA = getFieldInfo(opA.possibleSelections, ["items"]);
+    const itemsFieldB = getFieldInfo(opB.possibleSelections, ["items"]);
+    assert(itemsFieldA.selection);
+    assert(itemsFieldB.selection);
+
+    const childSelA = resolveSelection(opA, itemsFieldA.selection, null);
+    const childSelB = resolveSelection(opB, itemsFieldB.selection, null);
+
+    expect(resolvedSelectionsAreEqual(childSelA, childSelB)).toBe(true);
+  });
 });
 
 describe(fieldEntriesAreEqual, () => {
