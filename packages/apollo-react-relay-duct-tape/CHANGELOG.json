@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Fri, 20 Mar 2026 15:11:23 GMT",
+      "version": "1.4.34",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v1.4.34",
+      "comments": {
+        "patch": [
+          {
+            "author": "vikaskumar@microsoft.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "commit": "74059c1b6971f0746c0f03c259cde554a38c8b98",
+            "comment": "Align pagination/refetch completion callback option with Relay by supporting `onComplete` and keeping `onCompleted` as a deprecated alias."
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 19 Mar 2026 18:12:21 GMT",
       "version": "1.4.33",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v1.4.33",

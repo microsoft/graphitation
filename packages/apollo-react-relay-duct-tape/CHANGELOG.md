@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-<!-- This log was last generated on Thu, 19 Mar 2026 18:12:21 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 20 Mar 2026 15:11:23 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.4.34
+
+Fri, 20 Mar 2026 15:11:23 GMT
+
+### Patches
+
+- Align pagination/refetch completion callback option with Relay by supporting `onComplete` and keeping `onCompleted` as a deprecated alias. (vikaskumar@microsoft.com)
 
 ## 1.4.33
 
