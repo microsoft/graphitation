@@ -59,6 +59,7 @@ export function describeOperation(
     ...documentDescriptor,
     ...resultTreeDescriptor,
     id: env.genId?.() ?? 0,
+    name: documentDescriptor.definition.name?.value,
     env,
     variables,
     variablesWithDefaults,

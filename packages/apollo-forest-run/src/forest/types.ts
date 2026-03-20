@@ -124,6 +124,7 @@ export type IndexedForest = {
   extraRootIds: Map<NodeKey, TypeName>;
   operationsByNodes: Map<NodeKey, Set<OperationId>>; // May contain false positives
   operationsWithErrors: Set<OperationDescriptor>; // May contain false positives
+  operationsByName: Map<string, Set<OperationId>>; // operationName → operation IDs
   deletedNodes: Set<NodeKey>;
 };
 

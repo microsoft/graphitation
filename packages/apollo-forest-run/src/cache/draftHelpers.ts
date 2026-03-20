@@ -11,6 +11,7 @@ import type {
 import type {
   NodeKey,
   OperationDescriptor,
+  OperationId,
   ResolvedSelection,
 } from "../descriptor/types";
 import type { IndexedForest } from "../forest/types";
@@ -110,6 +111,7 @@ export function findRecyclableChunk(
   selection: ResolvedSelection,
   includeDeleted = false,
   dirtyNodes?: DirtyNodeMap,
+  coveringIds?: Set<OperationId>,
 ): NodeChunk | undefined {
   if (typeof ref !== "string") {
     return undefined; // TODO?
@@ -117,7 +119,6 @@ export function findRecyclableChunk(
   if (dirtyNodes && isDirtyNode(ref, selection, dirtyNodes)) {
     return undefined;
   }
-  const opName = operation.definition.name?.value;
   for (const layer of layers) {
     if (!includeDeleted && layer.deletedNodes.has(ref)) {
       // When a node is deleted in some layer - it is treated as deleted from lower layers too
@@ -137,19 +138,14 @@ export function findRecyclableChunk(
       }
     }
     // Check covering operations' trees for recyclable chunks
-    if (opsWithNode && (opName || operation.covers.length)) {
-      for (const opId of opsWithNode) {
-        if (opId === operation.id) continue;
-        const candidateTree = layer.trees.get(opId);
-        if (!candidateTree) continue;
-        const candidateName = candidateTree.operation.definition.name?.value;
-        // Forward: candidateTree covers us; Reverse: we cover candidateTree
-        const isCovering =
-          (opName && candidateTree.operation.covers.includes(opName)) ||
-          (candidateName && operation.covers.includes(candidateName));
-        if (!isCovering) continue;
+    if (coveringIds) {
+      for (const coverId of coveringIds) {
+        if (coverId === operation.id) continue;
+        if (!opsWithNode?.has(coverId)) continue;
+        const coverTree = layer.trees.get(coverId);
+        if (!coverTree) continue;
         checkedInLayer++;
-        for (const chunk of candidateTree.nodes.get(ref) ?? EMPTY_ARRAY) {
+        for (const chunk of coverTree.nodes.get(ref) ?? EMPTY_ARRAY) {
           if (resolvedSelectionsAreEqual(chunk.selection, selection)) {
             return chunk;
           }
@@ -214,25 +210,71 @@ export const createParentLocator =
   (chunk: ObjectChunk | CompositeListChunk) =>
     findParentInfo(layers, chunk);
 
-export const createChunkMatcher =
-  (
-    layers: IndexedForest[],
-    includeDeleted = false,
-    dirtyNodes?: DirtyNodeMap | undefined,
-  ): ChunkMatcher =>
-  (
+export function createChunkMatcher(
+  layers: IndexedForest[],
+  includeDeleted = false,
+  dirtyNodes?: DirtyNodeMap | undefined,
+): ChunkMatcher {
+  let coveringIds: Set<OperationId> | undefined;
+  let coveringIdsComputed = false;
+  return (
     ref: GraphValueReference,
     operation: OperationDescriptor,
     selection: ResolvedSelection,
-  ) =>
-    findRecyclableChunk(
+  ) => {
+    if (!coveringIdsComputed) {
+      coveringIds = getCoveringOperationIds(layers, operation);
+      coveringIdsComputed = true;
+    }
+    return findRecyclableChunk(
       layers,
       operation,
       ref,
       selection,
       includeDeleted,
       dirtyNodes,
+      coveringIds,
     );
+  };
+}
+
+function getCoveringOperationIds(
+  layers: IndexedForest[],
+  operation: OperationDescriptor,
+): Set<OperationId> | undefined {
+  const opName = operation.name;
+  if (!opName && !operation.covers.length) return undefined;
+
+  let ids: Set<OperationId> | undefined;
+
+  for (const layer of layers) {
+    // Forward: find ops that cover us (their covers list includes our name)
+    if (opName) {
+      for (const tree of layer.trees.values()) {
+        if (
+          tree.operation.id !== operation.id &&
+          tree.operation.covers.includes(opName)
+        ) {
+          if (!ids) ids = new Set();
+          ids.add(tree.operation.id);
+        }
+      }
+    }
+    // Reverse: find ops that we cover (look up by name)
+    for (const coveredName of operation.covers) {
+      const coveredIds = layer.operationsByName.get(coveredName);
+      if (coveredIds) {
+        for (const id of coveredIds) {
+          if (id !== operation.id) {
+            if (!ids) ids = new Set();
+            ids.add(id);
+          }
+        }
+      }
+    }
+  }
+  return ids;
+}
 
 export const createChunkProvider =
   (layers: IndexedForest[], includeDeleted = false): ChunkProvider =>

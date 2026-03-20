@@ -85,6 +85,7 @@ export type ResolvedSelection = PossibleSelection & {
 
 export type OperationDescriptor = {
   id: OperationId;
+  name: string | undefined;
   env: OperationEnv;
   document: DocumentNode;
   fragmentMap: FragmentMap;
