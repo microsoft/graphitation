@@ -125,7 +125,6 @@ export type IndexedForest = {
   operationsByNodes: Map<NodeKey, Set<OperationId>>; // May contain false positives
   operationsWithErrors: Set<OperationDescriptor>; // May contain false positives
   deletedNodes: Set<NodeKey>;
-  coveredBy: Map<string, Set<OperationId>>; // operationName → covering operation IDs
 };
 
 export type Source = Readonly<SourceObject | SourceCompositeList>;
