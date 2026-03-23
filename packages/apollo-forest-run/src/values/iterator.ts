@@ -47,7 +47,7 @@ function iterator(
         const itemChunk = item.isAggregate ? item.chunks[0] : item;
         throw new Error(
           `Missing list item ${i - 1} in ${JSON.stringify(list)}\n` +
-            `  operation: ${itemChunk.operation.definition.name?.value}`,
+            `  operation: ${itemChunk.operation.name}`,
         );
       }
       assertNever(item);

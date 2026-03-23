@@ -267,7 +267,7 @@ function updateCompositeListValue(
       result[i] = newValue.data;
       continue;
     }
-    const op = operation.definition.name?.value;
+    const op = operation.name;
     context.env.logger?.warn(
       `Unknown list item kind: ${itemRef.kind} at #${i}\n` +
         `  source list: ${inspect(base.data)})` +
@@ -393,7 +393,7 @@ function replaceCompositeList(
         `Failed list item #${i} replacement, returning source list\n` +
           `  new list: ${inspect(newList.data)}\n` +
           `  source list: ${inspect(baseList.data)}\n` +
-          `  operation: ${context.operation.definition.name?.value}`,
+          `  operation: ${context.operation.name}`,
       );
       return undefined;
     }

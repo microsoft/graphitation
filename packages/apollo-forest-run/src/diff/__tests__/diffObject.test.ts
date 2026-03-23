@@ -1,6 +1,7 @@
 import { cloneDeep } from "lodash";
 import { diffObject } from "../diffObject";
 import { PossibleSelections, VariableValues } from "../../descriptor/types";
+import { UNINITIALIZED_HASH } from "../../jsutils/selectionHash";
 import { assert } from "../../jsutils/assert";
 import { ObjectChunk } from "../../values/types";
 import { SourceObject } from "../../values/types";
@@ -2076,6 +2077,7 @@ function chunkPerField(env: DiffEnv, sourceChunk: ObjectChunk): ObjectChunk[] {
           fieldsWithSelections: selection.fieldsWithSelections?.includes(name)
             ? [name]
             : [],
+          structuralHash: UNINITIALIZED_HASH,
         },
       ],
     ]);

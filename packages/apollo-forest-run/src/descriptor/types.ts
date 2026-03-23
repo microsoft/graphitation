@@ -80,10 +80,12 @@ export type ResolvedSelection = PossibleSelection & {
   normalizedFields?: Map<FieldInfo, NormalizedFieldEntry>;
   skippedFields?: Set<FieldInfo>;
   skippedSpreads?: Set<SpreadInfo>;
+  resolvedHash?: number; // Structural hash + runtime-resolved state (args, skip/include)
 };
 
 export type OperationDescriptor = {
   id: OperationId;
+  name: string | undefined;
   env: OperationEnv;
   document: DocumentNode;
   fragmentMap: FragmentMap;
@@ -99,6 +101,7 @@ export type OperationDescriptor = {
   selections: Map<PossibleSelections, Map<TypeName | null, ResolvedSelection>>;
   cache: boolean;
   historySize: number; // Size of operation history to keep
+  covers: string[]; // Operation names this operation covers (from @cache(covers: [...]))
 };
 
 export type FormattedError = GraphQLFormattedError;
@@ -149,6 +152,10 @@ export type PossibleSelection = {
 
   experimentalAlias?: FragmentAlias;
   experimentalAliasedFragments?: Map<FragmentAlias, PossibleSelection>;
+
+  hasDescendantsToResolve?: boolean; // true if any descendant has fieldsToNormalize, fieldsWithDirectives, or spreadsWithDirectives
+
+  structuralHash: number; // Order-independent hash of field structure (names, dataKeys, arg names, child hashes)
 };
 
 export type ResolvedSelections = Map<

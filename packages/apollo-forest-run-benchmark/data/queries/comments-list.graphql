@@ -1,0 +1,37 @@
+query CommentsList($postId: ID!, $first: Int!, $after: String) {
+  ...CommentsListFragment
+}
+
+fragment CommentsListFragment on Query {
+  post(id: $postId) {
+    id
+    comments(first: $first, after: $after) {
+      edges {
+        node {
+          id
+          body
+          createdAt
+          author {
+            id
+            name
+            avatarUrl
+          }
+          reactions {
+            id
+            type
+            user {
+              id
+              name
+            }
+          }
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      totalCount
+    }
+  }
+}

@@ -8,6 +8,7 @@ import {
   FieldInfo,
   FieldMap,
   OperationDescriptor,
+  OperationEnv,
   PossibleSelection,
   PossibleSelections,
   VariableValues,
@@ -77,6 +78,30 @@ export function createTestOperation(
   return describeOperation(
     {},
     docDescriptor,
+    resultDescriptor,
+    variables ?? {},
+  );
+}
+
+export function createTestOperationWithEnv(
+  env: OperationEnv,
+  documentOrString: DocumentNode | string,
+  variables?: VariableValues,
+): OperationDescriptor {
+  const document =
+    typeof documentOrString === "string"
+      ? parseOnce(documentOrString)
+      : documentOrString;
+
+  let resultDescriptor = descriptorCache.get(documentOrString);
+  if (!resultDescriptor) {
+    resultDescriptor = describeResultTree(describeDocument(document));
+    descriptorCache.set(documentOrString, resultDescriptor);
+  }
+
+  return describeOperation(
+    env,
+    describeDocument(document),
     resultDescriptor,
     variables ?? {},
   );
