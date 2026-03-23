@@ -2,6 +2,21 @@
   "name": "@graphitation/rempl-apollo-devtools",
   "entries": [
     {
+      "date": "Mon, 23 Mar 2026 14:19:47 GMT",
+      "version": "2.1.9",
+      "tag": "@graphitation/rempl-apollo-devtools_v2.1.9",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/rempl-apollo-devtools",
+            "comment": "Bump @graphitation/apollo-forest-run to v0.22.0",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 16 Mar 2026 14:29:08 GMT",
       "version": "2.1.8",
       "tag": "@graphitation/rempl-apollo-devtools_v2.1.8",

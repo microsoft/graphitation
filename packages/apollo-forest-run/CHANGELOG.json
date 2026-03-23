@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Mon, 23 Mar 2026 14:19:47 GMT",
+      "version": "0.22.0",
+      "tag": "@graphitation/apollo-forest-run_v0.22.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "948389a1d62d9fcc858bbb74fd9c8f8e8babd15a",
+            "comment": "optimize a \"preloader pattern\" where one operation explicitly covers selection of several other operations"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 16 Mar 2026 14:29:08 GMT",
       "version": "0.21.1",
       "tag": "@graphitation/apollo-forest-run_v0.21.1",
