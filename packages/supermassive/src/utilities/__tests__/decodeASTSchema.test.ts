@@ -65,6 +65,20 @@ describe(decodeASTSchema, () => {
     expect(print(decoded)).toMatchSnapshot();
   });
 
+  test("correctly encodes kitchen sink AST schema WITH enum values merged", () => {
+    const doc = cleanUpDocument(kitchenSinkSDL.document);
+    const encoded = [
+      mergeSchemaDefinitions(
+        { types: {}, directives: [] },
+        encodeASTSchema(doc),
+        { mergeEnumValues: true },
+      ),
+    ];
+    const decoded = decodeASTSchema(encoded);
+    expect(encodeASTSchema(decoded)).toEqual(encoded);
+    expect(print(decoded)).toMatchSnapshot();
+  });
+
   test("correctly encodes swapi AST schema with directives", () => {
     const doc = cleanUpDocument(swapiSDL.document);
     const encoded = encodeASTSchema(doc, { includeDirectives: true });

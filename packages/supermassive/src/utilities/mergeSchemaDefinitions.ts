@@ -1,9 +1,12 @@
 import {
   DirectiveDefinitionTuple,
   DirectiveTuple,
+  EnumTypeDefinitionTuple,
   FieldDefinitionRecord,
   getDirectiveDefinitionArgs,
   getDirectiveDefinitionName,
+  getEnumMetadata,
+  getEnumValues,
   getFieldArgs,
   getFieldMetadata,
   getFields,
@@ -24,6 +27,7 @@ import {
   TypeDefinitionTuple,
   TypeDefinitionMetadata,
   getDirectiveName,
+  isEnumTypeDefinition,
 } from "../schema/definition";
 import { inspect } from "../jsutils/inspect";
 
@@ -31,9 +35,13 @@ export function createSchemaDefinitions(definitions: SchemaDefinitions[]) {
   return mergeSchemaDefinitions({ types: {}, directives: [] }, definitions);
 }
 
+type MergeSchemaDefinitionsOptions = {
+  mergeEnumValues?: boolean;
+};
 export function mergeSchemaDefinitions(
   accumulator: SchemaDefinitions,
   definitions: SchemaDefinitions[],
+  options?: MergeSchemaDefinitionsOptions,
 ): SchemaDefinitions {
   if (!definitions.length) {
     return accumulator;
@@ -42,7 +50,7 @@ export function mergeSchemaDefinitions(
     if (!accumulator.types) {
       accumulator.types = source.types;
     } else if (source.types) {
-      mergeTypes(accumulator.types, source.types);
+      mergeTypes(accumulator.types, source.types, options);
     }
     if (!accumulator.directives) {
       accumulator.directives = source.directives;
@@ -124,6 +132,7 @@ export function mergeDirectives(
 export function mergeTypes(
   target: TypeDefinitionsRecord,
   source: TypeDefinitionsRecord,
+  options?: MergeSchemaDefinitionsOptions,
 ): void {
   for (const [typeName, sourceDef] of Object.entries(source)) {
     const targetDef = target[typeName];
@@ -154,6 +163,16 @@ export function mergeTypes(
       );
       continue;
     }
+
+    if (
+      options?.mergeEnumValues &&
+      isEnumTypeDefinition(targetDef) &&
+      isEnumTypeDefinition(sourceDef)
+    ) {
+      mergeEnumValues(targetDef, sourceDef);
+      continue;
+    }
+
     // Note: not merging scalars, unions and enums - assuming they are fully defined by the first occurrence
     if (targetDef[0] !== sourceDef[0]) {
       throw new Error(
@@ -230,6 +249,42 @@ function mergeInterfaces(
   for (const interfaceName of sourceInterfaces) {
     if (!targetInterfaces.includes(interfaceName)) {
       targetInterfaces.push(interfaceName);
+    }
+  }
+}
+
+function mergeEnumValues(
+  target: EnumTypeDefinitionTuple,
+  source: EnumTypeDefinitionTuple,
+): void {
+  const targetValues = getEnumValues(target);
+  const sourceValues = getEnumValues(source);
+
+  for (const value of sourceValues) {
+    if (!targetValues.includes(value)) {
+      targetValues.push(value);
+    }
+  }
+
+  const sourceMetadata = getEnumMetadata(source);
+  if (!sourceMetadata?.values) {
+    return;
+  }
+
+  const targetMetadata = getEnumMetadata(target);
+  if (!targetMetadata) {
+    target[2] = { values: { ...sourceMetadata.values } };
+    return;
+  }
+
+  if (!targetMetadata.values) {
+    targetMetadata.values = { ...sourceMetadata.values };
+    return;
+  }
+
+  for (const [valueName, valueMeta] of Object.entries(sourceMetadata.values)) {
+    if (!targetMetadata.values[valueName]) {
+      targetMetadata.values[valueName] = valueMeta;
     }
   }
 }

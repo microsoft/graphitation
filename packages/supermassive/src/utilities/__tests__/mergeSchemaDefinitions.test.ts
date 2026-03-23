@@ -191,6 +191,53 @@ describe("mergeSchemaDefinitions", () => {
     `);
   });
 
+  it("should merge enum values from extended enum type", () => {
+    const defs = schema(`
+      enum UserRole {
+        ADMIN
+        USER
+      }
+
+      extend enum UserRole {
+        MODERATOR
+      }
+    `);
+    const result = mergeSchemaDefinitions({ types: {}, directives: [] }, defs, {
+      mergeEnumValues: true,
+    });
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "directives": [],
+        "types": {
+          "UserRole": [
+            5,
+            [
+              "ADMIN",
+              "USER",
+              "MODERATOR",
+            ],
+          ],
+        },
+      }
+    `);
+  });
+
+  it("should not duplicate enum values when merging", () => {
+    const defs = schema(`
+      enum UserRole {
+        ADMIN
+        USER
+      }
+
+      extend enum UserRole {
+        USER
+        MODERATOR
+      }
+    `);
+    const result = mergeSchemaDefinitions({ types: {}, directives: [] }, defs, { mergeEnumValues: true});
+    expect(result.types["UserRole"][1]).toEqual(["ADMIN", "USER", "MODERATOR"]);
+  });
+
   it("should throw when scalar type definition differs", () => {
     const defs = schema(`
       scalar DateTime
