@@ -1,4 +1,4 @@
-import { parse } from "graphql";
+import { parse, print } from "graphql";
 import {
   createSchemaDefinitions,
   mergeSchemaDefinitions,
@@ -7,6 +7,7 @@ import {
   encodeASTSchema,
   type EncodeASTSchemaOptions,
 } from "../encodeASTSchema";
+import { decodeASTSchema } from "../decodeASTSchema";
 import { SchemaDefinitions } from "../../schema/definition";
 
 function schema(
@@ -15,6 +16,10 @@ function schema(
 ): SchemaDefinitions[] {
   const doc = parse(sdl);
   return encodeASTSchema(doc, options);
+}
+
+function printSchema(definitions: SchemaDefinitions): string {
+  return print(decodeASTSchema([definitions]));
 }
 
 describe("mergeSchemaDefinitions", () => {
@@ -234,7 +239,9 @@ describe("mergeSchemaDefinitions", () => {
         MODERATOR
       }
     `);
-    const result = mergeSchemaDefinitions({ types: {}, directives: [] }, defs, { mergeEnumValues: true});
+    const result = mergeSchemaDefinitions({ types: {}, directives: [] }, defs, {
+      mergeEnumValues: true,
+    });
     expect(result.types["UserRole"][1]).toEqual(["ADMIN", "USER", "MODERATOR"]);
   });
 
@@ -660,5 +667,245 @@ extend type Query {
         },
       }
     `);
+  });
+
+  it("should prefer non-nullable field type when merging nullable and non-nullable", () => {
+    const defs = schema(`
+      type User {
+        id: Int
+      }
+
+      extend type User {
+        id: Int!
+      }
+    `);
+    const result = mergeSchemaDefinitions({ types: {}, directives: [] }, defs);
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "directives": [],
+        "types": {
+          "User": [
+            2,
+            {
+              "id": 8,
+            },
+          ],
+        },
+      }
+    `);
+  });
+
+  describe("preferNonNullRef - nullable vs non-nullable type handling", () => {
+    it("should handle both fields nullable - returns target", () => {
+      const defs = schema(`
+        type User {
+          name: String
+        }
+
+        extend type User {
+          name: String
+        }
+      `);
+      const result = mergeSchemaDefinitions(
+        { types: {}, directives: [] },
+        defs,
+      );
+      expect(printSchema(result)).toMatchInlineSnapshot(`
+        "type User {
+          name: String
+        }
+        "
+      `);
+    });
+
+    it("should handle both fields non-nullable - returns target", () => {
+      const defs = schema(`
+        type User {
+          name: String!
+        }
+
+        extend type User {
+          name: String!
+        }
+      `);
+      const result = mergeSchemaDefinitions(
+        { types: {}, directives: [] },
+        defs,
+      );
+      expect(printSchema(result)).toMatchInlineSnapshot(`
+        "type User {
+          name: String!
+        }
+        "
+      `);
+    });
+
+    it("should prefer non-nullable when target is non-null and source is nullable", () => {
+      const defs = schema(`
+        type User {
+          name: String!
+        }
+
+        extend type User {
+          name: String
+        }
+      `);
+      const result = mergeSchemaDefinitions(
+        { types: {}, directives: [] },
+        defs,
+      );
+      expect(printSchema(result)).toMatchInlineSnapshot(`
+        "type User {
+          name: String!
+        }
+        "
+      `);
+    });
+
+    it("should prefer non-nullable when target is nullable and source is non-null", () => {
+      const defs = schema(`
+        type User {
+          name: String
+        }
+
+        extend type User {
+          name: String!
+        }
+      `);
+      const result = mergeSchemaDefinitions(
+        { types: {}, directives: [] },
+        defs,
+      );
+      expect(printSchema(result)).toMatchInlineSnapshot(`
+        "type User {
+          name: String!
+        }
+        "
+      `);
+    });
+
+    it("should handle non-nullable list types", () => {
+      const defs = schema(`
+        type User {
+          tags: [String]!
+        }
+
+        extend type User {
+          tags: [String]!
+        }
+      `);
+      const result = mergeSchemaDefinitions(
+        { types: {}, directives: [] },
+        defs,
+      );
+      expect(printSchema(result)).toMatchInlineSnapshot(`
+        "type User {
+          tags: [String]!
+        }
+        "
+      `);
+    });
+
+    it("should prefer non-nullable list when types match", () => {
+      const defs = schema(`
+        type User {
+          tags: [String]
+        }
+
+        extend type User {
+          tags: [String]!
+        }
+      `);
+      const result = mergeSchemaDefinitions(
+        { types: {}, directives: [] },
+        defs,
+      );
+      expect(printSchema(result)).toMatchInlineSnapshot(`
+        "type User {
+          tags: [String]!
+        }
+        "
+      `);
+    });
+
+    it("should handle non-null list items", () => {
+      const defs = schema(`
+        type User {
+          tags: [String!]
+        }
+
+        extend type User {
+          tags: [String!]
+        }
+      `);
+      const result = mergeSchemaDefinitions(
+        { types: {}, directives: [] },
+        defs,
+      );
+      expect(printSchema(result)).toMatchInlineSnapshot(`
+        "type User {
+          tags: [String!]
+        }
+        "
+      `);
+    });
+
+    it("should throw when merging incompatible types with different nullability", () => {
+      const defs = schema(`
+        type User {
+          name: String!
+        }
+
+        extend type User {
+          name: Int
+        }
+      `);
+      expect(() => {
+        mergeSchemaDefinitions({ types: {}, directives: [] }, defs);
+      }).toThrow();
+    });
+
+    it("should throw when merging list and scalar types with different nullability", () => {
+      const defs = schema(`
+        type User {
+          tags: [String]!
+        }
+
+        extend type User {
+          tags: String
+        }
+      `);
+      expect(() => {
+        mergeSchemaDefinitions({ types: {}, directives: [] }, defs);
+      }).toThrow();
+    });
+
+    it("should prefer non-null across multiple field merges", () => {
+      const defs = schema(`
+        type User {
+          id: ID
+          name: String
+          email: String!
+        }
+
+        extend type User {
+          id: ID!
+          name: String!
+          email: String
+        }
+      `);
+      const result = mergeSchemaDefinitions(
+        { types: {}, directives: [] },
+        defs,
+      );
+      expect(printSchema(result)).toMatchInlineSnapshot(`
+        "type User {
+          id: ID!
+          name: String!
+          email: String!
+        }
+        "
+      `);
+    });
   });
 });

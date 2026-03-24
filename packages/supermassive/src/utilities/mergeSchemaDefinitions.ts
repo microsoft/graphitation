@@ -3,14 +3,17 @@ import {
   DirectiveTuple,
   EnumTypeDefinitionTuple,
   FieldDefinitionRecord,
+  FieldDefinitionTuple,
   getDirectiveDefinitionArgs,
   getDirectiveDefinitionName,
   getEnumMetadata,
   getEnumValues,
   getFieldArgs,
   getFieldMetadata,
+  getFieldTypeReference,
   getFields,
   getInputObjectFields,
+  getInputValueTypeReference,
   getTypeDefinitionMetadataIndex,
   getTypeDefinitionMetadata,
   InputValueDefinitionRecord,
@@ -29,6 +32,7 @@ import {
   getDirectiveName,
   isEnumTypeDefinition,
 } from "../schema/definition";
+import { isNonNullType, TypeReference, unwrap } from "../schema/reference";
 import { inspect } from "../jsutils/inspect";
 
 export function createSchemaDefinitions(definitions: SchemaDefinitions[]) {
@@ -191,10 +195,35 @@ function mergeFields(
 ) {
   for (const [fieldName, sourceDef] of Object.entries(source)) {
     const targetDef = target[fieldName];
-    if (!target[fieldName] || !Array.isArray(targetDef)) {
+    if (!targetDef) {
       target[fieldName] = sourceDef;
       continue;
     }
+
+    if (!Array.isArray(targetDef)) {
+      const preferredType = preferNonNullRef(
+        targetDef,
+        getFieldTypeReference(sourceDef),
+      );
+      if (Array.isArray(sourceDef)) {
+        target[fieldName] = sourceDef;
+        if (preferredType !== sourceDef[0]) {
+          target[fieldName][0] = preferredType;
+        }
+      } else {
+        target[fieldName] = preferredType;
+      }
+      continue;
+    }
+
+    const preferredType = preferNonNullRef(
+      targetDef[0],
+      getFieldTypeReference(sourceDef),
+    );
+    if (preferredType !== targetDef[0]) {
+      targetDef[0] = preferredType;
+    }
+
     const sourceArgs = getFieldArgs(sourceDef);
     if (sourceArgs) {
       const targetArgs = getFieldArgs(targetDef) ?? setFieldArgs(targetDef, {});
@@ -295,9 +324,41 @@ function mergeInputValues(
 ) {
   for (const [fieldName, sourceDef] of Object.entries(source)) {
     const targetDef = target[fieldName];
-    if (!target[fieldName] || !Array.isArray(targetDef)) {
+    if (!targetDef) {
       target[fieldName] = sourceDef;
+      continue;
+    }
+
+    const preferredType = preferNonNullRef(
+      getInputValueTypeReference(targetDef),
+      getInputValueTypeReference(sourceDef),
+    );
+    if (preferredType !== getInputValueTypeReference(targetDef)) {
+      if (Array.isArray(targetDef)) {
+        targetDef[0] = preferredType;
+      } else {
+        target[fieldName] = preferredType;
+      }
     }
     // Note: not merging defaultValue - assuming it is fully defined by the first occurrence
   }
+}
+
+function preferNonNullRef(
+  target: TypeReference,
+  source: TypeReference,
+): TypeReference {
+  const targetIsNonNull = isNonNullType(target);
+  const sourceIsNonNull = isNonNullType(source);
+  if (targetIsNonNull === sourceIsNonNull) {
+    return target;
+  }
+  const nonNull = targetIsNonNull ? target : source;
+  const nullable = targetIsNonNull ? source : target;
+
+  if (unwrap(nonNull) === nullable) {
+    return nonNull;
+  }
+
+  throw new Error(`${unwrap(nonNull)} and ${nullable} cannot be merged`);
 }
