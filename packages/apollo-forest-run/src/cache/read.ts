@@ -78,10 +78,13 @@ export function read<TData>(
   // FIXME: this may break with optimistic layers - partialReadResults should be per layer?
   if (outputTree.incompleteChunks.size) {
     store.partialReadResults.add(outputTree.operation);
+    let missing: MissingFieldError[] | undefined;
     return {
       result: outputTree.result.data as TData,
-      complete: false,
-      missing: [reportFirstMissingField(outputTree)],
+      complete: false as const,
+      get missing() {
+        return (missing ??= [reportFirstMissingField(outputTree)]);
+      },
       dangling: outputTree.danglingReferences,
     };
   }
@@ -303,7 +306,12 @@ function growDataTree(
     rootNodeKey,
     rootType,
   );
-  hydrateDraft(env, rootDraft, createChunkProvider([forest]));
+  hydrateDraft(
+    env,
+    rootDraft,
+    createChunkProvider([forest]),
+    createChunkMatcher([forest]),
+  );
 
   // ApolloCompat: mostly added for tests
   if (

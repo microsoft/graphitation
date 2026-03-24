@@ -112,6 +112,56 @@ describe(extractMetadataTransform, () => {
       } as Metadata);
     });
 
+    it("extracts connection metadata when using 'filters' (plural) argument name", () => {
+      const result = extractMetadataTransform(graphql`
+        query UserWithFriendsFiltersQuery(
+          $friendsForwardCount: Int!
+          $friendsAfterCursor: String!
+          $friendsSortOrder: FriendsSortOrder = { field: NAME, direction: ASC }
+        ) {
+          ...UserFriendsFiltersFragment
+        }
+        fragment UserFriendsFiltersFragment on Query {
+          me {
+            friends(
+              first: $friendsForwardCount
+              after: $friendsAfterCursor
+              last: $friendsBackwardCount
+              before: $friendsBeforeCursor
+              sortBy: $friendsSortOrder
+            ) @connection(key: "UserFriendsFilters", filters: ["sortBy"]) {
+              edges {
+                node {
+                  ...FriendFiltersFragment
+                }
+              }
+              pageInfo {
+                endCursor
+              }
+            }
+          }
+        }
+        fragment FriendFiltersFragment on User {
+          name
+        }
+      `);
+      expect(result).toMatchObject({
+        connection: {
+          forwardCountVariable: "friendsForwardCount",
+          forwardCursorVariable: "friendsAfterCursor",
+          backwardCountVariable: "friendsBackwardCount",
+          backwardCursorVariable: "friendsBeforeCursor",
+          selectionPath: ["me", "friends"],
+          filterVariableDefaults: {
+            friendsSortOrder: {
+              field: "NAME",
+              direction: "ASC",
+            },
+          },
+        },
+      } as Metadata);
+    });
+
     it("returns nothing if no connection is declared", () => {
       const result = extractMetadataTransform(graphql`
         query {

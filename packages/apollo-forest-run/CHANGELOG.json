@@ -2,6 +2,66 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Tue, 24 Mar 2026 14:39:48 GMT",
+      "version": "0.22.1",
+      "tag": "@graphitation/apollo-forest-run_v0.22.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "celiac@microsoft.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "4f586d7316c7896629e3a839ca7a20702cf3a91d",
+            "comment": "update of minimatch and immutable dependencies"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 23 Mar 2026 14:19:47 GMT",
+      "version": "0.22.0",
+      "tag": "@graphitation/apollo-forest-run_v0.22.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "948389a1d62d9fcc858bbb74fd9c8f8e8babd15a",
+            "comment": "optimize a \"preloader pattern\" where one operation explicitly covers selection of several other operations"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 16 Mar 2026 14:29:08 GMT",
+      "version": "0.21.1",
+      "tag": "@graphitation/apollo-forest-run_v0.21.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "aa480e2c41d35c32a43e77ef19262e84d714f21a",
+            "comment": "fix enqueueListItem deleting instead of adding to itemQueue"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Thu, 12 Mar 2026 13:08:20 GMT",
+      "version": "0.21.0",
+      "tag": "@graphitation/apollo-forest-run_v0.21.0",
+      "comments": {
+        "none": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "ac4dc32d5ee8a74a646a559f3330d16e0efa15f5",
+            "comment": "Revert commits d6232a0b..2285d88d (cross-operation selection, preloader optimization, alpha publish, CI fixes)"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 06 Mar 2026 20:27:05 GMT",
       "version": "0.21.0",
       "tag": "@graphitation/apollo-forest-run_v0.21.0",

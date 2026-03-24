@@ -1,19 +1,38 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`executeWithoutSchema - regression tests Executing mutation without resolver should return error 1`] = `
+exports[`executeWithoutSchema - regression tests Executing subscription without type definitions but SchemaFragmentLoader will provide needed schema part 1`] = `
+[
+  {
+    "data": {
+      "newFileEvent": {
+        "id": "file-1",
+        "name": "document.pdf",
+      },
+    },
+  },
+  {
+    "data": {
+      "newFileEvent": {
+        "id": "file-2",
+        "name": "image.png",
+      },
+    },
+  },
+]
+`;
+
+exports[`executeWithoutSchema - regression tests Should fail when executing subscription without type definitions and schemaFragmentLoader still NOT returning requested schema part 1`] = `
 {
-  "data": null,
   "errors": [
-    [GraphQLError: Resolver for Mutation.downloadFile is missing],
+    [GraphQLError: Unexpected error value: "Type definition for Subscription.newFileEvent is missing"],
   ],
 }
 `;
 
-exports[`executeWithoutSchema - regression tests Executing mutation without type definitions return error 1`] = `
+exports[`executeWithoutSchema - regression tests Should fail while executing subscription without type definitions and without schema fragment loader 1`] = `
 {
-  "data": null,
   "errors": [
-    [GraphQLError: Type definition for Mutation.downloadFile is missing],
+    [GraphQLError: Unexpected error value: "Type definition for Subscription.newFileEvent is missing"],
   ],
 }
 `;

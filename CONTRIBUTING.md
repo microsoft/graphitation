@@ -52,9 +52,15 @@ yarn test
 yarn lint
 ```
 
-## Releasing alpha versions
+## Releasing canary versions
 
-1. Add a branch which will be releasing alpha version to .azure-devops\graphitation-release.yml into `trigger`
-2. Change `release` script in the root package json to `yarn beachball publish -t alpha`,
-3. Modify package.json of the package you want to release to x.x.x-alpha.0
-4. Every time you want to release a new version use `yarn change` and select `prelease`. To avoid patching of dependent packages set `dependentChangeType` to `none` manually in .changes directory
+1. Generate change files: `yarn change`
+2. Run pipeline [microsoft.graphitation](https://dev.azure.com/DomoreexpGithub/Github_Pipelines/_build?definitionId=8) from your branch
+3. Pipeline uses `beachball canary` to publish versions like `0.21.1-canary.0` with the `canary` dist-tag
+4. Install via `npm i @graphitation/PACKAGE@canary`
+
+Notes:
+
+- Change files are required — they determine _which_ packages to publish and the change type _is_ respected for the base bump (e.g. `minor` on `0.21.0` → `0.22.0`). Canary then adds an extra prerelease patch on top, so the final version is `0.22.1-canary.0`.
+- Canary versions auto-increment by checking the npm registry, so repeated runs are safe.
+- See [graphitation-release.yml](.azure-devops/graphitation-release.yml) for details.

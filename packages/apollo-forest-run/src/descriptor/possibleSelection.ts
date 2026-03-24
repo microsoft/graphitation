@@ -26,6 +26,12 @@ import type {
 } from "./types";
 import { accumulate, getOrCreate } from "../jsutils/map";
 import { assert, assertNever } from "../jsutils/assert";
+import {
+  hashString,
+  combineHash,
+  accumulateHash,
+  UNINITIALIZED_HASH,
+} from "../jsutils/selectionHash";
 
 export type Context = Readonly<{
   fragmentMap: FragmentMap;
@@ -366,6 +372,14 @@ function completeSelections(
   for (const selection of next) {
     completeSelections(context, selection, depth + 1);
   }
+
+  // Compute structural hashes and complex descendants bottom-up (children already completed above)
+  for (const selection of possibleSelections.values()) {
+    if (selection.structuralHash !== UNINITIALIZED_HASH) continue; // already hashed (shared selection)
+    selection.structuralHash = computeStructuralHash(selection);
+    computeHasDescendantsToResolve(selection);
+  }
+
   return possibleSelections;
 }
 
@@ -729,6 +743,7 @@ function copySelection(
     fieldQueue: [],
     experimentalAlias: selection.experimentalAlias,
     depth: selection.depth,
+    structuralHash: UNINITIALIZED_HASH,
   };
   for (const [field, aliases] of selection.fields.entries()) {
     copy.fields.set(field, [...aliases]);
@@ -756,8 +771,78 @@ function copySelection(
   return copy;
 }
 
+/**
+ * Compute an order-independent structural hash of a PossibleSelection.
+ * Hashes: field names, dataKeys, arg names, child type names, child structural hashes.
+ * Does NOT hash arg/directive values (those depend on variables, handled at resolve time).
+ */
+function computeStructuralHash(selection: PossibleSelection): number {
+  let hash = 0;
+
+  for (const [fieldName, entries] of selection.fields) {
+    // Per-field hash: order-dependent across entries (they're compared by index)
+    let fieldHash = hashString(fieldName);
+    for (const entry of entries) {
+      fieldHash = combineHash(fieldHash, hashString(entry.dataKey));
+
+      // Hash arg names (sorted for stability — same args in different AST order should match)
+      // FIXME: no need to sort? separate argHash that is order-dependent and combine with fieldHash in an order-independent way?
+      if (entry.args?.size) {
+        const argNames = [...entry.args.keys()].sort();
+        for (const argName of argNames) {
+          fieldHash = combineHash(fieldHash, hashString(argName));
+        }
+      }
+
+      // Hash child selection structure (already computed bottom-up)
+      if (entry.selection) {
+        for (const [typeName, childSel] of entry.selection) {
+          fieldHash = combineHash(
+            fieldHash,
+            typeName ? hashString(typeName) : 0,
+          );
+          fieldHash = combineHash(fieldHash, childSel.structuralHash);
+        }
+      }
+    }
+    // Accumulate order-independently across field names
+    hash = accumulateHash(hash, fieldHash);
+  }
+  // TODO: fieldsWithDirectives + spreadsWithDirectives should also affect structural hash (only directives + arg names)
+
+  return hash;
+}
+
+function computeHasDescendantsToResolve(selection: PossibleSelection) {
+  if (!selection.fieldsWithSelections) return;
+
+  for (const fieldName of selection.fieldsWithSelections) {
+    const fields = selection.fields.get(fieldName);
+    if (!fields) continue;
+    for (const field of fields) {
+      if (!field.selection) continue;
+      for (const [, childSel] of field.selection) {
+        if (
+          childSel.fieldsToNormalize?.length ||
+          childSel.fieldsWithDirectives?.length ||
+          childSel.spreadsWithDirectives?.length ||
+          childSel.hasDescendantsToResolve
+        ) {
+          selection.hasDescendantsToResolve = true;
+          return;
+        }
+      }
+    }
+  }
+}
+
 function createEmptySelection(): PossibleSelection {
-  return { fields: new Map(), fieldQueue: [], depth: -1 };
+  return {
+    fields: new Map(),
+    fieldQueue: [],
+    depth: -1,
+    structuralHash: UNINITIALIZED_HASH,
+  };
 }
 
 function getFragmentAlias(node: FragmentSpreadNode): string | undefined {

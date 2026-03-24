@@ -1,8 +1,32 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Fri, 06 Mar 2026 20:27:05 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 24 Mar 2026 14:39:48 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.22.1
+
+Tue, 24 Mar 2026 14:39:48 GMT
+
+### Patches
+
+- update of minimatch and immutable dependencies (celiac@microsoft.com)
+
+## 0.22.0
+
+Mon, 23 Mar 2026 14:19:47 GMT
+
+### Minor changes
+
+- optimize a "preloader pattern" where one operation explicitly covers selection of several other operations (vrazuvaev@microsoft.com_msteamsmdb)
+
+## 0.21.1
+
+Mon, 16 Mar 2026 14:29:08 GMT
+
+### Patches
+
+- fix enqueueListItem deleting instead of adding to itemQueue (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.21.0
 

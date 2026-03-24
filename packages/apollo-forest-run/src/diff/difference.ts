@@ -84,7 +84,7 @@ export function createCompositeListDifference(): CompositeListDifference {
 
 export function enqueueListItem(diff: CompositeListDifference, index: number) {
   diff.itemQueue ??= new Set();
-  diff.itemQueue.delete(index);
+  diff.itemQueue.add(index);
 }
 
 export function dequeueListItem(diff: CompositeListDifference, index: number) {

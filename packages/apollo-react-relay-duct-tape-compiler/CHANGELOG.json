@@ -2,6 +2,66 @@
   "name": "@graphitation/apollo-react-relay-duct-tape-compiler",
   "entries": [
     {
+      "date": "Thu, 19 Mar 2026 18:12:21 GMT",
+      "version": "1.9.5",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.9.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "comment": "Bump @graphitation/supermassive to v3.15.3",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 17 Mar 2026 10:18:09 GMT",
+      "version": "1.9.4",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.9.4",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "comment": "Bump @graphitation/supermassive to v3.15.2",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 16 Mar 2026 17:10:12 GMT",
+      "version": "1.9.3",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.9.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "comment": "Bump @graphitation/supermassive to v3.15.1",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 10 Mar 2026 19:18:00 GMT",
+      "version": "1.9.2",
+      "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.9.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-react-relay-duct-tape-compiler",
+            "commit": "d1c2fc68f7b61f533eceee6e0336d84afdc7b3bd",
+            "comment": "fix(apollo-react-relay-duct-tape-compiler): connection directive works with both \"filters\" and \"filter\" argument variants"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 09 Mar 2026 15:22:57 GMT",
       "version": "1.9.1",
       "tag": "@graphitation/apollo-react-relay-duct-tape-compiler_v1.9.1",

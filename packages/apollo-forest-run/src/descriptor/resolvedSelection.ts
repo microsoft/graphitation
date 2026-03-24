@@ -24,9 +24,21 @@ import { valueFromASTUntyped } from "graphql";
 import { equal } from "@wry/equality";
 import { assert } from "../jsutils/assert";
 import { createArgumentDefs } from "./possibleSelection";
+import {
+  hashString,
+  combineHash,
+  hashValue,
+  UNINITIALIZED_HASH,
+} from "../jsutils/selectionHash";
 
 const EMPTY_ARRAY = Object.freeze([]);
 const EMPTY_MAP = new Map();
+
+// Maps resolved selection wrappers to their source operations (for recursive child comparison)
+const selectionOperations = new WeakMap<
+  ResolvedSelection,
+  OperationDescriptor
+>();
 
 /**
  * Returns selection descriptor for the provided typeName. Enriches possible selection for this type with metadata that
@@ -48,12 +60,31 @@ export function resolveSelection(
   }
   let resolvedSelection = map.get(typeName);
   if (!resolvedSelection) {
-    const selection =
+    let effectiveTypeName = typeName;
+    let selection =
       possibleSelections.get(typeName) ?? possibleSelections.get(null);
     assert(selection);
 
+    // When null selection is empty but root type selection exists, fall through to it.
+    // This handles queries where all fields come from typed fragment spreads (e.g. fragment F on Query).
+    if (
+      typeName === null &&
+      selection.fields.size === 0 &&
+      possibleSelections.size > 1
+    ) {
+      const rootSelection = possibleSelections.get(operation.rootType);
+      if (rootSelection) {
+        selection = rootSelection;
+        effectiveTypeName = operation.rootType;
+      }
+    }
+
     const normalizedFields = selection.fieldsToNormalize?.length
-      ? normalizeFields(operation, selection.fieldsToNormalize, typeName)
+      ? normalizeFields(
+          operation,
+          selection.fieldsToNormalize,
+          effectiveTypeName,
+        )
       : undefined;
 
     const skippedFields = selection.fieldsWithDirectives?.length
@@ -78,59 +109,189 @@ export function resolveSelection(
       ? selection.fieldQueue.filter((field) => !skippedFields.has(field))
       : selection.fieldQueue;
 
-    resolvedSelection =
+    const hasLocalChanges =
       normalizedFields ||
       skippedFields?.size ||
       skippedSpreads?.size ||
-      fieldQueue !== selection.fieldQueue
-        ? {
-            ...selection,
-            fieldQueue,
-            normalizedFields,
-            skippedFields,
-            skippedSpreads,
-          }
-        : selection;
+      fieldQueue !== selection.fieldQueue;
+
+    if (hasLocalChanges || selection.hasDescendantsToResolve) {
+      resolvedSelection = {
+        ...selection,
+        fieldQueue,
+        normalizedFields,
+        skippedFields,
+        skippedSpreads,
+        resolvedHash: UNINITIALIZED_HASH,
+      };
+      selectionOperations.set(resolvedSelection, operation);
+
+      // New child may change parent hashes — invalidate existing cloned selections
+      invalidateResolvedHashes(operation);
+    } else {
+      resolvedSelection = selection;
+      resolvedSelection.resolvedHash = selection.structuralHash;
+    }
 
     map.set(typeName, resolvedSelection);
   }
   return resolvedSelection;
 }
 
+/** Reset resolvedHash on cloned resolved selections for this operation.
+ *  Only cloned selections (those in selectionOperations WeakMap) are operation-specific.
+ *  Non-cloned selections are shared PossibleSelections whose hash is deterministic. */
+function invalidateResolvedHashes(operation: OperationDescriptor): void {
+  for (const typeMap of operation.selections.values()) {
+    for (const sel of typeMap.values()) {
+      if (
+        sel.resolvedHash !== UNINITIALIZED_HASH &&
+        selectionOperations.has(sel)
+      ) {
+        sel.resolvedHash = UNINITIALIZED_HASH;
+      }
+    }
+  }
+}
+
+function computeResolvedHash(
+  operation: OperationDescriptor | undefined,
+  selection: ResolvedSelection,
+): number {
+  let hash = selection.structuralHash;
+
+  // Mix in resolved arg values. When keyArgs is defined, only hash the keyArgs
+  // (not all args) to match fieldEntriesAreEqual semantics — pagination args
+  // like after/before/first/last should not affect selection equality.
+  if (selection.normalizedFields?.size) {
+    for (const [, entry] of selection.normalizedFields) {
+      if (typeof entry === "string") {
+        hash = combineHash(hash, hashString(entry));
+      } else if (typeof entry.keyArgs === "string") {
+        hash = combineHash(hash, hashString(entry.name));
+        hash = combineHash(hash, hashString(entry.keyArgs));
+      } else if (entry.keyArgs) {
+        hash = combineHash(hash, hashString(entry.name));
+        for (const k of entry.keyArgs) {
+          hash = combineHash(hash, hashString(k));
+          const val = entry.args.get(k);
+          if (val !== undefined) hash = combineHash(hash, hashValue(val));
+        }
+      } else {
+        hash = combineHash(hash, hashString(entry.name));
+        for (const [argName, argVal] of entry.args) {
+          hash = combineHash(hash, hashString(argName));
+          hash = combineHash(hash, hashValue(argVal));
+        }
+      }
+    }
+  }
+
+  // Mix in resolved non-inclusion directive values (e.g. @connection)
+  if (selection.fieldsWithDirectives?.length) {
+    assert(operation);
+    const variables = operation.variablesWithDefaults;
+    for (const field of selection.fieldsWithDirectives) {
+      for (const ref of field.__refs) {
+        if (!ref.node.directives) continue;
+        for (const dir of ref.node.directives) {
+          const name = dir.name.value;
+          if (name === "skip" || name === "include") continue;
+          hash = combineHash(hash, hashString(name));
+          if (dir.arguments?.length) {
+            for (const arg of dir.arguments) {
+              hash = combineHash(hash, hashString(arg.name.value));
+              const val = valueFromASTUntyped(arg.value, variables);
+              hash = combineHash(hash, hashValue(val));
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Mix in skipped fields
+  if (selection.skippedFields?.size) {
+    for (const field of selection.skippedFields) {
+      hash = combineHash(hash, hashString(field.dataKey));
+    }
+  }
+
+  // Mix in skipped spreads
+  if (selection.skippedSpreads?.size) {
+    for (const spread of selection.skippedSpreads) {
+      hash = combineHash(hash, hashString(spread.name));
+    }
+  }
+
+  // Mix in children hashes (including type keys)
+  if (selection.fieldsWithSelections) {
+    for (const fieldName of selection.fieldsWithSelections) {
+      const fields = selection.fields.get(fieldName);
+      if (!fields) continue;
+      for (const field of fields) {
+        if (!field.selection) continue;
+        const resolvedMap = operation?.selections.get(field.selection);
+        for (const [typeName] of field.selection) {
+          // Hash type key so that different type spreads are distinguished
+          if (typeName !== null) {
+            hash = combineHash(hash, hashString(typeName));
+          }
+          // For variable-dependent selections, use operation.selections to find resolved children
+          // For non-variable selections, use PossibleSelection directly (it IS the resolved selection)
+          const child =
+            resolvedMap?.get(typeName) ??
+            (!selection.hasDescendantsToResolve
+              ? field.selection.get(typeName) ?? field.selection.get(null)
+              : undefined);
+          if (child) {
+            hash = combineHash(hash, getResolvedHash(child, operation));
+          }
+        }
+      }
+    }
+  }
+
+  return hash >>> 0;
+}
+
+/** Lazily compute resolved hash on first cross-doc comparison */
+function getResolvedHash(
+  selection: ResolvedSelection,
+  operation?: OperationDescriptor,
+): number {
+  if (
+    selection.resolvedHash !== undefined &&
+    selection.resolvedHash !== UNINITIALIZED_HASH
+  ) {
+    return selection.resolvedHash;
+  }
+  if (
+    !selection.normalizedFields &&
+    !selection.skippedFields &&
+    !selection.skippedSpreads &&
+    !selection.fieldsWithDirectives &&
+    !selection.fieldsWithSelections
+  ) {
+    selection.resolvedHash = selection.structuralHash;
+    return selection.resolvedHash;
+  }
+  const op = operation ?? selectionOperations.get(selection);
+  const hash = computeResolvedHash(op, selection);
+  // Cache the hash. For non-cloned selections (no op), the hash is deterministic
+  // from PossibleSelections structure. For cloned selections, it's operation-specific
+  // and invalidated by invalidateResolvedHashes when new types are resolved.
+  selection.resolvedHash = hash;
+  return hash;
+}
+
 export function resolvedSelectionsAreEqual(
   a: ResolvedSelection,
   b: ResolvedSelection,
-) {
-  if (a === b) {
-    return true;
-  }
-  if (a.fields !== b.fields) {
-    // Note: this will always return false for operations with different documents.
-    //   E.g. "query A { foo }" and "query B { foo }" have the same selection, but will return `false` here.
-    //   This is OK for our current purposes with current perf requirements.
-    return false;
-  }
-  if (a.skippedFields?.size !== b.skippedFields?.size) {
-    return false;
-  }
-  assert(a.normalizedFields?.size === b.normalizedFields?.size);
-
-  const aNormalizedFields = a.normalizedFields?.entries() ?? EMPTY_ARRAY;
-  for (const [alias, aNormalized] of aNormalizedFields) {
-    const bNormalized = b.normalizedFields?.get(alias);
-    assert(aNormalized && bNormalized);
-    if (!fieldEntriesAreEqual(aNormalized, bNormalized)) {
-      return false;
-    }
-  }
-  for (const aSkipped of a.skippedFields ?? EMPTY_ARRAY) {
-    if (!b.skippedFields?.has(aSkipped)) {
-      return false;
-    }
-  }
-  // FIXME: this is not enough, we must also check all child selections are equal. It requires some descriptor-level
-  //   aggregation of all possible fields / directives with variables
-  return true;
+): boolean {
+  if (a === b) return true;
+  if (a.structuralHash !== b.structuralHash) return false;
+  return getResolvedHash(a) === getResolvedHash(b);
 }
 
 export function resolveNormalizedField(

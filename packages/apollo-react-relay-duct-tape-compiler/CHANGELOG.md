@@ -1,8 +1,40 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape-compiler
 
-<!-- This log was last generated on Mon, 09 Mar 2026 15:22:57 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 19 Mar 2026 18:12:21 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.9.5
+
+Thu, 19 Mar 2026 18:12:21 GMT
+
+### Patches
+
+- Bump @graphitation/supermassive to v3.15.3
+
+## 1.9.4
+
+Tue, 17 Mar 2026 10:18:09 GMT
+
+### Patches
+
+- Bump @graphitation/supermassive to v3.15.2
+
+## 1.9.3
+
+Mon, 16 Mar 2026 17:10:12 GMT
+
+### Patches
+
+- Bump @graphitation/supermassive to v3.15.1
+
+## 1.9.2
+
+Tue, 10 Mar 2026 19:18:00 GMT
+
+### Patches
+
+- fix(apollo-react-relay-duct-tape-compiler): connection directive works with both "filters" and "filter" argument variants (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 1.9.1
 

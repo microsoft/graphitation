@@ -2,6 +2,51 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Thu, 19 Mar 2026 18:12:21 GMT",
+      "version": "3.15.3",
+      "tag": "@graphitation/supermassive_v3.15.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "dsamsonov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "4526d8c2847cec11b17aae8af3b60bf607a40fb2",
+            "comment": "revert: errors on missing types/resolvers"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 17 Mar 2026 10:18:09 GMT",
+      "version": "3.15.2",
+      "tag": "@graphitation/supermassive_v3.15.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/supermassive",
+            "commit": "ca8dfa12f9b69e8286ee12776914f6a54eac16c6",
+            "comment": "[HOTFIX] schema loader added to subscriptions"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 16 Mar 2026 17:10:12 GMT",
+      "version": "3.15.1",
+      "tag": "@graphitation/supermassive_v3.15.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "dsamsonov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "8bdacf83d8b6ab340a7b00cd46f3e0a553abf2e4",
+            "comment": "fix: allows for partial data in case resolver or type definition is missing"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 09 Mar 2026 15:22:57 GMT",
       "version": "3.15.0",
       "tag": "@graphitation/supermassive_v3.15.0",

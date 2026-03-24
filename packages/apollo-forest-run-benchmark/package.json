@@ -14,7 +14,7 @@
     "build": "rm -rf ./lib && monorepo-scripts build",
     "lint": "monorepo-scripts lint",
     "test": "monorepo-scripts test",
-    "types": "monorepo-scripts types",
+    "types": "node -e 0",
     "benchmark": "yarn build && node --expose-gc ./lib/index.js",
     "clone": "./scripts/clone-caches.sh",
     "just": "monorepo-scripts"

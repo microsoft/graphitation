@@ -570,7 +570,6 @@ function executeField(
     fieldName,
   });
   if (!loading) {
-    throwIfRootField(parentTypeName, fieldName, fieldGroup, "typeDefinition");
     return undefined;
   }
 
@@ -591,29 +590,8 @@ function executeField(
         incrementalDataRecord,
       );
     }
-
-    throwIfRootField(parentTypeName, fieldName, fieldGroup, "typeDefinition");
     return undefined;
   });
-}
-
-function throwIfRootField(
-  parentTypeName: string,
-  fieldName: string,
-  fieldGroup: FieldGroup,
-  validationTarget: "typeDefinition" | "resolver",
-) {
-  const isRootField =
-    parentTypeName === "Mutation" || parentTypeName === "Query";
-  if (isRootField) {
-    const message =
-      validationTarget === "typeDefinition"
-        ? `Type definition for ${parentTypeName}.${fieldName} is missing`
-        : validationTarget === "resolver"
-        ? `Resolver for ${parentTypeName}.${fieldName} is missing`
-        : "Unexpected validation target";
-    throw locatedError(new Error(message), fieldGroup);
-  }
 }
 
 function requestSchemaFragment(
@@ -708,7 +686,7 @@ function afterFieldSubscribeHandle(
 function executeSubscriptionImpl(
   exeContext: ExecutionContext,
 ): PromiseOrValue<AsyncIterable<unknown>> {
-  const { operation, rootValue, schemaFragment } = exeContext;
+  const { operation, schemaFragment } = exeContext;
   const rootTypeName = getOperationRootTypeName(operation);
   const { groupedFieldSet } = collectFields(exeContext, rootTypeName);
 
@@ -725,13 +703,64 @@ function executeSubscriptionImpl(
     fieldName,
   );
 
-  if (!fieldDef) {
+  if (fieldDef) {
+    return runSubscriptionResolver(
+      exeContext,
+      fieldDef,
+      fieldName,
+      fieldGroup,
+      responseName,
+      rootTypeName,
+    );
+  }
+
+  const loading = requestSchemaFragment(exeContext, {
+    kind: "ReturnType",
+    parentTypeName: rootTypeName,
+    fieldName,
+  });
+
+  if (!loading) {
     throw locatedError(
-      `The subscription field "${fieldName}" is not defined.`,
+      `Type definition for ${rootTypeName}.${fieldName} is missing`,
       fieldGroup,
     );
   }
 
+  return loading.then(() => {
+    const fieldDef = Definitions.getField(
+      schemaFragment.definitions,
+      rootTypeName,
+      fieldName,
+    );
+
+    if (fieldDef === undefined) {
+      throw locatedError(
+        `Type definition for ${rootTypeName}.${fieldName} is missing`,
+        fieldGroup,
+      );
+    }
+
+    return runSubscriptionResolver(
+      exeContext,
+      fieldDef,
+      fieldName,
+      fieldGroup,
+      responseName,
+      rootTypeName,
+    );
+  });
+}
+
+function runSubscriptionResolver(
+  exeContext: ExecutionContext,
+  fieldDef: FieldDefinition,
+  fieldName: string,
+  fieldGroup: FieldGroup,
+  responseName: string,
+  rootTypeName: string,
+): PromiseOrValue<AsyncIterable<unknown>> {
+  const { rootValue, schemaFragment } = exeContext;
   const returnTypeRef = Definitions.getFieldTypeReference(fieldDef);
   const resolveFn =
     Resolvers.getSubscriptionFieldResolver(
@@ -976,7 +1005,7 @@ export function buildResolveInfo(
 function handleFieldError(
   rawError: unknown,
   exeContext: ExecutionContext,
-  returnTypeRef: TypeReference,
+  returnTypeRef: TypeReference | undefined,
   fieldGroup: FieldGroup,
   path: Path,
   incrementalDataRecord: IncrementalDataRecord | undefined,
@@ -985,7 +1014,7 @@ function handleFieldError(
 
   // If the field type is non-nullable, then it is resolved without any
   // protection from errors, however it still properly locates the error.
-  if (isNonNullType(returnTypeRef)) {
+  if (returnTypeRef && isNonNullType(returnTypeRef)) {
     throw error;
   }
 
@@ -1026,17 +1055,6 @@ function resolveAndCompleteField(
 
   const isDefaultResolverUsed =
     resolveFn === exeContext.fieldResolver || fieldName === "__typename";
-
-  if (resolveFn === exeContext.fieldResolver && typeof source === "undefined") {
-    /**
-     * Resolving a root field with default resolver makes operation look succsessful, even though nothing was actually done.
-     * This leads to problems that are hard to debug, especially for mutations.
-     *
-     * NOTE1: executing Mutation.__typename or Query.__typename with default resolver is fine
-     * NOTE2: source check is required to account for systems like Grats that work exclusively on default resolvers
-     */
-    throwIfRootField(parentTypeName, fieldName, fieldGroup, "resolver");
-  }
 
   const hooks = exeContext.fieldExecutionHooks;
   let hookContext: unknown = undefined;

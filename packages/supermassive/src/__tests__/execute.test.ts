@@ -491,14 +491,39 @@ describe("executeWithoutSchema - regression tests", () => {
     expect(infoAtCallTime?.fieldNodes[1].name.value).toEqual("foo");
   });
 
-  test("Executing mutation without type definitions return error", async () => {
+  test("Should fail while executing subscription without type definitions and without schema fragment loader", async () => {
     const schemaFragment = {
       schemaId: "test",
       definitions: { types: {} },
       resolvers: {},
     };
     const document = parse(
-      `mutation DownloadFile { downloadFile { downloadUrl } }`,
+      `subscription FetchFileEvent { newFileEvent { id } }`,
+    );
+
+    const result = await executeWithoutSchema({
+      document,
+      schemaFragment,
+    });
+
+    // Note: there used to be a discrepancy in the results based on whether schemaFramentLoader provided or not.
+    const result1 = await executeWithoutSchema({
+      document,
+      schemaFragment,
+    });
+
+    expect(result).toStrictEqual(result1);
+    expect(result).toMatchSnapshot();
+  });
+
+  test("Should fail when executing subscription without type definitions and schemaFragmentLoader still NOT returning requested schema part", async () => {
+    const schemaFragment = {
+      schemaId: "test",
+      definitions: { types: {} },
+      resolvers: {},
+    };
+    const document = parse(
+      `subscription FetchFileEvent { newFileEvent { id } }`,
     );
 
     const result = await executeWithoutSchema({
@@ -518,23 +543,41 @@ describe("executeWithoutSchema - regression tests", () => {
     expect(result).toMatchSnapshot();
   });
 
-  test("Executing mutation without resolver should return error", async () => {
-    const schemaFragment = {
-      schemaId: "test",
-      definitions: encodeASTSchema(
-        parse(`type Mutation { downloadFile: DownloadFileResult }`),
-      )[0],
-      resolvers: {},
-    };
-    const document = parse(
-      `mutation DownloadFile { downloadFile { downloadUrl } }`,
-    );
+  test("Executing subscription without type definitions but SchemaFragmentLoader will provide needed schema part", async () => {
+    const fileEvents = [
+      { newFileEvent: { id: "file-1", name: "document.pdf" } },
+      { newFileEvent: { id: "file-2", name: "image.png" } },
+    ];
 
     const result = await executeWithoutSchema({
-      document,
-      schemaFragment,
+      document: parse(
+        `subscription FetchFileEvent { newFileEvent { id name } }`,
+      ),
+      schemaFragment: {
+        schemaId: "test",
+        definitions: { types: {} },
+        resolvers: {
+          Subscription: {
+            newFileEvent: {
+              subscribe: async function* () {
+                yield* fileEvents;
+              },
+            },
+          },
+        },
+      },
+      schemaFragmentLoader: (currentFragment) => {
+        currentFragment.definitions = encodeASTSchema(
+          parse(`
+            type Subscription { newFileEvent: File! }
+            type File { id: ID! name: String! }
+          `),
+        )[0];
+        return Promise.resolve({ mergedFragment: currentFragment });
+      },
     });
 
-    expect(result).toMatchSnapshot();
+    const events = await drainExecution(result);
+    expect(events).toMatchSnapshot();
   });
 });

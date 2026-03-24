@@ -139,7 +139,7 @@ function useLoadMore({
             });
           }
 
-          options?.onCompleted?.(error);
+          (options?.onComplete ?? options?.onCompleted)?.(error);
         },
       };
       // TODO: Measure if invoking `refetch` leads to React updates and if it

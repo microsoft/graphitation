@@ -2,6 +2,66 @@
   "name": "@graphitation/rempl-apollo-devtools",
   "entries": [
     {
+      "date": "Tue, 24 Mar 2026 14:39:48 GMT",
+      "version": "2.1.10",
+      "tag": "@graphitation/rempl-apollo-devtools_v2.1.10",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/rempl-apollo-devtools",
+            "comment": "Bump @graphitation/apollo-forest-run to v0.22.1",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 23 Mar 2026 14:19:47 GMT",
+      "version": "2.1.9",
+      "tag": "@graphitation/rempl-apollo-devtools_v2.1.9",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/rempl-apollo-devtools",
+            "comment": "Bump @graphitation/apollo-forest-run to v0.22.0",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 16 Mar 2026 14:29:08 GMT",
+      "version": "2.1.8",
+      "tag": "@graphitation/rempl-apollo-devtools_v2.1.8",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/rempl-apollo-devtools",
+            "comment": "Bump @graphitation/apollo-forest-run to v0.21.1",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Thu, 12 Mar 2026 13:08:20 GMT",
+      "version": "2.1.6",
+      "tag": "@graphitation/rempl-apollo-devtools_v2.1.6",
+      "comments": {
+        "none": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/rempl-apollo-devtools",
+            "commit": "ac4dc32d5ee8a74a646a559f3330d16e0efa15f5",
+            "comment": "Revert commits d6232a0b..2285d88d (cross-operation selection, preloader optimization, alpha publish, CI fixes)"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 06 Mar 2026 20:27:06 GMT",
       "version": "2.1.6",
       "tag": "@graphitation/rempl-apollo-devtools_v2.1.6",

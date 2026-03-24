@@ -45,6 +45,7 @@ export function createStore(_: CacheEnv): Store {
     trees: new Map(),
     operationsByNodes: new Map<NodeKey, Set<OperationId>>(),
     operationsWithErrors: new Set<OperationDescriptor>(),
+    operationsByName: new Map(),
     extraRootIds: new Map<NodeKey, TypeName>(),
     layerTag: null, // not an optimistic layer
     readResults: new Map(),
@@ -205,6 +206,7 @@ export function createOptimisticLayer(
     trees: new Map(),
     operationsByNodes: new Map(),
     operationsWithErrors: new Set(),
+    operationsByName: new Map(),
     extraRootIds: new Map(),
     readResults: new Map(),
     mutations: new Set(),
@@ -387,6 +389,7 @@ export function resetStore(store: Store): void {
   dataForest.extraRootIds.clear();
   dataForest.operationsByNodes.clear();
   dataForest.operationsWithErrors.clear();
+  dataForest.operationsByName.clear();
   dataForest.operationsWithDanglingRefs.clear();
   dataForest.readResults.clear();
   operations.clear();

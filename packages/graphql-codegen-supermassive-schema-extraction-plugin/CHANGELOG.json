@@ -2,6 +2,51 @@
   "name": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
   "entries": [
     {
+      "date": "Thu, 19 Mar 2026 18:12:21 GMT",
+      "version": "2.1.23",
+      "tag": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin_v2.1.23",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
+            "comment": "Bump @graphitation/supermassive to v3.15.3",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Tue, 17 Mar 2026 10:18:09 GMT",
+      "version": "2.1.22",
+      "tag": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin_v2.1.22",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
+            "comment": "Bump @graphitation/supermassive to v3.15.2",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
+      "date": "Mon, 16 Mar 2026 17:10:12 GMT",
+      "version": "2.1.21",
+      "tag": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin_v2.1.21",
+      "comments": {
+        "patch": [
+          {
+            "author": "beachball",
+            "package": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
+            "comment": "Bump @graphitation/supermassive to v3.15.1",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 09 Mar 2026 15:22:57 GMT",
       "version": "2.1.20",
       "tag": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin_v2.1.20",
