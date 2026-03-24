@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "update of minimatch and immutable dependencies",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "celiac@microsoft.com",
-  "dependentChangeType": "patch"
-}

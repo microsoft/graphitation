@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Mon, 23 Mar 2026 14:19:47 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 24 Mar 2026 14:39:48 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.22.1
+
+Tue, 24 Mar 2026 14:39:48 GMT
+
+### Patches
+
+- update of minimatch and immutable dependencies (celiac@microsoft.com)
 
 ## 0.22.0
 

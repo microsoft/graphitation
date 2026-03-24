@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Tue, 24 Mar 2026 14:39:48 GMT",
+      "version": "0.22.1",
+      "tag": "@graphitation/apollo-forest-run_v0.22.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "celiac@microsoft.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "4f586d7316c7896629e3a839ca7a20702cf3a91d",
+            "comment": "update of minimatch and immutable dependencies"
+          }
+        ]
+      }
+    },
+    {
       "date": "Mon, 23 Mar 2026 14:19:47 GMT",
       "version": "0.22.0",
       "tag": "@graphitation/apollo-forest-run_v0.22.0",
