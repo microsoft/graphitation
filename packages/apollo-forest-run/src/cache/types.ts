@@ -103,6 +103,8 @@ export type Store = {
   // Last access time of operation
   //   Used for LRU eviction
   atime: Map<OperationId, number>;
+  // Precomputed eviction partition per tree
+  partitions: WeakMap<IndexedTree, string>;
 };
 
 export type Transaction = {

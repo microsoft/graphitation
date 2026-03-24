@@ -1,6 +1,14 @@
 import { ForestRun } from "../ForestRun";
 import { gql } from "./helpers/descriptor";
 
+beforeEach(() => {
+  jest.useFakeTimers();
+});
+
+afterEach(() => {
+  jest.useRealTimers();
+});
+
 it("evicts data automatically by default", () => {
   const cache = new ForestRun({
     maxOperationCount: 1,
@@ -14,6 +22,8 @@ it("evicts data automatically by default", () => {
   cache.write({ query, variables: { i: 0 }, result: { foo: 0 } });
   cache.write({ query, variables: { i: 1 }, result: { foo: 1 } });
   cache.write({ query, variables: { i: 2 }, result: { foo: 2 } });
+
+  jest.runAllTimers();
 
   const result0 = cache.read({ query, variables: { i: 0 }, optimistic: true });
   const result1 = cache.read({ query, variables: { i: 1 }, optimistic: true });
@@ -38,6 +48,8 @@ it("allows disabling automatic eviction", () => {
   cache.write({ query, variables: { i: 0 }, result: { foo: 0 } });
   cache.write({ query, variables: { i: 1 }, result: { foo: 1 } });
   cache.write({ query, variables: { i: 2 }, result: { foo: 2 } });
+
+  jest.runAllTimers();
 
   const result0 = cache.read({ query, variables: { i: 0 }, optimistic: true });
   const result1 = cache.read({ query, variables: { i: 1 }, optimistic: true });
@@ -334,6 +346,8 @@ it("auto-evicts all partitions when global autoEvict is true", () => {
   cache.write({ query: b, variables: { i: 1 }, result: { bar: 1 } });
   cache.write({ query: b, variables: { i: 2 }, result: { bar: 2 } });
 
+  jest.runAllTimers();
+
   // Both partitions should be auto-evicted (global autoEvict: true)
   expect(
     cache.read({ query: a, variables: { i: 0 }, optimistic: true }),
@@ -379,6 +393,8 @@ it("per-partition autoEvict: false prevents auto-eviction for that partition whe
   cache.write({ query: b, variables: { i: 1 }, result: { bar: 1 } });
   cache.write({ query: b, variables: { i: 2 }, result: { bar: 2 } });
 
+  jest.runAllTimers();
+
   // Partition "a" should be auto-evicted (autoEvict: true)
   expect(
     cache.read({ query: a, variables: { i: 0 }, optimistic: true }),
@@ -395,7 +411,7 @@ it("per-partition autoEvict: false prevents auto-eviction for that partition whe
   ).toEqual({ bar: 2 });
 });
 
-it("does not auto-evict any partition when global autoEvict is false", () => {
+it("auto-evicts partitions with autoEvict: true even when global autoEvict is false", () => {
   const cache = new ForestRun({
     maxOperationCount: 1,
     autoEvict: false,
@@ -425,8 +441,9 @@ it("does not auto-evict any partition when global autoEvict is false", () => {
   cache.write({ query: b, variables: { i: 1 }, result: { bar: 1 } });
   cache.write({ query: b, variables: { i: 2 }, result: { bar: 2 } });
 
-  // Global autoEvict: false prevents all auto-eviction,
-  // even if per-partition autoEvict is true
+  jest.runAllTimers();
+
+  // Partition "a" auto-evicted (autoEvict: true)
   const resultA0 = cache.read({
     query: a,
     variables: { i: 0 },
@@ -437,6 +454,7 @@ it("does not auto-evict any partition when global autoEvict is false", () => {
     variables: { i: 2 },
     optimistic: true,
   });
+  // Partition "b" NOT auto-evicted (inherits global autoEvict: false)
   const resultB0 = cache.read({
     query: b,
     variables: { i: 0 },
@@ -448,9 +466,9 @@ it("does not auto-evict any partition when global autoEvict is false", () => {
     optimistic: true,
   });
 
-  expect(resultA0).toEqual({ foo: 0 }); // NOT evicted (global autoEvict: false)
+  expect(resultA0).toEqual(null); // evicted
   expect(resultA2).toEqual({ foo: 2 }); // kept
-  expect(resultB0).toEqual({ bar: 0 }); // NOT evicted (global autoEvict: false)
+  expect(resultB0).toEqual({ bar: 0 }); // NOT evicted (inherits global false)
   expect(resultB2).toEqual({ bar: 2 }); // kept
 });
 
@@ -505,8 +523,9 @@ it("gc() evicts all partitions regardless of per-partition autoEvict", () => {
   ).toEqual({ bar: 1 });
 });
 
-it("per-partition autoEvict: true does not override global autoEvict: false", () => {
-  // Global autoEvict: false prevents all auto-eviction
+it("per-partition autoEvict: true overrides global autoEvict: false for default partition", () => {
+  // autoEvict: false only applies to __default__ partition and partitions
+  // that don't specify their own autoEvict
   const cache = new ForestRun({
     maxOperationCount: 1,
     autoEvict: false,
@@ -536,13 +555,16 @@ it("per-partition autoEvict: true does not override global autoEvict: false", ()
   cache.write({ query: b, variables: { i: 1 }, result: { bar: 1 } });
   cache.write({ query: b, variables: { i: 2 }, result: { bar: 2 } });
 
-  // No auto-eviction since global autoEvict is false
+  jest.runAllTimers();
+
+  // Partition "a" auto-evicted (autoEvict: true)
   expect(
     cache.read({ query: a, variables: { i: 0 }, optimistic: true }),
-  ).toEqual({ foo: 0 });
+  ).toEqual(null);
   expect(
     cache.read({ query: a, variables: { i: 2 }, optimistic: true }),
   ).toEqual({ foo: 2 });
+  // Default partition NOT auto-evicted (inherits global autoEvict: false)
   expect(
     cache.read({ query: b, variables: { i: 0 }, optimistic: true }),
   ).toEqual({ bar: 0 });

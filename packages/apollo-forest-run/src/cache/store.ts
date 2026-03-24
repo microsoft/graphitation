@@ -21,6 +21,25 @@ import { operationCacheKey } from "./descriptor";
 
 const EMPTY_ARRAY = Object.freeze([]);
 
+const DEFAULT_PARTITION = "__default__";
+
+export function resolvePartition(env: CacheEnv, tree: IndexedTree): string {
+  const partitionKey = env.partitionConfig?.partitionKey;
+  const key = partitionKey?.(tree);
+  if (key == null) {
+    return DEFAULT_PARTITION;
+  }
+  const configuredPartitionKeys = env.partitionConfig?.partitions;
+  if (!configuredPartitionKeys || !(key in configuredPartitionKeys)) {
+    env.logger?.warnOnce(
+      "partition_not_configured",
+      `Partition "${key}" is not configured in partitionConfig. Using default partition instead.`,
+    );
+    return DEFAULT_PARTITION;
+  }
+  return key;
+}
+
 export function createStore(_: CacheEnv): Store {
   const dataForest: DataForest = {
     trees: new Map(),
@@ -50,6 +69,7 @@ export function createStore(_: CacheEnv): Store {
     watches: new Map(),
     fragmentWatches: new Map(),
     atime: new Map(),
+    partitions: new WeakMap(),
   };
   return store;
 }
@@ -62,10 +82,25 @@ export function touchOperation(
   store.atime.set(operation.id, env.now());
 }
 
+function anyPartitionHasAutoEvict(env: CacheEnv): boolean {
+  if (env.autoEvict) {
+    return true;
+  }
+  const partitions = env.partitionConfig?.partitions;
+  if (partitions) {
+    for (const key in partitions) {
+      if (partitions[key].autoEvict) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 export function maybeEvictOldData(env: CacheEnv, store: Store): OperationId[] {
   if (
-    !env.autoEvict ||
     !env.maxOperationCount ||
+    !anyPartitionHasAutoEvict(env) ||
     store.dataForest.trees.size <= env.maxOperationCount * 2
   ) {
     return [];
@@ -82,27 +117,16 @@ export function evictOldData(
   const { dataForest, atime } = store;
 
   const partitionsOps = new Map<string, OperationId[]>();
-  const partitionKey = env.partitionConfig?.partitionKey;
-  const configuredPartitionKeys = new Set(
-    Object.keys(env.partitionConfig?.partitions ?? {}),
-  );
-
-  const DEFAULT_PARTITION = "__default__";
 
   for (const tree of dataForest.trees.values()) {
     if (!canEvict(env, store, tree)) {
       continue; // Skip non-evictable operations entirely
     }
 
-    let partition = partitionKey?.(tree);
-    if (partition == null) {
-      partition = DEFAULT_PARTITION; // Default partition if not specified or not configured
-    } else if (!configuredPartitionKeys.has(partition)) {
-      env.logger?.warnOnce(
-        "partition_not_configured",
-        `Partition "${partition}" is not configured in partitionConfig. Using default partition instead.`,
-      );
-      partition = DEFAULT_PARTITION; // Default partition if not specified or not configured
+    let partition = store.partitions.get(tree);
+    if (partition === undefined) {
+      partition = resolvePartition(env, tree);
+      store.partitions.set(tree, partition);
     }
     let partitionOps = partitionsOps.get(partition);
     if (!partitionOps) {

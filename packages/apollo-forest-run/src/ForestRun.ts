@@ -90,6 +90,8 @@ const REFS_POOL = new Map(
 );
 const getRef = (ref: string) => REFS_POOL.get(ref) ?? { __ref: ref };
 
+type PendingEviction = { cancel: () => void };
+
 export class ForestRun<
   TPartitions extends HistoryPartitions = any,
 > extends ApolloCache<SerializedCache> {
@@ -111,6 +113,7 @@ export class ForestRun<
 
   protected invalidatedDiffs = new WeakSet<Cache.DiffResult<any>>();
   protected extractedObjects = new WeakMap<any, SerializedOperationInfo>();
+  private pendingEviction: PendingEviction | null = null;
 
   public constructor(public config?: CacheConfig<TPartitions>) {
     super();
@@ -451,10 +454,33 @@ export class ForestRun<
   }
 
   public gc(): string[] {
+    this.cancelPendingEviction();
     if (this.env.maxOperationCount) {
       return evictOldData(this.env, this.store).map(String);
     }
     return [];
+  }
+
+  private scheduleMaybeEvict(): void {
+    if (this.pendingEviction != null) {
+      return;
+    }
+    const run = () => {
+      this.pendingEviction = null;
+      maybeEvictOldData(this.env, this.store);
+    };
+    if (typeof requestIdleCallback === "function") {
+      const id = requestIdleCallback(run);
+      this.pendingEviction = { cancel: () => cancelIdleCallback(id) };
+    } else {
+      const id = setTimeout(run, 0);
+      this.pendingEviction = { cancel: () => clearTimeout(id) };
+    }
+  }
+
+  private cancelPendingEviction(): void {
+    this.pendingEviction?.cancel();
+    this.pendingEviction = null;
   }
 
   public getStats() {
@@ -579,7 +605,7 @@ export class ForestRun<
       );
       logUpdateStats(this.env, activeTransaction.changelog, watchesToNotify);
     }
-    maybeEvictOldData(this.env, this.store);
+    this.scheduleMaybeEvict();
 
     return result as T;
   }
