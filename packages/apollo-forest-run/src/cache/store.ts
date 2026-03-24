@@ -1,5 +1,6 @@
 import {
   CacheEnv,
+  ClearPartitionOptions,
   DataForest,
   DataTree,
   OptimisticLayer,
@@ -143,6 +144,76 @@ export function evictOldData(env: CacheEnv, store: Store): OperationId[] {
   }
 
   return toEvict;
+}
+
+export function clearPartitionData(
+  env: CacheEnv,
+  store: Store,
+  options: ClearPartitionOptions,
+): OperationId[] {
+  const { partition, keepMostRecent = 0, includeWatched = false } = options;
+
+  if (!env.partitionConfig) {
+    env.logger?.warnOnce(
+      "clear_partition_no_config",
+      `clearPartition called but no partitionConfig is configured.`,
+    );
+    return [];
+  }
+
+  const configuredPartitionKeys = new Set(
+    Object.keys(env.partitionConfig.partitions),
+  );
+  if (!configuredPartitionKeys.has(partition)) {
+    env.logger?.warnOnce(
+      "clear_partition_not_found",
+      `Partition "${partition}" is not configured in partitionConfig.`,
+    );
+    return [];
+  }
+
+  const { dataForest, atime } = store;
+  const partitionKey = env.partitionConfig.partitionKey;
+  const matchingOps: OperationId[] = [];
+
+  for (const tree of dataForest.trees.values()) {
+    if (partitionKey(tree) !== partition) {
+      continue;
+    }
+    if (!includeWatched && store.watches.has(tree.operation)) {
+      continue;
+    }
+    if (env.nonEvictableQueries?.size) {
+      const rootFields = getRootNode(tree)?.selection.fields.keys();
+      let skip = false;
+      for (const rootField of rootFields ?? EMPTY_ARRAY) {
+        if (env.nonEvictableQueries.has(rootField)) {
+          skip = true;
+          break;
+        }
+      }
+      if (skip) continue;
+    }
+    matchingOps.push(tree.operation.id);
+  }
+
+  if (keepMostRecent > 0 && matchingOps.length > keepMostRecent) {
+    matchingOps.sort((a, b) => (atime.get(a) ?? 0) - (atime.get(b) ?? 0));
+    matchingOps.length = matchingOps.length - keepMostRecent;
+  } else if (keepMostRecent > 0) {
+    return [];
+  }
+
+  for (const opId of matchingOps) {
+    const tree = dataForest.trees.get(opId);
+    assert(tree);
+    if (includeWatched) {
+      store.watches.delete(tree.operation);
+    }
+    removeDataTree(store, tree);
+  }
+
+  return matchingOps;
 }
 
 function canEvict(env: CacheEnv, store: Store, resultTree: DataTree) {

@@ -1,4 +1,9 @@
-import type { Cache, InMemoryCacheConfig, TypePolicies } from "@apollo/client";
+import type {
+  ApolloCache,
+  Cache,
+  InMemoryCacheConfig,
+  TypePolicies,
+} from "@apollo/client";
 import type {
   IndexedForest,
   IndexedTree,
@@ -33,6 +38,16 @@ import type { TelemetryEvent } from "../telemetry/types";
 import { ExtendedLogger, Logger } from "../jsutils/logger";
 import { GraphDifference, GraphDiffError } from "../diff/diffTree";
 import { ObjectDifference } from "../diff/types";
+
+export type ClearPartitionOptions = {
+  partition: string;
+  keepMostRecent?: number;
+  includeWatched?: boolean;
+};
+
+export type ApolloCacheExtended<T = unknown> = ApolloCache<T> & {
+  clearPartition?(options: ClearPartitionOptions): string[];
+};
 
 export type PartitionConfig = {
   partitions: {
