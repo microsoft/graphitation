@@ -1,6 +1,5 @@
 import {
   CacheEnv,
-  ClearPartitionOptions,
   DataForest,
   DataTree,
   OptimisticLayer,
@@ -64,79 +63,149 @@ export function touchOperation(
   store.atime.set(operation.id, env.now());
 }
 
-export function maybeEvictOldData(env: CacheEnv, store: Store): OperationId[] {
-  if (
-    !env.autoEvict ||
-    !env.maxOperationCount ||
-    store.dataForest.trees.size <= env.maxOperationCount * 2
-  ) {
-    return [];
+const DEFAULT_PARTITION = "__default__";
+
+export function maybeAutoEvict(
+  env: CacheEnv,
+  store: Store,
+  transaction: Transaction,
+): void {
+  if (!env.maxOperationCount && !env.partitionConfig) {
+    return;
   }
-  return evictOldData(env, store);
+  const partitionConfig = env.partitionConfig;
+  const { changelog } = transaction;
+
+  // Determine which partitions were affected by this transaction
+  const affectedPartitions = new Set<string>();
+  let hasNonPartitioned = false;
+
+  if (partitionConfig) {
+    for (const entry of changelog) {
+      if ("incoming" in entry) {
+        const partition = partitionConfig.partitionKey(entry.incoming);
+        if (partition != null) {
+          affectedPartitions.add(partition);
+        } else {
+          hasNonPartitioned = true;
+        }
+      }
+    }
+  } else {
+    hasNonPartitioned = changelog.length > 0;
+  }
+
+  if (
+    !affectedPartitions.size &&
+    (!env.maxOperationCount ||
+      store.dataForest.trees.size < env.maxOperationCount * 2)
+  ) {
+    return;
+  }
+
+  // Group all evictable operations by partition (single pass over all trees)
+  const grouped = groupByPartition(env, store);
+
+  // For partition auto-evict: apply 2x threshold per affected partition, remove partitions that don't need eviction
+  for (const partition of affectedPartitions) {
+    const config = partitionConfig?.partitions[partition];
+    if (!config?.autoEvict) {
+      grouped.delete(partition);
+      continue;
+    }
+    const ops = grouped.get(partition);
+    if (!ops || ops.length < config.maxOperationCount * 2) {
+      grouped.delete(partition);
+    }
+  }
+
+  // For global auto-evict: apply 2x threshold on non-partitioned ops
+  if (hasNonPartitioned && env.autoEvict && env.maxOperationCount) {
+    const defaultOps = grouped.get(DEFAULT_PARTITION);
+    if (!defaultOps || defaultOps.length < env.maxOperationCount * 2) {
+      grouped.delete(DEFAULT_PARTITION);
+    }
+  } else {
+    grouped.delete(DEFAULT_PARTITION);
+  }
+
+  // Remove partitions not targeted by this auto-evict pass
+  for (const key of grouped.keys()) {
+    if (key !== DEFAULT_PARTITION && !affectedPartitions.has(key)) {
+      grouped.delete(key);
+    }
+  }
+
+  if (grouped.size > 0) {
+    evictOldData(env, store, grouped);
+  }
 }
 
-export function evictOldData(env: CacheEnv, store: Store): OperationId[] {
-  assert(env.maxOperationCount);
-  const { dataForest, atime } = store;
-
-  const partitionsOps = new Map<string, OperationId[]>();
+function groupByPartition(
+  env: CacheEnv,
+  store: Store,
+): Map<string, OperationId[]> {
+  const { dataForest } = store;
   const partitionKey = env.partitionConfig?.partitionKey;
   const configuredPartitionKeys = new Set(
     Object.keys(env.partitionConfig?.partitions ?? {}),
   );
-
-  const DEFAULT_PARTITION = "__default__";
+  const grouped = new Map<string, OperationId[]>();
 
   for (const tree of dataForest.trees.values()) {
     if (!canEvict(env, store, tree)) {
-      continue; // Skip non-evictable operations entirely
+      continue;
     }
-
     let partition = partitionKey?.(tree);
     if (partition == null) {
-      partition = DEFAULT_PARTITION; // Default partition if not specified or not configured
+      partition = DEFAULT_PARTITION;
     } else if (!configuredPartitionKeys.has(partition)) {
       env.logger?.warnOnce(
         "partition_not_configured",
         `Partition "${partition}" is not configured in partitionConfig. Using default partition instead.`,
       );
-      partition = DEFAULT_PARTITION; // Default partition if not specified or not configured
+      partition = DEFAULT_PARTITION;
     }
-    let partitionOps = partitionsOps.get(partition);
-    if (!partitionOps) {
-      partitionOps = [];
-      partitionsOps.set(partition, partitionOps);
+    let ops = grouped.get(partition);
+    if (!ops) {
+      ops = [];
+      grouped.set(partition, ops);
     }
-
-    partitionOps.push(tree.operation.id);
+    ops.push(tree.operation.id);
   }
+  return grouped;
+}
+
+export function evictOldData(
+  env: CacheEnv,
+  store: Store,
+  groupedOps?: Map<string, OperationId[]>,
+): OperationId[] {
+  assert(env.maxOperationCount);
+  const { atime } = store;
+  const partitionsOps = groupedOps ?? groupByPartition(env, store);
 
   const toEvict: OperationId[] = [];
 
-  // Process each partition
   for (const [partition, evictableOperationIds] of partitionsOps) {
     const maxCount =
       env.partitionConfig?.partitions[partition]?.maxOperationCount ??
       env.maxOperationCount;
 
     if (evictableOperationIds.length <= maxCount) {
-      continue; // No eviction needed for this partition
+      continue;
     }
 
-    // Sort by access time (LRU) and determine how many to evict
     evictableOperationIds.sort(
       (a, b) => (atime.get(a) ?? 0) - (atime.get(b) ?? 0),
     );
 
     const evictCount = Math.max(0, evictableOperationIds.length - maxCount);
-
-    // Keep only the ones to evict without array copying w/ slice
     evictableOperationIds.length = evictCount;
 
     toEvict.push(...evictableOperationIds);
   }
 
-  // Remove evicted operations
   for (const opId of toEvict) {
     const tree = store.dataForest.trees.get(opId);
     assert(tree);
@@ -144,76 +213,6 @@ export function evictOldData(env: CacheEnv, store: Store): OperationId[] {
   }
 
   return toEvict;
-}
-
-export function clearPartitionData(
-  env: CacheEnv,
-  store: Store,
-  options: ClearPartitionOptions,
-): OperationId[] {
-  const { partition, keepMostRecent = 0, includeWatched = false } = options;
-
-  if (!env.partitionConfig) {
-    env.logger?.warnOnce(
-      "clear_partition_no_config",
-      `clearPartition called but no partitionConfig is configured.`,
-    );
-    return [];
-  }
-
-  const configuredPartitionKeys = new Set(
-    Object.keys(env.partitionConfig.partitions),
-  );
-  if (!configuredPartitionKeys.has(partition)) {
-    env.logger?.warnOnce(
-      "clear_partition_not_found",
-      `Partition "${partition}" is not configured in partitionConfig.`,
-    );
-    return [];
-  }
-
-  const { dataForest, atime } = store;
-  const partitionKey = env.partitionConfig.partitionKey;
-  const matchingOps: OperationId[] = [];
-
-  for (const tree of dataForest.trees.values()) {
-    if (partitionKey(tree) !== partition) {
-      continue;
-    }
-    if (!includeWatched && store.watches.has(tree.operation)) {
-      continue;
-    }
-    if (env.nonEvictableQueries?.size) {
-      const rootFields = getRootNode(tree)?.selection.fields.keys();
-      let skip = false;
-      for (const rootField of rootFields ?? EMPTY_ARRAY) {
-        if (env.nonEvictableQueries.has(rootField)) {
-          skip = true;
-          break;
-        }
-      }
-      if (skip) continue;
-    }
-    matchingOps.push(tree.operation.id);
-  }
-
-  if (keepMostRecent > 0 && matchingOps.length > keepMostRecent) {
-    matchingOps.sort((a, b) => (atime.get(a) ?? 0) - (atime.get(b) ?? 0));
-    matchingOps.length = matchingOps.length - keepMostRecent;
-  } else if (keepMostRecent > 0) {
-    return [];
-  }
-
-  for (const opId of matchingOps) {
-    const tree = dataForest.trees.get(opId);
-    assert(tree);
-    if (includeWatched) {
-      store.watches.delete(tree.operation);
-    }
-    removeDataTree(store, tree);
-  }
-
-  return matchingOps;
 }
 
 function canEvict(env: CacheEnv, store: Store, resultTree: DataTree) {

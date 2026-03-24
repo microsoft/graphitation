@@ -10,7 +10,6 @@ import type { OperationDescriptor } from "./descriptor/types";
 import type {
   CacheConfig,
   CacheEnv,
-  ClearPartitionOptions,
   DataForest,
   HistoryPartitions,
   OptimisticLayer,
@@ -26,12 +25,11 @@ import { read } from "./cache/read";
 import { getNodeChunks } from "./cache/draftHelpers";
 import { modify } from "./cache/modify";
 import {
-  clearPartitionData,
   createOptimisticLayer,
   createStore,
   evictOldData,
   getEffectiveReadLayers,
-  maybeEvictOldData,
+  maybeAutoEvict,
   removeOptimisticLayers,
   resetStore,
 } from "./cache/store";
@@ -459,10 +457,6 @@ export class ForestRun<
     return [];
   }
 
-  public clearPartition(options: ClearPartitionOptions): string[] {
-    return clearPartitionData(this.env, this.store, options).map(String);
-  }
-
   public getStats() {
     return {
       docCount: this.store.operations.size,
@@ -585,7 +579,7 @@ export class ForestRun<
       );
       logUpdateStats(this.env, activeTransaction.changelog, watchesToNotify);
     }
-    maybeEvictOldData(this.env, this.store);
+    maybeAutoEvict(this.env, this.store, activeTransaction);
 
     return result as T;
   }

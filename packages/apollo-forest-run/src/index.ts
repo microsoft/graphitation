@@ -8,11 +8,7 @@ export type {
   MergePolicyError,
   TelemetryEvent,
 } from "./telemetry/types";
-export type {
-  ApolloCacheExtended,
-  ForestRunAdditionalConfig,
-  ClearPartitionOptions,
-} from "./cache/types";
+export type { ForestRunAdditionalConfig } from "./cache/types";
 
 export { OPERATION_HISTORY_SYMBOL } from "./descriptor/operation";
 

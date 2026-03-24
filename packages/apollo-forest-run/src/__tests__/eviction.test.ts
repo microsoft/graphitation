@@ -1,5 +1,4 @@
 import { ForestRun } from "../ForestRun";
-import { PartitionConfig } from "../cache/types";
 import { gql } from "./helpers/descriptor";
 
 it("evicts data automatically by default", () => {
@@ -305,20 +304,17 @@ it("should warn exactly once for the same warning", () => {
   // notably: "query TestB" is NOT logged
 });
 
-describe("clearPartition", () => {
-  const partitionConfig: PartitionConfig = {
-    partitionKey: (o) => o.operation.debugName,
-    partitions: {
-      "query a": { maxOperationCount: 10 },
-      "query b": { maxOperationCount: 10 },
-    },
-  };
-
-  it("clears all ops in a partition", () => {
+describe("partition autoEvict", () => {
+  it("auto-evicts partition on write when partition.autoEvict is true", () => {
     const cache = new ForestRun({
       maxOperationCount: 100,
       autoEvict: false,
-      unstable_partitionConfig: partitionConfig,
+      unstable_partitionConfig: {
+        partitionKey: (o) => o.operation.debugName,
+        partitions: {
+          "query a": { maxOperationCount: 1, autoEvict: true },
+        },
+      },
     });
     const a = gql`
       query a($i: Int) {
@@ -328,26 +324,26 @@ describe("clearPartition", () => {
 
     cache.write({ query: a, variables: { i: 0 }, result: { foo: 0 } });
     cache.write({ query: a, variables: { i: 1 }, result: { foo: 1 } });
-    cache.write({ query: a, variables: { i: 2 }, result: { foo: 2 } });
 
-    cache.clearPartition({ partition: "query a" });
-
+    // Only most recent survives
     expect(
       cache.read({ query: a, variables: { i: 0 }, optimistic: true }),
     ).toEqual(null);
     expect(
       cache.read({ query: a, variables: { i: 1 }, optimistic: true }),
-    ).toEqual(null);
-    expect(
-      cache.read({ query: a, variables: { i: 2 }, optimistic: true }),
-    ).toEqual(null);
+    ).toEqual({ foo: 1 });
   });
 
-  it("keepMostRecent preserves N most recent ops", () => {
+  it("does not auto-evict partition when autoEvict is not set", () => {
     const cache = new ForestRun({
       maxOperationCount: 100,
       autoEvict: false,
-      unstable_partitionConfig: partitionConfig,
+      unstable_partitionConfig: {
+        partitionKey: (o) => o.operation.debugName,
+        partitions: {
+          "query a": { maxOperationCount: 1 },
+        },
+      },
     });
     const a = gql`
       query a($i: Int) {
@@ -357,27 +353,27 @@ describe("clearPartition", () => {
 
     cache.write({ query: a, variables: { i: 0 }, result: { foo: 0 } });
     cache.write({ query: a, variables: { i: 1 }, result: { foo: 1 } });
-    cache.write({ query: a, variables: { i: 2 }, result: { foo: 2 } });
 
-    cache.clearPartition({ partition: "query a", keepMostRecent: 1 });
-
+    // Both survive — no auto-eviction
     expect(
       cache.read({ query: a, variables: { i: 0 }, optimistic: true }),
-    ).toEqual(null);
+    ).toEqual({ foo: 0 });
     expect(
       cache.read({ query: a, variables: { i: 1 }, optimistic: true }),
-    ).toEqual(null);
-    // Most recent survives
-    expect(
-      cache.read({ query: a, variables: { i: 2 }, optimistic: true }),
-    ).toEqual({ foo: 2 });
+    ).toEqual({ foo: 1 });
   });
 
   it("doesn't touch other partitions", () => {
     const cache = new ForestRun({
       maxOperationCount: 100,
       autoEvict: false,
-      unstable_partitionConfig: partitionConfig,
+      unstable_partitionConfig: {
+        partitionKey: (o) => o.operation.debugName,
+        partitions: {
+          "query a": { maxOperationCount: 1, autoEvict: true },
+          "query b": { maxOperationCount: 10 },
+        },
+      },
     });
     const a = gql`
       query a($i: Int) {
@@ -390,15 +386,19 @@ describe("clearPartition", () => {
       }
     `;
 
-    cache.write({ query: a, variables: { i: 0 }, result: { foo: 0 } });
     cache.write({ query: b, variables: { i: 0 }, result: { bar: 0 } });
     cache.write({ query: b, variables: { i: 1 }, result: { bar: 1 } });
+    cache.write({ query: a, variables: { i: 0 }, result: { foo: 0 } });
+    cache.write({ query: a, variables: { i: 1 }, result: { foo: 1 } });
 
-    cache.clearPartition({ partition: "query a" });
-
+    // partition a evicted down to 1
     expect(
       cache.read({ query: a, variables: { i: 0 }, optimistic: true }),
     ).toEqual(null);
+    expect(
+      cache.read({ query: a, variables: { i: 1 }, optimistic: true }),
+    ).toEqual({ foo: 1 });
+    // partition b untouched
     expect(
       cache.read({ query: b, variables: { i: 0 }, optimistic: true }),
     ).toEqual({ bar: 0 });
@@ -407,147 +407,20 @@ describe("clearPartition", () => {
     ).toEqual({ bar: 1 });
   });
 
-  it("skips watched ops by default", () => {
+  it("skips watched ops during partition auto-eviction", () => {
     const cache = new ForestRun({
       maxOperationCount: 100,
       autoEvict: false,
-      unstable_partitionConfig: partitionConfig,
+      unstable_partitionConfig: {
+        partitionKey: (o) => o.operation.debugName,
+        partitions: {
+          "query a": { maxOperationCount: 1, autoEvict: true },
+        },
+      },
     });
     const a = gql`
       query a($i: Int) {
         foo(i: $i)
-      }
-    `;
-
-    cache.watch({
-      query: a,
-      variables: { i: 1 },
-      optimistic: true,
-      callback: () => {},
-    });
-
-    cache.write({ query: a, variables: { i: 0 }, result: { foo: 0 } });
-    cache.write({ query: a, variables: { i: 1 }, result: { foo: 1 } });
-    cache.write({ query: a, variables: { i: 2 }, result: { foo: 2 } });
-
-    cache.clearPartition({ partition: "query a" });
-
-    expect(
-      cache.read({ query: a, variables: { i: 0 }, optimistic: true }),
-    ).toEqual(null);
-    // Watched — survives
-    expect(
-      cache.read({ query: a, variables: { i: 1 }, optimistic: true }),
-    ).toEqual({ foo: 1 });
-    expect(
-      cache.read({ query: a, variables: { i: 2 }, optimistic: true }),
-    ).toEqual(null);
-  });
-
-  it("includeWatched clears watched ops too", () => {
-    const cache = new ForestRun({
-      maxOperationCount: 100,
-      autoEvict: false,
-      unstable_partitionConfig: partitionConfig,
-    });
-    const a = gql`
-      query a($i: Int) {
-        foo(i: $i)
-      }
-    `;
-
-    cache.watch({
-      query: a,
-      variables: { i: 1 },
-      optimistic: true,
-      callback: () => {},
-    });
-
-    cache.write({ query: a, variables: { i: 0 }, result: { foo: 0 } });
-    cache.write({ query: a, variables: { i: 1 }, result: { foo: 1 } });
-    cache.write({ query: a, variables: { i: 2 }, result: { foo: 2 } });
-
-    cache.clearPartition({
-      partition: "query a",
-      includeWatched: true,
-    });
-
-    expect(
-      cache.read({ query: a, variables: { i: 0 }, optimistic: true }),
-    ).toEqual(null);
-    expect(
-      cache.read({ query: a, variables: { i: 1 }, optimistic: true }),
-    ).toEqual(null);
-    expect(
-      cache.read({ query: a, variables: { i: 2 }, optimistic: true }),
-    ).toEqual(null);
-  });
-
-  it("warns and returns empty for unconfigured partition name", () => {
-    const mockConsole = { ...console, warn: jest.fn() };
-    const cache = new ForestRun({
-      maxOperationCount: 100,
-      autoEvict: false,
-      logger: mockConsole,
-      unstable_partitionConfig: partitionConfig,
-    });
-
-    const result = cache.clearPartition({ partition: "nonexistent" });
-
-    expect(result).toEqual([]);
-    expect(mockConsole.warn).toHaveBeenCalledTimes(1);
-  });
-
-  it("warns and returns empty when no partitionConfig", () => {
-    const mockConsole = { ...console, warn: jest.fn() };
-    const cache = new ForestRun({
-      maxOperationCount: 100,
-      autoEvict: false,
-      logger: mockConsole,
-    });
-
-    const result = cache.clearPartition({ partition: "anything" });
-
-    expect(result).toEqual([]);
-    expect(mockConsole.warn).toHaveBeenCalledTimes(1);
-  });
-
-  it("returns evicted operation IDs as string[]", () => {
-    const cache = new ForestRun({
-      maxOperationCount: 100,
-      autoEvict: false,
-      unstable_partitionConfig: partitionConfig,
-    });
-    const a = gql`
-      query a($i: Int) {
-        foo(i: $i)
-      }
-    `;
-
-    cache.write({ query: a, variables: { i: 0 }, result: { foo: 0 } });
-    cache.write({ query: a, variables: { i: 1 }, result: { foo: 1 } });
-
-    const result = cache.clearPartition({ partition: "query a" });
-
-    expect(result).toHaveLength(2);
-    expect(result.every((id) => typeof id === "string")).toBe(true);
-  });
-
-  it("respects nonEvictableQueries even with includeWatched", () => {
-    const cache = new ForestRun({
-      maxOperationCount: 100,
-      autoEvict: false,
-      nonEvictableQueries: new Set(["foo"]),
-      unstable_partitionConfig: partitionConfig,
-    });
-    const a = gql`
-      query a($i: Int) {
-        foo(i: $i)
-      }
-    `;
-    const b = gql`
-      query b($i: Int) {
-        bar(i: $i)
       }
     `;
 
@@ -560,24 +433,48 @@ describe("clearPartition", () => {
 
     cache.write({ query: a, variables: { i: 0 }, result: { foo: 0 } });
     cache.write({ query: a, variables: { i: 1 }, result: { foo: 1 } });
-    cache.write({ query: b, variables: { i: 0 }, result: { bar: 0 } });
+    cache.write({ query: a, variables: { i: 2 }, result: { foo: 2 } });
 
-    const result = cache.clearPartition({
-      partition: "query a",
-      includeWatched: true,
+    // Watched op survives, most recent survives
+    expect(
+      cache.read({ query: a, variables: { i: 0 }, optimistic: true }),
+    ).toEqual({ foo: 0 });
+    expect(
+      cache.read({ query: a, variables: { i: 2 }, optimistic: true }),
+    ).toEqual({ foo: 2 });
+  });
+
+  it("respects nonEvictableQueries during partition auto-eviction", () => {
+    const cache = new ForestRun({
+      maxOperationCount: 100,
+      autoEvict: false,
+      nonEvictableQueries: new Set(["foo"]),
+      unstable_partitionConfig: {
+        partitionKey: (o) => o.operation.debugName,
+        partitions: {
+          "query a": { maxOperationCount: 1, autoEvict: true },
+        },
+      },
     });
+    const a = gql`
+      query a($i: Int) {
+        foo(i: $i)
+      }
+    `;
 
-    // "foo" is nonEvictable — both query a ops survive despite includeWatched
-    expect(result).toEqual([]);
+    cache.write({ query: a, variables: { i: 0 }, result: { foo: 0 } });
+    cache.write({ query: a, variables: { i: 1 }, result: { foo: 1 } });
+    cache.write({ query: a, variables: { i: 2 }, result: { foo: 2 } });
+
+    // All survive — nonEvictableQueries protects them
     expect(
       cache.read({ query: a, variables: { i: 0 }, optimistic: true }),
     ).toEqual({ foo: 0 });
     expect(
       cache.read({ query: a, variables: { i: 1 }, optimistic: true }),
     ).toEqual({ foo: 1 });
-    // other partition untouched
     expect(
-      cache.read({ query: b, variables: { i: 0 }, optimistic: true }),
-    ).toEqual({ bar: 0 });
+      cache.read({ query: a, variables: { i: 2 }, optimistic: true }),
+    ).toEqual({ foo: 2 });
   });
 });
