@@ -34,12 +34,32 @@ import { ExtendedLogger, Logger } from "../jsutils/logger";
 import { GraphDifference, GraphDiffError } from "../diff/diffTree";
 import { ObjectDifference } from "../diff/types";
 
+export type PartitionOptions = {
+  maxOperationCount: number;
+  autoEvict?: boolean;
+};
+
 export type PartitionConfig = {
   partitions: {
-    [key: string]: {
-      maxOperationCount: number;
-      autoEvict?: boolean;
-    };
+    [key: string]: PartitionOptions;
+  };
+  partitionKey: (operation: IndexedTree) => string | null;
+};
+
+export type ResolvedPartitionOptions = {
+  maxOperationCount: number;
+  autoEvict: boolean;
+};
+
+export type ResolvedPartition = {
+  partition: string;
+  options: ResolvedPartitionOptions;
+};
+
+export type ResolvedPartitionConfig = {
+  partitions: {
+    __default__: ResolvedPartitionOptions;
+    [key: string]: ResolvedPartitionOptions | undefined;
   };
   partitionKey: (operation: IndexedTree) => string | null;
 };
@@ -104,7 +124,9 @@ export type Store = {
   //   Used for LRU eviction
   atime: Map<OperationId, number>;
   // Precomputed eviction partition per tree
-  partitions: WeakMap<IndexedTree, string>;
+  partitions: WeakMap<IndexedTree, ResolvedPartition>;
+  // Pending scheduled auto-eviction
+  pendingEviction: ScheduledEvictionHandle | null;
 };
 
 export type Transaction = {
@@ -147,6 +169,12 @@ export type ModifyResult = {
   difference?: LayerDifferenceMap;
 };
 
+export type ScheduledEvictionHandle = { cancel: () => void };
+
+export type ScheduleEviction = (
+  run: () => void,
+) => ScheduledEvictionHandle | null;
+
 export type ForestRunAdditionalConfig<
   TPartitions extends HistoryPartitions = any,
 > = {
@@ -154,6 +182,7 @@ export type ForestRunAdditionalConfig<
   maxOperationCount?: number;
   nonEvictableQueries?: Set<string>;
   unstable_partitionConfig?: PartitionConfig;
+  scheduleAutoEviction?: ScheduleEviction;
   apolloCompat_keepOrphanNodes?: boolean;
   logger?: Logger;
   notify?: (event: TelemetryEvent) => void;
@@ -231,7 +260,8 @@ export type CacheEnv<TPartitions extends HistoryPartitions = any> = {
   autoEvict: boolean;
   nonEvictableQueries: Set<string>;
   maxOperationCount: number;
-  partitionConfig?: PartitionConfig;
+  partitionConfig: ResolvedPartitionConfig;
+  scheduleAutoEviction: ScheduleEviction;
 
   // Feature flags
   logUpdateStats: boolean;
