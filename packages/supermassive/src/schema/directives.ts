@@ -41,10 +41,14 @@ export const DEFAULT_DEPRECATION_REASON = "No longer supported";
  */
 export const GraphQLDeprecatedDirective: DirectiveDefinitionTuple = [
   "deprecated",
-  [DirectiveLocation.FIELD_DEFINITION].map(encodeDirectiveLocation),
+  [
+    DirectiveLocation.FIELD_DEFINITION,
+    DirectiveLocation.ENUM_VALUE,
+    DirectiveLocation.INPUT_FIELD_DEFINITION,
+    DirectiveLocation.ARGUMENT_DEFINITION,
+  ].map(encodeDirectiveLocation),
   { reason: ["String", DEFAULT_DEPRECATION_REASON] },
 ];
-
 /**
  * Used to provide a URL for specifying the behaviour of custom scalar definitions.
  */
