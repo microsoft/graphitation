@@ -257,9 +257,7 @@ export type CacheEnv<TPartitions extends HistoryPartitions = any> = {
 
   mergePolicies: Map<TypeName, Map<FieldName, FieldMergeFunction>>;
   readPolicies: Map<TypeName, Map<FieldName, FieldReadFunction>>;
-  autoEvict: boolean;
   nonEvictableQueries: Set<string>;
-  maxOperationCount: number;
   partitionConfig: ResolvedPartitionConfig;
   scheduleAutoEviction: ScheduleEviction;
 

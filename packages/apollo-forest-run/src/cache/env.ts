@@ -4,6 +4,7 @@ import {
   CacheEnv,
   PartitionConfig,
   ResolvedPartitionConfig,
+  ResolvedPartitionOptions,
   ScheduleEviction,
 } from "./types";
 import { keyArgs, objectKey } from "./keys";
@@ -29,7 +30,7 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
   let id = 0;
   let tick = 0;
 
-  const defaults = {
+  const env: CacheEnv = {
     addTypename: config?.addTypename ?? true,
     apolloCompat_keepOrphanNodes: config?.apolloCompat_keepOrphanNodes ?? false,
     possibleTypes,
@@ -43,13 +44,18 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
     },
     mergePolicies: new Map(),
     readPolicies: new Map(),
-    autoEvict: config?.autoEvict ?? true,
     logUpdateStats: config?.logUpdateStats ?? false,
     logStaleOperations: config?.logStaleOperations ?? false,
     historyConfig: config?.historyConfig,
     optimizeFragmentReads: config?.optimizeFragmentReads ?? false,
     nonEvictableQueries: config?.nonEvictableQueries ?? new Set(),
-    maxOperationCount: config?.maxOperationCount ?? 1000,
+    partitionConfig: resolvePartitionConfig(
+      {
+        autoEvict: config?.autoEvict ?? true,
+        maxOperationCount: config?.maxOperationCount ?? 1000,
+      },
+      config?.unstable_partitionConfig,
+    ),
     scheduleAutoEviction: config?.scheduleAutoEviction ?? runAutoEvictionSync,
     logger: createExtendedLogger(
       config && "logger" in config ? config.logger : logger,
@@ -70,14 +76,6 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
       source?: OperationDescriptor,
     ) => keyArgs(env, typeName, fieldName, args, directives, source),
   };
-
-  const env: CacheEnv = {
-    ...defaults,
-    partitionConfig: resolvePartitionConfig(
-      defaults,
-      config?.unstable_partitionConfig,
-    ),
-  };
   cachePolicies(env);
   return env;
 }
@@ -88,7 +86,7 @@ const runAutoEvictionSync: ScheduleEviction = (run) => {
 };
 
 function resolvePartitionConfig(
-  defaults: Pick<CacheEnv, "autoEvict" | "maxOperationCount">,
+  defaults: ResolvedPartitionOptions,
   input?: PartitionConfig,
 ): ResolvedPartitionConfig {
   const { autoEvict, maxOperationCount } = defaults;
