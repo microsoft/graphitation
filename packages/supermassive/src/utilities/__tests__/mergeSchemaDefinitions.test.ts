@@ -234,7 +234,9 @@ describe("mergeSchemaDefinitions", () => {
         MODERATOR
       }
     `);
-    const result = mergeSchemaDefinitions({ types: {}, directives: [] }, defs, { mergeEnumValues: true});
+    const result = mergeSchemaDefinitions({ types: {}, directives: [] }, defs, {
+      mergeEnumValues: true,
+    });
     expect(result.types["UserRole"][1]).toEqual(["ADMIN", "USER", "MODERATOR"]);
   });
 
