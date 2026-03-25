@@ -304,7 +304,7 @@ it("should warn exactly once for the same warning", () => {
   // notably: "query TestB" is NOT logged
 });
 
-it("auto-evicts all partitions when global autoEvict is true", () => {
+it("partitions without autoEvict specified inherit the default", () => {
   const cache = new ForestRun({
     maxOperationCount: 1,
     autoEvict: true,
@@ -505,7 +505,7 @@ it("gc() evicts all partitions regardless of per-partition autoEvict", () => {
   ).toEqual({ bar: 1 });
 });
 
-it("per-partition autoEvict: true overrides global autoEvict: false for default partition", () => {
+it("unconfigured operations fall to default partition and inherit global autoEvict", () => {
   // autoEvict: false only applies to __default__ partition and partitions
   // that don't specify their own autoEvict
   const cache = new ForestRun({
