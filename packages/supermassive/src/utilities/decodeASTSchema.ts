@@ -74,6 +74,7 @@ import {
   StringValueNode,
 } from "graphql/language/ast"; // TODO: use ConstValueNode in graphql@17
 import { inspect } from "../jsutils/inspect";
+import { specifiedDirectives } from "../schema/directives";
 
 /**
  * Converts encoded schema to standard AST representation of the same schema
@@ -490,10 +491,15 @@ function decodeDirective(
   }
 
   return directiveTuples.map(([directiveName, args]) => {
-    const directiveTuple = directiveDefinitions?.find(
-      (directiveDefinition) =>
-        getDirectiveDefinitionName(directiveDefinition) === directiveName,
-    );
+    const directiveTuple =
+      directiveDefinitions?.find(
+        (directiveDefinition) =>
+          getDirectiveDefinitionName(directiveDefinition) === directiveName,
+      ) ||
+      specifiedDirectives?.find(
+        (directiveDefinition) =>
+          getDirectiveDefinitionName(directiveDefinition) === directiveName,
+      );
 
     invariant(
       directiveTuple !== undefined,
