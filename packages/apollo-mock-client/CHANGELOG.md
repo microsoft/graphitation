@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-mock-client
 
-<!-- This log was last generated on Fri, 06 Feb 2026 12:41:07 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 26 Mar 2026 13:23:08 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.13.0
+
+Thu, 26 Mar 2026 13:23:08 GMT
+
+### Minor changes
+
+- support async resolvers. (pavelglac@gmail.com)
 
 ## 0.12.2
 

@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "support async resolvers.",
-  "packageName": "@graphitation/apollo-mock-client",
-  "email": "pavelglac@gmail.com",
-  "dependentChangeType": "patch"
-}

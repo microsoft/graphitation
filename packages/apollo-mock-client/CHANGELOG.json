@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-mock-client",
   "entries": [
     {
+      "date": "Thu, 26 Mar 2026 13:23:08 GMT",
+      "version": "0.13.0",
+      "tag": "@graphitation/apollo-mock-client_v0.13.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "pavelglac@gmail.com",
+            "package": "@graphitation/apollo-mock-client",
+            "commit": "c6041fd4da10b41d15be6faa5959935c94f700b3",
+            "comment": "support async resolvers."
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 06 Feb 2026 12:41:07 GMT",
       "version": "0.12.2",
       "tag": "@graphitation/apollo-mock-client_v0.12.2",
