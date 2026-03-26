@@ -346,7 +346,7 @@ export class ForestRun<
     return this.env.optimizeFragmentReads &&
       isFragmentDocument(watch.query) &&
       (watch.id || watch.rootId)
-      ? this.watchFragment(watch)
+      ? this.watchFragmentInternal(watch)
       : this.watchOperation(watch);
   }
 
@@ -371,13 +371,66 @@ export class ForestRun<
     };
   }
 
-  private watchFragment(watch: Cache.WatchOptions) {
+  private watchFragmentInternal(watch: Cache.WatchOptions) {
     const id = watch.id ?? watch.rootId;
     assert(id !== undefined);
     accumulate(this.store.fragmentWatches, id, watch);
 
     return () => {
       deleteAccumulated(this.store.fragmentWatches, id, watch);
+    };
+  }
+
+  public watchFragment(options: {
+    fragment: DocumentNode;
+    fragmentName?: string;
+    from: string | StoreObject;
+    optimistic?: boolean;
+  }) {
+    const { fragment, fragmentName, from, optimistic = true, ...otherOptions } =
+      options;
+    const query = this["getFragmentDoc"](fragment, fragmentName);
+    const id = typeof from === "string" ? from : this.identify(from);
+
+    return {
+      subscribe: (
+        observerOrNext:
+          | ((result: any) => void)
+          | { next?: (result: any) => void }
+          | null
+          | undefined,
+      ) => {
+        let latestDiff: Cache.DiffResult<any> | undefined;
+        const unsubscribe = this.watch({
+          ...otherOptions,
+          returnPartialData: true,
+          id,
+          query,
+          optimistic,
+          immediate: true,
+          callback: (diff: Cache.DiffResult<any>) => {
+            let data = diff.result;
+            if (data === null) data = {};
+            if (latestDiff && equal(latestDiff.result, data)) return;
+            const result = {
+              data,
+              dataState: diff.complete ? "complete" : "partial",
+              complete: !!diff.complete,
+              missing: diff.missing,
+            };
+            latestDiff = {
+              ...diff,
+              result: data,
+            };
+            const next =
+              typeof observerOrNext === "function"
+                ? observerOrNext
+                : observerOrNext?.next;
+            next?.(result);
+          },
+        });
+        return { unsubscribe };
+      },
     };
   }
 
