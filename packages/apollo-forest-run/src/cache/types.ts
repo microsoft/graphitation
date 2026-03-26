@@ -181,7 +181,7 @@ export type ForestRunAdditionalConfig<
   autoEvict?: boolean;
   maxOperationCount?: number;
   nonEvictableQueries?: Set<string>;
-  unstable_partitionConfig?: PartitionConfig;
+  partitionConfig?: PartitionConfig;
   scheduleAutoEviction?: ScheduleEviction;
   apolloCompat_keepOrphanNodes?: boolean;
   logger?: Logger;

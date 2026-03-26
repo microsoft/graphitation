@@ -54,7 +54,7 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
         autoEvict: config?.autoEvict ?? true,
         maxOperationCount: config?.maxOperationCount ?? 1000,
       },
-      config?.unstable_partitionConfig,
+      config?.partitionConfig,
     ),
     scheduleAutoEviction: config?.scheduleAutoEviction ?? runAutoEvictionSync,
     logger: createExtendedLogger(

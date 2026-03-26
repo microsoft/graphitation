@@ -151,7 +151,7 @@ it("allows partitioned eviction", () => {
   const cache = new ForestRun({
     maxOperationCount: 1,
     autoEvict: false,
-    unstable_partitionConfig: {
+    partitionConfig: {
       partitionKey: (o) => o.operation.debugName,
       partitions: {
         "query a": { maxOperationCount: 1 },
@@ -269,7 +269,7 @@ it("should warn exactly once for the same warning", () => {
     maxOperationCount: 1,
     autoEvict: false,
     logger: mockConsole,
-    unstable_partitionConfig: {
+    partitionConfig: {
       partitionKey: (o) => o.operation.debugName,
       partitions: {},
     },
@@ -308,7 +308,7 @@ it("partitions without autoEvict specified inherit the default", () => {
   const cache = new ForestRun({
     maxOperationCount: 1,
     autoEvict: true,
-    unstable_partitionConfig: {
+    partitionConfig: {
       partitionKey: (o) => o.operation.debugName,
       partitions: {
         "query a": { maxOperationCount: 1 },
@@ -353,7 +353,7 @@ it("per-partition autoEvict: false prevents auto-eviction for that partition whe
   const cache = new ForestRun({
     maxOperationCount: 1,
     autoEvict: true,
-    unstable_partitionConfig: {
+    partitionConfig: {
       partitionKey: (o) => o.operation.debugName,
       partitions: {
         "query a": { maxOperationCount: 1, autoEvict: true },
@@ -399,7 +399,7 @@ it("auto-evicts partitions with autoEvict: true even when global autoEvict is fa
   const cache = new ForestRun({
     maxOperationCount: 1,
     autoEvict: false,
-    unstable_partitionConfig: {
+    partitionConfig: {
       partitionKey: (o) => o.operation.debugName,
       partitions: {
         "query a": { maxOperationCount: 1, autoEvict: true },
@@ -458,7 +458,7 @@ it("gc() evicts all partitions regardless of per-partition autoEvict", () => {
   const cache = new ForestRun({
     maxOperationCount: 1,
     autoEvict: false,
-    unstable_partitionConfig: {
+    partitionConfig: {
       partitionKey: (o) => o.operation.debugName,
       partitions: {
         "query a": { maxOperationCount: 1, autoEvict: false },
@@ -511,7 +511,7 @@ it("unconfigured operations fall to default partition and inherit global autoEvi
   const cache = new ForestRun({
     maxOperationCount: 1,
     autoEvict: false,
-    unstable_partitionConfig: {
+    partitionConfig: {
       partitionKey: (o) => o.operation.debugName,
       partitions: {
         "query a": { maxOperationCount: 1, autoEvict: true },
