@@ -112,7 +112,9 @@ export interface MockFunctions<Schema = GraphQLSchema, Node = DocumentNode> {
    * as per https://www.apollographql.com/docs/react/development-testing/testing/
    */
   resolveMostRecentOperation(
-    resolver: (operation: OperationDescriptor<Schema, Node>) => ExecutionResult,
+    resolver: (
+      operation: OperationDescriptor<Schema, Node>,
+    ) => ExecutionResult | Promise<ExecutionResult>,
   ): Promise<void>;
 
   /**
@@ -290,10 +292,12 @@ class Mock implements MockFunctions {
   }
 
   public async resolveMostRecentOperation(
-    resolver: (operation: OperationDescriptor) => ExecutionResult,
+    resolver: (
+      operation: OperationDescriptor,
+    ) => ExecutionResult | Promise<ExecutionResult>,
   ): Promise<void> {
     const operation = this.getMostRecentOperation();
-    this.resolve(operation, resolver(operation));
+    this.resolve(operation, await resolver(operation));
   }
 
   public async rejectMostRecentOperation(
