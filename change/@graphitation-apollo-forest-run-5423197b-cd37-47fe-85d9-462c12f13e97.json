@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "feat(apollo-forest-run): per-partition auto-eviction",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "joeflateau@microsoft.com",
+  "dependentChangeType": "patch"
+}
