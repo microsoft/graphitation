@@ -180,7 +180,7 @@ export function write(
     // Note: even with existingResult === undefined the tree for this operation may still exist in the cache
     //   (when existingResult is resolved with a different key descriptor due to key variables)
     // TODO: replace with addTree and add a proper check for keyVariables
-    replaceTree(targetForest, modifiedIncomingResult);
+    replaceTree(env, targetForest, modifiedIncomingResult);
   }
 
   appendAffectedOperationsFromOtherLayers(

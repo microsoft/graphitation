@@ -59,9 +59,9 @@ export function updateAffectedTrees(
       );
     }
 
+    replaceTree(env, forest, result.updatedTree);
     // Reset previous tree state on commit
     result.updatedTree.prev = null;
-    replaceTree(forest, result.updatedTree);
   }
   return allUpdated;
 }

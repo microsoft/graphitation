@@ -578,7 +578,7 @@ export class ForestRun<
       );
       logUpdateStats(this.env, activeTransaction.changelog, watchesToNotify);
     }
-    maybeEvictOldData(this.env, this.store, activeTransaction);
+    maybeEvictOldData(this.env, this.store);
 
     return result as T;
   }

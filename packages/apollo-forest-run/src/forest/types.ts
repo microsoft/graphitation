@@ -125,6 +125,7 @@ export type IndexedForest = {
   operationsByNodes: Map<NodeKey, Set<OperationId>>; // May contain false positives
   operationsWithErrors: Set<OperationDescriptor>; // May contain false positives
   operationsByName: Map<string, Set<OperationId>>; // operationName → operation IDs
+  operationsByPartitions: Map<string, Set<OperationId>>; // partition key => operation IDs
   deletedNodes: Set<NodeKey>;
 };
 
@@ -238,4 +239,10 @@ export type ForestEnv = {
 
   // History feature flags
   historyConfig?: HistoryConfig;
+
+  partitionConfig?: {
+    partitionKey: (operation: IndexedTree) => string | null;
+  };
 };
+
+export type DefaultPartition = "__default__";
