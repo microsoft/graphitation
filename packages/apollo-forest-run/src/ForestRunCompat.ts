@@ -47,7 +47,7 @@ export class ForestRunCompat extends ForestRun {
       );
       const operationResult = { data: write.result ?? {} };
       const tree = indexTree(this.env, operation, operationResult);
-      replaceTree(this.store.dataForest, tree);
+      replaceTree(this.env, this.store.dataForest, tree);
     }
     return this;
   }

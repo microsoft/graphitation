@@ -264,7 +264,7 @@ function growOutputTree(
   }
   if (!dataTree) {
     dataTree = growDataTree(env, forest, operation);
-    addTree(forest, dataTree);
+    addTree(env, forest, dataTree);
   }
   const tree = applyTransformations(
     env,
