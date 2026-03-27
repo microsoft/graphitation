@@ -27,6 +27,7 @@ import { modify } from "./cache/modify";
 import {
   createOptimisticLayer,
   createStore,
+  cancelPendingEviction,
   evictOldData,
   getEffectiveReadLayers,
   maybeEvictOldData,
@@ -451,10 +452,8 @@ export class ForestRun<
   }
 
   public gc(): string[] {
-    if (this.env.maxOperationCount) {
-      return evictOldData(this.env, this.store).map(String);
-    }
-    return [];
+    cancelPendingEviction(this.store);
+    return evictOldData(this.env, this.store).map(String);
   }
 
   public getStats() {
@@ -579,7 +578,7 @@ export class ForestRun<
       );
       logUpdateStats(this.env, activeTransaction.changelog, watchesToNotify);
     }
-    maybeEvictOldData(this.env, this.store);
+    maybeEvictOldData(this.env, this.store, activeTransaction);
 
     return result as T;
   }

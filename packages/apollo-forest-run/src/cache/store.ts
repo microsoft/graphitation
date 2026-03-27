@@ -3,6 +3,8 @@ import {
   DataForest,
   DataTree,
   OptimisticLayer,
+  ResolvedPartition,
+  ResolvedPartitionOptions,
   ResultTree,
   Store,
   Transaction,
@@ -20,6 +22,39 @@ import { NodeChunk } from "../values/types";
 import { operationCacheKey } from "./descriptor";
 
 const EMPTY_ARRAY = Object.freeze([]);
+
+const DEFAULT_PARTITION = "__default__";
+
+function resolvePartition(
+  env: CacheEnv,
+  store: Store,
+  tree: IndexedTree,
+): ResolvedPartition {
+  const cached = store.partitions.get(tree);
+  if (cached !== undefined) {
+    return cached;
+  }
+  const { partitions, partitionKey } = env.partitionConfig;
+  const key = partitionKey(tree);
+  let partition: string;
+  let options: ResolvedPartitionOptions;
+  if (key != null && partitions[key]) {
+    partition = key;
+    options = partitions[key];
+  } else {
+    partition = DEFAULT_PARTITION;
+    options = partitions[DEFAULT_PARTITION];
+    if (key != null) {
+      env.logger?.warnOnce(
+        "partition_not_configured",
+        `Partition "${key}" is not configured in partitionConfig. Using default partition instead.`,
+      );
+    }
+  }
+  const result: ResolvedPartition = { partition, options };
+  store.partitions.set(tree, result);
+  return result;
+}
 
 export function createStore(_: CacheEnv): Store {
   const dataForest: DataForest = {
@@ -51,6 +86,8 @@ export function createStore(_: CacheEnv): Store {
     watches: new Map(),
     fragmentWatches: new Map(),
     atime: new Map(),
+    partitions: new WeakMap(),
+    pendingEviction: null,
   };
   return store;
 }
@@ -63,62 +100,88 @@ export function touchOperation(
   store.atime.set(operation.id, env.now());
 }
 
-export function maybeEvictOldData(env: CacheEnv, store: Store): OperationId[] {
-  if (
-    !env.autoEvict ||
-    !env.maxOperationCount ||
-    store.dataForest.trees.size <= env.maxOperationCount * 2
-  ) {
-    return [];
+function affectedPartitionsHaveAutoEvict(
+  env: CacheEnv,
+  store: Store,
+  transaction: Transaction,
+): boolean {
+  for (const entry of transaction.changelog) {
+    if ("incoming" in entry) {
+      const { options } = resolvePartition(env, store, entry.incoming);
+      if (options.autoEvict) {
+        return true;
+      }
+    }
   }
-  return evictOldData(env, store);
+  return false;
 }
 
-export function evictOldData(env: CacheEnv, store: Store): OperationId[] {
-  assert(env.maxOperationCount);
+export function maybeEvictOldData(
+  env: CacheEnv,
+  store: Store,
+  transaction: Transaction,
+): void {
+  if (store.pendingEviction != null) {
+    return;
+  }
+  if (!affectedPartitionsHaveAutoEvict(env, store, transaction)) {
+    return;
+  }
+  store.pendingEviction = env.scheduleAutoEviction(() => {
+    store.pendingEviction = null;
+    evictOldData(env, store, true);
+  });
+}
+
+export function cancelPendingEviction(store: Store): void {
+  store.pendingEviction?.cancel();
+  store.pendingEviction = null;
+}
+
+export function evictOldData(
+  env: CacheEnv,
+  store: Store,
+  isAutoEvict?: boolean,
+): OperationId[] {
   const { dataForest, atime } = store;
 
-  const partitionsOps = new Map<string, OperationId[]>();
-  const partitionKey = env.partitionConfig?.partitionKey;
-  const configuredPartitionKeys = new Set(
-    Object.keys(env.partitionConfig?.partitions ?? {}),
-  );
-
-  const DEFAULT_PARTITION = "__default__";
+  const partitionsOps = new Map<
+    string,
+    { options: ResolvedPartitionOptions; operations: OperationId[] }
+  >();
 
   for (const tree of dataForest.trees.values()) {
     if (!canEvict(env, store, tree)) {
       continue; // Skip non-evictable operations entirely
     }
 
-    let partition = partitionKey?.(tree);
-    if (partition == null) {
-      partition = DEFAULT_PARTITION; // Default partition if not specified or not configured
-    } else if (!configuredPartitionKeys.has(partition)) {
-      env.logger?.warnOnce(
-        "partition_not_configured",
-        `Partition "${partition}" is not configured in partitionConfig. Using default partition instead.`,
-      );
-      partition = DEFAULT_PARTITION; // Default partition if not specified or not configured
-    }
+    const { partition, options } = resolvePartition(env, store, tree);
     let partitionOps = partitionsOps.get(partition);
     if (!partitionOps) {
-      partitionOps = [];
+      partitionOps = { options, operations: [] };
       partitionsOps.set(partition, partitionOps);
     }
 
-    partitionOps.push(tree.operation.id);
+    partitionOps.operations.push(tree.operation.id);
   }
 
   const toEvict: OperationId[] = [];
 
   // Process each partition
-  for (const [partition, evictableOperationIds] of partitionsOps) {
-    const maxCount =
-      env.partitionConfig?.partitions[partition]?.maxOperationCount ??
-      env.maxOperationCount;
+  for (const {
+    options: partitionConf,
+    operations: evictableOperationIds,
+  } of partitionsOps.values()) {
+    // During auto-eviction, respect per-partition autoEvict settings
+    if (isAutoEvict) {
+      if (!partitionConf.autoEvict) {
+        continue;
+      }
+    }
 
-    if (evictableOperationIds.length <= maxCount) {
+    const maxCount = partitionConf.maxOperationCount;
+
+    if (!maxCount || evictableOperationIds.length <= maxCount) {
       continue; // No eviction needed for this partition
     }
 

@@ -1,5 +1,12 @@
 import { TypePolicies } from "@apollo/client";
-import { CacheConfig, CacheEnv } from "./types";
+import {
+  CacheConfig,
+  CacheEnv,
+  PartitionConfig,
+  ResolvedPartitionConfig,
+  ResolvedPartitionOptions,
+  ScheduleEviction,
+} from "./types";
 import { keyArgs, objectKey } from "./keys";
 import { TypePolicy } from "@apollo/client/cache/inmemory/policies";
 import {
@@ -19,8 +26,10 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
   if (possibleTypes) {
     inheritTypePolicies(typePolicies, possibleTypes);
   }
+
   let id = 0;
   let tick = 0;
+
   const env: CacheEnv = {
     addTypename: config?.addTypename ?? true,
     apolloCompat_keepOrphanNodes: config?.apolloCompat_keepOrphanNodes ?? false,
@@ -35,14 +44,19 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
     },
     mergePolicies: new Map(),
     readPolicies: new Map(),
-    autoEvict: config?.autoEvict ?? true,
     logUpdateStats: config?.logUpdateStats ?? false,
     logStaleOperations: config?.logStaleOperations ?? false,
     historyConfig: config?.historyConfig,
     optimizeFragmentReads: config?.optimizeFragmentReads ?? false,
     nonEvictableQueries: config?.nonEvictableQueries ?? new Set(),
-    maxOperationCount: config?.maxOperationCount ?? 1000,
-    partitionConfig: config?.unstable_partitionConfig,
+    partitionConfig: resolvePartitionConfig(
+      {
+        autoEvict: config?.autoEvict ?? true,
+        maxOperationCount: config?.maxOperationCount ?? 1000,
+      },
+      config?.partitionConfig,
+    ),
+    scheduleAutoEviction: config?.scheduleAutoEviction ?? runAutoEvictionSync,
     logger: createExtendedLogger(
       config && "logger" in config ? config.logger : logger,
     ),
@@ -64,6 +78,38 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
   };
   cachePolicies(env);
   return env;
+}
+
+const runAutoEvictionSync: ScheduleEviction = (run) => {
+  run();
+  return null;
+};
+
+function resolvePartitionConfig(
+  defaults: ResolvedPartitionOptions,
+  input?: PartitionConfig,
+): ResolvedPartitionConfig {
+  const { autoEvict, maxOperationCount } = defaults;
+  const partitions: ResolvedPartitionConfig["partitions"] = {
+    __default__: {
+      maxOperationCount,
+      autoEvict,
+    },
+  };
+  if (input) {
+    for (const key in input.partitions) {
+      const p = input.partitions[key];
+      partitions[key] = {
+        maxOperationCount: p.maxOperationCount,
+        autoEvict: p.autoEvict ?? autoEvict,
+      };
+    }
+  }
+  const partitionKey = input?.partitionKey ?? (() => null);
+  return {
+    partitions,
+    partitionKey,
+  };
 }
 
 function inheritTypePolicies(
