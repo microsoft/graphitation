@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Fri, 27 Mar 2026 15:51:00 GMT",
+      "version": "0.23.0",
+      "tag": "@graphitation/apollo-forest-run_v0.23.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "joeflateau@microsoft.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "c4a9224c8daa95d61e2ae077ceeea876f32f31a7",
+            "comment": "feat(apollo-forest-run): per-partition auto-eviction"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 24 Mar 2026 14:39:48 GMT",
       "version": "0.22.1",
       "tag": "@graphitation/apollo-forest-run_v0.22.1",

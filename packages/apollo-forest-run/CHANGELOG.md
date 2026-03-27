@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Tue, 24 Mar 2026 14:39:48 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 27 Mar 2026 15:51:00 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.23.0
+
+Fri, 27 Mar 2026 15:51:00 GMT
+
+### Minor changes
+
+- feat(apollo-forest-run): per-partition auto-eviction (joeflateau@microsoft.com)
 
 ## 0.22.1
 
