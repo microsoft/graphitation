@@ -43,9 +43,9 @@ export function ensureApolloClientCompat(
   }
 
   // Ensure mutationStore exists — in Apollo Client 3.13+,
-  // mutationStore is only initialised when onBroadcast is provided.
+  // mutationStore is only initialized when onBroadcast is provided.
   // Some devtools code iterates mutationStore, so it must be non-null.
   if (!qm.mutationStore) {
-    qm.mutationStore = Object.create(null);
+    qm.mutationStore = {};
   }
 }
