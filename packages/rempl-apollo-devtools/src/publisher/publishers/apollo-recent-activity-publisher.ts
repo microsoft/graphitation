@@ -159,8 +159,8 @@ export class ApolloRecentActivityPublisher {
     if (client.queryManager.mutationStore?.getStore) {
       return client.queryManager.mutationStore.getStore();
     } else {
-      // Apollo Client 3.3+
-      return client.queryManager.mutationStore;
+      // Apollo Client 3.3+ (mutationStore may be undefined in 3.13+)
+      return client.queryManager.mutationStore || {};
     }
   }
 

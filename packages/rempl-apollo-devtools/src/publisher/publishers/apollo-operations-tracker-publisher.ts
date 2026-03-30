@@ -8,6 +8,7 @@ import {
 import { ClientObject, WrapperCallbackParams } from "../../types";
 import { Subscription } from "rxjs";
 import { ICopyData } from "apollo-inspector-ui";
+import { ensureApolloClientCompat } from "../helpers/apollo-client-compat";
 
 export class ApolloOperationsTrackerPublisher {
   private remplWrapper: RemplWrapper;
@@ -34,11 +35,15 @@ export class ApolloOperationsTrackerPublisher {
     this.apolloPublisher.provide("startOperationsTracker", (options: any) => {
       this.trackingSubscription?.unsubscribe();
       const apolloClients: IApolloClientObject[] = this.apolloClients.map(
-        (ac) =>
-          ({
+        (ac) => {
+          ensureApolloClientCompat(
+            ac.client as ApolloClient<NormalizedCacheObject>,
+          );
+          return {
             client: ac.client as ApolloClient<NormalizedCacheObject>,
             clientId: ac.clientId,
-          } as unknown as IApolloClientObject),
+          } as unknown as IApolloClientObject;
+        },
       );
       const inspector = new ApolloInspector(apolloClients);
 
