@@ -1,6 +1,7 @@
 import { createPublisher, getHost } from "rempl";
 import hotkeys from "hotkeys-js";
 import { ClientObject, WrapperCallbackParams, Publisher } from "../types";
+import { ensureApolloClientCompat } from "./helpers/apollo-client-compat";
 
 declare let __APOLLO_DEVTOOLS_SUBSCRIBER__: string;
 type RemplStatusHook = {
@@ -92,6 +93,12 @@ export class RemplWrapper {
   public runAllHooks() {
     if (!browserWindow.__APOLLO_CLIENTS__?.length) {
       return;
+    }
+
+    // Apply compatibility shims for newer Apollo Client versions (3.8+).
+    // This must run before any publisher accesses client internals.
+    for (const clientObj of browserWindow.__APOLLO_CLIENTS__) {
+      ensureApolloClientCompat(clientObj.client);
     }
 
     for (const { id, callback, timeout } of this.remplStatusHooks) {
