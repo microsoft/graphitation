@@ -22,6 +22,10 @@ export function ensureApolloClientCompat(
   const qm = (client as any).queryManager;
   if (!qm) return;
 
+  // Guard against repeated calls on the same client.
+  if (qm.__apolloCompatApplied) return;
+  qm.__apolloCompatApplied = true;
+
   // 1. Alias getQuery → getOrCreateQuery (renamed in Apollo Client 3.8+).
   //    apollo-inspector calls queryManager.getQuery(queryId) in its hooks.
   if (!qm.getQuery && typeof qm.getOrCreateQuery === "function") {
