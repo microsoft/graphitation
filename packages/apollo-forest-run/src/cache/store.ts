@@ -3,8 +3,6 @@ import {
   DataForest,
   DataTree,
   OptimisticLayer,
-  ResolvedPartition,
-  ResolvedPartitionOptions,
   ResultTree,
   Store,
   Transaction,
@@ -17,51 +15,20 @@ import {
   TypeName,
 } from "../descriptor/types";
 import { assert } from "../jsutils/assert";
-import { IndexedTree } from "../forest/types";
+import { IndexedTree, DefaultPartition } from "../forest/types";
 import { NodeChunk } from "../values/types";
 import { operationCacheKey } from "./descriptor";
 
 const EMPTY_ARRAY = Object.freeze([]);
-
-const DEFAULT_PARTITION = "__default__";
-
-function resolvePartition(
-  env: CacheEnv,
-  store: Store,
-  tree: IndexedTree,
-): ResolvedPartition {
-  const cached = store.partitions.get(tree);
-  if (cached !== undefined) {
-    return cached;
-  }
-  const { partitions, partitionKey } = env.partitionConfig;
-  const key = partitionKey(tree);
-  let partition: string;
-  let options: ResolvedPartitionOptions;
-  if (key != null && partitions[key]) {
-    partition = key;
-    options = partitions[key];
-  } else {
-    partition = DEFAULT_PARTITION;
-    options = partitions[DEFAULT_PARTITION];
-    if (key != null) {
-      env.logger?.warnOnce(
-        "partition_not_configured",
-        `Partition "${key}" is not configured in partitionConfig. Using default partition instead.`,
-      );
-    }
-  }
-  const result: ResolvedPartition = { partition, options };
-  store.partitions.set(tree, result);
-  return result;
-}
+const DEFAULT_PARTITION: DefaultPartition = "__default__";
 
 export function createStore(_: CacheEnv): Store {
   const dataForest: DataForest = {
     trees: new Map(),
     operationsByNodes: new Map<NodeKey, Set<OperationId>>(),
-    operationsWithErrors: new Set<OperationDescriptor>(),
     operationsByName: new Map(),
+    operationsByPartitions: new Map(),
+    operationsWithErrors: new Set<OperationDescriptor>(),
     extraRootIds: new Map<NodeKey, TypeName>(),
     layerTag: null, // not an optimistic layer
     readResults: new Map(),
@@ -100,31 +67,33 @@ export function touchOperation(
   store.atime.set(operation.id, env.now());
 }
 
-function affectedPartitionsHaveAutoEvict(
+function shouldAutoEvictAtLeastOnePartition(
   env: CacheEnv,
   store: Store,
-  transaction: Transaction,
 ): boolean {
-  for (const entry of transaction.changelog) {
-    if ("incoming" in entry) {
-      const { options } = resolvePartition(env, store, entry.incoming);
-      if (options.autoEvict) {
-        return true;
-      }
+  const partitions = env.partitionConfig.partitions;
+
+  for (const [partition, ops] of store.dataForest.operationsByPartitions) {
+    const partitionConfig =
+      partitions[partition] ?? partitions[DEFAULT_PARTITION];
+
+    assert(partitionConfig);
+
+    if (
+      partitionConfig.autoEvict &&
+      ops.size >= partitionConfig.maxOperationCount * 2
+    ) {
+      return true;
     }
   }
   return false;
 }
 
-export function maybeEvictOldData(
-  env: CacheEnv,
-  store: Store,
-  transaction: Transaction,
-): void {
+export function maybeEvictOldData(env: CacheEnv, store: Store): void {
   if (store.pendingEviction != null) {
     return;
   }
-  if (!affectedPartitionsHaveAutoEvict(env, store, transaction)) {
+  if (!shouldAutoEvictAtLeastOnePartition(env, store)) {
     return;
   }
   store.pendingEviction = env.scheduleAutoEviction(() => {
@@ -145,48 +114,35 @@ export function evictOldData(
 ): OperationId[] {
   const { dataForest, atime } = store;
 
-  const partitionsOps = new Map<
-    string,
-    { options: ResolvedPartitionOptions; operations: OperationId[] }
-  >();
-
-  for (const tree of dataForest.trees.values()) {
-    if (!canEvict(env, store, tree)) {
-      continue; // Skip non-evictable operations entirely
-    }
-
-    const { partition, options } = resolvePartition(env, store, tree);
-    let partitionOps = partitionsOps.get(partition);
-    if (!partitionOps) {
-      partitionOps = { options, operations: [] };
-      partitionsOps.set(partition, partitionOps);
-    }
-
-    partitionOps.operations.push(tree.operation.id);
-  }
-
-  const toEvict: OperationId[] = [];
+  const evictedIds: OperationId[] = [];
+  const partitions = env.partitionConfig?.partitions ?? {};
 
   // Process each partition
-  for (const {
-    options: partitionConf,
-    operations: evictableOperationIds,
-  } of partitionsOps.values()) {
-    // During auto-eviction, respect per-partition autoEvict settings
-    if (isAutoEvict) {
-      if (!partitionConf.autoEvict) {
-        continue;
-      }
+  for (const [partition, ops] of dataForest.operationsByPartitions) {
+    if (!partitions[partition]) {
+      env.logger?.warnOnce(
+        "partition_not_configured",
+        `Partition "${partition}" is not configured in partitionConfig. Using default partition instead.`,
+      );
     }
 
-    const maxCount = partitionConf.maxOperationCount;
+    const partitionConfig =
+      partitions[partition] ?? partitions[DEFAULT_PARTITION];
 
-    if (!maxCount || evictableOperationIds.length <= maxCount) {
+    assert(partitionConfig);
+
+    if (isAutoEvict && !partitionConfig.autoEvict) {
+      continue;
+    }
+
+    const maxCount = partitionConfig.maxOperationCount;
+
+    if (!maxCount || ops.size <= maxCount) {
       continue; // No eviction needed for this partition
     }
 
     // Sort by access time (LRU) and determine how many to evict
-    evictableOperationIds.sort(
+    const evictableOperationIds = [...ops].sort(
       (a, b) => (atime.get(a) ?? 0) - (atime.get(b) ?? 0),
     );
 
@@ -195,17 +151,20 @@ export function evictOldData(
     // Keep only the ones to evict without array copying w/ slice
     evictableOperationIds.length = evictCount;
 
-    toEvict.push(...evictableOperationIds);
+    // Remove evicted operations
+    for (const opId of evictableOperationIds) {
+      const tree = store.dataForest.trees.get(opId);
+      assert(tree);
+      if (!canEvict(env, store, tree)) {
+        continue; // Skip non-evictable operations entirely
+      }
+      removeDataTree(store, tree, partition);
+    }
+
+    evictedIds.push(...evictableOperationIds);
   }
 
-  // Remove evicted operations
-  for (const opId of toEvict) {
-    const tree = store.dataForest.trees.get(opId);
-    assert(tree);
-    removeDataTree(store, tree);
-  }
-
-  return toEvict;
+  return evictedIds;
 }
 
 function canEvict(env: CacheEnv, store: Store, resultTree: DataTree) {
@@ -234,6 +193,7 @@ export function createOptimisticLayer(
     operationsByNodes: new Map(),
     operationsWithErrors: new Set(),
     operationsByName: new Map(),
+    operationsByPartitions: new Map(),
     extraRootIds: new Map(),
     readResults: new Map(),
     mutations: new Set(),
@@ -394,11 +354,14 @@ function removeDataTree(
     atime,
   }: Store,
   { operation }: ResultTree,
+  partition: string,
 ) {
   assert(!watches.has(operation));
   dataForest.trees.delete(operation.id);
   dataForest.readResults.delete(operation);
   dataForest.operationsWithErrors.delete(operation);
+  dataForest.operationsByName.get(operation.name ?? "")?.delete(operation.id);
+  dataForest.operationsByPartitions.get(partition)?.delete(operation.id);
   optimisticReadResults.delete(operation);
   partialReadResults.delete(operation);
   operations.get(operation.document)?.delete(operationCacheKey(operation));
