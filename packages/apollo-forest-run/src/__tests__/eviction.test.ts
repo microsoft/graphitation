@@ -511,6 +511,58 @@ it("gc() evicts all partitions regardless of per-partition autoEvict", () => {
   ).toEqual({ bar: 1 });
 });
 
+it("auto-evicting partition B does not evict partition A with autoEvict: false", () => {
+  const cache = new ForestRun({
+    maxOperationCount: 2,
+    autoEvict: true,
+    partitionConfig: {
+      partitionKey: (o) => o.operation.debugName,
+      partitions: {
+        "query a": { maxOperationCount: 2, autoEvict: false },
+        "query b": { maxOperationCount: 1, autoEvict: true },
+      },
+    },
+  });
+  const a = gql`
+    query a($i: Int) {
+      foo(i: $i)
+    }
+  `;
+  const b = gql`
+    query b($i: Int) {
+      bar(i: $i)
+    }
+  `;
+
+  // Fill partition A beyond maxOperationCount (but autoEvict: false)
+  cache.write({ query: a, variables: { i: 0 }, result: { foo: 0 } });
+  cache.write({ query: a, variables: { i: 1 }, result: { foo: 1 } });
+  cache.write({ query: a, variables: { i: 2 }, result: { foo: 2 } });
+
+  // Fill partition B to trigger auto-eviction (2 ops >= maxOperationCount * 2 = 2)
+  cache.write({ query: b, variables: { i: 0 }, result: { bar: 0 } });
+  cache.write({ query: b, variables: { i: 1 }, result: { bar: 1 } });
+
+  // Partition A should NOT be evicted (autoEvict: false)
+  expect(
+    cache.read({ query: a, variables: { i: 0 }, optimistic: true }),
+  ).toEqual({ foo: 0 });
+  expect(
+    cache.read({ query: a, variables: { i: 1 }, optimistic: true }),
+  ).toEqual({ foo: 1 });
+  expect(
+    cache.read({ query: a, variables: { i: 2 }, optimistic: true }),
+  ).toEqual({ foo: 2 });
+
+  // Partition B should be auto-evicted (autoEvict: true, over threshold)
+  expect(
+    cache.read({ query: b, variables: { i: 0 }, optimistic: true }),
+  ).toEqual(null);
+  expect(
+    cache.read({ query: b, variables: { i: 1 }, optimistic: true }),
+  ).toEqual({ bar: 1 });
+});
+
 it("unconfigured operations fall to default partition and inherit global autoEvict", () => {
   // autoEvict: false only applies to __default__ partition and partitions
   // that don't specify their own autoEvict

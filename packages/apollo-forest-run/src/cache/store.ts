@@ -98,7 +98,7 @@ export function maybeEvictOldData(env: CacheEnv, store: Store): void {
   }
   store.pendingEviction = env.scheduleAutoEviction(() => {
     store.pendingEviction = null;
-    evictOldData(env, store);
+    evictOldData(env, store, true);
   });
 }
 
@@ -107,7 +107,11 @@ export function cancelPendingEviction(store: Store): void {
   store.pendingEviction = null;
 }
 
-export function evictOldData(env: CacheEnv, store: Store): OperationId[] {
+export function evictOldData(
+  env: CacheEnv,
+  store: Store,
+  isAutoEvict?: boolean,
+): OperationId[] {
   const { dataForest, atime } = store;
 
   const evictedIds: OperationId[] = [];
@@ -126,6 +130,10 @@ export function evictOldData(env: CacheEnv, store: Store): OperationId[] {
       partitions[partition] ?? partitions[DEFAULT_PARTITION];
 
     assert(partitionConfig);
+
+    if (isAutoEvict && !partitionConfig.autoEvict) {
+      continue;
+    }
 
     const maxCount = partitionConfig.maxOperationCount;
 
