@@ -27,6 +27,7 @@ export function createStore(_: CacheEnv): Store {
     trees: new Map(),
     operationsByNodes: new Map<NodeKey, Set<OperationId>>(),
     operationsByName: new Map(),
+    operationsByCoveredName: new Map(),
     operationsByPartitions: new Map(),
     operationsWithErrors: new Set<OperationDescriptor>(),
     extraRootIds: new Map<NodeKey, TypeName>(),
@@ -193,6 +194,7 @@ export function createOptimisticLayer(
     operationsByNodes: new Map(),
     operationsWithErrors: new Set(),
     operationsByName: new Map(),
+    operationsByCoveredName: new Map(),
     operationsByPartitions: new Map(),
     extraRootIds: new Map(),
     readResults: new Map(),
@@ -361,6 +363,9 @@ function removeDataTree(
   dataForest.readResults.delete(operation);
   dataForest.operationsWithErrors.delete(operation);
   dataForest.operationsByName.get(operation.name ?? "")?.delete(operation.id);
+  for (const coveredName of operation.covers) {
+    dataForest.operationsByCoveredName.get(coveredName)?.delete(operation.id);
+  }
   dataForest.operationsByPartitions.get(partition)?.delete(operation.id);
   optimisticReadResults.delete(operation);
   partialReadResults.delete(operation);
@@ -380,6 +385,7 @@ export function resetStore(store: Store): void {
   dataForest.operationsByNodes.clear();
   dataForest.operationsWithErrors.clear();
   dataForest.operationsByName.clear();
+  dataForest.operationsByCoveredName.clear();
   dataForest.operationsWithDanglingRefs.clear();
   dataForest.readResults.clear();
   operations.clear();

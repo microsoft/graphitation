@@ -50,6 +50,12 @@ function trackOperationName(forest: IndexedForest, tree: IndexedTree) {
   const name = tree.operation.name;
   if (!name) return;
   getOrCreate(forest.operationsByName, name, newSet).add(tree.operation.id);
+
+  for (const coveredName of tree.operation.covers) {
+    getOrCreate(forest.operationsByCoveredName, coveredName, newSet).add(
+      tree.operation.id,
+    );
+  }
 }
 
 function trackPartitions(

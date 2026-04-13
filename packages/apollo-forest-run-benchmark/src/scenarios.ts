@@ -1,5 +1,15 @@
 import type { ForestRun } from "@graphitation/apollo-forest-run";
 import type { Scenario, ScenarioContext } from "./types";
+import { parse } from "graphql";
+
+// Pre-parse 50 unique named queries to simulate a real app with many active operations.
+// Each has its own operation name and data, creating separate trees in the forest.
+// This is the setup that exposes O(n) scans in getCoveringOperationIds.
+const EXTRA_OPS_COUNT = 50;
+const extraOperations = Array.from({ length: EXTRA_OPS_COUNT }, (_, i) => ({
+  query: parse(`query BgQuery${i} { node${i}(id: "${i}") { id value } }`),
+  data: { [`node${i}`]: { __typename: `Node${i}`, id: `${i}`, value: i } },
+}));
 
 const addWatchers = (
   watcherCount: number,
@@ -399,6 +409,34 @@ export const scenarios = [
           return cache.readQuery({
             query: preloader.query,
             variables: listVars,
+          });
+        },
+      };
+    },
+  },
+  {
+    name: "write-many-ops-one-field-change",
+    prepare: (ctx: ScenarioContext) => {
+      const { operations, CacheFactory, configuration, watcherCount } = ctx;
+      const cache = new CacheFactory(configuration);
+
+      // Populate the cache with many unrelated operations (simulating real app)
+      for (const { query, data } of extraOperations) {
+        cache.writeQuery({ query, data });
+      }
+
+      // Write the main query, add watchers, then measure a write with a change.
+      // Each watcher's diff triggers readOperation → applyTransformations →
+      // createChunkMatcher → getCoveringOperationIds which scans all trees.
+      const { data, query } = operations["complex-nested"];
+      cache.writeQuery({ query, data: data["complex-nested"] });
+      addWatchers(watcherCount, cache, query);
+
+      return {
+        run() {
+          return cache.writeQuery({
+            query,
+            data: data["complex-nested-single-field-change"],
           });
         },
       };

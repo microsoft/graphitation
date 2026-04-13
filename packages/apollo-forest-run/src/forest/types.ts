@@ -125,6 +125,7 @@ export type IndexedForest = {
   operationsByNodes: Map<NodeKey, Set<OperationId>>; // May contain false positives
   operationsWithErrors: Set<OperationDescriptor>; // May contain false positives
   operationsByName: Map<string, Set<OperationId>>; // operationName → operation IDs
+  operationsByCoveredName: Map<string, Set<OperationId>>; // coveredName → IDs of ops whose covers list includes it
   operationsByPartitions: Map<string, Set<OperationId>>; // partition key => operation IDs
   deletedNodes: Set<NodeKey>;
 };

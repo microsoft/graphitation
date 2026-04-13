@@ -248,15 +248,15 @@ function getCoveringOperationIds(
   let ids: Set<OperationId> | undefined;
 
   for (const layer of layers) {
-    // Forward: find ops that cover us (their covers list includes our name)
+    // Forward: find ops that cover us via pre-built index
     if (opName) {
-      for (const tree of layer.trees.values()) {
-        if (
-          tree.operation.id !== operation.id &&
-          tree.operation.covers.includes(opName)
-        ) {
-          if (!ids) ids = new Set();
-          ids.add(tree.operation.id);
+      const coveringIds = layer.operationsByCoveredName.get(opName);
+      if (coveringIds) {
+        for (const id of coveringIds) {
+          if (id !== operation.id) {
+            if (!ids) ids = new Set();
+            ids.add(id);
+          }
         }
       }
     }
