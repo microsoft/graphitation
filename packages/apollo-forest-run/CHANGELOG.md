@@ -1,8 +1,18 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Fri, 27 Mar 2026 15:51:00 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 13 Apr 2026 10:14:02 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.23.1
+
+Mon, 13 Apr 2026 10:14:02 GMT
+
+### Patches
+
+- fix perf regression on auto eviction (vrazuvaev@microsoft.com_msteamsmdb)
+- update of picomatch and path-to-regexp (celiac@microsoft.com)
+- fix(apollo-forest-run): index covered operations (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.23.0
 

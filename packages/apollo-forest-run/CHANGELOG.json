@@ -2,6 +2,33 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Mon, 13 Apr 2026 10:14:02 GMT",
+      "version": "0.23.1",
+      "tag": "@graphitation/apollo-forest-run_v0.23.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "07fc20bc27d6bb4b63ff922f6a37fcff7ca7e323",
+            "comment": "fix perf regression on auto eviction"
+          },
+          {
+            "author": "celiac@microsoft.com",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "07fc20bc27d6bb4b63ff922f6a37fcff7ca7e323",
+            "comment": "update of picomatch and path-to-regexp"
+          },
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "edf2e48144578e4b13bb636ddb4798cbfb067aa9",
+            "comment": "fix(apollo-forest-run): index covered operations"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 27 Mar 2026 15:51:00 GMT",
       "version": "0.23.0",
       "tag": "@graphitation/apollo-forest-run_v0.23.0",

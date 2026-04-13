@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "fix perf regression on auto eviction",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "vrazuvaev@microsoft.com_msteamsmdb",
-  "dependentChangeType": "patch"
-}
