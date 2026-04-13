@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Mon, 13 Apr 2026 10:14:02 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 13 Apr 2026 14:54:21 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.23.2
+
+Mon, 13 Apr 2026 14:54:21 GMT
+
+### Patches
+
+- updating lodash version (celiac@microsoft.com)
 
 ## 0.23.1
 

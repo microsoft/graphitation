@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-react-relay-duct-tape",
   "entries": [
     {
+      "date": "Mon, 13 Apr 2026 14:54:21 GMT",
+      "version": "1.4.36",
+      "tag": "@graphitation/apollo-react-relay-duct-tape_v1.4.36",
+      "comments": {
+        "patch": [
+          {
+            "author": "celiac@microsoft.com",
+            "package": "@graphitation/apollo-react-relay-duct-tape",
+            "commit": "c1ec30c04a7c8e4fc67c95f30445f2f07ef66599",
+            "comment": "updating lodash version"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 26 Mar 2026 13:23:08 GMT",
       "version": "1.4.35",
       "tag": "@graphitation/apollo-react-relay-duct-tape_v1.4.35",

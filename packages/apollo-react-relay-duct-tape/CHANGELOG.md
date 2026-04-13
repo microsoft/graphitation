@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-react-relay-duct-tape
 
-<!-- This log was last generated on Thu, 26 Mar 2026 13:23:08 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 13 Apr 2026 14:54:21 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.4.36
+
+Mon, 13 Apr 2026 14:54:21 GMT
+
+### Patches
+
+- updating lodash version (celiac@microsoft.com)
 
 ## 1.4.35
 
