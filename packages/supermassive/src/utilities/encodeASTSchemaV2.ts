@@ -320,10 +320,7 @@ function getDirectiveDefinitionMetadata<T>(
 
   if (includeDescriptions && node.description) {
     metadata ??= {};
-    metadata.description = {
-      block: node.description.block,
-      value: node.description.value,
-    };
+    metadata.description = node.description.value;
   }
 
   if (node.repeatable) {
@@ -355,10 +352,8 @@ function getEnumTypeDefinitionMetadata(
         if (includeDescriptions && value.description) {
           valuesMetadadata ??= {};
           valuesMetadadata[value.name.value] ??= {};
-          valuesMetadadata[value.name.value]["description"] = {
-            block: value.description.block,
-            value: value.description.value,
-          };
+          valuesMetadadata[value.name.value]["description"] =
+            value.description.value;
         }
       }
     }
@@ -395,10 +390,7 @@ function getTypeDefinitionMetadata<T>(
 
   if (includeDescriptions && node.description) {
     metadata ??= {};
-    metadata.description = {
-      block: node.description.block,
-      value: node.description.value,
-    };
+    metadata.description = node.description.value;
   }
 
   return metadata;

@@ -43,10 +43,7 @@ describe(encodeASTSchema, () => {
             3,
             undefined,
             {
-              "description": {
-                "block": true,
-                "value": "Field Description",
-              },
+              "description": "Field Description",
             },
           ],
         },
@@ -54,10 +51,7 @@ describe(encodeASTSchema, () => {
           "Node",
         ],
         {
-          "description": {
-            "block": true,
-            "value": "Type Description",
-          },
+          "description": "Type Description",
         },
       ]
     `);
@@ -72,12 +66,9 @@ describe(encodeASTSchema, () => {
           "enumField": "NodeType!",
         },
         {
-          "description": {
-            "block": true,
-            "value": "Input Description
+          "description": "Input Description
       second line
       third line",
-          },
         },
       ]
     `);
@@ -90,10 +81,7 @@ describe(encodeASTSchema, () => {
           "VALUE_WITH_DESCRIPTION",
         ],
         {
-          "description": {
-            "block": true,
-            "value": "Enum Description",
-          },
+          "description": "Enum Description",
         },
       ]
     `);

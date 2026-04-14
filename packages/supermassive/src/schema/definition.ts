@@ -1,8 +1,6 @@
 import {
   DirectiveLocation as GraphQLDirectiveLocation,
   DirectiveLocationEnum,
-  FieldNode,
-  DirectiveNode,
 } from "graphql";
 import { isSpecifiedScalarType } from "./resolvers";
 import { TypeName, TypeReference, typeNameFromReference } from "./reference";
@@ -27,14 +25,9 @@ const enum ScalarKeys {
   metadata = 1,
 }
 
-export type Description = {
-  value: string;
-  block?: boolean;
-};
-
 type DefinitionMetadata = {
   directives?: DirectiveTuple[];
-  description?: Description;
+  description?: string;
 };
 
 export type TypeDefinitionMetadata = DefinitionMetadata;
@@ -45,7 +38,7 @@ export type EnumTypeDefinitionMetadata = DefinitionMetadata & {
 
 export type DirectiveDefinitionMetadata = {
   repeatable?: boolean;
-  description?: Description;
+  description?: string;
 };
 
 export type ObjectTypeDefinitionTuple = [

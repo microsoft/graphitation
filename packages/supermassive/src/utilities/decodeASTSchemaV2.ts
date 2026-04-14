@@ -57,7 +57,6 @@ import {
   DirectiveTuple,
   getDirectiveDefinitionMetadata,
   getFieldDefinitionMetadata,
-  Description,
 } from "../schema/definition";
 import {
   inspectTypeReference,
@@ -542,17 +541,14 @@ function decodeDirective(
   });
 }
 
-function decodeDescription(
-  description?: Description,
-): StringValueNode | undefined {
+function decodeDescription(description?: string): StringValueNode | undefined {
   if (!description) {
     return;
   }
 
-  const { value, block } = description;
   return {
     kind: "StringValue",
-    value,
-    block,
+    value: description,
+    block: true,
   };
 }

@@ -435,10 +435,7 @@ exports[`encodeASTSchema correctly encodes schema with both directives and descr
           "if": 7,
         },
         {
-          "description": {
-            "block": true,
-            "value": "This is a description of the \`@skip\` directive",
-          },
+          "description": "This is a description of the \`@skip\` directive",
         },
       ],
       [
@@ -758,10 +755,7 @@ exports[`encodeASTSchema correctly encodes schema with both directives and descr
             "Type",
             undefined,
             {
-              "description": {
-                "block": false,
-                "value": "Description of the \`one\` field.",
-              },
+              "description": "Description of the \`one\` field.",
             },
           ],
           "seven": [
@@ -791,10 +785,7 @@ exports[`encodeASTSchema correctly encodes schema with both directives and descr
               "other": 1,
             },
             {
-              "description": {
-                "block": true,
-                "value": "This is a description of the \`three\` field.",
-              },
+              "description": "This is a description of the \`three\` field.",
             },
           ],
           "two": [
@@ -803,10 +794,7 @@ exports[`encodeASTSchema correctly encodes schema with both directives and descr
               "argument": "InputType!",
             },
             {
-              "description": {
-                "block": true,
-                "value": "This is a description of the \`two\` field.",
-              },
+              "description": "This is a description of the \`two\` field.",
             },
           ],
         },
@@ -816,11 +804,8 @@ exports[`encodeASTSchema correctly encodes schema with both directives and descr
           "Two",
         ],
         {
-          "description": {
-            "block": true,
-            "value": "This is a description
+          "description": "This is a description
 of the \`Foo\` type.",
-          },
         },
       ],
       "InputType": [
@@ -857,22 +842,13 @@ of the \`Foo\` type.",
         {
           "values": {
             "DESKTOP": {
-              "description": {
-                "block": true,
-                "value": "This is a description of the \`DESKTOP\` value",
-              },
+              "description": "This is a description of the \`DESKTOP\` value",
             },
             "MOBILE": {
-              "description": {
-                "block": true,
-                "value": "This is a description of the \`MOBILE\` value",
-              },
+              "description": "This is a description of the \`MOBILE\` value",
             },
             "WEB": {
-              "description": {
-                "block": false,
-                "value": "This is a description of the \`WEB\` value",
-              },
+              "description": "This is a description of the \`WEB\` value",
             },
           },
         },
@@ -1037,10 +1013,7 @@ exports[`encodeASTSchema correctly encodes schema with descriptions when include
           "locale": 1,
         },
         {
-          "description": {
-            "block": true,
-            "value": "Directive Description",
-          },
+          "description": "Directive Description",
         },
       ],
     ],
@@ -1051,12 +1024,9 @@ exports[`encodeASTSchema correctly encodes schema with descriptions when include
           "enumField": "NodeType!",
         },
         {
-          "description": {
-            "block": true,
-            "value": "Input Description
+          "description": "Input Description
 second line
 third line",
-          },
         },
       ],
       "EnumWithDescription": [
@@ -1065,10 +1035,7 @@ third line",
           "VALUE_WITH_DESCRIPTION",
         ],
         {
-          "description": {
-            "block": true,
-            "value": "Enum Description",
-          },
+          "description": "Enum Description",
         },
       ],
       "TypeWithDescription": [
@@ -1078,10 +1045,7 @@ third line",
             3,
             undefined,
             {
-              "description": {
-                "block": true,
-                "value": "Field Description",
-              },
+              "description": "Field Description",
             },
           ],
         },
@@ -1089,10 +1053,7 @@ third line",
           "Node",
         ],
         {
-          "description": {
-            "block": true,
-            "value": "Type Description",
-          },
+          "description": "Type Description",
         },
       ],
     },
