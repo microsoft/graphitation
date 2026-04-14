@@ -2,13 +2,19 @@ import { parse } from "graphql";
 import {
   createSchemaDefinitions,
   mergeSchemaDefinitions,
-} from "../mergeSchemaDefinitions";
-import { encodeASTSchema } from "../encodeASTSchema";
+} from "../mergeSchemaDefinitionsV2";
+import {
+  encodeASTSchema,
+  type EncodeASTSchemaOptions,
+} from "../encodeASTSchemaV2";
 import { SchemaDefinitions } from "../../schema/definition";
 
-function schema(sdl: string): SchemaDefinitions[] {
+function schema(
+  sdl: string,
+  options?: EncodeASTSchemaOptions,
+): SchemaDefinitions[] {
   const doc = parse(sdl);
-  return encodeASTSchema(doc);
+  return encodeASTSchema(doc, options);
 }
 
 describe("mergeSchemaDefinitions", () => {
@@ -185,6 +191,55 @@ describe("mergeSchemaDefinitions", () => {
     `);
   });
 
+  it("should merge enum values from extended enum type", () => {
+    const defs = schema(`
+      enum UserRole {
+        ADMIN
+        USER
+      }
+
+      extend enum UserRole {
+        MODERATOR
+      }
+    `);
+    const result = mergeSchemaDefinitions({ types: {}, directives: [] }, defs, {
+      mergeEnumValues: true,
+    });
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "directives": [],
+        "types": {
+          "UserRole": [
+            5,
+            [
+              "ADMIN",
+              "USER",
+              "MODERATOR",
+            ],
+          ],
+        },
+      }
+    `);
+  });
+
+  it("should not duplicate enum values when merging", () => {
+    const defs = schema(`
+      enum UserRole {
+        ADMIN
+        USER
+      }
+
+      extend enum UserRole {
+        USER
+        MODERATOR
+      }
+    `);
+    const result = mergeSchemaDefinitions({ types: {}, directives: [] }, defs, {
+      mergeEnumValues: true,
+    });
+    expect(result.types["UserRole"][1]).toEqual(["ADMIN", "USER", "MODERATOR"]);
+  });
+
   it("should throw when scalar type definition differs", () => {
     const defs = schema(`
       scalar DateTime
@@ -245,7 +300,7 @@ describe("mergeSchemaDefinitions", () => {
       }
       
       extend type User implements Named {
-        name: String
+        name: String @testDirective
       }
       
       extend type User implements Contactable {
@@ -316,6 +371,167 @@ describe("mergeSchemaDefinitions", () => {
               "Node",
               "Named",
             ],
+          ],
+        },
+      }
+    `);
+  });
+
+  it("merge directives from source to target", () => {
+    const defs = schema(
+      `
+extend type Query {
+  user24: String! @context
+  }
+    `,
+      { includeDirectives: true },
+    );
+
+    const result = mergeSchemaDefinitions({ types: {}, directives: [] }, defs);
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "directives": [],
+        "types": {
+          "Query": [
+            2,
+            {
+              "user24": [
+                6,
+                undefined,
+                {
+                  "directives": [
+                    [
+                      "context",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      }
+    `);
+  });
+  it("merge directives from source to target", () => {
+    const defs = schema(
+      `
+interface IUser @onInterface {
+  id: ID! @onField
+}
+
+type User implements IUser @onType {
+  id: ID! @onField
+}
+
+extend type Query {
+  user(
+    id: String!
+  ): User @context
+  }
+    `,
+      { includeDirectives: true },
+    );
+    const defs2 = schema(
+      `
+extend interface IUser @onExtendInterface {
+      name: String!
+}      
+
+extend type User implements IUser @onExtendType {
+      name: String!
+}      
+extend type Query {
+  user(
+    id: String!
+  ): String @oneOf
+    }
+    `,
+      { includeDirectives: true },
+    );
+    const result = mergeSchemaDefinitions({ types: {}, directives: [] }, defs2);
+    const finalResult = mergeSchemaDefinitions(result, defs);
+    expect(finalResult).toMatchInlineSnapshot(`
+      {
+        "directives": [],
+        "types": {
+          "IUser": [
+            3,
+            {
+              "id": [
+                10,
+                undefined,
+                {
+                  "directives": [
+                    [
+                      "onField",
+                    ],
+                  ],
+                },
+              ],
+              "name": 6,
+            },
+            [],
+            {
+              "directives": [
+                [
+                  "onExtendInterface",
+                ],
+                [
+                  "onInterface",
+                ],
+              ],
+            },
+          ],
+          "Query": [
+            2,
+            {
+              "user": [
+                1,
+                {
+                  "id": 6,
+                },
+                {
+                  "directives": [
+                    [
+                      "oneOf",
+                    ],
+                    [
+                      "context",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "User": [
+            2,
+            {
+              "id": [
+                10,
+                undefined,
+                {
+                  "directives": [
+                    [
+                      "onField",
+                    ],
+                  ],
+                },
+              ],
+              "name": 6,
+            },
+            [
+              "IUser",
+            ],
+            {
+              "directives": [
+                [
+                  "onExtendType",
+                ],
+                [
+                  "onType",
+                ],
+              ],
+            },
           ],
         },
       }
