@@ -1,6 +1,8 @@
 import {
   DirectiveLocation as GraphQLDirectiveLocation,
   DirectiveLocationEnum,
+  FieldNode,
+  DirectiveNode,
 } from "graphql";
 import { isSpecifiedScalarType } from "./resolvers";
 import { TypeName, TypeReference, typeNameFromReference } from "./reference";
@@ -29,12 +31,15 @@ export type Description = {
   value: string;
   block?: boolean;
 };
-export interface TypeDefinitionMetadata {
+
+type DefinitionMetadata = {
   directives?: DirectiveTuple[];
   description?: Description;
-}
+};
 
-export type EnumTypeDefinitionMetadata = TypeDefinitionMetadata & {
+export type TypeDefinitionMetadata = DefinitionMetadata;
+
+export type EnumTypeDefinitionMetadata = DefinitionMetadata & {
   values?: Record<string, TypeDefinitionMetadata>;
 };
 
@@ -112,7 +117,6 @@ export type CompositeTypeTuple =
 
 export type FieldDefinitionTuple = [
   type: TypeReference,
-  // TODO should I really do it ?
   arguments?: InputValueDefinitionRecord,
   metadata?: TypeDefinitionMetadata,
 ];
@@ -244,7 +248,9 @@ export function getTypeDefinitionMetadataIndex(
   }
 }
 
-export function getTypeDefinitionMetadata(typeDefinition: TypeDefinitionTuple) {
+export function getTypeDefinitionMetadata(
+  typeDefinition: TypeDefinitionTuple,
+): TypeDefinitionMetadata | undefined {
   if (isObjectTypeDefinition(typeDefinition)) {
     return getObjectTypeMetadata(typeDefinition);
   } else if (isScalarTypeDefinition(typeDefinition)) {
@@ -592,7 +598,7 @@ export function getFieldArgs(
   return Array.isArray(field) ? field[FieldKeys.arguments] : undefined;
 }
 
-export function getFieldMetadata(
+export function getFieldDefinitionMetadata(
   field: FieldDefinition,
 ): TypeDefinitionMetadata | undefined {
   return Array.isArray(field) ? field[FieldKeys.metadata] : undefined;
@@ -606,7 +612,7 @@ export function setFieldArgs(
   return args;
 }
 
-export function setFieldDirectives(
+export function setFieldDefinitionMetadata(
   field: FieldDefinitionTuple,
   args: TypeDefinitionMetadata,
 ): TypeDefinitionMetadata {
@@ -656,15 +662,13 @@ export function createInterfaceTypeDefinition(
   interfaces?: TypeName[],
   metadata?: TypeDefinitionMetadata,
 ): InterfaceTypeDefinitionTuple {
-  if (!interfaces?.length && !metadata) {
-    return [TypeKind.INTERFACE, fields];
+  if (metadata) {
+    return [TypeKind.INTERFACE, fields, interfaces, metadata];
   }
-
-  if (interfaces?.length && !metadata) {
+  if (interfaces?.length) {
     return [TypeKind.INTERFACE, fields, interfaces];
   }
-
-  return [TypeKind.INTERFACE, fields, interfaces, metadata];
+  return [TypeKind.INTERFACE, fields];
 }
 
 export function createObjectTypeDefinition(
@@ -672,15 +676,15 @@ export function createObjectTypeDefinition(
   interfaces?: TypeName[],
   metadata?: TypeDefinitionMetadata,
 ): ObjectTypeDefinitionTuple {
-  if (!interfaces?.length && !metadata) {
-    return [TypeKind.OBJECT, fields];
+  if (metadata) {
+    return [TypeKind.OBJECT, fields, interfaces, metadata];
   }
 
-  if (interfaces?.length && !metadata) {
+  if (interfaces?.length) {
     return [TypeKind.OBJECT, fields, interfaces];
   }
 
-  return [TypeKind.OBJECT, fields, interfaces, metadata];
+  return [TypeKind.OBJECT, fields];
 }
 
 export function createInputObjectTypeDefinition(
@@ -763,7 +767,7 @@ export function getUnionTypeMetadata(
   return def[UnionKeys.metadata];
 }
 
-export function getFieldArguments(
+export function getFieldDefinitionArgs(
   def: FieldDefinition,
 ): InputValueDefinitionRecord | undefined {
   return Array.isArray(def) ? def[FieldKeys.arguments] : undefined;

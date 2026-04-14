@@ -56,7 +56,7 @@ import {
   getInputTypeMetadata,
   DirectiveTuple,
   getDirectiveDefinitionMetadata,
-  getFieldMetadata,
+  getFieldDefinitionMetadata,
   Description,
 } from "../schema/definition";
 import {
@@ -320,7 +320,7 @@ function decodeFields(
   return Object.entries(fields).map(([name, value]) => {
     const type = decodeTypeReference(getFieldTypeReference(value));
     const { directives: metadataDirectives, description: metadataDescription } =
-      getFieldMetadata(value) || {};
+      getFieldDefinitionMetadata(value) || {};
     const decodedDescription = decodeDescription(metadataDescription);
     const decodedDirectives = decodeDirective(
       metadataDirectives,

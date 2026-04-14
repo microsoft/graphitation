@@ -8,7 +8,7 @@ import {
   getEnumMetadata,
   getEnumValues,
   getFieldArgs,
-  getFieldMetadata,
+  getFieldDefinitionMetadata,
   getFields,
   getInputObjectFields,
   getTypeDefinitionMetadataIndex,
@@ -22,7 +22,7 @@ import {
   SchemaDefinitions,
   setDirectiveDefinitionArgs,
   setFieldArgs,
-  setFieldDirectives,
+  setFieldDefinitionMetadata,
   TypeDefinitionsRecord,
   TypeDefinitionTuple,
   TypeDefinitionMetadata,
@@ -201,10 +201,11 @@ function mergeFields(
       mergeInputValues(targetArgs, sourceArgs);
     }
 
-    const sourceDirectives = getFieldMetadata(sourceDef);
+    const sourceDirectives = getFieldDefinitionMetadata(sourceDef);
     if (sourceDirectives) {
       const targetMetadata =
-        getFieldMetadata(targetDef) ?? setFieldDirectives(targetDef, {});
+        getFieldDefinitionMetadata(targetDef) ??
+        setFieldDefinitionMetadata(targetDef, {});
       if (targetMetadata.directives && sourceDirectives.directives) {
         mergeFieldDirectives(
           targetMetadata.directives,

@@ -13,7 +13,7 @@ import { ExecutionContext } from "./executeWithoutSchema";
 import {
   DirectiveDefinitionTuple,
   FieldDefinition,
-  getFieldArguments,
+  getFieldDefinitionArgs,
   getDirectiveDefinitionName,
   getInputDefaultValue,
   getInputValueTypeReference,
@@ -152,6 +152,13 @@ function coerceVariableValues(
   return coercedValues;
 }
 
+function isFieldDefinition(
+  def: FieldDefinition | DirectiveDefinitionTuple,
+  node: FieldNode | DirectiveNode,
+): def is FieldDefinition {
+  return node.kind === Kind.FIELD;
+}
+
 /**
  * Prepares an object map of argument values given a list of argument
  * definitions and list of argument AST nodes.
@@ -169,10 +176,9 @@ export function getArgumentValues(
 ): { [argument: string]: unknown } {
   const definitions = exeContext.schemaFragment.definitions;
   const coercedValues: { [argument: string]: unknown } = {};
-  const argumentDefs =
-    node.kind === Kind.FIELD
-      ? getFieldArguments(def as FieldDefinition)
-      : getDirectiveDefinitionArgs(def as DirectiveDefinitionTuple);
+  const argumentDefs = isFieldDefinition(def, node)
+    ? getFieldDefinitionArgs(def)
+    : getDirectiveDefinitionArgs(def);
   if (!argumentDefs) {
     return coercedValues;
   }
