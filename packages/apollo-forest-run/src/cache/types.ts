@@ -186,13 +186,13 @@ export type ForestRunAdditionalConfig<
   apolloCompat_keepOrphanNodes?: boolean;
   logger?: Logger;
   notify?: (event: TelemetryEvent) => void;
+  indexFieldsOfTypes?: Set<string>;
+  historyConfig?: HistoryConfig<TPartitions>;
 
   // Feature flags
   logUpdateStats?: boolean;
   logStaleOperations?: boolean;
   optimizeFragmentReads?: boolean;
-
-  historyConfig?: HistoryConfig<TPartitions>;
 };
 
 export type CacheConfig<TPartitions extends HistoryPartitions = any> =
@@ -260,12 +260,13 @@ export type CacheEnv<TPartitions extends HistoryPartitions = any> = {
   nonEvictableQueries: Set<string>;
   partitionConfig: ResolvedPartitionConfig;
   scheduleAutoEviction: ScheduleEviction;
+  indexFieldsOfTypes: Set<string>;
+  historyConfig?: HistoryConfig<TPartitions>;
 
   // Feature flags
   logUpdateStats: boolean;
   logStaleOperations: boolean;
   optimizeFragmentReads: boolean;
-  historyConfig?: HistoryConfig<TPartitions>;
 };
 
 export type SerializedOperationKey = string;

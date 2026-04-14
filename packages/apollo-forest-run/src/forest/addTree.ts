@@ -21,6 +21,7 @@ export function addTree(
   trees.set(tree.operation.id, tree);
 
   trackTreeNodes(forest, tree);
+  trackIndexedFields(forest, tree);
   trackOperationName(forest, tree);
   trackPartitions(env, forest, tree);
 }
@@ -34,27 +35,39 @@ export function replaceTree(
   trees.set(tree.operation.id, tree);
 
   trackTreeNodes(forest, tree);
+  trackIndexedFields(forest, tree);
   trackOperationName(forest, tree);
   trackPartitions(env, forest, tree);
 }
 
 export function trackTreeNodes(forest: IndexedForest, tree: IndexedTree) {
+  const opId = tree.operation.id;
   for (const nodeKey of tree.nodes.keys()) {
-    getOrCreate(forest.operationsByNodes, nodeKey, newSet).add(
-      tree.operation.id,
-    );
+    getOrCreate(forest.operationsByNodes, nodeKey, newSet).add(opId);
+  }
+}
+
+export function trackIndexedFields(forest: IndexedForest, tree: IndexedTree) {
+  const opId = tree.operation.id;
+  for (const [typeName, fieldMap] of forest.fieldIndex) {
+    const chunks = tree.typeMap.get(typeName);
+    if (!chunks?.length) continue;
+    for (const chunk of chunks) {
+      for (const fieldName of chunk.selection.fields.keys()) {
+        getOrCreate(fieldMap, fieldName, newSet).add(opId);
+      }
+    }
   }
 }
 
 function trackOperationName(forest: IndexedForest, tree: IndexedTree) {
   const name = tree.operation.name;
   if (!name) return;
-  getOrCreate(forest.operationsByName, name, newSet).add(tree.operation.id);
+  const opId = tree.operation.id;
+  getOrCreate(forest.operationsByName, name, newSet).add(opId);
 
   for (const coveredName of tree.operation.covers) {
-    getOrCreate(forest.operationsByCoveredName, coveredName, newSet).add(
-      tree.operation.id,
-    );
+    getOrCreate(forest.operationsByCoveredName, coveredName, newSet).add(opId);
   }
 }
 

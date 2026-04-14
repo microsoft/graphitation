@@ -22,13 +22,18 @@ import { operationCacheKey } from "./descriptor";
 const EMPTY_ARRAY = Object.freeze([]);
 const DEFAULT_PARTITION: DefaultPartition = "__default__";
 
-export function createStore(_: CacheEnv): Store {
+export function createStore(env: CacheEnv): Store {
+  const fieldIndex = new Map<string, Map<string, Set<OperationId>>>();
+  for (const typeName of env.indexFieldsOfTypes) {
+    fieldIndex.set(typeName, new Map());
+  }
   const dataForest: DataForest = {
     trees: new Map(),
     operationsByNodes: new Map<NodeKey, Set<OperationId>>(),
     operationsByName: new Map(),
     operationsByCoveredName: new Map(),
     operationsByPartitions: new Map(),
+    fieldIndex,
     operationsWithErrors: new Set<OperationDescriptor>(),
     extraRootIds: new Map<NodeKey, TypeName>(),
     layerTag: null, // not an optimistic layer
@@ -196,6 +201,7 @@ export function createOptimisticLayer(
     operationsByName: new Map(),
     operationsByCoveredName: new Map(),
     operationsByPartitions: new Map(),
+    fieldIndex: new Map(),
     extraRootIds: new Map(),
     readResults: new Map(),
     mutations: new Set(),
@@ -355,9 +361,10 @@ function removeDataTree(
     watches,
     atime,
   }: Store,
-  { operation }: ResultTree,
+  tree: ResultTree,
   partition: string,
 ) {
+  const { operation } = tree;
   assert(!watches.has(operation));
   dataForest.trees.delete(operation.id);
   dataForest.readResults.delete(operation);
@@ -367,6 +374,15 @@ function removeDataTree(
     dataForest.operationsByCoveredName.get(coveredName)?.delete(operation.id);
   }
   dataForest.operationsByPartitions.get(partition)?.delete(operation.id);
+  for (const [typeName, fieldMap] of dataForest.fieldIndex) {
+    const chunks = tree.typeMap.get(typeName);
+    if (!chunks?.length) continue;
+    for (const chunk of chunks) {
+      for (const fieldName of chunk.selection.fields.keys()) {
+        fieldMap.get(fieldName)?.delete(operation.id);
+      }
+    }
+  }
   optimisticReadResults.delete(operation);
   partialReadResults.delete(operation);
   operations.get(operation.document)?.delete(operationCacheKey(operation));
@@ -386,6 +402,7 @@ export function resetStore(store: Store): void {
   dataForest.operationsWithErrors.clear();
   dataForest.operationsByName.clear();
   dataForest.operationsByCoveredName.clear();
+  dataForest.fieldIndex.clear();
   dataForest.operationsWithDanglingRefs.clear();
   dataForest.readResults.clear();
   operations.clear();

@@ -9,10 +9,12 @@ import type {
   ParentLocator,
 } from "../values/types";
 import type {
+  FieldInfo,
   NodeKey,
   OperationDescriptor,
   OperationId,
   ResolvedSelection,
+  TypeName,
 } from "../descriptor/types";
 import type { IndexedForest } from "../forest/types";
 import { assert } from "../jsutils/assert";
@@ -276,7 +278,77 @@ function getCoveringOperationIds(
   return ids;
 }
 
-export const createChunkProvider =
-  (layers: IndexedForest[], includeDeleted = false): ChunkProvider =>
-  (ref: GraphValueReference) =>
-    getObjectChunks(layers, ref, includeDeleted);
+export function createChunkProvider(
+  layers: IndexedForest[],
+  includeDeleted = false,
+): ChunkProvider {
+  const hasFieldIndex = layers.some((l) => l.fieldIndex.size > 0);
+  if (!hasFieldIndex) {
+    return (ref: GraphValueReference) =>
+      getObjectChunks(layers, ref, includeDeleted);
+  }
+  return (ref: GraphValueReference) =>
+    getObjectChunksWithFieldIndex(layers, ref, includeDeleted);
+}
+
+function resolveNodeType(
+  layers: IndexedForest[],
+  key: NodeKey,
+): TypeName | undefined {
+  for (const layer of layers) {
+    const ops = layer.operationsByNodes.get(key);
+    if (!ops) continue;
+    for (const opId of ops) {
+      const tree = layer.trees.get(opId);
+      const chunks = tree?.nodes.get(key);
+      if (chunks?.length) return chunks[0].type || undefined;
+    }
+  }
+  return undefined;
+}
+
+function getObjectChunksWithFieldIndex(
+  layers: IndexedForest[],
+  ref: GraphValueReference,
+  includeDeleted: boolean,
+): Iterable<ObjectChunk> & { update?(fields: FieldInfo[]): void } {
+  if (typeof ref !== "string") {
+    return getObjectChunks(layers, ref, includeDeleted);
+  }
+  const nodeKey = ref;
+  const typeName = resolveNodeType(layers, nodeKey);
+  if (!typeName || !layers.every((l) => l.fieldIndex.has(typeName))) {
+    return getNodeChunks(layers, nodeKey, includeDeleted);
+  }
+  let relevantOps: Set<OperationId> | undefined;
+
+  return {
+    update(fields: FieldInfo[]) {
+      relevantOps = undefined;
+      for (const field of fields) {
+        for (const layer of layers) {
+          const ops = layer.fieldIndex.get(typeName)?.get(field.name);
+          if (ops) {
+            if (!relevantOps) relevantOps = new Set();
+            for (const opId of ops) relevantOps.add(opId);
+          }
+        }
+      }
+    },
+    *[Symbol.iterator]() {
+      if (!relevantOps) {
+        yield* getNodeChunks(layers, nodeKey, includeDeleted);
+        return;
+      }
+      for (const layer of layers) {
+        if (!includeDeleted && layer.deletedNodes.has(nodeKey)) break;
+        for (const opId of relevantOps) {
+          const tree = layer.trees.get(opId);
+          if (!tree) continue;
+          const chunks = tree.nodes.get(nodeKey);
+          if (chunks) yield* chunks;
+        }
+      }
+    },
+  };
+}
