@@ -6,6 +6,7 @@ const bdQuery = parse(`query BgQuery($id: ID!) { node(id: $ID) { id value } }`);
 const userQuery = parse(
   `query User($id: ID!) { user(id: $ID) { id name status } }`,
 );
+const userBatchQuery = parse(`query UserBatch { users { id name status } }`);
 
 // Those are operations that just inflates cache size, which may affect some scenarios
 // that need to loop through all operations to find some node.
@@ -466,10 +467,7 @@ export const scenarios = [
     name: "cache-misses-with-background",
     prepare: (ctx: ScenarioContext) => {
       const { CacheFactory, configuration } = ctx;
-      const cache = new CacheFactory({
-        ...configuration,
-        indexedFields: new Map([["Query", new Set(["user"])]]),
-      });
+      const cache = new CacheFactory(configuration);
 
       // Populate the cache with many unrelated operations (simulating real app)
       for (const { query, data, variables } of backgroundQueries(50)) {
@@ -481,6 +479,56 @@ export const scenarios = [
       return {
         run() {
           for (const { query, variables } of users) {
+            cache.readQuery({ query, variables });
+          }
+        },
+      };
+    },
+  },
+  {
+    name: "cache-redirect-with-background",
+    prepare: (ctx: ScenarioContext) => {
+      const { CacheFactory, configuration } = ctx;
+      const cache = new CacheFactory({
+        ...configuration,
+        typePolicies: {
+          Query: {
+            fields: {
+              user(_, { args, toReference }) {
+                return toReference({ __typename: "User", id: args!.id });
+              },
+            },
+          },
+        },
+      });
+
+      // Populate the cache with many unrelated operations (simulating real app)
+      for (const { query, data, variables } of backgroundQueries(50)) {
+        cache.writeQuery({ query, data, variables });
+      }
+
+      // Write all users via a batch query — individual reads resolve via cache redirect
+      const userCount = 5;
+      cache.writeQuery({
+        query: userBatchQuery,
+        data: {
+          users: Array.from({ length: userCount }, (_, i) => ({
+            __typename: "User",
+            id: `user_${i}`,
+            name: `User ${i}`,
+            status: "available",
+          })),
+        },
+      });
+
+      const reads = Array.from({ length: userCount }, (_, i) => ({
+        query: userQuery,
+        variables: { id: `user_${i}` },
+      }));
+
+      return {
+        run() {
+          for (const { query, variables } of reads) {
             cache.readQuery({ query, variables });
           }
         },
