@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "feat(supermassive): produce errors on missing type definitions or resolvers for root fields",
+  "packageName": "@graphitation/supermassive",
+  "email": "dsamsonov@microsoft.com",
+  "dependentChangeType": "patch"
+}
