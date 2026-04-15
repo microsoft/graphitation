@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Wed, 15 Apr 2026 15:45:05 GMT",
+      "version": "3.17.0",
+      "tag": "@graphitation/supermassive_v3.17.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "77059398+vejrj@users.noreply.github.com",
+            "package": "@graphitation/supermassive",
+            "commit": "7d068d183889bc031a220087b48d387641b62c0e",
+            "comment": "Added new description and directive support under new backwards compatible encode/decode/merge asts functions"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 15 Apr 2026 09:53:46 GMT",
       "version": "3.16.0",
       "tag": "@graphitation/supermassive_v3.16.0",

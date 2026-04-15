@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Wed, 15 Apr 2026 09:53:46 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 15 Apr 2026 15:45:05 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.17.0
+
+Wed, 15 Apr 2026 15:45:05 GMT
+
+### Minor changes
+
+- Added new description and directive support under new backwards compatible encode/decode/merge asts functions (77059398+vejrj@users.noreply.github.com)
 
 ## 3.16.0
 
