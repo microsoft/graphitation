@@ -6,7 +6,7 @@ export const CONFIG = {
       name: "Default",
       description: "Default ForestRun configuration",
       options: {
-        indexedFields: new Map([["Query", new Set(["user"])]]),
+        indexedFields: { Query: ["user"] },
       },
     },
   ] as const satisfies CacheConfiguration[],

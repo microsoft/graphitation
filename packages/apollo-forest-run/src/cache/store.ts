@@ -30,8 +30,8 @@ export function createStore(env: CacheEnv): Store {
     { fields: Set<string>; ops: Map<string, Set<OperationId>> }
   >();
   if (env.indexedFields) {
-    for (const [typeName, fields] of env.indexedFields) {
-      fieldIndex.set(typeName, { fields, ops: new Map() });
+    for (const [typeName, fields] of Object.entries(env.indexedFields)) {
+      fieldIndex.set(typeName, { fields: new Set(fields), ops: new Map() });
     }
   }
   const dataForest: DataForest = {

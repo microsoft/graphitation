@@ -186,7 +186,7 @@ export type ForestRunAdditionalConfig<
   apolloCompat_keepOrphanNodes?: boolean;
   logger?: Logger;
   notify?: (event: TelemetryEvent) => void;
-  indexedFields?: Map<string, Set<string>>;
+  indexedFields?: Record<TypeName, FieldName[]>;
   historyConfig?: HistoryConfig<TPartitions>;
 
   // Feature flags
@@ -260,7 +260,7 @@ export type CacheEnv<TPartitions extends HistoryPartitions = any> = {
   nonEvictableQueries: Set<string>;
   partitionConfig: ResolvedPartitionConfig;
   scheduleAutoEviction: ScheduleEviction;
-  indexedFields?: Map<string, Set<string>>;
+  indexedFields?: Record<TypeName, FieldName[]>;
   historyConfig?: HistoryConfig<TPartitions>;
 
   // Feature flags
