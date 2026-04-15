@@ -18,7 +18,7 @@ describe(decodeASTSchema, () => {
     expect(decoded).toEqual(doc);
     expect(encodeASTSchema(decoded)).toEqual(encoded);
     expect(print(decoded)).toMatchSnapshot();
-  }); 
+  });
 
   test("correctly encodes description AST schema", () => {
     const decoded = decodeASTSchema(

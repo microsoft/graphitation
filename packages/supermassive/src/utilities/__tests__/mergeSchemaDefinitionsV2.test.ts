@@ -3,9 +3,7 @@ import {
   createSchemaDefinitions,
   mergeSchemaDefinitions,
 } from "../mergeSchemaDefinitionsV2";
-import {
-  mergeSchemaDefinitions as mergeSchemaDefinitionsV1,
-} from "../mergeSchemaDefinitions";
+import { mergeSchemaDefinitions as mergeSchemaDefinitionsV1 } from "../mergeSchemaDefinitions";
 import {
   encodeASTSchema,
   type EncodeASTSchemaOptions,
