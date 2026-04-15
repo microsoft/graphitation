@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Added new description and directive support under new backwards compatible encode/decode/merge asts functions",
+  "packageName": "@graphitation/graphql-codegen-near-operation-file-preset-with-resolver-metadata",
+  "email": "77059398+vejrj@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}

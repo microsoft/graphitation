@@ -1,11 +1,18 @@
 import {
   DirectiveDefinitionTuple,
+  DirectiveTuple,
+  EnumTypeDefinitionTuple,
   FieldDefinitionRecord,
   getDirectiveDefinitionArgs,
   getDirectiveDefinitionName,
+  getEnumMetadata,
+  getEnumValues,
   getFieldArgs,
+  getFieldDefinitionMetadata,
   getFields,
   getInputObjectFields,
+  getTypeDefinitionMetadataIndex,
+  getTypeDefinitionMetadata,
   InputValueDefinitionRecord,
   InterfaceTypeDefinitionTuple,
   isInputObjectTypeDefinition,
@@ -15,7 +22,12 @@ import {
   SchemaDefinitions,
   setDirectiveDefinitionArgs,
   setFieldArgs,
+  setFieldDefinitionMetadata,
   TypeDefinitionsRecord,
+  TypeDefinitionTuple,
+  TypeDefinitionMetadata,
+  getDirectiveName,
+  isEnumTypeDefinition,
 } from "../schema/definition";
 import { inspect } from "../jsutils/inspect";
 
@@ -23,9 +35,13 @@ export function createSchemaDefinitions(definitions: SchemaDefinitions[]) {
   return mergeSchemaDefinitions({ types: {}, directives: [] }, definitions);
 }
 
+type MergeSchemaDefinitionsOptions = {
+  mergeEnumValues?: boolean;
+};
 export function mergeSchemaDefinitions(
   accumulator: SchemaDefinitions,
   definitions: SchemaDefinitions[],
+  options?: MergeSchemaDefinitionsOptions,
 ): SchemaDefinitions {
   if (!definitions.length) {
     return accumulator;
@@ -34,7 +50,7 @@ export function mergeSchemaDefinitions(
     if (!accumulator.types) {
       accumulator.types = source.types;
     } else if (source.types) {
-      mergeTypes(accumulator.types, source.types);
+      mergeTypes(accumulator.types, source.types, options);
     }
     if (!accumulator.directives) {
       accumulator.directives = source.directives;
@@ -43,6 +59,44 @@ export function mergeSchemaDefinitions(
     }
   }
   return accumulator;
+}
+
+function mergeTypeMetadata(
+  target: TypeDefinitionTuple,
+  source: TypeDefinitionTuple,
+): void {
+  const targetMetadata: TypeDefinitionMetadata | undefined =
+    getTypeDefinitionMetadata(target);
+  const sourceMetadata: TypeDefinitionMetadata | undefined =
+    getTypeDefinitionMetadata(source);
+
+  const metadataIndex = getTypeDefinitionMetadataIndex(target);
+  if (!sourceMetadata || !metadataIndex) {
+    return;
+  }
+
+  if (!targetMetadata) {
+    target[metadataIndex] ??= {};
+    const targetMetadata: TypeDefinitionMetadata = target[
+      metadataIndex
+    ] as TypeDefinitionMetadata;
+    if (sourceMetadata?.directives) {
+      targetMetadata.directives = [...sourceMetadata.directives];
+    }
+    return;
+  }
+
+  if (sourceMetadata.directives && targetMetadata.directives) {
+    for (const sourceDirective of sourceMetadata.directives) {
+      const directiveName = getDirectiveName(sourceDirective);
+      const exists = targetMetadata.directives.some(
+        (d: DirectiveTuple) => getDirectiveName(d) === directiveName,
+      );
+      if (!exists) {
+        targetMetadata.directives.push(sourceDirective);
+      }
+    }
+  }
 }
 
 export function mergeDirectives(
@@ -78,6 +132,7 @@ export function mergeDirectives(
 export function mergeTypes(
   target: TypeDefinitionsRecord,
   source: TypeDefinitionsRecord,
+  options?: MergeSchemaDefinitionsOptions,
 ): void {
   for (const [typeName, sourceDef] of Object.entries(source)) {
     const targetDef = target[typeName];
@@ -85,6 +140,9 @@ export function mergeTypes(
       target[typeName] = sourceDef;
       continue;
     }
+
+    mergeTypeMetadata(targetDef, sourceDef);
+
     if (
       (isObjectTypeDefinition(targetDef) &&
         isObjectTypeDefinition(sourceDef)) ||
@@ -105,6 +163,16 @@ export function mergeTypes(
       );
       continue;
     }
+
+    if (
+      options?.mergeEnumValues &&
+      isEnumTypeDefinition(targetDef) &&
+      isEnumTypeDefinition(sourceDef)
+    ) {
+      mergeEnumValues(targetDef, sourceDef);
+      continue;
+    }
+
     // Note: not merging scalars, unions and enums - assuming they are fully defined by the first occurrence
     if (targetDef[0] !== sourceDef[0]) {
       throw new Error(
@@ -132,6 +200,34 @@ function mergeFields(
       const targetArgs = getFieldArgs(targetDef) ?? setFieldArgs(targetDef, {});
       mergeInputValues(targetArgs, sourceArgs);
     }
+
+    const sourceDirectives = getFieldDefinitionMetadata(sourceDef);
+    if (sourceDirectives) {
+      const targetMetadata =
+        getFieldDefinitionMetadata(targetDef) ??
+        setFieldDefinitionMetadata(targetDef, {});
+      if (targetMetadata.directives && sourceDirectives.directives) {
+        mergeFieldDirectives(
+          targetMetadata.directives,
+          sourceDirectives.directives,
+        );
+      }
+    }
+  }
+}
+
+function mergeFieldDirectives(
+  target: DirectiveTuple[],
+  source: DirectiveTuple[],
+): void {
+  for (const sourceDirective of source) {
+    const directiveName = getDirectiveName(sourceDirective);
+    const exists = target.some(
+      (d: DirectiveTuple) => getDirectiveName(d) === directiveName,
+    );
+    if (!exists) {
+      target.push(sourceDirective);
+    }
   }
 }
 
@@ -154,6 +250,42 @@ function mergeInterfaces(
   for (const interfaceName of sourceInterfaces) {
     if (!targetInterfaces.includes(interfaceName)) {
       targetInterfaces.push(interfaceName);
+    }
+  }
+}
+
+function mergeEnumValues(
+  target: EnumTypeDefinitionTuple,
+  source: EnumTypeDefinitionTuple,
+): void {
+  const targetValues = getEnumValues(target);
+  const sourceValues = getEnumValues(source);
+
+  for (const value of sourceValues) {
+    if (!targetValues.includes(value)) {
+      targetValues.push(value);
+    }
+  }
+
+  const sourceMetadata = getEnumMetadata(source);
+  if (!sourceMetadata?.values) {
+    return;
+  }
+
+  const targetMetadata = getEnumMetadata(target);
+  if (!targetMetadata) {
+    target[2] = { values: { ...sourceMetadata.values } };
+    return;
+  }
+
+  if (!targetMetadata.values) {
+    targetMetadata.values = { ...sourceMetadata.values };
+    return;
+  }
+
+  for (const [valueName, valueMeta] of Object.entries(sourceMetadata.values)) {
+    if (!targetMetadata.values[valueName]) {
+      targetMetadata.values[valueName] = valueMeta;
     }
   }
 }

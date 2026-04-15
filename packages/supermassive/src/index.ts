@@ -28,12 +28,18 @@ export {
 export { annotateDocumentGraphQLTransform } from "./utilities/annotateDocumentGraphQLTransform";
 export { decodeASTSchema } from "./utilities/decodeASTSchema";
 export { encodeASTSchema } from "./utilities/encodeASTSchema";
+export { decodeASTSchema as decodeASTSchemaV2 } from "./utilities/decodeASTSchemaV2";
+export { encodeASTSchema as encodeASTSchemaV2 } from "./utilities/encodeASTSchemaV2";
 export { extractMinimalViableSchemaForRequestDocument } from "./utilities/extractMinimalViableSchemaForRequestDocument";
 export { mergeResolvers } from "./utilities/mergeResolvers";
 export {
   createSchemaDefinitions,
   mergeSchemaDefinitions,
 } from "./utilities/mergeSchemaDefinitions";
+export {
+  createSchemaDefinitions as createSchemaDefinitionsV2,
+  mergeSchemaDefinitions as mergeSchemaDefinitionsV2,
+} from "./utilities/mergeSchemaDefinitionsV2";
 export { subtractSchemaDefinitions } from "./utilities/subtractSchemaDefinitions";
 export { schemaFragmentFromMinimalViableSchemaDocument } from "./utilities/schemaFragmentFromMinimalViableSchemaDocument";
 export { pathToArray } from "./jsutils/Path";

@@ -97,6 +97,26 @@ directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
 directive @include2(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
 
 directive @myRepeatableDir(name: String!) on OBJECT | INTERFACE
+
+directive @onType on OBJECT
+
+directive @onObject(arg: String!) on OBJECT
+
+directive @onUnion on UNION
+
+directive @onField on FIELD
+
+directive @onEnumValue on ENUM_VALUE
+
+directive @onInterface on INTERFACE
+
+directive @onScalar on SCALAR
+
+directive @onEnum on ENUM
+
+directive @oneOf on INPUT_OBJECT
+
+directive @onInputObject on INPUT_OBJECT
 "
 `;
 

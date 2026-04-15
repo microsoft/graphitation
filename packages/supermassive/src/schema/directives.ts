@@ -3,7 +3,7 @@ import {
   DirectiveDefinitionTuple,
   DirectiveName,
   encodeDirectiveLocation,
-  getDirectiveName,
+  getDirectiveDefinitionName,
 } from "./definition";
 
 /**
@@ -41,10 +41,14 @@ export const DEFAULT_DEPRECATION_REASON = "No longer supported";
  */
 export const GraphQLDeprecatedDirective: DirectiveDefinitionTuple = [
   "deprecated",
-  [DirectiveLocation.FIELD_DEFINITION].map(encodeDirectiveLocation),
+  [
+    DirectiveLocation.FIELD_DEFINITION,
+    DirectiveLocation.ENUM_VALUE,
+    DirectiveLocation.INPUT_FIELD_DEFINITION,
+    DirectiveLocation.ARGUMENT_DEFINITION,
+  ].map(encodeDirectiveLocation),
   { reason: ["String", DEFAULT_DEPRECATION_REASON] },
 ];
-
 /**
  * Used to provide a URL for specifying the behaviour of custom scalar definitions.
  */
@@ -106,7 +110,9 @@ export function isKnownDirective(
   directive: DirectiveName | DirectiveDefinitionTuple,
 ): boolean {
   const name =
-    typeof directive === "string" ? directive : getDirectiveName(directive);
+    typeof directive === "string"
+      ? directive
+      : getDirectiveDefinitionName(directive);
   return (
     isSpecifiedDirective(directive) ||
     name === SUPERMASSIVE_SCHEMA_DIRECTIVE_NAME
@@ -116,8 +122,10 @@ export function isSpecifiedDirective(
   directive: DirectiveName | DirectiveDefinitionTuple,
 ): boolean {
   const name =
-    typeof directive === "string" ? directive : getDirectiveName(directive);
+    typeof directive === "string"
+      ? directive
+      : getDirectiveDefinitionName(directive);
   return specifiedDirectives.some(
-    (specDirective) => getDirectiveName(specDirective) === name,
+    (specDirective) => getDirectiveDefinitionName(specDirective) === name,
   );
 }
