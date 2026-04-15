@@ -16,8 +16,10 @@ import type {
   ResolvedSelection,
   TypeName,
 } from "../descriptor/types";
+import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import type { IndexedForest } from "../forest/types";
 import { assert } from "../jsutils/assert";
+import { fieldToStringKey } from "./keys";
 import {
   isMissingValue,
   isNodeValue,
@@ -288,7 +290,9 @@ function getObjectChunksWithFieldIndex(
   ref: GraphValueReference,
   includeDeleted: boolean,
   typeName?: TypeName | false,
-): Iterable<ObjectChunk> & { update?(fields: FieldInfo[]): void } {
+): Iterable<ObjectChunk> & {
+  update?(fields: FieldInfo[], selection?: ResolvedSelection): void;
+} {
   if (
     !typeName ||
     typeof ref !== "string" ||
@@ -297,16 +301,26 @@ function getObjectChunksWithFieldIndex(
     return getObjectChunks(layers, ref, includeDeleted);
   }
   const nodeKey = ref;
+  const index = layers[0].fieldIndex.get(typeName);
   let relevantOps: Set<OperationId> | undefined;
 
   return {
-    update(fields: FieldInfo[]) {
+    update(fields: FieldInfo[], selection?: ResolvedSelection) {
       relevantOps = undefined;
       for (const field of fields) {
+        if (!index?.fields.has(field.name)) {
+          // Field not indexed — can't use index, fall back to full scan
+          return;
+        }
+      }
+      relevantOps = new Set();
+      for (const field of fields) {
+        const cacheKey = selection
+          ? fieldToStringKey(resolveNormalizedField(selection, field))
+          : field.name;
         for (const layer of layers) {
-          const ops = layer.fieldIndex.get(typeName)?.get(field.name);
+          const ops = layer.fieldIndex.get(typeName)?.ops.get(cacheKey);
           if (ops) {
-            if (!relevantOps) relevantOps = new Set();
             for (const opId of ops) relevantOps.add(opId);
           }
         }

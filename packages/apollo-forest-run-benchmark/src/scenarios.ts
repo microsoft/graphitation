@@ -466,7 +466,10 @@ export const scenarios = [
     name: "cache-misses-with-background",
     prepare: (ctx: ScenarioContext) => {
       const { CacheFactory, configuration } = ctx;
-      const cache = new CacheFactory(configuration);
+      const cache = new CacheFactory({
+        ...configuration,
+        indexedFields: new Map([["Query", new Set(["user"])]]),
+      });
 
       // Populate the cache with many unrelated operations (simulating real app)
       for (const { query, data, variables } of backgroundQueries(50)) {

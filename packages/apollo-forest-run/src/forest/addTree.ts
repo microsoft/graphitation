@@ -4,8 +4,10 @@ import {
   IndexedForest,
   IndexedTree,
 } from "./types";
+import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import { assert } from "../jsutils/assert";
 import { getOrCreate } from "../jsutils/map";
+import { fieldToStringKey } from "../cache/keys";
 
 const newSet = () => new Set();
 
@@ -49,12 +51,18 @@ export function trackTreeNodes(forest: IndexedForest, tree: IndexedTree) {
 
 export function trackIndexedFields(forest: IndexedForest, tree: IndexedTree) {
   const opId = tree.operation.id;
-  for (const [typeName, fieldMap] of forest.fieldIndex) {
+  for (const [typeName, { fields, ops }] of forest.fieldIndex) {
     const chunks = tree.typeMap.get(typeName);
     if (!chunks?.length) continue;
     for (const chunk of chunks) {
-      for (const fieldName of chunk.selection.fields.keys()) {
-        getOrCreate(fieldMap, fieldName, newSet).add(opId);
+      for (const [fieldName, fieldInfos] of chunk.selection.fields) {
+        if (!fields.has(fieldName)) continue;
+        for (const fieldInfo of fieldInfos) {
+          const cacheKey = fieldToStringKey(
+            resolveNormalizedField(chunk.selection, fieldInfo),
+          );
+          getOrCreate(ops, cacheKey, newSet).add(opId);
+        }
       }
     }
   }

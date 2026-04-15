@@ -128,8 +128,13 @@ export type IndexedForest = {
   operationsByName: Map<string, Set<OperationId>>; // operationName → operation IDs
   operationsByCoveredName: Map<string, Set<OperationId>>; // coveredName → IDs of ops whose covers list includes it
   operationsByPartitions: Map<string, Set<OperationId>>; // partition key => operation IDs
-  fieldIndex: Map<TypeName, Map<FieldName, Set<OperationId>>>; // indexed type → field → ops (for fast cold-read lookup)
+  fieldIndex: Map<TypeName, FieldIndex>;
   deletedNodes: Set<NodeKey>;
+};
+
+export type FieldIndex = {
+  fields: Set<FieldName>; // configured field names (from config)
+  ops: Map<string, Set<OperationId>>; // cacheKey → opIds
 };
 
 export type Source = Readonly<SourceObject | SourceCompositeList>;

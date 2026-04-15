@@ -14,18 +14,25 @@ import {
   OperationId,
   TypeName,
 } from "../descriptor/types";
+import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import { assert } from "../jsutils/assert";
 import { IndexedTree, DefaultPartition } from "../forest/types";
 import { NodeChunk } from "../values/types";
 import { operationCacheKey } from "./descriptor";
+import { fieldToStringKey } from "./keys";
 
 const EMPTY_ARRAY = Object.freeze([]);
 const DEFAULT_PARTITION: DefaultPartition = "__default__";
 
 export function createStore(env: CacheEnv): Store {
-  const fieldIndex = new Map<string, Map<string, Set<OperationId>>>();
-  for (const typeName of env.indexFieldsOfTypes) {
-    fieldIndex.set(typeName, new Map());
+  const fieldIndex = new Map<
+    string,
+    { fields: Set<string>; ops: Map<string, Set<OperationId>> }
+  >();
+  if (env.indexedFields) {
+    for (const [typeName, fields] of env.indexedFields) {
+      fieldIndex.set(typeName, { fields, ops: new Map() });
+    }
   }
   const dataForest: DataForest = {
     trees: new Map(),
@@ -374,12 +381,18 @@ function removeDataTree(
     dataForest.operationsByCoveredName.get(coveredName)?.delete(operation.id);
   }
   dataForest.operationsByPartitions.get(partition)?.delete(operation.id);
-  for (const [typeName, fieldMap] of dataForest.fieldIndex) {
+  for (const [typeName, { fields, ops }] of dataForest.fieldIndex) {
     const chunks = tree.typeMap.get(typeName);
     if (!chunks?.length) continue;
     for (const chunk of chunks) {
-      for (const fieldName of chunk.selection.fields.keys()) {
-        fieldMap.get(fieldName)?.delete(operation.id);
+      for (const [fieldName, fieldInfos] of chunk.selection.fields) {
+        if (!fields.has(fieldName)) continue;
+        for (const fieldInfo of fieldInfos) {
+          const cacheKey = fieldToStringKey(
+            resolveNormalizedField(chunk.selection, fieldInfo),
+          );
+          ops.get(cacheKey)?.delete(operation.id);
+        }
       }
     }
   }
@@ -402,7 +415,9 @@ export function resetStore(store: Store): void {
   dataForest.operationsWithErrors.clear();
   dataForest.operationsByName.clear();
   dataForest.operationsByCoveredName.clear();
-  dataForest.fieldIndex.clear();
+  for (const [, { ops }] of dataForest.fieldIndex) {
+    ops.clear();
+  }
   dataForest.operationsWithDanglingRefs.clear();
   dataForest.readResults.clear();
   operations.clear();
