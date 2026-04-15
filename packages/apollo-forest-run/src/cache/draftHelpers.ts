@@ -109,6 +109,21 @@ export function getNodeChunks(
   key: NodeKey,
   includeDeleted = false,
 ): Iterable<NodeChunk> {
+  // Fast path: skip iterator allocation when key doesn't exist in any layer
+  let hasKey = false;
+  for (let i = 0; i < layers.length; i++) {
+    const layer = layers[i];
+    if (!includeDeleted && layer.deletedNodes.has(key)) {
+      break;
+    }
+    if (layer.operationsByNodes.has(key)) {
+      hasKey = true;
+      break;
+    }
+  }
+  if (!hasKey) {
+    return EMPTY_ARRAY;
+  }
   return {
     [Symbol.iterator](): Iterator<NodeChunk> {
       let layerIdx = 0;
