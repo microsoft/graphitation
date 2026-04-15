@@ -1,6 +1,8 @@
 import { DocumentNode, visit, print } from "graphql";
 import { decodeASTSchema } from "../decodeASTSchemaV2";
+import { decodeASTSchema as decodeASTSchemaV1 } from "../decodeASTSchema";
 import { encodeASTSchema } from "../encodeASTSchemaV2";
+import { encodeASTSchema as encodeASTSchemaV1 } from "../encodeASTSchema";
 import { kitchenSinkSDL } from "./fixtures/kitchenSinkSDL";
 import { swapiSDL } from "./fixtures/swapiSDL";
 import { mergeSchemaDefinitions } from "../mergeSchemaDefinitionsV2";
@@ -16,7 +18,7 @@ describe(decodeASTSchema, () => {
     expect(decoded).toEqual(doc);
     expect(encodeASTSchema(decoded)).toEqual(encoded);
     expect(print(decoded)).toMatchSnapshot();
-  });
+  }); 
 
   test("correctly encodes description AST schema", () => {
     const decoded = decodeASTSchema(
@@ -142,6 +144,15 @@ describe(decodeASTSchema, () => {
 
     const reEncoded = encodeASTSchema(decoded, { includeDescriptions: true });
     expect(reEncoded).toEqual(encoded);
+  });
+
+  test("V1 and V2 round-trip produce the same output for swapi schema", () => {
+    const doc = cleanUpDocument(swapiSDL.document);
+
+    const v1Decoded = decodeASTSchemaV1(encodeASTSchemaV1(doc));
+    const v2Decoded = decodeASTSchema(encodeASTSchema(doc));
+
+    expect(print(v2Decoded)).toEqual(print(v1Decoded));
   });
 });
 

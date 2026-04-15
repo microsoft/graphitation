@@ -4,9 +4,13 @@ import {
   mergeSchemaDefinitions,
 } from "../mergeSchemaDefinitionsV2";
 import {
+  mergeSchemaDefinitions as mergeSchemaDefinitionsV1,
+} from "../mergeSchemaDefinitions";
+import {
   encodeASTSchema,
   type EncodeASTSchemaOptions,
 } from "../encodeASTSchemaV2";
+import { encodeASTSchema as encodeASTSchemaV1 } from "../encodeASTSchema";
 import { SchemaDefinitions } from "../../schema/definition";
 
 function schema(
@@ -638,7 +642,7 @@ extend type Query {
       interface Entity {
         id: ID
       }
-      
+
       extend interface Entity implements Node & Named {
         name: String
       }
@@ -662,5 +666,34 @@ extend type Query {
         },
       }
     `);
+  });
+
+  it("V1 and V2 produce the same merged result for a basic schema", () => {
+    const sdl = `
+      type User implements Node & Named {
+        id: ID
+        name: String
+      }
+
+      extend type User implements Contactable {
+        email: String
+      }
+
+      type Post {
+        title: String
+      }
+    `;
+    const doc = parse(sdl);
+
+    const v1Result = mergeSchemaDefinitionsV1(
+      { types: {}, directives: [] },
+      encodeASTSchemaV1(doc),
+    );
+    const v2Result = mergeSchemaDefinitions(
+      { types: {}, directives: [] },
+      encodeASTSchema(doc),
+    );
+
+    expect(v2Result).toEqual(v1Result);
   });
 });

@@ -1,4 +1,8 @@
+import { print } from "graphql";
 import { encodeASTSchema } from "../encodeASTSchemaV2";
+import { encodeASTSchema as encodeASTSchemaV1 } from "../encodeASTSchema";
+import { decodeASTSchema } from "../decodeASTSchemaV2";
+import { decodeASTSchema as decodeASTSchemaV1 } from "../decodeASTSchema";
 import { swapiSDL } from "./fixtures/swapiSDL";
 import { kitchenSinkSDL } from "./fixtures/kitchenSinkSDL";
 import { descriptionsSDL } from "./fixtures/descriptionsSDL";
@@ -94,5 +98,12 @@ describe(encodeASTSchema, () => {
     });
 
     expect(encoded).toMatchSnapshot();
+  });
+
+  test("V1 and V2 encode produce equivalent output for swapi schema", () => {
+    const v1Decoded = decodeASTSchemaV1(encodeASTSchemaV1(swapiSDL.document));
+    const v2Decoded = decodeASTSchema(encodeASTSchema(swapiSDL.document));
+
+    expect(print(v2Decoded)).toEqual(print(v1Decoded));
   });
 });
