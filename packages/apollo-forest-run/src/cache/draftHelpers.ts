@@ -59,49 +59,101 @@ export function getObjectChunks(
   );
 }
 
-function* getEmbeddedObjectChunks(
+function getEmbeddedObjectChunks(
   pathEnv: TraverseEnv,
   nodeChunks: Iterable<NodeChunk>,
   ref: GraphValueReference,
-): Generator<ObjectChunk> {
-  for (const chunk of nodeChunks) {
-    const value = retrieveEmbeddedValue(pathEnv, chunk, ref);
-    if (value === undefined || isMissingValue(value)) {
-      continue;
-    }
-    assert(isObjectValue(value) && value.key === false);
-    if (value.isAggregate) {
-      for (const embeddedChunk of value.chunks) {
-        yield embeddedChunk;
-      }
-    } else {
-      yield value;
-    }
-  }
+): Iterable<ObjectChunk> {
+  return {
+    [Symbol.iterator](): Iterator<ObjectChunk> {
+      const outerIter = nodeChunks[Symbol.iterator]();
+      let innerChunks: ObjectChunk[] | undefined;
+      let innerIdx = 0;
+      return {
+        next(): IteratorResult<ObjectChunk> {
+          for (;;) {
+            if (innerChunks) {
+              if (innerIdx < innerChunks.length) {
+                return { value: innerChunks[innerIdx++], done: false };
+              }
+              innerChunks = undefined;
+            }
+            const outerResult = outerIter.next();
+            if (outerResult.done) {
+              return { value: undefined as any, done: true };
+            }
+            const value = retrieveEmbeddedValue(
+              pathEnv,
+              outerResult.value,
+              ref,
+            );
+            if (value === undefined || isMissingValue(value)) {
+              continue;
+            }
+            assert(isObjectValue(value) && value.key === false);
+            if (value.isAggregate) {
+              innerChunks = value.chunks;
+              innerIdx = 0;
+            } else {
+              return { value, done: false };
+            }
+          }
+        },
+      };
+    },
+  };
 }
 
-export function* getNodeChunks(
+export function getNodeChunks(
   layers: IndexedForest[],
   key: NodeKey,
   includeDeleted = false,
-): Generator<NodeChunk> {
-  for (const layer of layers) {
-    if (!includeDeleted && layer.deletedNodes.has(key)) {
-      // When a node is deleted in some layer - it is treated as deleted from lower layers too
-      break;
-    }
-    const operations = layer.operationsByNodes.get(key);
-    for (const operation of operations ?? EMPTY_ARRAY) {
-      const tree = layer.trees.get(operation);
-      if (!tree) {
-        continue;
-      }
-      const chunks = tree.nodes.get(key) ?? EMPTY_ARRAY;
-      for (const chunk of chunks) {
-        yield chunk;
-      }
-    }
-  }
+): Iterable<NodeChunk> {
+  return {
+    [Symbol.iterator](): Iterator<NodeChunk> {
+      let layerIdx = 0;
+      let currentLayer: IndexedForest | undefined;
+      let opIter: Iterator<OperationId> | undefined;
+      let chunks: readonly NodeChunk[] = EMPTY_ARRAY;
+      let chunkIdx = 0;
+      return {
+        next(): IteratorResult<NodeChunk> {
+          for (;;) {
+            // Yield from current chunks array
+            if (chunkIdx < chunks.length) {
+              return { value: chunks[chunkIdx++], done: false };
+            }
+            // Advance to next operation
+            if (opIter) {
+              const opResult = opIter.next();
+              if (!opResult.done) {
+                const tree = currentLayer!.trees.get(opResult.value);
+                if (tree) {
+                  chunks = tree.nodes.get(key) ?? EMPTY_ARRAY;
+                  chunkIdx = 0;
+                }
+                continue;
+              }
+              opIter = undefined;
+            }
+            // Advance to next layer
+            if (layerIdx >= layers.length) {
+              return { value: undefined as any, done: true };
+            }
+            currentLayer = layers[layerIdx++];
+            if (!includeDeleted && currentLayer.deletedNodes.has(key)) {
+              // When a node is deleted in some layer - it is treated as deleted from lower layers too
+              return { value: undefined as any, done: true };
+            }
+            const operations = currentLayer.operationsByNodes.get(key);
+            if (operations) {
+              opIter = operations[Symbol.iterator]();
+            }
+          }
+        },
+      };
+    },
+  };
 }
 
 export function findRecyclableChunk(

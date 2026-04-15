@@ -80,13 +80,27 @@ export function createLRUMap<K, V>(
       }
       return newSpaceSize + oldSpaceSize;
     },
-    *[Symbol.iterator]() {
-      for (const item of oldSpace) {
-        if (!newSpace.has(item[0])) {
-          yield item;
-        }
-      }
-      yield* newSpace;
+    [Symbol.iterator](): Iterator<[K, V]> {
+      let oldIter: Iterator<[K, V]> | null = oldSpace[Symbol.iterator]();
+      let newIter: Iterator<[K, V]> | null = null;
+      return {
+        next(): IteratorResult<[K, V]> {
+          if (oldIter) {
+            for (;;) {
+              const result = oldIter.next();
+              if (result.done) {
+                oldIter = null;
+                newIter = newSpace[Symbol.iterator]();
+                break;
+              }
+              if (!newSpace.has(result.value[0])) {
+                return result;
+              }
+            }
+          }
+          return newIter!.next();
+        },
+      };
     },
   };
   return result;
