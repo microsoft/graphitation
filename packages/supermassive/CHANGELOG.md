@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Thu, 19 Mar 2026 18:12:21 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 15 Apr 2026 09:53:46 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.16.0
+
+Wed, 15 Apr 2026 09:53:46 GMT
+
+### Minor changes
+
+- feat(supermassive): produce errors on missing type definitions or resolvers for root fields (dsamsonov@microsoft.com)
 
 ## 3.15.3
 

@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Wed, 15 Apr 2026 09:53:46 GMT",
+      "version": "3.16.0",
+      "tag": "@graphitation/supermassive_v3.16.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "dsamsonov@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "bf43ea06df74b0edf9096c931f2adbe9257e4182",
+            "comment": "feat(supermassive): produce errors on missing type definitions or resolvers for root fields"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 19 Mar 2026 18:12:21 GMT",
       "version": "3.15.3",
       "tag": "@graphitation/supermassive_v3.15.3",
