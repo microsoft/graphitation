@@ -2,55 +2,34 @@ import type { ForestRun } from "@graphitation/apollo-forest-run";
 import type { Scenario, ScenarioContext } from "./types";
 import { parse } from "graphql";
 
-// Pre-parse 50 unique named queries to simulate a real app with many active operations.
-// Each has its own operation name and data, creating separate trees in the forest.
-// This is the setup that exposes O(n) scans in getCoveringOperationIds.
-const EXTRA_OPS_COUNT = 50;
-const extraOperations = Array.from({ length: EXTRA_OPS_COUNT }, (_, i) => ({
-  query: parse(`query BgQuery${i} { node${i}(id: "${i}") { id value } }`),
-  data: { [`node${i}`]: { __typename: `Node${i}`, id: `${i}`, value: i } },
-}));
-
-// Pre-parse 500 unique queries for read-scaling benchmarks.
-// Simulates a long-running app where many operations accumulate in the cache
-// (e.g., 25 roster open/close cycles adding ~40 operations each).
-// All queries share ROOT_QUERY, so reading any new query forces iteration
-// of all accumulated operations' ROOT_QUERY chunks via getNodeChunks.
-const READ_SCALING_OPS_COUNT = 500;
-const readScalingOperations = Array.from(
-  { length: READ_SCALING_OPS_COUNT },
-  (_, i) => ({
-    query: parse(
-      `query CachedOp${i} { entity${i}(id: "${i}") { id name status } }`,
-    ),
-    data: {
-      [`entity${i}`]: {
-        __typename: `Entity`,
-        id: `entity_${i}`,
-        name: `Entity ${i}`,
-        status: "active",
-      },
-    },
-  }),
+const bdQuery = parse(`query BgQuery($id: ID!) { node(id: $ID) { id value } }`);
+const userQuery = parse(
+  `query User($id: ID!) { user(id: $ID) { id name status } }`,
 );
 
-// Simulates a burst of cold reads like a roster panel opening:
-// each read uses a unique query (different user ID), creating a new tree.
-// This compounds: read N iterates (BASE_OPS + N) ROOT_QUERY chunks.
-const BURST_READ_COUNT = 50;
-const burstReadQueries = Array.from({ length: BURST_READ_COUNT }, (_, i) => ({
-  query: parse(
-    `query UserRead${i} { user${i}(id: "${i}") { id name status } }`,
-  ),
-  data: {
-    [`user${i}`]: {
-      __typename: "User",
-      id: `user_${i}`,
-      name: `User ${i}`,
-      status: "available",
+// Those are operations that just inflates cache size, which may affect some scenarios
+// that need to loop through all operations to find some node.
+const backgroundQueries = (count: number) =>
+  Array.from({ length: count }, (_, i) => ({
+    query: bdQuery,
+    variables: { id: `${i}` },
+    data: { node: { __typename: `Node${i}`, id: `${i}`, value: i } },
+  }));
+
+// User queries, useful to read many unique queries
+const userQueries = (count: number) =>
+  Array.from({ length: count }, (_, i) => ({
+    query: userQuery,
+    variables: { id: `user_${i}` },
+    data: {
+      user: {
+        __typename: "User",
+        id: `user_${i}`,
+        name: `User ${i}`,
+        status: "available",
+      },
     },
-  },
-}));
+  }));
 
 const addWatchers = (
   watcherCount: number,
@@ -462,8 +441,8 @@ export const scenarios = [
       const cache = new CacheFactory(configuration);
 
       // Populate the cache with many unrelated operations (simulating real app)
-      for (const { query, data } of extraOperations) {
-        cache.writeQuery({ query, data });
+      for (const { query, data, variables } of backgroundQueries(50)) {
+        cache.writeQuery({ query, data, variables });
       }
 
       // Write the main query, add watchers, then measure a write with a change.
@@ -484,37 +463,22 @@ export const scenarios = [
     },
   },
   {
-    name: "read-cold-burst-from-large-cache",
+    name: "cache-misses-with-background",
     prepare: (ctx: ScenarioContext) => {
       const { CacheFactory, configuration } = ctx;
       const cache = new CacheFactory(configuration);
 
-      // Populate cache with 500 operations — simulates a long-running app
-      // where roster open/close cycles accumulate trees without eviction.
-      // All operations share ROOT_QUERY as a node.
-      for (const { query, data } of readScalingOperations) {
-        cache.writeQuery({ query, data });
+      // Populate the cache with many unrelated operations (simulating real app)
+      for (const { query, data, variables } of backgroundQueries(50)) {
+        cache.writeQuery({ query, data, variables });
       }
 
-      // Write user data so nodes exist in the cache
-      for (const { query, data } of burstReadQueries) {
-        cache.writeQuery({ query, data });
-      }
+      const users = userQueries(5);
 
       return {
         run() {
-          // Simulate a roster panel opening: 50 cold reads in sequence.
-          // Each read uses a fresh DocumentNode → new operation descriptor →
-          // resultsMap miss → growOutputTree → getNodeChunks("ROOT_QUERY").
-          //
-          // Critically, each cold read adds a new tree to the forest via
-          // growDataTree → addTree. So read N iterates (500 + N) ROOT_QUERY
-          // chunks — the cost compounds within the burst.
-          // Total: SUM(500..549) ≈ 26,250 ROOT_QUERY chunk iterations.
-          for (const { query } of burstReadQueries) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const freshQuery = parse(query.loc!.source.body);
-            cache.readQuery({ query: freshQuery });
+          for (const { query, variables } of users) {
+            cache.readQuery({ query, variables });
           }
         },
       };

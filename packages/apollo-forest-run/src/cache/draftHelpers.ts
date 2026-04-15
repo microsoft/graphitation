@@ -278,48 +278,25 @@ function getCoveringOperationIds(
   return ids;
 }
 
-export function createChunkProvider(
-  layers: IndexedForest[],
-  includeDeleted = false,
-): ChunkProvider {
-  const hasFieldIndex = layers.some((l) => l.fieldIndex.size > 0);
-  if (!hasFieldIndex) {
-    return (ref: GraphValueReference) =>
-      getObjectChunks(layers, ref, includeDeleted);
-  }
-  return (ref: GraphValueReference) =>
-    getObjectChunksWithFieldIndex(layers, ref, includeDeleted);
-}
-
-function resolveNodeType(
-  layers: IndexedForest[],
-  key: NodeKey,
-): TypeName | undefined {
-  for (const layer of layers) {
-    const ops = layer.operationsByNodes.get(key);
-    if (!ops) continue;
-    for (const opId of ops) {
-      const tree = layer.trees.get(opId);
-      const chunks = tree?.nodes.get(key);
-      if (chunks?.length) return chunks[0].type || undefined;
-    }
-  }
-  return undefined;
-}
+export const createChunkProvider =
+  (layers: IndexedForest[], includeDeleted = false): ChunkProvider =>
+  (ref: GraphValueReference, typeName?: TypeName | false) =>
+    getObjectChunksWithFieldIndex(layers, ref, includeDeleted, typeName);
 
 function getObjectChunksWithFieldIndex(
   layers: IndexedForest[],
   ref: GraphValueReference,
   includeDeleted: boolean,
+  typeName?: TypeName | false,
 ): Iterable<ObjectChunk> & { update?(fields: FieldInfo[]): void } {
-  if (typeof ref !== "string") {
+  if (
+    !typeName ||
+    typeof ref !== "string" ||
+    !layers[0]?.fieldIndex.has(typeName) // assuming fieldIndex is the same for all layers
+  ) {
     return getObjectChunks(layers, ref, includeDeleted);
   }
   const nodeKey = ref;
-  const typeName = resolveNodeType(layers, nodeKey);
-  if (!typeName || !layers.every((l) => l.fieldIndex.has(typeName))) {
-    return getNodeChunks(layers, nodeKey, includeDeleted);
-  }
   let relevantOps: Set<OperationId> | undefined;
 
   return {
