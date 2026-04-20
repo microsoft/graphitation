@@ -45,6 +45,7 @@ export function invalidateReadResults(
               nodeDiffs,
               incomingResult,
               difference.newNodes,
+              targetForest.layerTag as string,
               env,
             ),
           );

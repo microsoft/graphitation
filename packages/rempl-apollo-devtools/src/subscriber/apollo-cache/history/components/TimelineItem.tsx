@@ -36,6 +36,11 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
   const changeCount = entry.changes.length;
 
   const isOptimistic = entry.kind === "Optimistic";
+  // Backwards compatible: older history entries did not have `wasApplied`.
+  // Treat missing/undefined as "applied" (true) so that pre-existing history
+  // feeds continue to display without showing the "Reverted" indicator.
+  const isReverted =
+    isOptimistic && (entry as { wasApplied?: boolean }).wasApplied === false;
 
   return (
     <div
@@ -76,18 +81,25 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
         )}
         {isOptimistic && (
           <Tooltip
-            content="This update comes from an optimistic response"
+            content={
+              isReverted
+                ? "This optimistic update was later reverted (the underlying layer was removed before it could be applied)"
+                : "This update comes from an optimistic response"
+            }
             relationship="description"
           >
             <Tag
               size="small"
               appearance="filled"
               style={{
-                backgroundColor: tokens.colorBrandBackground2,
+                backgroundColor: isReverted
+                  ? tokens.colorStatusDangerBackground2
+                  : tokens.colorBrandBackground2,
                 color: tokens.colorNeutralForeground1,
+                textDecoration: isReverted ? "line-through" : undefined,
               }}
             >
-              Optimistic
+              {isReverted ? "Optimistic (reverted)" : "Optimistic"}
             </Tag>
           </Tooltip>
         )}

@@ -224,6 +224,11 @@ export function removeOptimisticLayers<T>(
       `affected operations: ${affectedOps.length}`,
   );
 
+  // Mark any optimistic history entries that originated from the layer(s)
+  // being removed as `wasApplied: false` so that history consumers (e.g.
+  // devtools) can show that the optimistic update was reverted.
+  markOptimisticHistoryAsReverted(store, layerTag);
+
   const affectedOperationSet = new Set<OperationDescriptor>();
 
   for (const operationId of affectedOps) {
@@ -271,6 +276,37 @@ export function removeOptimisticLayers<T>(
     }
   }
   return affectedOperationSet;
+}
+
+function markOptimisticHistoryAsReverted(store: Store, layerTag: string): void {
+  const { dataForest, optimisticLayers, optimisticReadResults } = store;
+
+  const visited = new Set<IndexedTree>();
+  const markTree = (outputTree: IndexedTree | undefined) => {
+    if (!outputTree || visited.has(outputTree)) {
+      return;
+    }
+    visited.add(outputTree);
+    const { items } = outputTree.history;
+    for (let i = 0; i < items.length; i++) {
+      const entry = items[i];
+      if (entry.kind === "Optimistic" && entry.layerTag === layerTag) {
+        entry.wasApplied = false;
+      }
+    }
+  };
+
+  for (const result of dataForest.readResults.values()) {
+    markTree(result.outputTree);
+  }
+  for (const layer of optimisticLayers) {
+    for (const result of layer.readResults.values()) {
+      markTree(result.outputTree);
+    }
+  }
+  for (const result of optimisticReadResults.values()) {
+    markTree(result.outputTree);
+  }
 }
 
 export function getActiveForest(

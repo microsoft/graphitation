@@ -7,12 +7,14 @@ export interface OperationMetadataProps {
   operationName?: string;
   variables?: Record<string, unknown>;
   isOptimistic?: boolean;
+  wasReverted?: boolean;
 }
 
 export const OperationMetadata: React.FC<OperationMetadataProps> = ({
   operationName,
   variables,
   isOptimistic = false,
+  wasReverted = false,
 }) => {
   const classes = useOperationMetadataStyles();
 
@@ -32,8 +34,15 @@ export const OperationMetadata: React.FC<OperationMetadataProps> = ({
           <Text className={classes.value}>
             {operationName}{" "}
             {isOptimistic && (
-              <Badge size="small" appearance="filled" color="brand">
-                Optimistic
+              <Badge
+                size="small"
+                appearance="filled"
+                color={wasReverted ? "danger" : "brand"}
+                style={
+                  wasReverted ? { textDecoration: "line-through" } : undefined
+                }
+              >
+                {wasReverted ? "Optimistic (reverted)" : "Optimistic"}
               </Badge>
             )}
           </Text>

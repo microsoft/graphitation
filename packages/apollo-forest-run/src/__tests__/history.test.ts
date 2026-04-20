@@ -419,6 +419,58 @@ describe.each([true, false])("enableRichHistory: %p", (enableRichHistory) => {
     expect(historyEntries).toMatchSnapshot();
     expect(historyWithoutData).toMatchSnapshot();
   });
+
+  test("should mark optimistic history entries as not applied when the layer is reverted", () => {
+    const cache = new ForestRun({
+      historyConfig: {
+        enableRichHistory,
+        overwrittenHistorySize: 5,
+      },
+    });
+
+    cache.write({
+      query: USER_QUERY,
+      result: { user: createUser("Alice") },
+    });
+
+    // Force the read result to be materialized so that history entries are
+    // captured when the optimistic write happens below.
+    cache.read({ query: USER_QUERY, optimistic: true });
+
+    cache.recordOptimisticTransaction(() => {
+      cache.writeQuery({
+        query: USER_QUERY,
+        data: { user: createUser("Alice (optimistic)") },
+      });
+    }, "revertable-optimistic");
+
+    // Read once to ensure the read result/history is materialized before revert
+    let data: any = cache.read({
+      query: USER_QUERY,
+      optimistic: true,
+    });
+    let entries = data[OPERATION_HISTORY_SYMBOL].history;
+    const optimisticEntry = entries.find(
+      (entry: any) => entry.kind === "Optimistic",
+    );
+    expect(optimisticEntry).toBeDefined();
+    expect(optimisticEntry.wasApplied).toBe(true);
+    expect(optimisticEntry.layerTag).toBe("revertable-optimistic");
+
+    cache.removeOptimistic("revertable-optimistic");
+
+    data = cache.read({
+      query: USER_QUERY,
+      optimistic: true,
+    });
+    entries = data[OPERATION_HISTORY_SYMBOL].history;
+    const revertedEntry = entries.find(
+      (entry: any) => entry.kind === "Optimistic",
+    );
+    expect(revertedEntry).toBeDefined();
+    expect(revertedEntry.wasApplied).toBe(false);
+    expect(revertedEntry.layerTag).toBe("revertable-optimistic");
+  });
 });
 
 describe("History getter", () => {

@@ -117,6 +117,14 @@ export type OptimisticHistoryChange = {
   kind: "Optimistic";
   nodeDiffs: NodeDifferenceMap | undefined;
   updatedNodes: string[];
+  // Tag of the optimistic layer this entry originates from.
+  // Used to correlate history entries with their layer (e.g. to mark them as
+  // not applied when the layer is removed/reverted).
+  layerTag: string;
+  // Whether this optimistic update is still considered applied. Defaults to
+  // `true` at creation time and is flipped to `false` when the originating
+  // optimistic layer is removed (e.g. because the mutation errored).
+  wasApplied: boolean;
 };
 
 export type IndexedForest = {

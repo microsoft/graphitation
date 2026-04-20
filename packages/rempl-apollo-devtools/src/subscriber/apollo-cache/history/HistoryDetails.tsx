@@ -36,11 +36,18 @@ export const HistoryDetails: React.FC<HistoryDetailsProps> = ({ entry }) => {
   }`;
 
   const isOptimistic = entry.kind === "Optimistic";
+  // Backwards compatible: missing `wasApplied` is treated as applied.
+  const wasReverted =
+    isOptimistic && (entry as { wasApplied?: boolean }).wasApplied === false;
   const OptimisticTitle = () => (
     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
       Field Changes
       <Tooltip
-        content="Not all changes necessarily were applied to this query's result. For optimistic updates we displaying all changes made in cache not specifically for this query."
+        content={
+          wasReverted
+            ? "These changes were optimistically applied to the cache but later reverted because the originating layer was removed."
+            : "Not all changes necessarily were applied to this query's result. For optimistic updates we displaying all changes made in cache not specifically for this query."
+        }
         relationship="description"
       >
         <span style={{ display: "inline-flex", cursor: "help" }}>
@@ -65,6 +72,7 @@ export const HistoryDetails: React.FC<HistoryDetailsProps> = ({ entry }) => {
                 hasVariables ? entry.modifyingOperation.variables : undefined
               }
               isOptimistic={entry.kind === "Optimistic"}
+              wasReverted={wasReverted}
             />
           </div>
 

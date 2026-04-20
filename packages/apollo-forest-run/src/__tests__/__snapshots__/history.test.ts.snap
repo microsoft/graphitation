@@ -261,6 +261,7 @@ exports[`enableRichHistory: false should capture optimistic array changes in his
         ],
         "data": undefined,
         "kind": "Optimistic",
+        "layerTag": "test-optimistic-array-add",
         "modifyingOperation": {
           "name": "query GetTodoHistory",
           "variables": {},
@@ -273,6 +274,7 @@ exports[`enableRichHistory: false should capture optimistic array changes in his
           "Todo:1",
           "Todo:4",
         ],
+        "wasApplied": true,
       },
       {
         "changes": [
@@ -358,6 +360,7 @@ exports[`enableRichHistory: false should capture optimistic array changes in his
         },
       ],
       "kind": "Optimistic",
+      "layerTag": "test-optimistic-array-add",
       "modifyingOperation": {
         "name": "query GetTodoHistory",
       },
@@ -369,6 +372,7 @@ exports[`enableRichHistory: false should capture optimistic array changes in his
         "Todo:(redacted-id-2)",
         "Todo:(redacted-id-3)",
       ],
+      "wasApplied": true,
     },
     {
       "changes": [
@@ -429,6 +433,7 @@ exports[`enableRichHistory: false should capture optimistic updates in history e
         ],
         "data": undefined,
         "kind": "Optimistic",
+        "layerTag": "test-optimistic",
         "modifyingOperation": {
           "name": "query GetUserHistory",
           "variables": {},
@@ -438,6 +443,7 @@ exports[`enableRichHistory: false should capture optimistic updates in history e
           "ROOT_QUERY",
           "User:1",
         ],
+        "wasApplied": true,
       },
       {
         "changes": [
@@ -480,6 +486,7 @@ exports[`enableRichHistory: false should capture optimistic updates in history e
         },
       ],
       "kind": "Optimistic",
+      "layerTag": "test-optimistic",
       "modifyingOperation": {
         "name": "query GetUserHistory",
       },
@@ -488,6 +495,7 @@ exports[`enableRichHistory: false should capture optimistic updates in history e
         "ROOT_QUERY",
         "User:(redacted-id-0)",
       ],
+      "wasApplied": true,
     },
     {
       "changes": [
@@ -1022,6 +1030,7 @@ exports[`enableRichHistory: true should capture optimistic array changes in hist
           "updated": undefined,
         },
         "kind": "Optimistic",
+        "layerTag": "test-optimistic-array-add",
         "modifyingOperation": {
           "name": "query GetTodoHistory",
           "variables": {},
@@ -1034,6 +1043,7 @@ exports[`enableRichHistory: true should capture optimistic array changes in hist
           "Todo:1",
           "Todo:4",
         ],
+        "wasApplied": true,
       },
       {
         "changes": [
@@ -1207,6 +1217,7 @@ exports[`enableRichHistory: true should capture optimistic array changes in hist
         },
       ],
       "kind": "Optimistic",
+      "layerTag": "test-optimistic-array-add",
       "modifyingOperation": {
         "name": "query GetTodoHistory",
       },
@@ -1218,6 +1229,7 @@ exports[`enableRichHistory: true should capture optimistic array changes in hist
         "Todo:(redacted-id-2)",
         "Todo:(redacted-id-3)",
       ],
+      "wasApplied": true,
     },
     {
       "changes": [
@@ -1299,6 +1311,7 @@ exports[`enableRichHistory: true should capture optimistic updates in history en
           "updated": undefined,
         },
         "kind": "Optimistic",
+        "layerTag": "test-optimistic",
         "modifyingOperation": {
           "name": "query GetUserHistory",
           "variables": {},
@@ -1308,6 +1321,7 @@ exports[`enableRichHistory: true should capture optimistic updates in history en
           "ROOT_QUERY",
           "User:1",
         ],
+        "wasApplied": true,
       },
       {
         "changes": [
@@ -1378,6 +1392,7 @@ exports[`enableRichHistory: true should capture optimistic updates in history en
         },
       ],
       "kind": "Optimistic",
+      "layerTag": "test-optimistic",
       "modifyingOperation": {
         "name": "query GetUserHistory",
       },
@@ -1386,6 +1401,7 @@ exports[`enableRichHistory: true should capture optimistic updates in history en
         "ROOT_QUERY",
         "User:(redacted-id-0)",
       ],
+      "wasApplied": true,
     },
     {
       "changes": [

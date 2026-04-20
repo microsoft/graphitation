@@ -259,12 +259,15 @@ export function createOptimisticHistoryEntry(
   nodeDiffs: NodeDifferenceMap,
   incomingTree: IndexedTree | undefined,
   updatedNodes: string[],
+  layerTag: string,
   env: ForestEnv,
 ): HistoryChange {
   return {
     kind: "Optimistic",
     nodeDiffs,
     updatedNodes,
+    layerTag,
+    wasApplied: true,
     timestamp: Date.now(),
     modifyingOperation: {
       name: incomingTree?.operation?.debugName ?? "Anonymous Operation",
@@ -331,6 +334,8 @@ export function serializeHistory(
       return {
         kind: entry.kind,
         updatedNodes: entry.updatedNodes,
+        layerTag: entry.layerTag,
+        wasApplied: entry.wasApplied,
         changes,
         timestamp: entry.timestamp,
         modifyingOperation: entry.modifyingOperation,
