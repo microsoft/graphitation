@@ -46,7 +46,7 @@ export const HistoryDetails: React.FC<HistoryDetailsProps> = ({ entry }) => {
         content={
           wasReverted
             ? "These changes were optimistically applied to the cache but later reverted because the originating layer was removed."
-            : "Not all changes necessarily were applied to this query's result. For optimistic updates we displaying all changes made in cache not specifically for this query."
+            : "Not all changes necessarily were applied to this query's result. For optimistic updates we display all changes made in cache not specifically for this query."
         }
         relationship="description"
       >
