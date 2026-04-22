@@ -9,13 +9,17 @@ import type {
   ParentLocator,
 } from "../values/types";
 import type {
+  FieldInfo,
   NodeKey,
   OperationDescriptor,
   OperationId,
   ResolvedSelection,
+  TypeName,
 } from "../descriptor/types";
+import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import type { IndexedForest } from "../forest/types";
 import { assert } from "../jsutils/assert";
+import { fieldToStringKey } from "./keys";
 import {
   isMissingValue,
   isNodeValue,
@@ -278,5 +282,64 @@ function getCoveringOperationIds(
 
 export const createChunkProvider =
   (layers: IndexedForest[], includeDeleted = false): ChunkProvider =>
-  (ref: GraphValueReference) =>
-    getObjectChunks(layers, ref, includeDeleted);
+  (ref: GraphValueReference, typeName?: TypeName | false) =>
+    getObjectChunksWithFieldIndex(layers, ref, includeDeleted, typeName);
+
+function getObjectChunksWithFieldIndex(
+  layers: IndexedForest[],
+  ref: GraphValueReference,
+  includeDeleted: boolean,
+  typeName?: TypeName | false,
+): Iterable<ObjectChunk> & {
+  update?(fields: FieldInfo[], selection?: ResolvedSelection): void;
+} {
+  if (
+    !typeName ||
+    typeof ref !== "string" ||
+    !layers[0]?.fieldIndex.has(typeName) // assuming fieldIndex is the same for all layers
+  ) {
+    return getObjectChunks(layers, ref, includeDeleted);
+  }
+  const nodeKey = ref;
+  const index = layers[0].fieldIndex.get(typeName);
+  let relevantOps: Set<OperationId> | undefined;
+
+  return {
+    update(fields: FieldInfo[], selection?: ResolvedSelection) {
+      relevantOps = undefined;
+      for (const field of fields) {
+        if (!index?.fields.has(field.name)) {
+          // Field not indexed — can't use index, fall back to full scan
+          return;
+        }
+      }
+      relevantOps = new Set();
+      for (const field of fields) {
+        const cacheKey = selection
+          ? fieldToStringKey(resolveNormalizedField(selection, field))
+          : field.name;
+        for (const layer of layers) {
+          const ops = layer.fieldIndex.get(typeName)?.ops.get(cacheKey);
+          if (ops) {
+            for (const opId of ops) relevantOps.add(opId);
+          }
+        }
+      }
+    },
+    *[Symbol.iterator]() {
+      if (!relevantOps) {
+        yield* getNodeChunks(layers, nodeKey, includeDeleted);
+        return;
+      }
+      for (const layer of layers) {
+        if (!includeDeleted && layer.deletedNodes.has(nodeKey)) break;
+        for (const opId of relevantOps) {
+          const tree = layer.trees.get(opId);
+          if (!tree) continue;
+          const chunks = tree.nodes.get(nodeKey);
+          if (chunks) yield* chunks;
+        }
+      }
+    },
+  };
+}
