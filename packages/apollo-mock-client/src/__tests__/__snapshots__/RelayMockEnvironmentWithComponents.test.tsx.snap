@@ -105,3 +105,5 @@ exports[`ReactRelayTestMocker with Containers resolve/reject next with component
   &lt;mock-value-for-field-"name"&gt;
 </div>
 `;
+
+exports[`createMockClient with ForestRun cache should resolve a query when using ForestRun cache 1`] = `"My id <mock-id-1> and name is <mock-value-for-field-"name">"`;

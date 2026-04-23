@@ -5,6 +5,7 @@ import {
   InMemoryCache,
 } from "@apollo/client";
 import type {
+  ApolloCache,
   Operation,
   FetchResult,
   NormalizedCacheObject,
@@ -322,7 +323,12 @@ class Mock implements MockFunctions {
 
 export function createMockClient(
   schema: GraphQLSchema,
-  options?: { cache?: InMemoryCacheConfig },
+  options?: {
+    cache?: InMemoryCacheConfig;
+    cacheFactory?: (
+      possibleTypes: Record<string, string[]>,
+    ) => ApolloCache<NormalizedCacheObject>;
+  },
 ): ApolloMockClient {
   // Build a list of abstract types and their possible types.
   // TODO: Cache this on the schema?
@@ -339,16 +345,20 @@ export function createMockClient(
 
   const link = new MockLink(schema);
 
+  const cache = options?.cacheFactory
+    ? options.cacheFactory(possibleTypes)
+    : new InMemoryCache({
+        addTypename: true,
+        ...options?.cache,
+        possibleTypes,
+      });
+
   return Object.assign<
     ApolloClient<NormalizedCacheObject>,
     ApolloClientExtension
   >(
     new ApolloClient({
-      cache: new InMemoryCache({
-        addTypename: true,
-        ...options?.cache,
-        possibleTypes,
-      }),
+      cache,
       link,
     }),
     {
