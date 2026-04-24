@@ -194,13 +194,36 @@ export function applyMergePolicies(
   const conversionContext: ConversionContext = {
     env: env,
     operation: incomingTree.operation,
-    getChunks: function* (ref) {
-      if (typeof ref === "string") {
-        yield* incomingTree.nodes.get(ref) ?? EMPTY_ARRAY;
-        yield* incomingTree.prev?.nodes.get(ref) ?? EMPTY_ARRAY;
-      }
-      yield* getObjectChunks(layers, ref);
-    },
+    getChunks: (ref) => ({
+      [Symbol.iterator](): Iterator<ObjectChunk> {
+        const sources: Iterable<ObjectChunk>[] =
+          typeof ref === "string"
+            ? [
+                incomingTree.nodes.get(ref) ?? EMPTY_ARRAY,
+                incomingTree.prev?.nodes.get(ref) ?? EMPTY_ARRAY,
+                getObjectChunks(layers, ref),
+              ]
+            : [getObjectChunks(layers, ref)];
+        let sourceIdx = 0;
+        let currentIter: Iterator<ObjectChunk> | undefined;
+        return {
+          next(): IteratorResult<ObjectChunk> {
+            for (;;) {
+              if (currentIter) {
+                const result = currentIter.next();
+                if (!result.done) {
+                  return result;
+                }
+              }
+              if (sourceIdx >= sources.length) {
+                return { value: undefined as any, done: true };
+              }
+              currentIter = sources[sourceIdx++][Symbol.iterator]();
+            }
+          },
+        };
+      },
+    }),
     findChunk: (value: ApolloStoreValue) => {
       const info = findChunkInfo(value);
       return info?.value &&
