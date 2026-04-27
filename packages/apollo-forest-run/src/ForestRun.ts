@@ -19,6 +19,7 @@ import type {
   Transaction,
 } from "./cache/types";
 import { ApolloCache } from "@apollo/client";
+import { Observable } from "@apollo/client/utilities";
 import { assert } from "./jsutils/assert";
 import { accumulate, deleteAccumulated } from "./jsutils/map";
 import { read } from "./cache/read";
@@ -343,11 +344,18 @@ export class ForestRun<
   public watch<TData = any, TVariables = any>(
     watch: Cache.WatchOptions<TData, TVariables>,
   ): () => void {
-    return this.env.optimizeFragmentReads &&
+    if (
+      this.env.optimizeFragmentReads &&
       isFragmentDocument(watch.query) &&
       (watch.id || watch.rootId)
-      ? this.watchFragment(watch)
-      : this.watchOperation(watch);
+    ) {
+      const id = watch.id ?? watch.rootId;
+      accumulate(this.store.fragmentWatches, id, watch);
+      return () => {
+        deleteAccumulated(this.store.fragmentWatches, id, watch);
+      };
+    }
+    return this.watchOperation(watch);
   }
 
   private watchOperation(watch: Cache.WatchOptions) {
@@ -371,14 +379,73 @@ export class ForestRun<
     };
   }
 
-  private watchFragment(watch: Cache.WatchOptions) {
-    const id = watch.id ?? watch.rootId;
-    assert(id !== undefined);
-    accumulate(this.store.fragmentWatches, id, watch);
+  public watchFragment<TData = any, TVars = any>(options: {
+    fragment: DocumentNode;
+    fragmentName?: string;
+    from: StoreObject | Reference | string;
+    optimistic?: boolean;
+    variables?: TVars;
+  }): Observable<{
+    data: TData;
+    complete: boolean;
+    missing?: any;
+  }> {
+    const {
+      fragment,
+      fragmentName,
+      from,
+      optimistic = true,
+      ...otherOptions
+    } = options;
+    const query = this["getFragmentDoc"](fragment, fragmentName);
+    // While our TypeScript types do not allow for `undefined` as a valid
+    // `from`, its possible `useFragment` gives us an `undefined` since it
+    // calls `cache.identify` and provides that value to `from`. We are
+    // adding this fix here however to ensure those using plain JavaScript
+    // and using `cache.identify` themselves will avoid seeing the obscure
+    // warning.
+    const id =
+      typeof from === "undefined" || typeof from === "string"
+        ? from
+        : this.identify(from);
 
-    return () => {
-      deleteAccumulated(this.store.fragmentWatches, id, watch);
+    const diffOptions: Cache.DiffOptions<TData, TVars> = {
+      ...otherOptions,
+      returnPartialData: true,
+      id,
+      query,
+      optimistic,
     };
+
+    let latestDiff: Cache.DiffResult<TData> | undefined;
+
+    return new Observable((observer) => {
+      const callback = (diff: Cache.DiffResult<TData>) => {
+        const data = diff.result == null ? ({} as TData) : diff.result;
+
+        if (latestDiff && equal(latestDiff.result, data)) {
+          return;
+        }
+
+        const result = {
+          data,
+          complete: !!diff.complete,
+          missing: diff.missing,
+        };
+
+        latestDiff = {
+          ...diff,
+          result: data,
+        };
+
+        observer.next(result);
+      };
+      return this.watch({
+        ...diffOptions,
+        immediate: true,
+        callback,
+      });
+    });
   }
 
   // Compatibility with InMemoryCache for Apollo dev tools
@@ -480,6 +547,7 @@ export class ForestRun<
     if (options?.discardWatches) {
       this.newWatches.clear();
       this.store.watches.clear();
+      this.store.fragmentWatches.clear();
     }
 
     return Promise.resolve();
