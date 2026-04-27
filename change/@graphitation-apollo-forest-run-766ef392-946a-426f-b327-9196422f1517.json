@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "watchFragment with observer",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "pavelglac@gmail.com",
+  "dependentChangeType": "patch"
+}
