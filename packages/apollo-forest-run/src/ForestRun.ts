@@ -346,7 +346,7 @@ export class ForestRun<
     return this.env.optimizeFragmentReads &&
       isFragmentDocument(watch.query) &&
       (watch.id || watch.rootId)
-      ? this.watchFragment(watch)
+      ? this.watchFragmentInternal(watch)
       : this.watchOperation(watch);
   }
 
@@ -371,9 +371,17 @@ export class ForestRun<
     };
   }
 
-  private watchFragment(watch: Cache.WatchOptions) {
+  private watchFragmentInternal(watch: Cache.WatchOptions) {
     const id = watch.id ?? watch.rootId;
     assert(id !== undefined);
+
+    if (watch.immediate) {
+      const diff = this.diff(watch);
+      if (this.shouldNotifyWatch(watch, diff)) {
+        this.notifyWatch(watch, diff);
+      }
+    }
+
     accumulate(this.store.fragmentWatches, id, watch);
 
     return () => {
@@ -480,6 +488,7 @@ export class ForestRun<
     if (options?.discardWatches) {
       this.newWatches.clear();
       this.store.watches.clear();
+      this.store.fragmentWatches.clear();
     }
 
     return Promise.resolve();
