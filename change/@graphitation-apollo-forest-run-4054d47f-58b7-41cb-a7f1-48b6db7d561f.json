@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "rename conflicting API",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "pavelglac@gmail.com",
+  "dependentChangeType": "patch"
+}
