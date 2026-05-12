@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@apollo/client": "~3.6.0",
+    "@apollo/client": "3.13.9",
     "@fluentui/react-components": "^9.18.9",
     "@graphitation/apollo-forest-run": "0.24.0",
     "@graphql-tools/schema": "^7.1.5",

@@ -18,7 +18,7 @@
     "just": "monorepo-scripts"
   },
   "devDependencies": {
-    "@apollo/client": "~3.6.0",
+    "@apollo/client": "3.13.9",
     "@emotion/react": "^11.8.1",
     "@fluentui/react-components": "^9.18.9",
     "@fluentui/react-data-grid-react-window": "^9.0.0-beta.21",
@@ -26,6 +26,7 @@
     "@fluentui/react-virtualizer": "9.0.0-alpha.47",
     "@graphitation/apollo-forest-run": "^0.24.0",
     "@graphql-tools/schema": "^7.1.5",
+    "@playwright/test": "1.56.1",
     "@types/lodash.debounce": "^4.0.6",
     "@types/lodash.isequal": "^4.5.5",
     "@types/react": "^18.2.29",
