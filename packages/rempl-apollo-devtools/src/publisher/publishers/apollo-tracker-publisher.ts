@@ -6,6 +6,10 @@ import {
   filterMutationInfo,
   filterQueryInfo,
 } from "../helpers/parse-apollo-data";
+import {
+  ensureMutationTracking,
+  getTrackedMutations,
+} from "../helpers/apollo-mutation-store";
 
 export class ApolloTrackerPublisher {
   private apolloPublisher;
@@ -42,6 +46,8 @@ export class ApolloTrackerPublisher {
     if (!activeClient) {
       return;
     }
+
+    ensureMutationTracking(activeClient.client);
 
     const mutations = this.serializeTrackerMutations(activeClient.client);
     const queries = this.serializeTrackerQueries(activeClient.client);
@@ -124,13 +130,7 @@ export class ApolloTrackerPublisher {
   }
 
   private getMutations(client: any) {
-    // Apollo Client 2 to 3.2
-    if (client.queryManager.mutationStore?.getStore) {
-      return client.queryManager.mutationStore.getStore();
-    } else {
-      // Apollo Client 3.3+
-      return client.queryManager.mutationStore;
-    }
+    return getTrackedMutations(client);
   }
 
   private getQueries(client: any) {

@@ -11,6 +11,10 @@ import {
   Mutation,
 } from "../../types";
 import { getRecentData } from "../helpers/parse-apollo-data";
+import {
+  ensureMutationTracking,
+  getTrackedMutations,
+} from "../helpers/apollo-mutation-store";
 
 export class ApolloRecentActivityPublisher {
   private apolloPublisher;
@@ -54,6 +58,8 @@ export class ApolloRecentActivityPublisher {
     if (!activeClient || !this.recordRecentActivity) {
       return;
     }
+
+    ensureMutationTracking(activeClient.client);
 
     const newData = this.serializeRecentActivityDataObjects(
       activeClient.client,
@@ -155,13 +161,7 @@ export class ApolloRecentActivityPublisher {
   }
 
   private getMutations(client: any) {
-    // Apollo Client 2 to 3.2
-    if (client.queryManager.mutationStore?.getStore) {
-      return client.queryManager.mutationStore.getStore();
-    } else {
-      // Apollo Client 3.3+
-      return client.queryManager.mutationStore;
-    }
+    return getTrackedMutations(client);
   }
 
   private getQueries(client: any) {

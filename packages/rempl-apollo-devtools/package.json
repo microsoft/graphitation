@@ -14,6 +14,7 @@
     "watch": "watch 'node scripts/build.js'",
     "lint": "monorepo-scripts lint",
     "test": "monorepo-scripts test",
+    "test:e2e": "playwright test",
     "types": "echo \"No types to generate\"",
     "just": "monorepo-scripts"
   },
