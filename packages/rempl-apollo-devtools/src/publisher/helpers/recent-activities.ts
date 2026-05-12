@@ -13,6 +13,7 @@ export function getRecentOperationsActivity(
   items: WatchedQuery[] | Mutation[],
   lastIterationItems: WatchedQuery[] | Mutation[],
 ): RecentActivityRaw[] | null {
+  // An empty previous/current side means all operations on the other side were added/removed.
   if (!lastIterationItems.length && !items.length) {
     return null;
   }
@@ -81,8 +82,30 @@ export function getRecentCacheActivity(
   cache: NormalizedCacheObject,
   previousCache: NormalizedCacheObject,
 ): RecentActivity<CacheStoreObject>[] | null {
-  if (!Object.keys(cache).length || !Object.keys(previousCache).length) {
+  if (!Object.keys(cache).length && !Object.keys(previousCache).length) {
     return null;
+  }
+
+  if (!Object.keys(previousCache).length) {
+    return Object.entries(cache)
+      .filter(([key]) => !IGNORED_KEYS.has(key))
+      .map(([key, value]) => ({
+        id: uid(),
+        change: RECENT_DATA_CHANGES_TYPES.ADDED,
+        type: ACTIVITY_TYPE.CACHE,
+        data: { __activity_key: key, cacheValue: value },
+      }));
+  }
+
+  if (!Object.keys(cache).length) {
+    return Object.entries(previousCache)
+      .filter(([key]) => !IGNORED_KEYS.has(key))
+      .map(([key, value]) => ({
+        id: uid(),
+        change: RECENT_DATA_CHANGES_TYPES.REMOVED,
+        type: ACTIVITY_TYPE.CACHE,
+        data: { __activity_key: key, cacheValue: value },
+      }));
   }
 
   const cacheEntries = Object.entries(cache);

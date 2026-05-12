@@ -5,6 +5,8 @@ type ApolloClientWithMutationTracking = ApolloClient<NormalizedCacheObject> & {
   __REMPL_APOLLO_DEVTOOLS_MUTATION_PATCHED__?: boolean;
 };
 
+let mutationIdCounter = 1;
+
 export function ensureMutationTracking(
   client: ApolloClient<NormalizedCacheObject>,
 ) {
@@ -19,7 +21,7 @@ export function ensureMutationTracking(
   const originalMutate = trackedClient.mutate.bind(trackedClient);
 
   trackedClient.mutate = ((options: any) => {
-    const mutationId = `${Date.now()}-${Math.random()}`;
+    const mutationId = `${mutationIdCounter++}`;
     const mutation = {
       mutation: options.mutation,
       variables: options.variables || {},

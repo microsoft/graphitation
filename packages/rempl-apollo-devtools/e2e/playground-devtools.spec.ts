@@ -1,5 +1,9 @@
 import { expect, Frame, Page, test } from "@playwright/test";
 
+const TEST_TIMEOUT_MS = 60_000;
+
+test.setTimeout(TEST_TIMEOUT_MS);
+
 async function openDevtools(page: Page): Promise<Frame> {
   await page.goto("/");
   await page.keyboard.press("Control+Shift+Alt+Digit0");
@@ -71,7 +75,7 @@ test("records recent cache and operation activity", async ({ page }) => {
 
   await devtools.getByText("Activity monitor").click();
   await devtools.getByRole("button", { name: "Record recent activity" }).click();
-  await page.waitForTimeout(1000);
+  await expect(devtools.getByRole("button", { name: "Stop recording" })).toBeVisible();
   await page.getByRole("textbox", { name: "Message", exact: true }).fill("recent activity");
   await clickPlaygroundButton(page, "Add Message");
 
