@@ -13,7 +13,9 @@ async function openDevtools(page: Page): Promise<Frame> {
   }
 
   await expect(frame.getByText("Apollo client:")).toBeVisible();
-  await expect(frame.getByText("main", { exact: true })).toBeVisible();
+  await expect(
+    frame.locator("#apollo-client-dropdown").getByText("main").first(),
+  ).toBeVisible();
   return frame;
 }
 
@@ -21,21 +23,23 @@ async function clickPlaygroundButton(page: Page, name: string) {
   await page.evaluate((buttonName) => {
     const buttons = Array.from(document.querySelectorAll("button"));
     const button = buttons.find((item) => item.textContent?.trim() === buttonName);
-    button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    button?.click();
   }, name);
 }
 
 test("shows Apollo clients and switches active client cache", async ({ page }) => {
   const devtools = await openDevtools(page);
 
-  await expect(devtools.getByText("Cache")).toBeVisible();
+  await expect(devtools.getByRole("link", { name: "Cache" })).toBeVisible();
   await expect(devtools.getByText("query Chat", { exact: false })).toBeVisible();
 
-  await devtools.locator("#apollo-client-dropdown").getByText("main").click();
+  await devtools.locator("#apollo-client-dropdown").getByText("main").first().click();
   await devtools.locator("#apollo-client-dropdown").getByText("emptyClient").click();
 
-  await expect(devtools.getByText("emptyClient", { exact: true })).toBeVisible();
-  await expect(devtools.getByText("Apollo cache (overall size 2 B)")).toBeVisible();
+  await expect(
+    devtools.locator("#apollo-client-dropdown").getByText("emptyClient").first(),
+  ).toBeVisible();
+  await expect(devtools.getByText("Apollo cache (overall size 0 B)")).toBeVisible();
 });
 
 test("tracks watched queries", async ({ page }) => {
@@ -43,7 +47,7 @@ test("tracks watched queries", async ({ page }) => {
 
   await devtools.getByText("Watched Queries").click();
 
-  await expect(devtools.getByText("OptimisticChat")).toBeVisible();
+  await expect(devtools.getByText("OptimisticChat", { exact: true })).toBeVisible();
   await expect(devtools.getByText("Chat", { exact: true })).toBeVisible();
   await expect(devtools.getByText("Query String")).toBeVisible();
   await expect(devtools.getByText("Latest data from the cache")).toBeVisible();
@@ -67,17 +71,19 @@ test("records recent cache and operation activity", async ({ page }) => {
 
   await devtools.getByText("Activity monitor").click();
   await devtools.getByRole("button", { name: "Record recent activity" }).click();
+  await page.waitForTimeout(1000);
   await page.getByRole("textbox", { name: "Message", exact: true }).fill("recent activity");
   await clickPlaygroundButton(page, "Add Message");
 
   await expect(devtools.getByText("Mutation: addMessage")).toBeVisible();
-  await expect(devtools.getByText("Cache item:", { exact: false })).toBeVisible();
+  await expect(devtools.getByText("Cache item:", { exact: false }).first()).toBeVisible();
 });
 
 test("records operation tracker events", async ({ page }) => {
   const devtools = await openDevtools(page);
 
   await devtools.getByText("Operations tracker").click();
+  await devtools.locator("input[type=checkbox]").first().check();
   await devtools.getByRole("button", { name: "Start Recording" }).click();
   await page.getByRole("textbox", { name: "Message", exact: true }).fill("tracked operation");
   await clickPlaygroundButton(page, "Add Message");
@@ -89,7 +95,7 @@ test("runs GraphiQL against the active Apollo client", async ({ page }) => {
   const devtools = await openDevtools(page);
 
   await devtools.getByText("GraphiQL").click();
-  await expect(devtools.getByText("GraphiQL", { exact: true })).toBeVisible();
+  await expect(devtools.getByTestId("graphiql-container")).toBeVisible();
   await expect(devtools.getByText("Variables")).toBeVisible();
 });
 

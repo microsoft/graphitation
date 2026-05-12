@@ -117,6 +117,24 @@ describe(".getRecentOperationsActivity", () => {
         id: "test",
       },
     ]);
+
+    expect(getRecentOperationsActivity(["test1"] as any[], [])).toEqual([
+      {
+        type: ACTIVITY_TYPE.OPERATION,
+        change: RECENT_DATA_CHANGES_TYPES.ADDED,
+        data: "test1",
+        id: "test",
+      },
+    ]);
+
+    expect(getRecentOperationsActivity([], ["test1"] as any[])).toEqual([
+      {
+        type: ACTIVITY_TYPE.OPERATION,
+        change: RECENT_DATA_CHANGES_TYPES.REMOVED,
+        data: "test1",
+        id: "test",
+      },
+    ]);
   });
 });
 

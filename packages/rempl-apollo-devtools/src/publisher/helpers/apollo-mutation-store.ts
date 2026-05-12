@@ -5,14 +5,17 @@ type ApolloClientWithMutationTracking = ApolloClient<NormalizedCacheObject> & {
   __REMPL_APOLLO_DEVTOOLS_MUTATION_PATCHED__?: boolean;
 };
 
-export function ensureMutationTracking(client: ApolloClient<NormalizedCacheObject>) {
+export function ensureMutationTracking(
+  client: ApolloClient<NormalizedCacheObject>,
+) {
   const trackedClient = client as ApolloClientWithMutationTracking;
 
   if (trackedClient.__REMPL_APOLLO_DEVTOOLS_MUTATION_PATCHED__) {
     return;
   }
 
-  trackedClient.__REMPL_APOLLO_DEVTOOLS_MUTATION_STORE__ ||= {};
+  const mutationStore =
+    (trackedClient.__REMPL_APOLLO_DEVTOOLS_MUTATION_STORE__ ||= {});
   const originalMutate = trackedClient.mutate.bind(trackedClient);
 
   trackedClient.mutate = ((options: any) => {
@@ -24,8 +27,7 @@ export function ensureMutationTracking(client: ApolloClient<NormalizedCacheObjec
       error: null,
     };
 
-    trackedClient.__REMPL_APOLLO_DEVTOOLS_MUTATION_STORE__![mutationId] =
-      mutation;
+    mutationStore[mutationId] = mutation;
 
     return originalMutate(options).then(
       (result) => {

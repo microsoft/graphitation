@@ -13,8 +13,26 @@ export function getRecentOperationsActivity(
   items: WatchedQuery[] | Mutation[],
   lastIterationItems: WatchedQuery[] | Mutation[],
 ): RecentActivityRaw[] | null {
-  if (!lastIterationItems.length || !items.length) {
+  if (!lastIterationItems.length && !items.length) {
     return null;
+  }
+
+  if (!lastIterationItems.length) {
+    return items.map((data) => ({
+      change: RECENT_DATA_CHANGES_TYPES.ADDED,
+      id: uid(),
+      type: ACTIVITY_TYPE.OPERATION,
+      data,
+    }));
+  }
+
+  if (!items.length) {
+    return lastIterationItems.map((data) => ({
+      change: RECENT_DATA_CHANGES_TYPES.REMOVED,
+      id: uid(),
+      type: ACTIVITY_TYPE.OPERATION,
+      data,
+    }));
   }
 
   const result = [];

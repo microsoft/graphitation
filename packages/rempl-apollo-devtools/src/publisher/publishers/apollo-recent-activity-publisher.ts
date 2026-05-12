@@ -139,12 +139,6 @@ export class ApolloRecentActivityPublisher {
     client: ApolloClient<NormalizedCacheObject>,
   ) {
     const currentMutations = this.getMutations(client);
-    if (!Object.keys(this.lastIterationData.mutations).length) {
-      this.lastIterationData.mutations = {
-        ...currentMutations,
-      };
-      return [];
-    }
     const currentMutationsValues: Mutation[] = Object.values(currentMutations);
     const lastIterationValues = Object.values(this.lastIterationData.mutations);
 
