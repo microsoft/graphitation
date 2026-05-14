@@ -1,7 +1,7 @@
 import React from 'react';
 import { GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook } from '@testing-library/react-hooks/dom';
 import { act } from 'react-dom/test-utils';
 
 import { ApolloClient, ApolloLink, ErrorPolicy, InMemoryCache, NetworkStatus, TypedDocumentNode } from '../../../core';

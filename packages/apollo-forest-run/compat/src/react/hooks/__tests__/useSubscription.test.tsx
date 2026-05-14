@@ -1,5 +1,5 @@
 import React from 'react';
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook } from '@testing-library/react-hooks/dom';
 import gql from 'graphql-tag';
 
 import { ApolloClient, ApolloLink, concat } from '../../../core';
