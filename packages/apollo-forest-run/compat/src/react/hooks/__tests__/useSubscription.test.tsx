@@ -1,15 +1,15 @@
-import React from 'react';
-import { renderHook } from '@testing-library/react-hooks/dom';
-import gql from 'graphql-tag';
+import React from "react";
+import { renderHook } from "@testing-library/react-hooks";
+import gql from "graphql-tag";
 
-import { ApolloClient, ApolloLink, concat } from '../../../core';
-import { InMemoryCache as Cache } from '../../../cache';
-import { ApolloProvider } from '../../context';
-import { MockSubscriptionLink } from '../../../testing';
-import { useSubscription } from '../useSubscription';
+import { ApolloClient, ApolloLink, concat } from "../../../core";
+import { InMemoryCache as Cache } from "../../../cache";
+import { ApolloProvider } from "../../context";
+import { MockSubscriptionLink } from "../../../testing";
+import { useSubscription } from "../useSubscription";
 
-describe('useSubscription Hook', () => {
-  it('should handle a simple subscription properly', async () => {
+describe("useSubscription Hook", () => {
+  it("should handle a simple subscription properly", async () => {
     const subscription = gql`
       subscription {
         car {
@@ -18,24 +18,21 @@ describe('useSubscription Hook', () => {
       }
     `;
 
-    const results = ['Audi', 'BMW', 'Mercedes', 'Hyundai'].map(make => ({
-      result: { data: { car: { make } } }
+    const results = ["Audi", "BMW", "Mercedes", "Hyundai"].map((make) => ({
+      result: { data: { car: { make } } },
     }));
 
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false })
+      cache: new Cache({ addTypename: false }),
     });
-
 
     const { result, waitForNextUpdate } = renderHook(
       () => useSubscription(subscription),
       {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            {children}
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       },
     );
@@ -61,7 +58,7 @@ describe('useSubscription Hook', () => {
     expect(result.current.data).toEqual(results[3].result.data);
   });
 
-  it('should cleanup after the subscription component has been unmounted', async () => {
+  it("should cleanup after the subscription component has been unmounted", async () => {
     const subscription = gql`
       subscription {
         car {
@@ -72,26 +69,25 @@ describe('useSubscription Hook', () => {
 
     const results = [
       {
-        result: { data: { car: { make: 'Pagani' } } }
-      }
+        result: { data: { car: { make: "Pagani" } } },
+      },
     ];
 
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false })
+      cache: new Cache({ addTypename: false }),
     });
 
     const onSubscriptionData = jest.fn();
     const { result, unmount, waitForNextUpdate } = renderHook(
-      () => useSubscription(subscription, {
-        onSubscriptionData,
-      }),
+      () =>
+        useSubscription(subscription, {
+          onSubscriptionData,
+        }),
       {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            {children}
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       },
     );
@@ -118,7 +114,7 @@ describe('useSubscription Hook', () => {
     expect(onSubscriptionData).toHaveBeenCalledTimes(1);
   });
 
-  it('should never execute a subscription with the skip option', async () => {
+  it("should never execute a subscription with the skip option", async () => {
     const subscription = gql`
       subscription {
         car {
@@ -132,26 +128,25 @@ describe('useSubscription Hook', () => {
     link.onSetup(onSetup);
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false })
+      cache: new Cache({ addTypename: false }),
     });
 
     const onSubscriptionData = jest.fn();
     const { result, unmount, waitForNextUpdate, rerender } = renderHook(
-      ({ variables }) => useSubscription(subscription, {
-        variables,
-        skip: true,
-        onSubscriptionData,
-      }),
+      ({ variables }) =>
+        useSubscription(subscription, {
+          variables,
+          skip: true,
+          onSubscriptionData,
+        }),
       {
         initialProps: {
           variables: {
-            foo: 'bar'
-          }
+            foo: "bar",
+          },
         },
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            {children}
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       },
     );
@@ -160,16 +155,17 @@ describe('useSubscription Hook', () => {
     expect(result.current.error).toBe(undefined);
     expect(result.current.data).toBe(undefined);
 
-    rerender({ variables: { foo: 'bar2' }});
-    await expect(waitForNextUpdate({ timeout: 20 }))
-      .rejects.toThrow('Timed out');
+    rerender({ variables: { foo: "bar2" } });
+    await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow(
+      "Timed out",
+    );
 
     expect(onSetup).toHaveBeenCalledTimes(0);
     expect(onSubscriptionData).toHaveBeenCalledTimes(0);
     unmount();
   });
 
-  it('should create a subscription after skip has changed from true to a falsy value', async () => {
+  it("should create a subscription after skip has changed from true to a falsy value", async () => {
     const subscription = gql`
       subscription {
         car {
@@ -180,26 +176,24 @@ describe('useSubscription Hook', () => {
 
     const results = [
       {
-        result: { data: { car: { make: 'Pagani' } } }
+        result: { data: { car: { make: "Pagani" } } },
       },
       {
-        result: { data: { car: { make: 'Scoop' } } }
-      }
+        result: { data: { car: { make: "Scoop" } } },
+      },
     ];
 
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false })
+      cache: new Cache({ addTypename: false }),
     });
 
     const { result, rerender, waitForNextUpdate } = renderHook(
       ({ skip }) => useSubscription(subscription, { skip }),
       {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            {children}
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
         initialProps: { skip: true },
       },
@@ -235,8 +229,9 @@ describe('useSubscription Hook', () => {
     expect(result.current.data).toBe(undefined);
     expect(result.current.error).toBe(undefined);
 
-    await expect(waitForNextUpdate({ timeout: 20 }))
-      .rejects.toThrow('Timed out');
+    await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow(
+      "Timed out",
+    );
 
     // ensure state persists across rerenders
     rerender({ skip: false });
@@ -254,7 +249,7 @@ describe('useSubscription Hook', () => {
     expect(result.current.error).toBe(undefined);
   });
 
-  it('should share context set in options', async () => {
+  it("should share context set in options", async () => {
     const subscription = gql`
       subscription {
         car {
@@ -263,30 +258,29 @@ describe('useSubscription Hook', () => {
       }
     `;
 
-    const results = ['Audi', 'BMW'].map(make => ({
-      result: { data: { car: { make } } }
+    const results = ["Audi", "BMW"].map((make) => ({
+      result: { data: { car: { make } } },
     }));
 
     let context: string;
     const link = new MockSubscriptionLink();
     const contextLink = new ApolloLink((operation, forward) => {
-      context = operation.getContext()?.make
+      context = operation.getContext()?.make;
       return forward(operation);
     });
     const client = new ApolloClient({
       link: concat(contextLink, link),
-      cache: new Cache({ addTypename: false })
+      cache: new Cache({ addTypename: false }),
     });
 
     const { result, waitForNextUpdate } = renderHook(
-      () => useSubscription(subscription, {
-        context: { make: 'Audi' },
-      }),
+      () =>
+        useSubscription(subscription, {
+          context: { make: "Audi" },
+        }),
       {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            {children}
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       },
     );
@@ -312,10 +306,10 @@ describe('useSubscription Hook', () => {
     expect(result.current.error).toBe(undefined);
     expect(result.current.data).toEqual(results[1].result.data);
 
-    expect(context!).toBe('Audi');
+    expect(context!).toBe("Audi");
   });
 
-  it('should handle multiple subscriptions properly', async () => {
+  it("should handle multiple subscriptions properly", async () => {
     const subscription = gql`
       subscription {
         car {
@@ -324,14 +318,14 @@ describe('useSubscription Hook', () => {
       }
     `;
 
-    const results = ['Audi', 'BMW'].map(make => ({
-      result: { data: { car: { make } } }
+    const results = ["Audi", "BMW"].map((make) => ({
+      result: { data: { car: { make } } },
     }));
 
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false })
+      cache: new Cache({ addTypename: false }),
     });
 
     const { result, waitForNextUpdate } = renderHook(
@@ -341,9 +335,7 @@ describe('useSubscription Hook', () => {
       }),
       {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            {children}
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       },
     );
@@ -380,8 +372,8 @@ describe('useSubscription Hook', () => {
     expect(result.current.sub2.data).toEqual(results[1].result.data);
   });
 
-  it('should handle immediate completions gracefully', async () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  it("should handle immediate completions gracefully", async () => {
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
 
     const subscription = gql`
       subscription {
@@ -394,16 +386,14 @@ describe('useSubscription Hook', () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false })
+      cache: new Cache({ addTypename: false }),
     });
 
     const { result, waitForNextUpdate } = renderHook(
       () => useSubscription(subscription),
       {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            {children}
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       },
     );
@@ -421,8 +411,9 @@ describe('useSubscription Hook', () => {
     expect(result.current.error).toBe(undefined);
     expect(result.current.data).toBe(null);
 
-    await expect(waitForNextUpdate({ timeout: 20 }))
-      .rejects.toThrow('Timed out');
+    await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow(
+      "Timed out",
+    );
 
     // ForestRun doesn't support this
     // expect(errorSpy).toHaveBeenCalledTimes(1);
@@ -432,8 +423,8 @@ describe('useSubscription Hook', () => {
     errorSpy.mockRestore();
   });
 
-  it('should handle immediate completions with multiple subscriptions gracefully', async () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  it("should handle immediate completions with multiple subscriptions gracefully", async () => {
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
     const subscription = gql`
       subscription {
         car {
@@ -456,9 +447,7 @@ describe('useSubscription Hook', () => {
       }),
       {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            {children}
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       },
     );
@@ -490,8 +479,9 @@ describe('useSubscription Hook', () => {
     expect(result.current.sub3.error).toBe(undefined);
     expect(result.current.sub3.data).toBe(null);
 
-    await expect(waitForNextUpdate({ timeout: 20 }))
-      .rejects.toThrow('Timed out');
+    await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow(
+      "Timed out",
+    );
 
     // ForestRun doesn't support this
     // expect(errorSpy).toHaveBeenCalledTimes(3);

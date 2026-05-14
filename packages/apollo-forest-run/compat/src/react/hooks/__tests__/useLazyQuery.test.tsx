@@ -1,26 +1,37 @@
-import React from 'react';
-import { GraphQLError } from 'graphql';
-import gql from 'graphql-tag';
-import { renderHook } from '@testing-library/react-hooks/dom';
-import { act } from 'react-dom/test-utils';
+import React from "react";
+import { GraphQLError } from "graphql";
+import gql from "graphql-tag";
+import { renderHook } from "@testing-library/react-hooks";
+import { act } from "react-dom/test-utils";
 
-import { ApolloClient, ApolloLink, ErrorPolicy, InMemoryCache, NetworkStatus, TypedDocumentNode } from '../../../core';
-import { Observable } from '../../../utilities';
-import { ApolloProvider } from '../../../react';
-import { MockedProvider, mockSingleLink } from '../../../testing';
-import { useLazyQuery } from '../useLazyQuery';
-import { QueryResult } from '../../types/types';
+import {
+  ApolloClient,
+  ApolloLink,
+  ErrorPolicy,
+  InMemoryCache,
+  NetworkStatus,
+  TypedDocumentNode,
+} from "../../../core";
+import { Observable } from "../../../utilities";
+import { ApolloProvider } from "../../../react";
+import { MockedProvider, mockSingleLink } from "../../../testing";
+import { useLazyQuery } from "../useLazyQuery";
+import { QueryResult } from "../../types/types";
 
-describe('useLazyQuery Hook', () => {
+describe("useLazyQuery Hook", () => {
   const helloQuery: TypedDocumentNode<{
     hello: string;
-  }> = gql`query { hello }`;
+  }> = gql`
+    query {
+      hello
+    }
+  `;
 
-  it('should hold query execution until manually triggered', async () => {
+  it("should hold query execution until manually triggered", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
-        result: { data: { hello: 'world' } },
+        result: { data: { hello: "world" } },
         delay: 20,
       },
     ];
@@ -28,9 +39,7 @@ describe('useLazyQuery Hook', () => {
       () => useLazyQuery(helloQuery),
       {
         wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>
-            {children}
-          </MockedProvider>
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
         ),
       },
     );
@@ -45,38 +54,33 @@ describe('useLazyQuery Hook', () => {
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toEqual({ hello: 'world' });
+    expect(result.current[1].data).toEqual({ hello: "world" });
   });
 
-  it('should set `called` to false by default', async () => {
+  it("should set `called` to false by default", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
-        result: { data: { hello: 'world' } },
+        result: { data: { hello: "world" } },
         delay: 20,
       },
     ];
-    const { result } = renderHook(
-      () => useLazyQuery(helloQuery),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>
-            {children}
-          </MockedProvider>
-        ),
-      },
-    );
+    const { result } = renderHook(() => useLazyQuery(helloQuery), {
+      wrapper: ({ children }) => (
+        <MockedProvider mocks={mocks}>{children}</MockedProvider>
+      ),
+    });
 
     expect(result.current[1].loading).toBe(false);
     expect(result.current[1].data).toBe(undefined);
     expect(result.current[1].called).toBe(false);
   });
 
-  it('should set `called` to true after calling the lazy execute function', async () => {
+  it("should set `called` to true after calling the lazy execute function", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
-        result: { data: { hello: 'world' } },
+        result: { data: { hello: "world" } },
         delay: 20,
       },
     ];
@@ -85,9 +89,7 @@ describe('useLazyQuery Hook', () => {
       () => useLazyQuery(helloQuery),
       {
         wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>
-            {children}
-          </MockedProvider>
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
         ),
       },
     );
@@ -106,11 +108,11 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].called).toBe(true);
   });
 
-  it('should override `skip` if lazy mode execution function is called', async () => {
+  it("should override `skip` if lazy mode execution function is called", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
-        result: { data: { hello: 'world' } },
+        result: { data: { hello: "world" } },
         delay: 20,
       },
     ];
@@ -120,9 +122,7 @@ describe('useLazyQuery Hook', () => {
       () => useLazyQuery(helloQuery, { skip: true } as any),
       {
         wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>
-            {children}
-          </MockedProvider>
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
         ),
       },
     );
@@ -141,9 +141,9 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].called).toBe(true);
   });
 
-  it('should use variables defined in hook options (if any), when running the lazy execution function', async () => {
+  it("should use variables defined in hook options (if any), when running the lazy execution function", async () => {
     const query = gql`
-      query($id: number) {
+      query ($id: number) {
         hello(id: $id)
       }
     `;
@@ -151,20 +151,19 @@ describe('useLazyQuery Hook', () => {
     const mocks = [
       {
         request: { query, variables: { id: 1 } },
-        result: { data: { hello: 'world 1' } },
+        result: { data: { hello: "world 1" } },
         delay: 20,
       },
     ];
 
     const { result, waitForNextUpdate } = renderHook(
-      () => useLazyQuery(query, {
-        variables: { id: 1 },
-      }),
+      () =>
+        useLazyQuery(query, {
+          variables: { id: 1 },
+        }),
       {
         wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>
-            {children}
-          </MockedProvider>
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
         ),
       },
     );
@@ -178,12 +177,12 @@ describe('useLazyQuery Hook', () => {
     await waitForNextUpdate();
 
     expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toEqual({ hello: 'world 1' });
+    expect(result.current[1].data).toEqual({ hello: "world 1" });
   });
 
-  it('should use variables passed into lazy execution function, overriding similar variables defined in Hook options', async () => {
+  it("should use variables passed into lazy execution function, overriding similar variables defined in Hook options", async () => {
     const query = gql`
-      query($id: number) {
+      query ($id: number) {
         hello(id: $id)
       }
     `;
@@ -191,25 +190,24 @@ describe('useLazyQuery Hook', () => {
     const mocks = [
       {
         request: { query, variables: { id: 1 } },
-        result: { data: { hello: 'world 1' } },
+        result: { data: { hello: "world 1" } },
         delay: 20,
       },
       {
         request: { query, variables: { id: 2 } },
-        result: { data: { hello: 'world 2' } },
+        result: { data: { hello: "world 2" } },
         delay: 20,
       },
     ];
 
     const { result, waitForNextUpdate } = renderHook(
-      () => useLazyQuery(query, {
-        variables: { id: 1 },
-      }),
+      () =>
+        useLazyQuery(query, {
+          variables: { id: 1 },
+        }),
       {
         wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>
-            {children}
-          </MockedProvider>
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
         ),
       },
     );
@@ -222,20 +220,20 @@ describe('useLazyQuery Hook', () => {
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toEqual({ hello: 'world 2' });
+    expect(result.current[1].data).toEqual({ hello: "world 2" });
   });
 
-  it('should merge variables from original hook and execution function', async () => {
-    const counterQuery: TypedDocumentNode<{
-      counter: number;
-    }, {
-      hookVar?: any;
-      execVar?: any;
-    }> = gql`
-      query GetCounter (
-        $hookVar: Boolean
-        $execVar: Boolean
-      ) {
+  it("should merge variables from original hook and execution function", async () => {
+    const counterQuery: TypedDocumentNode<
+      {
+        counter: number;
+      },
+      {
+        hookVar?: any;
+        execVar?: any;
+      }
+    > = gql`
+      query GetCounter($hookVar: Boolean, $execVar: Boolean) {
         counter
         vars
       }
@@ -244,23 +242,28 @@ describe('useLazyQuery Hook', () => {
     let count = 0;
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: new ApolloLink(request => new Observable(observer => {
-        if (request.operationName === "GetCounter") {
-          observer.next({
-            data: {
-              counter: ++count,
-              vars: request.variables,
-            },
-          });
-          setTimeout(() => {
-            observer.complete();
-          }, 10);
-        } else {
-          observer.error(new Error(`Unknown query: ${
-            request.operationName || request.query
-          }`));
-        }
-      })),
+      link: new ApolloLink(
+        (request) =>
+          new Observable((observer) => {
+            if (request.operationName === "GetCounter") {
+              observer.next({
+                data: {
+                  counter: ++count,
+                  vars: request.variables,
+                },
+              });
+              setTimeout(() => {
+                observer.complete();
+              }, 10);
+            } else {
+              observer.error(
+                new Error(
+                  `Unknown query: ${request.operationName || request.query}`,
+                ),
+              );
+            }
+          }),
+      ),
     });
 
     const { result, waitForNextUpdate } = renderHook(
@@ -278,9 +281,7 @@ describe('useLazyQuery Hook', () => {
       },
       {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            {children}
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       },
     );
@@ -289,9 +290,11 @@ describe('useLazyQuery Hook', () => {
     expect(result.current.query.called).toBe(false);
     expect(result.current.query.data).toBeUndefined();
 
-    await expect(waitForNextUpdate({
-      timeout: 20,
-    })).rejects.toThrow('Timed out');
+    await expect(
+      waitForNextUpdate({
+        timeout: 20,
+      }),
+    ).rejects.toThrow("Timed out");
 
     const expectedFinalData = {
       counter: 1,
@@ -301,15 +304,19 @@ describe('useLazyQuery Hook', () => {
       },
     };
 
-    const execPromise = act(() => result.current.exec({
-      variables: {
-        execVar: true,
-      }
-    }).then(finalResult => {
-      expect(finalResult.loading).toBe(false);
-      expect(finalResult.called).toBe(true);
-      expect(finalResult.data).toEqual(expectedFinalData);
-    }));
+    const execPromise = act(() =>
+      result.current
+        .exec({
+          variables: {
+            execVar: true,
+          },
+        })
+        .then((finalResult) => {
+          expect(finalResult.loading).toBe(false);
+          expect(finalResult.called).toBe(true);
+          expect(finalResult.data).toEqual(expectedFinalData);
+        }),
+    );
 
     expect(result.current.query.loading).toBe(true);
     expect(result.current.query.called).toBe(true);
@@ -321,34 +328,35 @@ describe('useLazyQuery Hook', () => {
 
     await execPromise;
 
-    await expect(waitForNextUpdate({
-      timeout: 20,
-    })).rejects.toThrow('Timed out');
+    await expect(
+      waitForNextUpdate({
+        timeout: 20,
+      }),
+    ).rejects.toThrow("Timed out");
   });
 
   it('should fetch data each time the execution function is called, when using a "network-only" fetch policy', async () => {
     const mocks = [
       {
         request: { query: helloQuery },
-        result: { data: { hello: 'world 1' } },
+        result: { data: { hello: "world 1" } },
         delay: 20,
       },
       {
         request: { query: helloQuery },
-        result: { data: { hello: 'world 2' } },
+        result: { data: { hello: "world 2" } },
         delay: 20,
       },
     ];
 
     const { result, waitForNextUpdate } = renderHook(
-      () => useLazyQuery(helloQuery, {
-        fetchPolicy: 'network-only',
-      }),
+      () =>
+        useLazyQuery(helloQuery, {
+          fetchPolicy: "network-only",
+        }),
       {
         wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>
-            {children}
-          </MockedProvider>
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
         ),
       },
     );
@@ -362,42 +370,41 @@ describe('useLazyQuery Hook', () => {
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toEqual({ hello: 'world 1' });
+    expect(result.current[1].data).toEqual({ hello: "world 1" });
 
     setTimeout(() => execute());
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(true);
-    expect(result.current[1].data).toEqual({ hello: 'world 1' });
+    expect(result.current[1].data).toEqual({ hello: "world 1" });
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toEqual({ hello: 'world 2' });
+    expect(result.current[1].data).toEqual({ hello: "world 2" });
   });
 
-  it('should persist previous data when a query is re-run', async () => {
+  it("should persist previous data when a query is re-run", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
-        result: { data: { hello: 'world 1' } },
+        result: { data: { hello: "world 1" } },
         delay: 20,
       },
       {
         request: { query: helloQuery },
-        result: { data: { hello: 'world 2' } },
+        result: { data: { hello: "world 2" } },
         delay: 20,
       },
     ];
 
     const { result, waitForNextUpdate } = renderHook(
-      () => useLazyQuery(helloQuery, {
-        notifyOnNetworkStatusChange: true,
-      }),
+      () =>
+        useLazyQuery(helloQuery, {
+          notifyOnNetworkStatusChange: true,
+        }),
       {
         wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>
-            {children}
-          </MockedProvider>
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
         ),
       },
     );
@@ -415,7 +422,7 @@ describe('useLazyQuery Hook', () => {
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toEqual({ hello: 'world 1' });
+    expect(result.current[1].data).toEqual({ hello: "world 1" });
     expect(result.current[1].previousData).toBe(undefined);
 
     const refetch = result.current[1].refetch;
@@ -423,16 +430,16 @@ describe('useLazyQuery Hook', () => {
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(true);
-    expect(result.current[1].data).toEqual({ hello: 'world 1' });
-    expect(result.current[1].previousData).toEqual({ hello: 'world 1' });
+    expect(result.current[1].data).toEqual({ hello: "world 1" });
+    expect(result.current[1].previousData).toEqual({ hello: "world 1" });
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toEqual({ hello: 'world 2' });
-    expect(result.current[1].previousData).toEqual({ hello: 'world 1' });
+    expect(result.current[1].data).toEqual({ hello: "world 2" });
+    expect(result.current[1].previousData).toEqual({ hello: "world 1" });
   });
 
-  it('should allow for the query to start with polling', async () => {
+  it("should allow for the query to start with polling", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -482,12 +489,14 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].data).toEqual({ hello: "world 3" });
 
     result.current[1].stopPolling();
-    await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+    await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow(
+      "Timed out",
+    );
   });
 
-  it('should persist previous data when a query is re-run and variable changes', async () => {
+  it("should persist previous data when a query is re-run and variable changes", async () => {
     const CAR_QUERY_BY_ID = gql`
-      query($id: Int) {
+      query ($id: Int) {
         car(id: $id) {
           make
           model
@@ -497,17 +506,17 @@ describe('useLazyQuery Hook', () => {
 
     const data1 = {
       car: {
-        make: 'Audi',
-        model: 'A4',
-        __typename: 'Car',
+        make: "Audi",
+        model: "A4",
+        __typename: "Car",
       },
     };
 
     const data2 = {
       car: {
-        make: 'Audi',
-        model: 'RS8',
-        __typename: 'Car',
+        make: "Audi",
+        model: "RS8",
+        __typename: "Car",
       },
     };
 
@@ -528,18 +537,16 @@ describe('useLazyQuery Hook', () => {
       () => useLazyQuery(CAR_QUERY_BY_ID),
       {
         wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>
-            {children}
-          </MockedProvider>
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
         ),
-      }
+      },
     );
 
     expect(result.current[1].loading).toBe(false);
     expect(result.current[1].data).toBe(undefined);
     expect(result.current[1].previousData).toBe(undefined);
     const execute = result.current[0];
-    setTimeout(() => execute({ variables: { id: 1 }}));
+    setTimeout(() => execute({ variables: { id: 1 } }));
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(true);
@@ -551,7 +558,7 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].data).toEqual(data1);
     expect(result.current[1].previousData).toBe(undefined);
 
-    setTimeout(() => execute({ variables: { id: 2 }}));
+    setTimeout(() => execute({ variables: { id: 2 } }));
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(true);
@@ -564,30 +571,26 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].previousData).toEqual(data1);
   });
 
-  it('should work with cache-and-network fetch policy', async () => {
+  it("should work with cache-and-network fetch policy", async () => {
     const cache = new InMemoryCache();
-    const link = mockSingleLink(
-      {
-        request: { query: helloQuery },
-        result: { data: { hello: 'from link' } },
-        delay: 20,
-      },
-    );
+    const link = mockSingleLink({
+      request: { query: helloQuery },
+      result: { data: { hello: "from link" } },
+      delay: 20,
+    });
 
     const client = new ApolloClient({
       link,
       cache,
     });
 
-    cache.writeQuery({ query: helloQuery, data: { hello: 'from cache' }});
+    cache.writeQuery({ query: helloQuery, data: { hello: "from cache" } });
 
     const { result, waitForNextUpdate } = renderHook(
-      () => useLazyQuery(helloQuery, { fetchPolicy: 'cache-and-network' }),
+      () => useLazyQuery(helloQuery, { fetchPolicy: "cache-and-network" }),
       {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            {children}
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       },
     );
@@ -601,18 +604,18 @@ describe('useLazyQuery Hook', () => {
 
     // TODO: FIXME
     expect(result.current[1].loading).toBe(true);
-    expect(result.current[1].data).toEqual({ hello: 'from cache' });
+    expect(result.current[1].data).toEqual({ hello: "from cache" });
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toEqual({ hello: 'from link' });
+    expect(result.current[1].data).toEqual({ hello: "from link" });
   });
 
-  it('should return a promise from the execution function which resolves with the result', async () => {
+  it("should return a promise from the execution function which resolves with the result", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
-        result: { data: { hello: 'world' } },
+        result: { data: { hello: "world" } },
         delay: 20,
       },
     ];
@@ -620,9 +623,7 @@ describe('useLazyQuery Hook', () => {
       () => useLazyQuery(helloQuery),
       {
         wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>
-            {children}
-          </MockedProvider>
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
         ),
       },
     );
@@ -631,7 +632,7 @@ describe('useLazyQuery Hook', () => {
     expect(result.current[1].data).toBe(undefined);
     const execute = result.current[0];
 
-    const executeResult = new Promise<QueryResult<any, any>>(resolve => {
+    const executeResult = new Promise<QueryResult<any, any>>((resolve) => {
       setTimeout(() => resolve(execute()));
     });
 
@@ -641,14 +642,14 @@ describe('useLazyQuery Hook', () => {
     await waitForNextUpdate();
     const latestRenderResult = result.current[1];
     expect(latestRenderResult.loading).toBe(false);
-    expect(latestRenderResult.data).toEqual({ hello: 'world' });
+    expect(latestRenderResult.data).toEqual({ hello: "world" });
 
-    return executeResult.then(finalResult => {
+    return executeResult.then((finalResult) => {
       expect(finalResult).toEqual(latestRenderResult);
     });
   });
 
-  it('should have matching results from execution function and hook', async () => {
+  it("should have matching results from execution function and hook", async () => {
     const query = gql`
       query GetCountries($filter: String) {
         countries(filter: $filter) {
@@ -699,9 +700,7 @@ describe('useLazyQuery Hook', () => {
       () => useLazyQuery(query),
       {
         wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>
-            {children}
-          </MockedProvider>
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
         ),
       },
     );
@@ -759,19 +758,19 @@ describe('useLazyQuery Hook', () => {
     });
   });
 
-  it('the promise should reject with errors the “way useMutation does”', async () => {
+  it("the promise should reject with errors the “way useMutation does”", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
         result: {
-          errors: [new GraphQLError('error 1')],
+          errors: [new GraphQLError("error 1")],
         },
         delay: 20,
       },
       {
         request: { query: helloQuery },
         result: {
-          errors: [new GraphQLError('error 2')],
+          errors: [new GraphQLError("error 2")],
         },
         delay: 20,
       },
@@ -781,9 +780,7 @@ describe('useLazyQuery Hook', () => {
       () => useLazyQuery(helloQuery),
       {
         wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>
-            {children}
-          </MockedProvider>
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
         ),
       },
     );
@@ -802,41 +799,45 @@ describe('useLazyQuery Hook', () => {
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(false);
     expect(result.current[1].data).toBeUndefined();
-    expect(result.current[1].error).toEqual(new Error('error 1'));
+    expect(result.current[1].error).toEqual(new Error("error 1"));
 
-    await executePromise.then(result => {
+    await executePromise.then((result) => {
       expect(result.loading).toBe(false);
       expect(result.data).toBeUndefined();
-      expect(result.error!.message).toBe('error 1');
+      expect(result.error!.message).toBe("error 1");
     });
 
-    await expect(waitForNextUpdate({
-      timeout: 20,
-    })).rejects.toThrow('Timed out');
+    await expect(
+      waitForNextUpdate({
+        timeout: 20,
+      }),
+    ).rejects.toThrow("Timed out");
 
     setTimeout(() => execute());
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(true);
     expect(result.current[1].data).toBeUndefined();
-    expect(result.current[1].error).toEqual(new Error('error 1'));
+    expect(result.current[1].error).toEqual(new Error("error 1"));
 
     await waitForNextUpdate();
     expect(result.current[1].loading).toBe(false);
     expect(result.current[1].data).toBe(undefined);
-    expect(result.current[1].error).toEqual(new Error('error 2'));
+    expect(result.current[1].error).toEqual(new Error("error 2"));
 
-    await expect(waitForNextUpdate({
-      timeout: 20,
-    })).rejects.toThrow('Timed out');
+    await expect(
+      waitForNextUpdate({
+        timeout: 20,
+      }),
+    ).rejects.toThrow("Timed out");
   });
 
-  it('the promise should not cause an unhandled rejection', async () => {
+  it("the promise should not cause an unhandled rejection", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
         result: {
-          errors: [new GraphQLError('error 1')],
+          errors: [new GraphQLError("error 1")],
         },
       },
     ];
@@ -845,9 +846,7 @@ describe('useLazyQuery Hook', () => {
       () => useLazyQuery(helloQuery),
       {
         wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>
-            {children}
-          </MockedProvider>
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
         ),
       },
     );
@@ -871,22 +870,24 @@ describe('useLazyQuery Hook', () => {
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),
-        link: new ApolloLink(request => new Observable(observer => {
-          setTimeout(() => {
-            observer.error(networkError);
-          });
-        })),
+        link: new ApolloLink(
+          (request) =>
+            new Observable((observer) => {
+              setTimeout(() => {
+                observer.error(networkError);
+              });
+            }),
+        ),
       });
 
       const { result, waitForNextUpdate } = renderHook(
-        () => useLazyQuery(helloQuery, {
-          errorPolicy,
-        }),
+        () =>
+          useLazyQuery(helloQuery, {
+            errorPolicy,
+          }),
         {
           wrapper: ({ children }) => (
-            <ApolloProvider client={client}>
-              {children}
-            </ApolloProvider>
+            <ApolloProvider client={client}>{children}</ApolloProvider>
           ),
         },
       );
@@ -896,9 +897,11 @@ describe('useLazyQuery Hook', () => {
       expect(result.current[1].networkStatus).toBe(NetworkStatus.ready);
       expect(result.current[1].data).toBeUndefined();
 
-      await expect(waitForNextUpdate({
-        timeout: 20,
-      })).rejects.toThrow('Timed out');
+      await expect(
+        waitForNextUpdate({
+          timeout: 20,
+        }),
+      ).rejects.toThrow("Timed out");
 
       setTimeout(execute);
 
@@ -913,9 +916,11 @@ describe('useLazyQuery Hook', () => {
       expect(result.current[1].data).toBeUndefined();
       expect(result.current[1].error!.message).toBe("from the network");
 
-      await expect(waitForNextUpdate({
-        timeout: 20,
-      })).rejects.toThrow('Timed out');
+      await expect(
+        waitForNextUpdate({
+          timeout: 20,
+        }),
+      ).rejects.toThrow("Timed out");
     }
 
     // For errorPolicy:"none", we expect result.error to be defined and
@@ -946,22 +951,27 @@ describe('useLazyQuery Hook', () => {
       let count = 0;
       const client = new ApolloClient({
         cache: new InMemoryCache(),
-        link: new ApolloLink(request => new Observable(observer => {
-          if (request.operationName === "GetCounter") {
-            observer.next({
-              data: {
-                counter: ++count,
-              },
-            });
-            setTimeout(() => {
-              observer.complete();
-            }, 10);
-          } else {
-            observer.error(new Error(`Unknown query: ${
-              request.operationName || request.query
-            }`));
-          }
-        })),
+        link: new ApolloLink(
+          (request) =>
+            new Observable((observer) => {
+              if (request.operationName === "GetCounter") {
+                observer.next({
+                  data: {
+                    counter: ++count,
+                  },
+                });
+                setTimeout(() => {
+                  observer.complete();
+                }, 10);
+              } else {
+                observer.error(
+                  new Error(
+                    `Unknown query: ${request.operationName || request.query}`,
+                  ),
+                );
+              }
+            }),
+        ),
       });
 
       const defaultFetchPolicy = "network-only";
@@ -981,9 +991,7 @@ describe('useLazyQuery Hook', () => {
         },
         {
           wrapper: ({ children }) => (
-            <ApolloProvider client={client}>
-              {children}
-            </ApolloProvider>
+            <ApolloProvider client={client}>{children}</ApolloProvider>
           ),
         },
       );
@@ -992,11 +1000,13 @@ describe('useLazyQuery Hook', () => {
       expect(result.current.query.called).toBe(false);
       expect(result.current.query.data).toBeUndefined();
 
-      await expect(waitForNextUpdate({
-        timeout: 20,
-      })).rejects.toThrow('Timed out');
+      await expect(
+        waitForNextUpdate({
+          timeout: 20,
+        }),
+      ).rejects.toThrow("Timed out");
 
-      const execPromise = result.current.exec().then(result => {
+      const execPromise = result.current.exec().then((result) => {
         expect(result.loading).toBe(false);
         expect(result.called).toBe(true);
         expect(result.data).toEqual({ counter: 1 });
@@ -1010,14 +1020,16 @@ describe('useLazyQuery Hook', () => {
       expect(result.current.query.called).toBe(true);
       expect(result.current.query.data).toEqual({ counter: 1 });
 
-      await expect(waitForNextUpdate({
-        timeout: 20,
-      })).rejects.toThrow('Timed out');
+      await expect(
+        waitForNextUpdate({
+          timeout: 20,
+        }),
+      ).rejects.toThrow("Timed out");
 
       await execPromise;
 
       const { options } = result.current.query.observable;
       expect(options.fetchPolicy).toBe(defaultFetchPolicy);
     });
-  })
+  });
 });
