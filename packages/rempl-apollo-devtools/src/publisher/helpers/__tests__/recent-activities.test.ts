@@ -117,10 +117,63 @@ describe(".getRecentOperationsActivity", () => {
         id: "test",
       },
     ]);
+
+    expect(getRecentOperationsActivity(["test1"] as any[], [])).toEqual([
+      {
+        type: ACTIVITY_TYPE.OPERATION,
+        change: RECENT_DATA_CHANGES_TYPES.ADDED,
+        data: "test1",
+        id: "test",
+      },
+    ]);
+
+    expect(getRecentOperationsActivity([], ["test1"] as any[])).toEqual([
+      {
+        type: ACTIVITY_TYPE.OPERATION,
+        change: RECENT_DATA_CHANGES_TYPES.REMOVED,
+        data: "test1",
+        id: "test",
+      },
+    ]);
   });
 });
 
 describe(".getRecentCacheActivity", () => {
+  test("reports added and removed cache entries when one side is empty", () => {
+    const cache = {
+      "car:123": { id: 123, name: "mercedes" },
+    };
+
+    expect(getRecentCacheActivity(cache, {})).toEqual([
+      {
+        type: ACTIVITY_TYPE.CACHE,
+        change: "added",
+        data: {
+          __activity_key: "car:123",
+          cacheValue: {
+            id: 123,
+            name: "mercedes",
+          },
+        },
+        id: "test",
+      },
+    ]);
+    expect(getRecentCacheActivity({}, cache)).toEqual([
+      {
+        type: ACTIVITY_TYPE.CACHE,
+        change: "removed",
+        data: {
+          __activity_key: "car:123",
+          cacheValue: {
+            id: 123,
+            name: "mercedes",
+          },
+        },
+        id: "test",
+      },
+    ]);
+  });
+
   test("when caches are the same the result should be empty", () => {
     const cache = {
       "car:123": { id: 123, name: "mercedes" },
