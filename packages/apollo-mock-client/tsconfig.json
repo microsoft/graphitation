@@ -9,6 +9,7 @@
   },
   "include": ["src"],
   "references": [
+    { "path": "../apollo-forest-run" },
     { "path": "../graphql-js-tag" },
     { "path": "../graphql-js-operation-payload-generator" }
   ]
