@@ -1,22 +1,23 @@
-import { useEffect, useMemo } from "react";
 import invariant from "invariant";
-import { useForceUpdate } from "./useForceUpdate";
-import { useOverridenOrDefaultApolloClient } from "../../useOverridenOrDefaultApolloClient";
 
 import type { FragmentReference } from "./types";
-import type { CompiledArtefactModule } from "@graphitation/apollo-react-relay-duct-tape-compiler";
-import { Cache } from "@apollo/client/core";
+import type {
+  CompiledArtefactModule,
+  Metadata,
+} from "@graphitation/apollo-react-relay-duct-tape-compiler";
+import { DocumentNode } from "@apollo/client/core";
+import { useFragment, UseFragmentOptions } from "@apollo/client";
+import { Kind, ValueNode } from "graphql";
 
 /**
  * @param documents Compiled watch query document that is used to setup a narrow
  *                  observable for just the data selected by the original fragment.
  * @param fragmentReference A Node object that has a globally unique `id` field.
  */
-
 export function useCompiledFragment(
   documents: CompiledArtefactModule,
   fragmentReference: FragmentReference,
-): object {
+) {
   invariant(
     fragmentReference,
     "useFragment(): Expected metadata to have been extracted from " +
@@ -28,73 +29,106 @@ export function useCompiledFragment(
     "useFragment(): Expected a `watchQueryDocument` to have been " +
       "extracted. Did you forget to invoke the compiler?",
   );
-
-  const client = useOverridenOrDefaultApolloClient();
-  const forceUpdate = useForceUpdate();
-
-  const observableQuery = useMemo(
-    () =>
-      client.watchQuery({
-        fetchPolicy: "cache-only",
-        query: watchQueryDocument,
-        returnPartialData: false,
-        variables: {
-          ...fragmentReference.__fragments,
-          id: fragmentReference.id,
-          __fragments: fragmentReference.__fragments,
-        },
-      }),
-    [client, fragmentReference.id, fragmentReference.__fragments],
-  );
-
-  useEffect(() => {
-    let skipFirst = true;
-    const subscription = observableQuery.subscribe(
-      () => {
-        // Unclear why, but this yields twice with the same results, so skip one.
-        if (skipFirst) {
-          skipFirst = false;
-        } else {
-          forceUpdate();
-        }
-      },
-      (error) => {
-        console.log(error);
-      },
-    );
-    return () => subscription.unsubscribe();
-  }, [observableQuery]);
-
-  const result = observableQuery.getCurrentResult();
-  if (result.partial) {
-    invariant(
-      false,
-      "useFragment(): Missing data expected to be seeded by the execution query document: %s. Please check your type policies and possibleTypes configuration. If only subset of properties is missing you might need to configure merge functions for non-normalized types.",
-      JSON.stringify(
-        // we need the cast because queryInfo and lastDiff are private but very useful for debugging
-        (
-          observableQuery as unknown as {
-            queryInfo?: { lastDiff?: { diff?: Cache.DiffResult<unknown> } };
-          }
-        ).queryInfo?.lastDiff?.diff?.missing?.map((e) => e.path),
-      ),
-    );
-  }
-  let data = result.data;
-  if (metadata?.rootSelection) {
-    invariant(
-      data,
-      "useFragment(): Expected Apollo to respond with previously seeded data of the execution query document: %s. Did you configure your type policies and possibleTypes correctly? Check apollo-react-relay-duct-tape README for more details.",
-      JSON.stringify({
-        selection: metadata.rootSelection,
-        mainFragment: metadata.mainFragment,
-      }),
-    );
-    data = data[metadata.rootSelection];
-  }
+  const from = fragmentReference.id;
   invariant(
-    data,
-    "useFragment(): Expected Apollo to respond with previously seeded data of the execution query document. Did you configure your type policies and possibleTypes correctly? Check apollo-react-relay-duct-tape README for more details.",
+    typeof from === "string",
+    "useFragment(): Expected the fragment reference to have a string id.",
   );
-  return data;
+  invariant(
+    metadata,
+    "useFragment(): Expected metadata to have been extracted from " +
+      "the fragment. Did you forget to invoke the compiler?",
+  );
+
+  const defaultVariables = getDefaultVariables(watchQueryDocument);
+  const variables = {
+    ...defaultVariables,
+    ...fragmentReference.__fragments,
+  };
+
+  const doc: UseFragmentOptions<unknown, unknown> = {
+    fragment: getFragmentDocumentFromWatchQueryDocument(
+      watchQueryDocument,
+      metadata,
+    ),
+    fragmentName: metadata?.mainFragment?.name,
+    from,
+    variables,
+  };
+
+  const result = useFragment(doc);
+
+  invariant(
+    result.complete,
+    "useFragment(): Missing data expected to be seeded by the execution query document. Please check your type policies and possibleTypes configuration. If only subset of properties is missing you might need to configure merge functions for non-normalized types.",
+  );
+
+  return result.data as object;
+}
+
+type DefaultValue =
+  | string
+  | number
+  | boolean
+  | { [key: string]: DefaultValue }
+  | DefaultValue[]
+  | undefined;
+
+const extractValue = (node: ValueNode): DefaultValue => {
+  if (!node) return undefined;
+
+  switch (node.kind) {
+    case Kind.INT:
+    case Kind.FLOAT:
+      return Number(node.value);
+    case Kind.STRING:
+    case Kind.ENUM:
+    case Kind.BOOLEAN:
+      return node.value;
+    case Kind.LIST:
+      return node.values.map(extractValue);
+    case Kind.OBJECT:
+      return node.fields.reduce<Record<string, DefaultValue>>((obj, field) => {
+        obj[field.name.value] = extractValue(field.value);
+        return obj;
+      }, {});
+    default:
+      return undefined;
+  }
+};
+
+function getDefaultVariables(documentNode: DocumentNode) {
+  const variableDefinitions = documentNode.definitions
+    .filter((def) => def.kind === Kind.OPERATION_DEFINITION)
+    .flatMap((def) => def.variableDefinitions || []);
+
+  return variableDefinitions.reduce<Record<string, DefaultValue>>(
+    (acc, varDef) => {
+      if (varDef.defaultValue) {
+        acc[varDef.variable.name.value] = extractValue(varDef.defaultValue);
+      }
+      return acc;
+    },
+    {},
+  );
+}
+function getFragmentDocumentFromWatchQueryDocument(
+  watchQueryDocument: DocumentNode,
+  metadata: Metadata,
+): DocumentNode {
+  const fragmentDefinition = watchQueryDocument.definitions.find((def) => {
+    if (def.kind === "FragmentDefinition") {
+      return def.name.value === metadata?.mainFragment?.name;
+    }
+    return false;
+  });
+  invariant(
+    fragmentDefinition,
+    "useFragment(): Expected a fragment definition to be found in the " +
+      "watch query document. Did you forget to invoke the compiler?",
+  );
+  return {
+    kind: "Document",
+    definitions: [fragmentDefinition],
+  };
 }
