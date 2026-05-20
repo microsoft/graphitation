@@ -23,9 +23,18 @@ export class CircularBuffer<TItem> implements Iterable<TItem> {
     }
   }
 
-  *[Symbol.iterator](): Iterator<TItem> {
-    for (let i = 0; i < this.items.length; i++) {
-      yield this.items[(this.head + i) % this.items.length];
-    }
+  [Symbol.iterator](): Iterator<TItem> {
+    let i = 0;
+    const items = this.items;
+    const head = this.head;
+    const len = items.length;
+    return {
+      next(): IteratorResult<TItem> {
+        if (i < len) {
+          return { value: items[(head + i++) % len], done: false };
+        }
+        return { value: undefined as any, done: true };
+      },
+    };
   }
 }
