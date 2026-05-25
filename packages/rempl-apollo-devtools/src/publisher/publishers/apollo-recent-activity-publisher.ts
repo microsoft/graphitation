@@ -160,7 +160,7 @@ export class ApolloRecentActivityPublisher {
       return client.queryManager.mutationStore.getStore();
     } else {
       // Apollo Client 3.3+
-      return client.queryManager.mutationStore;
+      return client.queryManager.mutationStore || {};
     }
   }
 
@@ -168,7 +168,7 @@ export class ApolloRecentActivityPublisher {
     if (client.queryManager.queryStore?.getStore) {
       return client.queryManager.queryStore.getStore();
     } else {
-      return client.queryManager.queries;
+      return client.queryManager.queries || new Map();
     }
   }
 
