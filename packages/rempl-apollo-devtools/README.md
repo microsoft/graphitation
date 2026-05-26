@@ -41,19 +41,21 @@ You can try the devtools using `yarn playground`
 1. First off, you need to include the bundled library's script into your site.
 
 ```
-yarn add rempl-graphql-devtools
+yarn add @graphitation/rempl-apollo-devtools
 ```
 
-include `dist/apollo-devtools.js` in Webpack
+Serve `dist/apollo-devtools.js` as a static script and include it in your HTML
+page:
 
 ```
-webpackConfig.entry["apollodevtools"] = PROJECT_ROOT("node_modules/rempl-graphql-devtools/dist/apollo-devtools.js");
+<script src="path/apollo-devtools.js"></script>
 ```
 
-OR
-
-build the library and include `<script>` with `dist/apollo-devtools.js`in your HTML page.
-`<script src="path/apollo-devtools.js"></script>`
+Avoid adding the prebuilt devtools bundle as a separate Webpack entry. Webpack
+will wrap that entry in another runtime, which can collide with the host
+application's Trusted Types policy when `output.trustedTypes` is enabled. If the
+bundle must be produced by Webpack, configure the devtools entry to share the
+application runtime, for example with `optimization.runtimeChunk: "single"`.
 
 2. In your project, you need to attach the apollo client(s) instance into the global variable **APOLLO_CLIENTS**
 
