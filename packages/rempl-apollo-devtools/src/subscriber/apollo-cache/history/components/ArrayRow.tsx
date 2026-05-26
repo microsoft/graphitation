@@ -1,4 +1,5 @@
-import React, { RefObject } from "react";
+import type { RefObject } from "react";
+import React from "react";
 import { Text } from "@fluentui/react-components";
 import type { IndexItem } from "./arrayDiffUtils";
 import { ArrayIndexItem } from "./ArrayIndexItem";

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { CacheDuplicates } from "../../types";
+import type { CacheDuplicates } from "../../types";
 import { remplSubscriber } from "../rempl";
 
 export type ApolloCacheDuplicatesContextType = {

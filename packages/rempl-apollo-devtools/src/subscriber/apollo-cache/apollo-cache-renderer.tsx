@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { CacheObjectWithSize } from "./types";
+import type { CacheObjectWithSize } from "./types";
 import { ApolloCacheItems } from "./apollo-cache-items";
 import debounce from "lodash.debounce";
 import { useStyles } from "./apollo-cache-renderer.styles";
@@ -7,7 +7,7 @@ import { Text, Button } from "@fluentui/react-components";
 import { TabMenu, Search } from "../../components";
 import { ArrowClockwise20Regular, Info20Regular } from "@fluentui/react-icons";
 import { ApolloCacheDuplicatedItems } from "./apollo-cache-duplicated-items";
-import { CacheDuplicates } from "../../types";
+import type { CacheDuplicates } from "../../types";
 import { useArrowNavigationGroup } from "@fluentui/react-tabster";
 
 interface IApolloCacheRenderer {

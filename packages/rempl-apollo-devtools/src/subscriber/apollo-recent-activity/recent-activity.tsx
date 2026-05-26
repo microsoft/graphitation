@@ -3,7 +3,7 @@ import { ActivityDialog, List, Dialog } from "../../components";
 import { mergeClasses, Text } from "@fluentui/react-components";
 import { useStyles } from "./recent-activity.styles";
 import { RECENT_DATA_CHANGES_TYPES, ACTIVITY_TYPE } from "../../consts";
-import { RecentActivities } from "../../types";
+import type { RecentActivities } from "../../types";
 import sizeOf from "object-sizeof";
 
 function getDateValue(value: number): string {

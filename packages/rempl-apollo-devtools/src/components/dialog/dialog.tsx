@@ -1,7 +1,7 @@
 import React, { createRef, useEffect } from "react";
 import { dialogStyles } from "./dialog.styles";
 import { Text, Button, Title1 } from "@fluentui/react-components";
-import { CacheObjectWithSize } from "../../subscriber/apollo-cache/types";
+import type { CacheObjectWithSize } from "../../subscriber/apollo-cache/types";
 import { Dismiss20Regular } from "@fluentui/react-icons";
 
 interface DialogProps {

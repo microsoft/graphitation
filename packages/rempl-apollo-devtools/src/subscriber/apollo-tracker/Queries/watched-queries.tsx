@@ -3,7 +3,7 @@ import { ApolloGlobalOperationsContext } from "../../contexts/apollo-global-oper
 import { List, VerticalViewer } from "../../../components";
 import { watchedQueriesStyles } from "./watched-queries.styles";
 import { mergeClasses, Text } from "@fluentui/react-components";
-import { WatchedQuery } from "../../../types";
+import type { WatchedQuery } from "../../../types";
 
 export const WatchedQueries = ({ queries }: { queries: WatchedQuery[] }) => {
   const [isExpanded, setIsExpanded] = useState(false);

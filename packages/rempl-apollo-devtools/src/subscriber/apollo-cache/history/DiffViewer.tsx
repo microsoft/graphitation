@@ -1,8 +1,6 @@
 import React, { useMemo, useState, useRef } from "react";
-import {
-  VirtualizerScrollView,
-  ScrollToInterface,
-} from "@fluentui/react-virtualizer";
+import type { ScrollToInterface } from "@fluentui/react-virtualizer";
+import { VirtualizerScrollView } from "@fluentui/react-virtualizer";
 import { mergeClasses, Button, Text, tokens } from "@fluentui/react-components";
 import {
   ChevronUp20Regular,

@@ -1,5 +1,5 @@
 import { v4 as uid } from "uuid";
-import {
+import type {
   RecentActivityRaw,
   WatchedQuery,
   Mutation,
@@ -7,7 +7,7 @@ import {
   CacheStoreObject,
 } from "../../types";
 import { RECENT_DATA_CHANGES_TYPES, ACTIVITY_TYPE } from "../../consts";
-import { NormalizedCacheObject } from "@apollo/client";
+import type { NormalizedCacheObject } from "@apollo/client";
 
 export function getRecentOperationsActivity(
   items: WatchedQuery[] | Mutation[],

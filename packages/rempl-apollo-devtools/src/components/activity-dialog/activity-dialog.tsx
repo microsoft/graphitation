@@ -2,7 +2,7 @@ import React, { createRef, useEffect } from "react";
 import { dialogStyles } from "./activity-dialog.styles";
 import { Text, Button, Title1 } from "@fluentui/react-components";
 import { Dismiss20Regular } from "@fluentui/react-icons";
-import { RecentActivityRaw, WatchedQuery, Mutation } from "../../types";
+import type { RecentActivityRaw, WatchedQuery, Mutation } from "../../types";
 
 interface ActivityDialogProps {
   value: { isMutation: boolean; __activity_type: string } & RecentActivityRaw;

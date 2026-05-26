@@ -3,7 +3,7 @@ import { ApolloCacheRenderer } from "./apollo-cache-renderer";
 import sizeOf from "object-sizeof";
 import { ApolloCacheContext } from "../contexts/apollo-cache-context";
 import { ApolloCacheDuplicatesContext } from "../contexts/apollo-cache-duplicates-context";
-import { CacheObjectWithSize } from "./types";
+import type { CacheObjectWithSize } from "./types";
 
 const ApolloCacheContainer = React.memo(() => {
   const contextData = useContext(ApolloCacheContext);

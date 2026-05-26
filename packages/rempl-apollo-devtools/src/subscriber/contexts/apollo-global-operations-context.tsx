@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ApolloGlobalOperations } from "../../types";
+import type { ApolloGlobalOperations } from "../../types";
 import { remplSubscriber } from "../rempl";
 
 export const ApolloGlobalOperationsContext =

@@ -1,6 +1,6 @@
 import { createPublisher, getHost } from "rempl";
 import hotkeys from "hotkeys-js";
-import { ClientObject, WrapperCallbackParams, Publisher } from "../types";
+import type { ClientObject, WrapperCallbackParams, Publisher } from "../types";
 import { ensureApolloClientCompat } from "./helpers/apollo-client-compat";
 
 declare let __APOLLO_DEVTOOLS_SUBSCRIBER__: string;

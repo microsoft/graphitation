@@ -1,6 +1,7 @@
-import { ApolloClient, NormalizedCacheObject } from "@apollo/client";
-import { RemplWrapper, browserWindow } from "../rempl-wrapper";
-import {
+import type { ApolloClient, NormalizedCacheObject } from "@apollo/client";
+import type { RemplWrapper } from "../rempl-wrapper";
+import { browserWindow } from "../rempl-wrapper";
+import type {
   CacheDuplicates,
   ClientObject,
   ApolloKeyFields,

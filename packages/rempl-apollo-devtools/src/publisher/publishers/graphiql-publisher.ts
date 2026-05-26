@@ -1,11 +1,11 @@
-import { RemplWrapper } from "../rempl-wrapper";
+import type { RemplWrapper } from "../rempl-wrapper";
 import {
   parse,
   type DocumentNode,
   type OperationDefinitionNode,
 } from "graphql";
 
-import { ApolloClientsObject, WrapperCallbackParams } from "../../types";
+import type { ApolloClientsObject, WrapperCallbackParams } from "../../types";
 
 export class GraphiQLPublisher {
   private apolloPublisher;

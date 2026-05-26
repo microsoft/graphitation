@@ -9,9 +9,9 @@ import {
   Button,
 } from "@fluentui/react-components";
 import { Open20Filled } from "@fluentui/react-icons";
-import { CacheDuplicates } from "../../types";
+import type { CacheDuplicates } from "../../types";
 import { Dialog } from "../../components";
-import { CacheObjectWithSize } from "./types";
+import type { CacheObjectWithSize } from "./types";
 
 interface IApolloCacheItems {
   duplicatedCacheObjects: CacheDuplicates;

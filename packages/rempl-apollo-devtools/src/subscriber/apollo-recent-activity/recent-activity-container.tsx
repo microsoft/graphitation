@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { RecentActivities } from "../../types";
+import type { RecentActivities } from "../../types";
 import { Button, mergeClasses } from "@fluentui/react-components";
 import { remplSubscriber } from "../rempl";
 import { useStyles } from "./recent-activity.styles";

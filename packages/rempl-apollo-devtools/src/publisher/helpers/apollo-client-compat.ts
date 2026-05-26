@@ -1,4 +1,4 @@
-import { ApolloClient, NormalizedCacheObject } from "@apollo/client";
+import type { ApolloClient, NormalizedCacheObject } from "@apollo/client";
 
 /**
  * Ensures an Apollo Client instance is compatible with apollo-inspector
@@ -40,8 +40,8 @@ export function ensureApolloClientCompat(
       typeof qm.getOrCreateQuery === "function"
         ? qm.getOrCreateQuery.bind(qm)
         : typeof qm.getQuery === "function"
-          ? qm.getQuery.bind(qm)
-          : undefined;
+        ? qm.getQuery.bind(qm)
+        : undefined;
 
     if (getQueryInfo) {
       const originalFetchConcastWithInfo = qm.fetchConcastWithInfo;

@@ -1,5 +1,5 @@
-import { RemplWrapper } from "../rempl-wrapper";
-import { ClientObject, WrapperCallbackParams } from "../../types";
+import type { RemplWrapper } from "../rempl-wrapper";
+import type { ClientObject, WrapperCallbackParams } from "../../types";
 
 export class ApolloClientsPublisher {
   private apolloPublisher;

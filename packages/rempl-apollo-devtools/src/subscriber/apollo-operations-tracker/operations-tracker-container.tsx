@@ -1,9 +1,9 @@
 import { remplSubscriber } from "../rempl";
 import * as React from "react";
-import { IDataView } from "apollo-inspector";
+import type { IDataView } from "apollo-inspector";
 import { OperationsTrackerContainer as Main } from "apollo-inspector-ui";
 import { Observable } from "rxjs";
-import { UnsubscribeFn } from "rempl/lib/utils";
+import type { UnsubscribeFn } from "rempl/lib/utils";
 import { CopyType } from "apollo-inspector-ui";
 
 export const OperationsTrackerContainer = () => {

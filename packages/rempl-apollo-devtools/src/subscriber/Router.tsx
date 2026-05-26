@@ -5,15 +5,13 @@ import { WatchedQueries, Mutations } from "./apollo-tracker";
 import { ApolloTrackerMetadataContext } from "./contexts/apollo-tracker-metadata-context";
 import { AdditionalInformations } from "./apollo-additional-informations";
 import { GraphiQLRenderer } from "./graphiql";
-import {
-  ApolloCacheContext,
-  ApolloCacheContextType,
-} from "./contexts/apollo-cache-context";
+import type { ApolloCacheContextType } from "./contexts/apollo-cache-context";
+import { ApolloCacheContext } from "./contexts/apollo-cache-context";
 import { Menu } from "../components";
 import RecentActivityContainer from "./apollo-recent-activity/recent-activity-container";
 import { OperationsTrackerContainer } from "./apollo-operations-tracker";
 import { ApolloGlobalOperationsContext } from "./contexts/apollo-global-operations-context";
-import { ApolloGlobalOperations } from "../types";
+import type { ApolloGlobalOperations } from "../types";
 import { ImportHistoryPage } from "./apollo-cache/history/ImportHistoryPage";
 
 function getCacheDataCount(cacheContextData: ApolloCacheContextType) {

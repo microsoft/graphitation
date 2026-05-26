@@ -1,4 +1,4 @@
-import { GriffelStyle } from "@griffel/core";
+import type { GriffelStyle } from "@griffel/core";
 // import { tokens } from "@fluentui/react-components";
 import { shorthands } from "@griffel/react";
 

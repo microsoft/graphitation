@@ -1,7 +1,7 @@
 import * as React from "react";
 import ReactDOM from "react-dom";
 import App from "./App";
-import { RecentActivities, ApolloTrackerMetadata } from "../types";
+import type { RecentActivities, ApolloTrackerMetadata } from "../types";
 
 declare let __GRAPHIQL_CSS__: string;
 declare let __GLOBAL_CSS__: string;

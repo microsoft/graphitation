@@ -3,7 +3,7 @@ import { List, VerticalViewer } from "../../../components";
 import { ApolloGlobalOperationsContext } from "../../contexts/apollo-global-operations-context";
 import { mutationsStyles } from "./mutations.styles";
 import { mergeClasses, Text } from "@fluentui/react-components";
-import { Mutation } from "../../../types";
+import type { Mutation } from "../../../types";
 
 export const Mutations = ({ mutations }: { mutations: Mutation[] }) => {
   const [isExpanded, setIsExpanded] = useState(false);

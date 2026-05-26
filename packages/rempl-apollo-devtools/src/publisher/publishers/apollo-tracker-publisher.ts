@@ -1,7 +1,7 @@
-import { RemplWrapper } from "../rempl-wrapper";
-import { NormalizedCacheObject, ApolloClient } from "@apollo/client";
+import type { RemplWrapper } from "../rempl-wrapper";
+import type { NormalizedCacheObject, ApolloClient } from "@apollo/client";
 
-import { WrapperCallbackParams } from "../../types";
+import type { WrapperCallbackParams } from "../../types";
 import {
   filterMutationInfo,
   filterQueryInfo,

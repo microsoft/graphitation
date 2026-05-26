@@ -1,5 +1,5 @@
 import * as React from "react";
-import { NormalizedCacheObject } from "@apollo/client/cache";
+import type { NormalizedCacheObject } from "@apollo/client/cache";
 import { remplSubscriber } from "../rempl";
 import type { OperationHistoryResponse } from "../types";
 

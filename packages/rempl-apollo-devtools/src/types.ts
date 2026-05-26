@@ -1,10 +1,10 @@
-import {
+import type {
   NormalizedCacheObject,
   ApolloClient,
   StoreObject,
 } from "@apollo/client";
-import { IDataView } from "apollo-inspector";
-import { createPublisher } from "rempl";
+import type { IDataView } from "apollo-inspector";
+import type { createPublisher } from "rempl";
 
 export type Publisher = ReturnType<typeof createPublisher>;
 

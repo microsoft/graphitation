@@ -1,6 +1,6 @@
-import { NormalizedCacheObject, StoreObject } from "@apollo/client";
+import type { NormalizedCacheObject, StoreObject } from "@apollo/client";
 import isEqual from "lodash.isequal";
-import { CacheDuplicates, ApolloKeyFields } from "../../types";
+import type { CacheDuplicates, ApolloKeyFields } from "../../types";
 
 function getObjectWithoutKeyFields(
   cacheItem: StoreObject,

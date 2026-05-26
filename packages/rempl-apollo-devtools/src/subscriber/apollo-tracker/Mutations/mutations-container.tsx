@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo } from "react";
-import { Mutation } from "../../../types";
+import type { Mutation } from "../../../types";
 import { remplSubscriber } from "../../rempl";
 import { Mutations } from "./mutations";
 

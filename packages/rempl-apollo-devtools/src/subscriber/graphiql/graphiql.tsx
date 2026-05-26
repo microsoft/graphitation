@@ -2,7 +2,7 @@
 import React, { useContext, useRef } from "react";
 import GraphiQL from "graphiql";
 import { ActiveClientContext } from "../contexts/active-client-context";
-import { FetcherParams } from "../../types";
+import type { FetcherParams } from "../../types";
 import { qraphiqlStyles } from "./graphiql.styles";
 import { remplSubscriber } from "../rempl";
 

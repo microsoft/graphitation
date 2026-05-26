@@ -1,6 +1,7 @@
-import { GraphQLError, print, getOperationAST } from "graphql";
+import type { GraphQLError } from "graphql";
+import { print, getOperationAST } from "graphql";
 
-import {
+import type {
   WatchedQuery,
   Mutation as MutationType,
   RecentActivityRaw,

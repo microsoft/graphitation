@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ApolloTrackerMetadata } from "../../types";
+import type { ApolloTrackerMetadata } from "../../types";
 import { remplSubscriber } from "../rempl";
 
 export const defaultMetadata = {

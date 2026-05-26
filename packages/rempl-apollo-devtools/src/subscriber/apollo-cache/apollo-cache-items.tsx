@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CacheObjectWithSize } from "./types";
+import type { CacheObjectWithSize } from "./types";
 import { useStyles } from "./apollo-cache-items.styles";
 import { Button, mergeClasses, Text } from "@fluentui/react-components";
 import {

@@ -1,4 +1,5 @@
-import { RemplWrapper, browserWindow } from "../rempl-wrapper";
+import type { RemplWrapper } from "../rempl-wrapper";
+import { browserWindow } from "../rempl-wrapper";
 
 export class ApolloGlobalOperationsPublisher {
   private apolloPublisher;

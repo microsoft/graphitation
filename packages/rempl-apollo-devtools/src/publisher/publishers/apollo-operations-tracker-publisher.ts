@@ -1,13 +1,10 @@
-import { ApolloClient, NormalizedCacheObject } from "@apollo/client";
-import { RemplWrapper } from "../rempl-wrapper";
-import {
-  ApolloInspector,
-  IDataView,
-  IApolloClientObject,
-} from "apollo-inspector";
-import { ClientObject, WrapperCallbackParams } from "../../types";
-import { Subscription } from "rxjs";
-import { ICopyData } from "apollo-inspector-ui";
+import type { ApolloClient, NormalizedCacheObject } from "@apollo/client";
+import type { RemplWrapper } from "../rempl-wrapper";
+import type { IDataView, IApolloClientObject } from "apollo-inspector";
+import { ApolloInspector } from "apollo-inspector";
+import type { ClientObject, WrapperCallbackParams } from "../../types";
+import type { Subscription } from "rxjs";
+import type { ICopyData } from "apollo-inspector-ui";
 import { ensureApolloClientCompat } from "../helpers/apollo-client-compat";
 
 export class ApolloOperationsTrackerPublisher {
