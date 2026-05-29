@@ -112,6 +112,29 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
   );
 
   statements.push(
+    factory.createTypeAliasDeclaration(
+      [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+      factory.createIdentifier("TypeMap"),
+      undefined,
+      factory.createTypeLiteralNode(
+        allTypes.map((type) =>
+          factory.createPropertySignature(
+            undefined,
+            factory.createStringLiteral(type.name),
+            undefined,
+            factory.createTypeReferenceNode(
+              factory.createQualifiedName(
+                factory.createIdentifier("Models"),
+                type.name,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  statements.push(
     factory.createInterfaceDeclaration(
       [factory.createToken(ts.SyntaxKind.ExportKeyword)],
       factory.createIdentifier("PossibleTypesResultData"),
