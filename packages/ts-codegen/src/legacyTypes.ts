@@ -111,6 +111,80 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
     ),
   );
 
+  statements.push(
+    factory.createInterfaceDeclaration(
+      [factory.createToken(ts.SyntaxKind.ExportKeyword)],
+      factory.createIdentifier("PossibleTypesResultData"),
+      undefined,
+      undefined,
+      [
+        factory.createPropertySignature(
+          undefined,
+          factory.createIdentifier("possibleTypes"),
+          undefined,
+          factory.createTypeLiteralNode([
+            factory.createIndexSignature(
+              undefined,
+              [
+                factory.createParameterDeclaration(
+                  undefined,
+                  undefined,
+                  factory.createIdentifier("key"),
+                  undefined,
+                  factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
+                  undefined,
+                ),
+              ],
+              factory.createArrayTypeNode(
+                factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
+              ),
+            ),
+          ]),
+        ),
+      ],
+    ),
+    factory.createVariableStatement(
+      undefined,
+      factory.createVariableDeclarationList(
+        [
+          factory.createVariableDeclaration(
+            factory.createIdentifier("result"),
+            undefined,
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("PossibleTypesResultData"),
+              undefined,
+            ),
+            factory.createObjectLiteralExpression(
+              [
+                factory.createPropertyAssignment(
+                  factory.createStringLiteral("possibleTypes"),
+                  factory.createObjectLiteralExpression(
+                    allTypes
+                      .filter((type) => type.kind === "UNION")
+                      .map((union) =>
+                        factory.createPropertyAssignment(
+                          factory.createStringLiteral(union.name),
+                          factory.createArrayLiteralExpression(
+                            union.types.map((type) => {
+                              return factory.createStringLiteral(type);
+                            }),
+                            true,
+                          ),
+                        ),
+                      ),
+                    true,
+                  ),
+                ),
+              ],
+              true,
+            ),
+          ),
+        ],
+        ts.NodeFlags.Const,
+      ),
+    ),
+  );
+
   const source = factory.createSourceFile(
     statements,
     factory.createToken(ts.SyntaxKind.EndOfFileToken),
