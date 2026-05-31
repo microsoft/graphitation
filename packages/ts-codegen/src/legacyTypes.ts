@@ -1,5 +1,5 @@
 import ts, { factory } from "typescript";
-import { BUILT_IN_SCALARS, TsCodegenContext } from "./context";
+import { BUILT_IN_SCALARS, TsCodegenContext, Type } from "./context";
 
 const ROOT_OPERATIONS = ["Query", "Mutation", "Subscription"];
 const LEGACY_TYPES = [
@@ -12,7 +12,16 @@ const LEGACY_TYPES = [
   "ENUM",
 ];
 
-export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
+export function generateLegacyTypes(
+  context: TsCodegenContext,
+  {
+    generateUnionPossibleTypes = true,
+    generateTypeMap = true,
+  }: {
+    generateUnionPossibleTypes?: boolean;
+    generateTypeMap?: boolean;
+  } = {},
+): ts.SourceFile {
   const statements: ts.Statement[] = [];
   const allTypes = context
     .getAllTypes()
@@ -111,30 +120,46 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
     ),
   );
 
-  statements.push(
-    factory.createTypeAliasDeclaration(
-      [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-      factory.createIdentifier("TypeMap"),
-      undefined,
-      factory.createTypeLiteralNode(
-        allTypes.map((type) =>
-          factory.createPropertySignature(
-            undefined,
-            factory.createStringLiteral(type.name),
-            undefined,
-            factory.createTypeReferenceNode(
-              factory.createQualifiedName(
-                factory.createIdentifier("Models"),
-                type.name,
+  if (generateTypeMap) {
+    statements.push(
+      factory.createTypeAliasDeclaration(
+        [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+        factory.createIdentifier("TypeMap"),
+        undefined,
+        factory.createTypeLiteralNode(
+          allTypes.map((type) =>
+            factory.createPropertySignature(
+              undefined,
+              factory.createStringLiteral(type.name),
+              undefined,
+              factory.createTypeReferenceNode(
+                factory.createQualifiedName(
+                  factory.createIdentifier("Models"),
+                  type.name,
+                ),
               ),
             ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 
-  statements.push(
+  if (generateUnionPossibleTypes) {
+    statements.push(...createUnionPossibleTypesStatements(allTypes));
+  }
+
+  const source = factory.createSourceFile(
+    statements,
+    factory.createToken(ts.SyntaxKind.EndOfFileToken),
+    ts.NodeFlags.None,
+  );
+  source.fileName = "legacy-types.interface.ts";
+  return source;
+}
+
+function createUnionPossibleTypesStatements(allTypes: Type[]): ts.Statement[] {
+  return [
     factory.createInterfaceDeclaration(
       [factory.createToken(ts.SyntaxKind.ExportKeyword)],
       factory.createIdentifier("PossibleTypesResultData"),
@@ -206,13 +231,5 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
         ts.NodeFlags.Const,
       ),
     ),
-  );
-
-  const source = factory.createSourceFile(
-    statements,
-    factory.createToken(ts.SyntaxKind.EndOfFileToken),
-    ts.NodeFlags.None,
-  );
-  source.fileName = "legacy-types.interface.ts";
-  return source;
+  ];
 }
