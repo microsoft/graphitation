@@ -8,7 +8,7 @@ if (require.main === module) {
       await esbuild.build({
         entryPoints: ["src/subscriber/index.tsx"],
         write: false,
-        minify: false,
+        minify: true,
         bundle: true,
         format: "esm",
         sourcemap: false,

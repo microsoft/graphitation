@@ -10,7 +10,7 @@
     "@jridgewell/gen-mapping" "^0.1.0"
     "@jridgewell/trace-mapping" "^0.3.9"
 
-"@apollo/client@>= 3.3.0 < 3.7.0", "@apollo/client@~3.6.0":
+"@apollo/client@>= 3.3.0 < 3.7.0", "@apollo/client@>=3.6.0 <3.13.9", "@apollo/client@~3.6.0":
   version "3.6.10"
   resolved "https://registry.yarnpkg.com/@apollo/client/-/client-3.6.10.tgz#f12d1f0cc4811d6bfe68b3f48a18e08a757ee301"
   integrity sha512-zow8+Z7Wz8OeH+8bhIxqPtqqXY87APoUbXlaXD/rgs3O9ijSyHSbUt3E4DnkLNP9q3+/OsRWY+Mx+WxkQQ4oig==
@@ -857,6 +857,11 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
+"@datastructures-js/queue@^4.2.3":
+  version "4.3.0"
+  resolved "https://registry.yarnpkg.com/@datastructures-js/queue/-/queue-4.3.0.tgz#3aca391aa7d8d3c81edc0fe333c608748f77b0aa"
+  integrity sha512-2RYt1+N4dtdcilwmB+A6j9HT/5MImHSK2UUjBA8WQAHoA2AEJC4YxJSSGhGTOBMyLMKpMiowwTrnB315YgtTrA==
+
 "@discoveryjs/json-ext@^0.5.0":
   version "0.5.6"
   resolved "https://registry.yarnpkg.com/@discoveryjs/json-ext/-/json-ext-0.5.6.tgz#d5e0706cf8c6acd8c6032f8d54070af261bbbb2f"
@@ -1131,6 +1136,14 @@
   integrity sha512-+sAUfpQ3Frz+VCbPCqj+cZzvEESy3fjSeT/pDWkYCWOBXYNNKZfuVsHuv8/JO2zze8+Eb/Q7a6hZVgzS81fLbQ==
   dependencies:
     "@floating-ui/core" "^1.2.4"
+
+"@fluentui-contrib/react-data-grid-react-window@^1.1.2":
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/@fluentui-contrib/react-data-grid-react-window/-/react-data-grid-react-window-1.4.2.tgz#20ed3a8da8c8b84f23e1bcf2d17023b4cabf25ab"
+  integrity sha512-pYPa6pgKlDpfUybMExfk8UifAJV+p6eAmjpS4l2iLBDLOaY41YHtKO8IEaNe3ogISJuEWmJFCPUa5LIzlXQxhw==
+  dependencies:
+    "@swc/helpers" "~0.5.11"
+    react-window "^1.8.5"
 
 "@fluentui/keyboard-keys@^9.0.6":
   version "9.0.6"
@@ -3274,6 +3287,20 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
+"@pavelglac/apollo-inspector@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@pavelglac/apollo-inspector/-/apollo-inspector-2.0.0.tgz#42253762350d0fe95ae185628bd33fe2c9b50d65"
+  integrity sha512-5fhciyzCG1CXhtExYtPF+K7+1WUsCMMunkwDVc781q+psnR/NmzqeoLaDknRqceC7EJqowFJ4aSLga6XUoqJEQ==
+  dependencies:
+    "@swc/helpers" "^0.4.14"
+    "@types/node" "^18.11.17"
+    deep-object-diff "^1.1.9"
+    graphql "^15.0.0"
+    lodash-es "4.17.6"
+    object-sizeof "^2.6.1"
+    rxjs "^7.8.1"
+    timer-node "^5.0.7"
+
 "@peculiar/asn1-schema@^2.3.8":
   version "2.3.8"
   resolved "https://registry.yarnpkg.com/@peculiar/asn1-schema/-/asn1-schema-2.3.8.tgz#04b38832a814e25731232dd5be883460a156da3b"
@@ -3529,6 +3556,13 @@
   integrity sha512-E4KcWTpoLHqwPHLxidpOqQbcrZVgi0rsmmZXUle1jXmJfuIf/UWpczUJ7MZZ5tlxytgJXyp0w4PGkkeLiuIdZw==
   dependencies:
     tslib "^2.4.0"
+
+"@swc/helpers@~0.5.11":
+  version "0.5.23"
+  resolved "https://registry.yarnpkg.com/@swc/helpers/-/helpers-0.5.23.tgz#19287d0d86d962b111376039a50c792902c9a86a"
+  integrity sha512-5lSsMOTXURePglDfvuAQUqkGek9Hg2kksOYay2m0+XR++b2NWYL/4sWyuvVBIs8oKnJaxkdi9whaL/sqN13afw==
+  dependencies:
+    tslib "^2.8.0"
 
 "@szmarczak/http-timer@^1.1.2":
   version "1.1.2"
@@ -4612,22 +4646,27 @@ anymatch@^3.0.3, anymatch@~3.1.2:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
-apollo-inspector-ui@^0.0.8:
-  version "0.0.8"
-  resolved "https://registry.yarnpkg.com/apollo-inspector-ui/-/apollo-inspector-ui-0.0.8.tgz#50164c22de15861538bb831fa85684223da5140c"
-  integrity sha512-wcEC1bRm+toNZ+BUfdvZYYpqhQDld9OPoZVUCDxcZoLopTm6p6/4ZohDCgc17vazkckxMejPsLfYjDQXrYhJnA==
+apollo-inspector-ui@^0.0.10:
+  version "0.0.10"
+  resolved "https://registry.yarnpkg.com/apollo-inspector-ui/-/apollo-inspector-ui-0.0.10.tgz#5ad693d39e2299f1fbf8e46f765b69ee29979c25"
+  integrity sha512-21h/RvUIYBztZF/l9elBH9JxoNvqbMqpADR8Tvrsp0rfXd4Jcg7+pJqjhq/lr8+XZW7upJiQwJHfGi3SOyTn+Q==
   dependencies:
-    apollo-inspector "1.17.6"
+    "@datastructures-js/queue" "^4.2.3"
+    "@fluentui-contrib/react-data-grid-react-window" "^1.1.2"
+    apollo-inspector "1.17.9"
+    copy-to-clipboard "^3.3.3"
+    event-target-shim "^6.0.2"
     graphql "16.8.1"
     immer "^10.0.1"
     lodash-es "^4.17.21"
     rxjs "^7.8.1"
-    zustand "^4.3.7"
+    webextension-polyfill "^0.10.0"
+    zustand "^4.5.0"
 
-apollo-inspector@1.17.6, apollo-inspector@^1.17.6:
-  version "1.17.6"
-  resolved "https://registry.yarnpkg.com/apollo-inspector/-/apollo-inspector-1.17.6.tgz#fae6a984a00f6b9a7b73804348e9d8df8132e2ca"
-  integrity sha512-JHjXzHeI0oP/0Ian5r3Q/jPry8VMqz0x8Z+MFc6ekDBLrDcSnERxxffslMdpKhU6MrgW+0lvWH0Uzjs310Zhrw==
+apollo-inspector@1.17.9:
+  version "1.17.9"
+  resolved "https://registry.yarnpkg.com/apollo-inspector/-/apollo-inspector-1.17.9.tgz#1e6e616d60bad3e258e44e847f95a91e2864ddbc"
+  integrity sha512-L1tKXjwknsA5P2tgGfMSfvaRjcUW0B+reH+qzn9EJ8QtD6lY0CpWdDOzTMveuG0w6vTKOBMXkq6uQ162gzlWwA==
   dependencies:
     "@swc/helpers" "^0.4.14"
     "@types/node" "^18.11.17"
@@ -5756,6 +5795,13 @@ copy-to-clipboard@^3.2.0:
   dependencies:
     toggle-selection "^1.0.6"
 
+copy-to-clipboard@^3.3.3:
+  version "3.3.3"
+  resolved "https://registry.yarnpkg.com/copy-to-clipboard/-/copy-to-clipboard-3.3.3.tgz#55ac43a1db8ae639a4bd99511c148cdd1b83a1b0"
+  integrity sha512-2KV8NhB5JqC3ky0r9PMCAZKbUHSwtEo4CwCs0KXgruG43gX5PMqDEBbVU4OUzw2MuAWUfsuFmWvEKG5QRfSnJA==
+  dependencies:
+    toggle-selection "^1.0.6"
+
 core-util-is@~1.0.0:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/core-util-is/-/core-util-is-1.0.2.tgz#b5fd54220aa2bc5ab57aab7140c940754503c1a7"
@@ -6591,6 +6637,11 @@ event-target-shim@^5.0.0:
   version "5.0.1"
   resolved "https://registry.yarnpkg.com/event-target-shim/-/event-target-shim-5.0.1.tgz#5d4d3ebdf9583d63a5333ce2deb7480ab2b05789"
   integrity sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==
+
+event-target-shim@^6.0.2:
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/event-target-shim/-/event-target-shim-6.0.2.tgz#ea5348c3618ee8b62ff1d344f01908ee2b8a2b71"
+  integrity sha512-8q3LsZjRezbFZ2PN+uP+Q7pnHUMmAOziU2vA2OwoFaKIXxlxl38IylhSSgUorWu/rf4er67w0ikBqjBFk/pomA==
 
 eventemitter3@^3.1.0:
   version "3.1.2"
@@ -9216,12 +9267,7 @@ lodash.toarray@^4.4.0:
   resolved "https://registry.yarnpkg.com/lodash.toarray/-/lodash.toarray-4.4.0.tgz#24c4bfcd6b2fba38bfd0594db1179d8e9b656561"
   integrity sha1-JMS/zWsvuji/0FlNsRedjptlZWE=
 
-lodash@^4, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.20, lodash@^4.17.21, lodash@^4.17.4, lodash@^4.18.1:
-  version "4.18.1"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.18.1.tgz#ff2b66c1f6326d59513de2407bf881439812771c"
-  integrity sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==
-
-lodash@~4.17.0, lodash@~4.17.15:
+lodash@^4, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.20, lodash@^4.17.21, lodash@^4.17.4, lodash@^4.18.1, lodash@~4.17.0, lodash@~4.17.15:
   version "4.18.1"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.18.1.tgz#ff2b66c1f6326d59513de2407bf881439812771c"
   integrity sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==
@@ -10458,6 +10504,14 @@ react-transition-group@^4.4.1:
     dom-helpers "^5.0.1"
     loose-envify "^1.4.0"
     prop-types "^15.6.2"
+
+react-window@^1.8.5:
+  version "1.8.11"
+  resolved "https://registry.yarnpkg.com/react-window/-/react-window-1.8.11.tgz#a857b48fa85bd77042d59cc460964ff2e0648525"
+  integrity sha512-+SRbUVT2scadgFSWx+R1P754xHPEqvcfSfVX10QYg6POOz+WNgkN48pS+BtZNIMGiL1HYrSEiCkwsMS15QogEQ==
+  dependencies:
+    "@babel/runtime" "^7.0.0"
+    memoize-one ">=3.1.1 <6"
 
 react-window@^1.8.6:
   version "1.8.8"
@@ -11793,6 +11847,11 @@ tslib@^2.4.1, tslib@^2.5.0, tslib@^2.6.1, tslib@^2.6.2:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.6.3.tgz#0438f810ad7a9edcde7a241c3d80db693c8cbfe0"
   integrity sha512-xNvxJEOUiWPGhUuUdQgAJPKOOJfGnIyKySOc09XkKsgdUV/3E2zvwZYdejjmRgPCgcym1juLH3226yA7sEFJKQ==
 
+tslib@^2.8.0:
+  version "2.8.1"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.8.1.tgz#612efe4ed235d567e8aba5f2a5fab70280ade83f"
+  integrity sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==
+
 tslib@~2.0.0, tslib@~2.0.1:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.0.3.tgz#8e0741ac45fc0c226e58a17bfc3e64b9bc6ca61c"
@@ -12036,6 +12095,11 @@ use-sync-external-store@1.2.0:
   resolved "https://registry.yarnpkg.com/use-sync-external-store/-/use-sync-external-store-1.2.0.tgz#7dbefd6ef3fe4e767a0cf5d7287aacfb5846928a"
   integrity sha512-eEgnFxGQ1Ife9bzYs6VLi8/4X6CObHMw9Qr9tPY43iKwsPw8xE8+EFsf/2cFZ5S3esXgpWgtSCtLNS41F+sKPA==
 
+use-sync-external-store@^1.2.2:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/use-sync-external-store/-/use-sync-external-store-1.6.0.tgz#b174bfa65cb2b526732d9f2ac0a408027876f32d"
+  integrity sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w==
+
 util-deprecate@^1.0.1, util-deprecate@~1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/util-deprecate/-/util-deprecate-1.0.2.tgz#450d4dc9fa70de732762fbd2d4a28981419a0ccf"
@@ -12167,6 +12231,11 @@ webcrypto-core@^1.8.0:
     asn1js "^3.0.1"
     pvtsutils "^1.3.5"
     tslib "^2.6.2"
+
+webextension-polyfill@^0.10.0:
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/webextension-polyfill/-/webextension-polyfill-0.10.0.tgz#ccb28101c910ba8cf955f7e6a263e662d744dbb8"
+  integrity sha512-c5s35LgVa5tFaHhrZDnr3FpQpjj1BB+RXhLTYUxGqBVN460HkbM8TBtEqdXWbpTKfzwCcjAZVF7zXCYSKtcp9g==
 
 webidl-conversions@^3.0.0:
   version "3.0.1"
@@ -12595,9 +12664,9 @@ zen-observable@0.8.15, zen-observable@^0.8.15:
   resolved "https://registry.yarnpkg.com/zen-observable/-/zen-observable-0.8.15.tgz#96415c512d8e3ffd920afd3889604e30b9eaac15"
   integrity sha512-PQ2PC7R9rslx84ndNBZB/Dkv8V8fZEpk83RLgXtYd0fwUgEjseMn1Dgajh2x6S8QbZAFa9p2qVCEuYZNgve0dQ==
 
-zustand@^4.3.7:
-  version "4.4.2"
-  resolved "https://registry.yarnpkg.com/zustand/-/zustand-4.4.2.tgz#e26ad331d0a2e28a7d4aa126b00c7140b34904bb"
-  integrity sha512-qF3/vZHCrjPUX5DvPE3DPDZlh+FiAWRKlP9PI7SlW1MCk8q4vUCDqyWsbF8K41ne0Yx8eeeb0m1cypn1LqUMYQ==
+zustand@^4.5.0:
+  version "4.5.7"
+  resolved "https://registry.yarnpkg.com/zustand/-/zustand-4.5.7.tgz#7d6bb2026a142415dd8be8891d7870e6dbe65f55"
+  integrity sha512-CHOUy7mu3lbD6o6LJLfllpjkzhHXSBlX8B9+qPddUsIfeF5S/UZ5q0kmCsnRqT1UHFQZchNFDDzMbQsuesHWlw==
   dependencies:
-    use-sync-external-store "1.2.0"
+    use-sync-external-store "^1.2.2"
