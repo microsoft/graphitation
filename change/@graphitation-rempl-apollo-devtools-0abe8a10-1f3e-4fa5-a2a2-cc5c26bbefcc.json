@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Apollo 3.13.9 compatibility",
+  "packageName": "@graphitation/rempl-apollo-devtools",
+  "email": "pavelglac@gmail.com",
+  "dependentChangeType": "patch"
+}
