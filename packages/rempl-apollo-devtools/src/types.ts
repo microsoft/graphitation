@@ -3,7 +3,7 @@ import {
   ApolloClient,
   StoreObject,
 } from "@apollo/client";
-import { IDataView } from "apollo-inspector";
+import { IDataView } from "@pavelglac/apollo-inspector";
 import { createPublisher } from "rempl";
 
 export type Publisher = ReturnType<typeof createPublisher>;

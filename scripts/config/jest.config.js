@@ -11,10 +11,13 @@ module.exports = {
     "graphql17.test.ts$",
   ],
   transform: {
-    "node_modules[\\\\/]+quick-lru": [
+    "node_modules[\\\\/]+(quick-lru|@pavelglac[\\\\/]+apollo-inspector)": [
       "babel-jest",
       { plugins: ["@babel/plugin-transform-modules-commonjs"] },
     ],
   },
-  transformIgnorePatterns: ["/node_modules/(?!(quick-lru))", ".pnp.[^\\]+$]"],
+  transformIgnorePatterns: [
+    "/node_modules/(?!(quick-lru|@pavelglac/apollo-inspector))",
+    ".pnp.[^\\]+$]",
+  ],
 };

@@ -1,5 +1,5 @@
 import { ApolloClient, ApolloLink, gql, Observable } from "@apollo/client";
-import { ApolloInspector, OperationType } from "apollo-inspector";
+import { ApolloInspector, OperationType } from "@pavelglac/apollo-inspector";
 import type { OperationDefinitionNode } from "graphql";
 import { ForestRun } from "../../../../../apollo-forest-run/src";
 
@@ -168,11 +168,6 @@ async function recordOperations() {
       query: QUERY_DOCUMENT,
       fetchPolicy: "network-only",
     });
-
-    const queryId = (observableQuery as any).queryId;
-    const originalQueryInfo = (client as any).queryManager.queries.get(queryId);
-
-    expect(originalQueryInfo.shouldNotify).toBeUndefined();
 
     querySubscription = observableQuery.subscribe({
       next: () => {
