@@ -1,7 +1,7 @@
 import { ApolloClient, ApolloLink, gql, Observable } from "@apollo/client";
 import { ApolloInspector, OperationType } from "@pavelglac/apollo-inspector";
 import type { OperationDefinitionNode } from "graphql";
-import { ForestRun } from "../../../../../apollo-forest-run/src";
+import { ForestRun } from "@graphitation/apollo-forest-run";
 
 const TEST_CLIENT_ID = "test-client";
 
