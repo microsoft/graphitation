@@ -20,6 +20,12 @@ interface TestCase {
   name: string;
   document: string;
   variables?: Record<string, unknown>;
+  /**
+   * Set to true when supermassive intentionally diverges from graphql-js.
+   * Tests marked this way are excluded from the cross-executor parity checks
+   * but the divergence is covered by a dedicated test in the non-blocking suite.
+   */
+  divergesFromGraphQLJs?: boolean;
 }
 
 const testCases: Array<TestCase> = [
@@ -417,6 +423,7 @@ const testCases: Array<TestCase> = [
 
   {
     name: "@stream/defer errors",
+    divergesFromGraphQLJs: true,
     document: `
       {
         person(id: 1) {
@@ -429,6 +436,13 @@ const testCases: Array<TestCase> = [
       }`,
   },
 ];
+
+/**
+ * Subset of testCases that are expected to produce identical results to
+ * graphql-js. Cases marked divergesFromGraphQLJs are covered by dedicated
+ * tests in the non-blocking semantics suite instead.
+ */
+const comparableTestCases = testCases.filter((t) => !t.divergesFromGraphQLJs);
 
 describe("graphql-js snapshot check to ensure test stability", () => {
   let schema: GraphQLSchema;
@@ -461,7 +475,7 @@ describe("executeWithSchema", () => {
     schema = makeSchema();
   });
 
-  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
+  test.each(comparableTestCases)("$name", async ({ document, variables }: TestCase) => {
     await compareResultsForExecuteWithSchema(schema, document, variables);
   });
 });
@@ -472,7 +486,7 @@ describe("executeWithoutSchema - minimal viable schema annotation", () => {
     jest.resetAllMocks();
     schema = makeSchema();
   });
-  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
+  test.each(comparableTestCases)("$name", async ({ document, variables }: TestCase) => {
     await compareResultForExecuteWithoutSchemaWithMVSAnnotation(
       schema,
       document,

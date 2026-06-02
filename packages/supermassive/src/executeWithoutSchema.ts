@@ -573,7 +573,6 @@ function executeFieldsAndPatches(
     includeCompletedDeferredFragmentsInResult(
       exeContext,
       resolved,
-      path,
       deferredRecords,
     );
     return resolved;
@@ -587,47 +586,21 @@ function executeFieldsAndPatches(
 function includeCompletedDeferredFragmentsInResult(
   exeContext: ExecutionContext,
   result: ObjMap<unknown>,
-  path: Path | undefined,
   deferredRecords: Array<DeferredFragmentRecord>,
 ) {
-  const basePath = pathToArray(path);
   for (const deferredRecord of deferredRecords) {
     if (!deferredRecord.isCompleted) {
       continue;
     }
 
-    mergeDeferredDataAtPath(
-      result,
-      deferredRecord.path.slice(basePath.length),
-      deferredRecord.data,
-    );
+    if (deferredRecord.data != null) {
+      Object.assign(result, deferredRecord.data);
+    }
     exeContext.subsequentPayloads.delete(deferredRecord);
 
     if (deferredRecord.errors.length > 0) {
       exeContext.errors.push(...deferredRecord.errors);
     }
-  }
-}
-
-function mergeDeferredDataAtPath(
-  data: ObjMap<unknown>,
-  path: ReadonlyArray<string | number>,
-  deferredData: ObjMap<unknown> | null,
-) {
-  if (deferredData == null) {
-    return;
-  }
-
-  let target: unknown = data;
-  for (const key of path) {
-    if (target == null || typeof target !== "object") {
-      return;
-    }
-    target = (target as ObjMap<unknown>)[key];
-  }
-
-  if (target != null && typeof target === "object") {
-    Object.assign(target, deferredData);
   }
 }
 
