@@ -3287,20 +3287,6 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@pavelglac/apollo-inspector@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@pavelglac/apollo-inspector/-/apollo-inspector-2.0.0.tgz#42253762350d0fe95ae185628bd33fe2c9b50d65"
-  integrity sha512-5fhciyzCG1CXhtExYtPF+K7+1WUsCMMunkwDVc781q+psnR/NmzqeoLaDknRqceC7EJqowFJ4aSLga6XUoqJEQ==
-  dependencies:
-    "@swc/helpers" "^0.4.14"
-    "@types/node" "^18.11.17"
-    deep-object-diff "^1.1.9"
-    graphql "^15.0.0"
-    lodash-es "4.17.6"
-    object-sizeof "^2.6.1"
-    rxjs "^7.8.1"
-    timer-node "^5.0.7"
-
 "@peculiar/asn1-schema@^2.3.8":
   version "2.3.8"
   resolved "https://registry.yarnpkg.com/@peculiar/asn1-schema/-/asn1-schema-2.3.8.tgz#04b38832a814e25731232dd5be883460a156da3b"
@@ -4667,6 +4653,20 @@ apollo-inspector@1.17.9:
   version "1.17.9"
   resolved "https://registry.yarnpkg.com/apollo-inspector/-/apollo-inspector-1.17.9.tgz#1e6e616d60bad3e258e44e847f95a91e2864ddbc"
   integrity sha512-L1tKXjwknsA5P2tgGfMSfvaRjcUW0B+reH+qzn9EJ8QtD6lY0CpWdDOzTMveuG0w6vTKOBMXkq6uQ162gzlWwA==
+  dependencies:
+    "@swc/helpers" "^0.4.14"
+    "@types/node" "^18.11.17"
+    deep-object-diff "^1.1.9"
+    graphql "^15.0.0"
+    lodash-es "4.17.6"
+    object-sizeof "^2.6.1"
+    rxjs "^7.8.1"
+    timer-node "^5.0.7"
+
+apollo-inspector@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/apollo-inspector/-/apollo-inspector-2.0.0.tgz#9956cc38de36e3fffff24f567660fb2a0af8969b"
+  integrity sha512-XzJWKn95Hor1QJkx05HSUYTLkkahnuFNt/DJuLrkkXeSs58+EtV8FX/WoDwZRE8DvPbB0aKu2GeVtm9J1Pu+3w==
   dependencies:
     "@swc/helpers" "^0.4.14"
     "@types/node" "^18.11.17"

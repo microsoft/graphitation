@@ -17,7 +17,7 @@ module.exports = {
     ],
   },
   transformIgnorePatterns: [
-    "/node_modules/(?!(quick-lru|@pavelglac/apollo-inspector))",
+    "/node_modules/(?!(quick-lru|apollo-inspector))",
     ".pnp.[^\\]+$]",
   ],
 };

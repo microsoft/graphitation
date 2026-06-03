@@ -1,5 +1,5 @@
 import { ApolloClient, ApolloLink, gql, Observable } from "@apollo/client";
-import { ApolloInspector, OperationType } from "@pavelglac/apollo-inspector";
+import { ApolloInspector, OperationType } from "apollo-inspector";
 import type { OperationDefinitionNode } from "graphql";
 import { ForestRun } from "@graphitation/apollo-forest-run";
 

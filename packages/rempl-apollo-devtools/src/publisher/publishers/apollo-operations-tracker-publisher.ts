@@ -4,7 +4,7 @@ import {
   ApolloInspector,
   IDataView,
   IApolloClientObject,
-} from "@pavelglac/apollo-inspector";
+} from "apollo-inspector";
 import { ClientObject, WrapperCallbackParams } from "../../types";
 import { Subscription } from "rxjs";
 import { ICopyData } from "apollo-inspector-ui";
