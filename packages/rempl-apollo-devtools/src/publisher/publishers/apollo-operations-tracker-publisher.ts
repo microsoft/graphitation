@@ -42,7 +42,7 @@ export class ApolloOperationsTrackerPublisher {
       );
       const inspector = new ApolloInspector(apolloClients);
 
-      const observable = inspector.startTrackingSubscription({
+      const observable = inspector.startTrackingAllOperationsSubscription({
         tracking: { trackVerboseOperations: true },
         apolloClientIds: options.clientIds,
         delayOperationsEmitByInMS: 1000,
@@ -110,8 +110,10 @@ export class ApolloOperationsTrackerPublisher {
     activeClient,
     clientObjects,
   }: WrapperCallbackParams) {
-    this.activeClient = activeClient?.client;
     this.apolloClients = clientObjects;
+    this.activeClient = activeClient?.client
+      ? (activeClient.client as ApolloClient<NormalizedCacheObject>)
+      : undefined;
 
     const clientIds = this.apolloClients.map((client) => client.clientId);
     this.apolloPublisher.ns("apollo-operations-tracker").publish(clientIds);
