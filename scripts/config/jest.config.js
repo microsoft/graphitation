@@ -11,7 +11,7 @@ module.exports = {
     "graphql17.test.ts$",
   ],
   transform: {
-    "node_modules[\\\\/]+(quick-lru|@pavelglac[\\\\/]+apollo-inspector)": [
+    "node_modules[\\\\/]+(quick-lru|apollo-inspector)": [
       "babel-jest",
       { plugins: ["@babel/plugin-transform-modules-commonjs"] },
     ],
