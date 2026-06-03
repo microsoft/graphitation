@@ -2,6 +2,21 @@
   "name": "@graphitation/rempl-apollo-devtools",
   "entries": [
     {
+      "date": "Wed, 03 Jun 2026 13:26:57 GMT",
+      "version": "2.2.0",
+      "tag": "@graphitation/rempl-apollo-devtools_v2.2.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "pavelglac@gmail.com",
+            "package": "@graphitation/rempl-apollo-devtools",
+            "commit": "e7e9bacdaa5a2f3a4585db12f8ff220f758e84bb",
+            "comment": "Apollo 3.13.9 compatibility"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 30 Apr 2026 12:37:52 GMT",
       "version": "2.1.14",
       "tag": "@graphitation/rempl-apollo-devtools_v2.1.14",

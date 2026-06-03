@@ -1,8 +1,16 @@
 # Change Log - @graphitation/rempl-apollo-devtools
 
-<!-- This log was last generated on Thu, 30 Apr 2026 12:37:52 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 03 Jun 2026 13:26:57 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 2.2.0
+
+Wed, 03 Jun 2026 13:26:57 GMT
+
+### Minor changes
+
+- Apollo 3.13.9 compatibility (pavelglac@gmail.com)
 
 ## 2.1.14
 
