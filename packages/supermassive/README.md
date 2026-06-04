@@ -63,6 +63,45 @@ However, APIs and response format _will_ change, expect breaking changes.
 > Note: see [this discussion](https://github.com/graphql/defer-stream-wg) of the new response format in the
 > defer and stream working group
 
+#### Deterministic, availability-driven `@defer`
+
+By default `@defer` always streams the deferred fragment as a subsequent incremental payload, matching
+graphql-js. Supermassive additionally lets you make `@defer` _deterministic_ based on data availability: a
+deferred fragment is included **inline** in the initial response when the data is already available locally,
+and streamed otherwise. This avoids a needless incremental round-trip when the data is already in a local
+store (e.g. a normalized cache, IndexedDB, etc.) while still streaming when a network fetch is required.
+
+The decision is driven by a per-field `isAvailable` probe co-located with the field's resolver. Because each
+deferred field can have completely different availability logic, the probe is defined per field:
+
+```ts
+const resolvers = {
+  Person: {
+    // object-form resolver: `resolve` produces the value, `isAvailable`
+    // reports whether it can be produced from a local store right now.
+    address: {
+      resolve: (source, args, context, info) => context.data.loadAddress(source.id),
+      // Must NOT trigger a network fetch - only read from the local store.
+      // Return `true` only when the value is locally available.
+      isAvailable: (source, args, context, info) => context.data.hasAddress(source.id),
+    },
+  },
+};
+```
+
+Semantics:
+
+- A deferred fragment is inlined only when **every** selected field reports available (all-or-nothing); if any
+  field is missing a probe, reports unavailable, or its probe throws, the whole fragment is streamed.
+- Probes may be synchronous or return a `Promise<boolean>`. The initial response only ever awaits the (local)
+  probes and the inlined fields' resolvers - it never awaits a streamed fragment's network fetch.
+- A fragment with no probeable fields (empty, or only `__typename`) is streamed, matching graphql-js.
+- Inlining is applied to **queries** only. Mutations and subscriptions keep streaming their deferred fragments
+  so the serial execution semantics of the root operation are unaffected.
+- With no `isAvailable` probes defined, behaviour is unchanged: every `@defer` fragment streams exactly like
+  graphql-js.
+
+
 ### Possible future - pre-normalized executor
 
 In a scenario where executor is running close to the client (sometimes even in same process or at least in same browser), it might be worth exploring removing some of the requirements imposed by the usual GraphQL transport - for example serialization. Not only GraphQL executors do the JSON serialization, but also they return the data that is optimized for transport and that matches the query tree. This means clients need to perform often expensive normazilation. As traffic and message size might be less important in same process / same browser scenarios, it might be worthwhile exploring return pre-normalized data from supermassive. This offers massive speedups for some clients like Apollo ([see benchmarks](https://github.com/vladar/graphql-normalized)).

@@ -13,6 +13,7 @@ import {
   collectSubfields as _collectSubfields,
   FieldGroup,
   GroupedFieldSet,
+  PatchFields,
 } from "./collectFields";
 import { devAssert } from "./jsutils/devAssert";
 import { inspect } from "./jsutils/inspect";
@@ -321,12 +322,13 @@ function executeOperation(
     // Note: cannot use OperationTypeNode from graphql-js as it doesn't exist in 15.x
     switch (operation.operation) {
       case "query":
-        result = executeFields(
+        result = executeFieldsAndPatches(
           exeContext,
           rootTypeName,
           rootValue,
           path,
           groupedFieldSet,
+          patches,
           undefined,
         );
         result = buildResponse(exeContext, result);
@@ -359,16 +361,21 @@ function executeOperation(
         );
     }
 
-    for (const patch of patches) {
-      const { label, groupedFieldSet: patchGroupedFieldSet } = patch;
-      executeDeferredFragment(
-        exeContext,
-        rootTypeName,
-        rootValue,
-        patchGroupedFieldSet,
-        label,
-        path,
-      );
+    // Query root patches are handled inline by executeFieldsAndPatches above
+    // (deterministic inline-vs-stream). Mutation/subscription root patches keep
+    // the streaming-only behaviour so serial mutation semantics are preserved.
+    if (operation.operation !== "query") {
+      for (const patch of patches) {
+        const { label, groupedFieldSet: patchGroupedFieldSet } = patch;
+        executeDeferredFragment(
+          exeContext,
+          rootTypeName,
+          rootValue,
+          patchGroupedFieldSet,
+          label,
+          path,
+        );
+      }
     }
 
     return result;
@@ -528,6 +535,335 @@ function executeFields(
   // field, which is possibly a promise. Return a promise that will return this
   // same map, but with any promises replaced with the values they resolved to.
   return promiseForObject(results);
+}
+
+/**
+ * Executes the critical fields of a selection set and, for every `@defer`
+ * fragment (patch) collected at that selection set, deterministically decides
+ * whether to include it inline in the initial response or to stream it as a
+ * subsequent incremental payload.
+ *
+ * The decision is based on data availability, not on timing: each field of a
+ * deferred fragment may provide an `isAvailable` probe that reports - using
+ * local-store reads only, never a network fetch - whether the field can be
+ * produced right now. A fragment is inlined only when *all* of its fields are
+ * available; otherwise the whole fragment is streamed. Fields without a probe
+ * are treated as "not available", so by default (no probes) `@defer` streams
+ * exactly like graphql-js.
+ *
+ * The initial response only ever awaits the (local) availability probes of
+ * deferred fragments; it never awaits the network fetch of a streamed fragment.
+ */
+function executeFieldsAndPatches(
+  exeContext: ExecutionContext,
+  parentTypeName: string,
+  sourceValue: unknown,
+  path: Path | undefined,
+  groupedFieldSet: GroupedFieldSet,
+  patches: Array<PatchFields>,
+  incrementalDataRecord: IncrementalDataRecord | undefined,
+): PromiseOrValue<ObjMap<unknown>> {
+  const result = executeFields(
+    exeContext,
+    parentTypeName,
+    sourceValue,
+    path,
+    groupedFieldSet,
+    incrementalDataRecord,
+  );
+
+  if (!patches.length) {
+    return result;
+  }
+
+  // Deterministic inlining is only applied to queries. Mutations and
+  // subscriptions keep streaming their deferred fragments so the serial
+  // execution semantics of the root operation are never affected by a
+  // deferred fragment that happens to be locally available.
+  if (exeContext.operation.operation !== "query") {
+    for (const patch of patches) {
+      const { label, groupedFieldSet: patchGroupedFieldSet } = patch;
+      executeDeferredFragment(
+        exeContext,
+        parentTypeName,
+        sourceValue,
+        patchGroupedFieldSet,
+        label,
+        path,
+        incrementalDataRecord,
+      );
+    }
+    return result;
+  }
+
+  // Start every patch decision now so the availability probes run concurrently
+  // with the critical fields. Each entry resolves to the data to merge inline,
+  // or to null when the patch was streamed instead.
+  const decidedPatches = patches.map((patch) =>
+    decidePatch(
+      exeContext,
+      parentTypeName,
+      sourceValue,
+      path,
+      patch,
+      incrementalDataRecord,
+    ),
+  );
+
+  const mergeInlinedPatches = (
+    criticalResult: ObjMap<unknown>,
+  ): PromiseOrValue<ObjMap<unknown>> => {
+    const merge = (inlined: Array<ObjMap<unknown> | null>): ObjMap<unknown> => {
+      for (const fragmentData of inlined) {
+        if (fragmentData != null) {
+          deepMergeInlinedData(criticalResult, fragmentData);
+        }
+      }
+      return criticalResult;
+    };
+
+    return decidedPatches.some(isPromise)
+      ? Promise.all(decidedPatches).then(merge)
+      : merge(decidedPatches as Array<ObjMap<unknown> | null>);
+  };
+
+  return isPromise(result)
+    ? result.then(mergeInlinedPatches)
+    : mergeInlinedPatches(result);
+}
+
+/**
+ * Decides a single `@defer` patch: probe availability, then either execute its
+ * fields inline (returning the data to merge) or stream it (returning null).
+ */
+function decidePatch(
+  exeContext: ExecutionContext,
+  parentTypeName: string,
+  sourceValue: unknown,
+  path: Path | undefined,
+  patch: PatchFields,
+  incrementalDataRecord: IncrementalDataRecord | undefined,
+): PromiseOrValue<ObjMap<unknown> | null> {
+  const { label, groupedFieldSet: patchGroupedFieldSet } = patch;
+
+  const onAvailability = (
+    available: boolean,
+  ): PromiseOrValue<ObjMap<unknown> | null> => {
+    if (!available) {
+      executeDeferredFragment(
+        exeContext,
+        parentTypeName,
+        sourceValue,
+        patchGroupedFieldSet,
+        label,
+        path,
+        incrementalDataRecord,
+      );
+      return null;
+    }
+    return executeInlineDeferredFragment(
+      exeContext,
+      parentTypeName,
+      sourceValue,
+      patchGroupedFieldSet,
+      label,
+      path,
+      incrementalDataRecord,
+    );
+  };
+
+  const availability = probePatchAvailability(
+    exeContext,
+    parentTypeName,
+    sourceValue,
+    patchGroupedFieldSet,
+    path,
+  );
+
+  return isPromise(availability)
+    ? availability.then(onAvailability)
+    : onAvailability(availability);
+}
+
+/**
+ * Probes whether every field of a deferred fragment can be produced from a
+ * local store right now. Returns false as soon as any field lacks an
+ * `isAvailable` probe or reports unavailable. A fragment with no probeable
+ * fields (empty, or only `__typename`) carries no positive availability signal
+ * and is therefore streamed, matching graphql-js' default behaviour.
+ */
+function probePatchAvailability(
+  exeContext: ExecutionContext,
+  parentTypeName: string,
+  sourceValue: unknown,
+  patchGroupedFieldSet: GroupedFieldSet,
+  path: Path | undefined,
+): PromiseOrValue<boolean> {
+  const pending: Array<Promise<boolean>> = [];
+  let sawProbe = false;
+
+  for (const [responseName, fieldGroup] of patchGroupedFieldSet) {
+    const fieldName = fieldGroup[0].name.value;
+    if (fieldName === "__typename") {
+      // __typename is always locally available (it is just the type name).
+      continue;
+    }
+
+    const isAvailable = Resolvers.getFieldAvailabilityResolver(
+      exeContext.schemaFragment,
+      parentTypeName,
+      fieldName,
+    );
+    if (!isAvailable) {
+      return false;
+    }
+
+    const fieldDef = Definitions.getField(
+      exeContext.schemaFragment.definitions,
+      parentTypeName,
+      fieldName,
+    );
+    if (fieldDef === undefined) {
+      return false;
+    }
+
+    sawProbe = true;
+
+    let outcome: PromiseOrValue<boolean>;
+    try {
+      const returnTypeRef = Definitions.getFieldTypeReference(fieldDef);
+      const args = getArgumentValues(exeContext, fieldDef, fieldGroup[0]);
+      const info = buildResolveInfo(
+        exeContext,
+        fieldName,
+        fieldGroup,
+        parentTypeName,
+        typeNameFromReference(returnTypeRef),
+        addPath(path, responseName, parentTypeName),
+      );
+      outcome = isAvailable(sourceValue, args, exeContext.contextValue, info);
+    } catch {
+      // A probe that throws is treated as "not available" so the fragment
+      // streams through the normal resolver path (which surfaces the error).
+      return false;
+    }
+
+    if (isPromise(outcome)) {
+      pending.push(
+        outcome.then(
+          (value) => value === true,
+          () => false,
+        ),
+      );
+    } else if (outcome !== true) {
+      return false;
+    }
+  }
+
+  if (!sawProbe) {
+    // No field asserted local availability (empty fragment or only
+    // __typename) - stream it so behaviour matches graphql-js.
+    return false;
+  }
+  if (pending.length === 0) {
+    return true;
+  }
+  return Promise.all(pending).then((results) =>
+    results.every((value) => value === true),
+  );
+}
+
+/**
+ * Executes a deferred fragment that has been determined to be locally available
+ * and returns its data to be merged into the initial response. A
+ * `DeferredFragmentRecord` is still created so nested `@defer`/`@stream` records
+ * have a parent to chain on; on success the record is removed from the streamed
+ * payloads and its errors are promoted to the containing context. If execution
+ * fails (e.g. a non-null field error bubbles), the fragment falls back to being
+ * streamed as an error payload instead of corrupting the initial response.
+ */
+function executeInlineDeferredFragment(
+  exeContext: ExecutionContext,
+  parentTypeName: string,
+  sourceValue: unknown,
+  fields: GroupedFieldSet,
+  label: string | undefined,
+  path: Path | undefined,
+  incrementalDataRecord: IncrementalDataRecord | undefined,
+): PromiseOrValue<ObjMap<unknown> | null> {
+  const record = new DeferredFragmentRecord({
+    label,
+    path,
+    parentContext: incrementalDataRecord,
+    exeContext,
+  });
+
+  const inline = (data: ObjMap<unknown>): ObjMap<unknown> => {
+    exeContext.subsequentPayloads.delete(record);
+    if (record.errors.length > 0) {
+      const target = incrementalDataRecord?.errors ?? exeContext.errors;
+      target.push(...record.errors);
+    }
+    // Resolve the record so any nested records chained on its promise still
+    // fire, even though it is no longer streamed on its own.
+    record.addData(data);
+    return data;
+  };
+
+  const stream = (error: unknown): null => {
+    record.errors.push(error as GraphQLError);
+    record.addData(null);
+    return null;
+  };
+
+  let data: PromiseOrValue<ObjMap<unknown>>;
+  try {
+    data = executeFields(
+      exeContext,
+      parentTypeName,
+      sourceValue,
+      path,
+      fields,
+      record,
+    );
+  } catch (error) {
+    return stream(error);
+  }
+
+  return isPromise(data) ? data.then(inline, stream) : inline(data);
+}
+
+/**
+ * Deep-merges an inlined deferred fragment's data into the initial result.
+ * Deferred fragment fields are siblings of the critical fields at the same
+ * path, but a deferred fragment and the critical selection can share an
+ * object-typed field with different sub-selections, so nested objects are
+ * merged recursively. A critical value of `null` (e.g. from null bubbling) is
+ * never resurrected.
+ */
+function deepMergeInlinedData(
+  target: ObjMap<unknown>,
+  source: ObjMap<unknown>,
+): void {
+  for (const key of Object.keys(source)) {
+    const sourceValue = source[key];
+    const targetValue = target[key];
+    if (targetValue === null) {
+      continue;
+    }
+    if (isPlainObjectLike(targetValue) && isPlainObjectLike(sourceValue)) {
+      deepMergeInlinedData(
+        targetValue as ObjMap<unknown>,
+        sourceValue as ObjMap<unknown>,
+      );
+    } else {
+      target[key] = sourceValue;
+    }
+  }
+}
+
+function isPlainObjectLike(value: unknown): value is ObjMap<unknown> {
+  return isObjectLike(value) && !Array.isArray(value);
 }
 
 /**
@@ -2003,29 +2339,15 @@ function collectAndExecuteSubfields(
   const { groupedFieldSet: subGroupedFieldSet, patches: subPatches } =
     collectSubfields(exeContext, { name: returnTypeName }, fieldGroup);
 
-  const subFields = executeFields(
+  return executeFieldsAndPatches(
     exeContext,
     returnTypeName,
     result,
     path,
     subGroupedFieldSet,
+    subPatches,
     incrementalDataRecord,
   );
-
-  for (const subPatch of subPatches) {
-    const { label, groupedFieldSet: subPatchGroupedFieldSet } = subPatch;
-    executeDeferredFragment(
-      exeContext,
-      returnTypeName,
-      result,
-      subPatchGroupedFieldSet,
-      label,
-      path,
-      incrementalDataRecord,
-    );
-  }
-
-  return subFields;
 }
 
 function invokeBeforeFieldSubscribeHook(

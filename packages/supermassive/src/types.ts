@@ -46,7 +46,32 @@ export type FieldResolverObject<
 > = {
   subscribe?: FunctionFieldResolver<TSource, TContext, TArgs, TReturn>;
   resolve?: FunctionFieldResolver<TSource, TContext, TArgs, TReturn>;
+  /**
+   * Optional, synchronous-or-async availability probe used to make `@defer`
+   * non-blocking in a deterministic way. When a field selected inside a
+   * `@defer` fragment provides this, the executor calls it (local-store reads
+   * only, never a network fetch) to decide whether the deferred fragment can be
+   * included inline in the initial response (all of its fields available) or
+   * must be streamed as a subsequent incremental payload (any field missing).
+   *
+   * It receives the same arguments as `resolve` and must NOT trigger a fetch:
+   * return `true` only when the field can be produced from a local store.
+   * Fields without an `isAvailable` probe are treated as "not available", so a
+   * fragment containing them always streams (preserving graphql-js behaviour).
+   */
+  isAvailable?: FieldAvailabilityResolver<TSource, TContext, TArgs>;
 };
+
+export type FieldAvailabilityResolver<
+  TSource,
+  TContext,
+  TArgs = Record<string, unknown>,
+> = (
+  source: TSource,
+  args: TArgs,
+  context: TContext,
+  info: ResolveInfo,
+) => PromiseOrValue<boolean>;
 
 export type TypeResolver<TSource, TContext> = (
   value: TSource,

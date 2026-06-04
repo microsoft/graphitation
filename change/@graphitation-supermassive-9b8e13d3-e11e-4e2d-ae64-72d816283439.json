@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Add deterministic, availability-driven @defer: a deferred fragment is inlined into the initial response when every selected field reports locally available via a new per-field `isAvailable` resolver probe, otherwise it streams (default behaviour, matching graphql-js)",
+  "packageName": "@graphitation/supermassive",
+  "email": "pavelglac@microsoft.com",
+  "dependentChangeType": "patch"
+}

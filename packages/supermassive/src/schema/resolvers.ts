@@ -4,6 +4,7 @@ import {
   UserInterfaceTypeResolver,
   ScalarTypeResolver,
   FunctionFieldResolver,
+  FieldAvailabilityResolver,
   SchemaId,
   SchemaFragment,
   ObjectTypeResolver,
@@ -84,6 +85,23 @@ export function getFieldResolver(
   return typeof fieldResolver === "function"
     ? fieldResolver
     : fieldResolver?.resolve;
+}
+
+export function getFieldAvailabilityResolver(
+  schemaFragment: SchemaFragment,
+  typeName: TypeName,
+  fieldName: string,
+): FieldAvailabilityResolver<unknown, unknown> | undefined {
+  if (fieldName === "__typename") {
+    return undefined;
+  }
+  const typeResolvers = schemaFragment.resolvers[typeName] as
+    | ObjectTypeResolver<unknown, unknown, unknown>
+    | undefined;
+  const fieldResolver = typeResolvers?.[fieldName];
+  return typeof fieldResolver === "function"
+    ? undefined
+    : fieldResolver?.isAvailable;
 }
 
 export function getSubscriptionFieldResolver(
