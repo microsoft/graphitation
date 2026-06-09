@@ -599,10 +599,14 @@ describe("@cache(covers)", () => {
     ).toThrowError(/Could not extract covers/);
   });
 
-  it("throws when covers is an empty list", () => {
-    expect(() =>
-      describeOp(`query Q @cache(covers: []) { field }`),
-    ).toThrowError(/Could not extract covers/);
+  it("returns empty covers when covers is an empty list", () => {
+    const op = describeOp(`query Q @cache(covers: []) { field }`);
+    expect(op.covers).toEqual([]);
+  });
+
+  it("returns empty covers when covers is null", () => {
+    const op = describeOp(`query Q @cache(covers: null) { field }`);
+    expect(op.covers).toEqual([]);
   });
 
   it("throws when covers contains empty strings", () => {
@@ -631,6 +635,22 @@ describe("@cache(covers)", () => {
       `query Preloader($ops: [String!] = ["DefaultOp"]) @cache(covers: $ops) { field }`,
     );
     expect(op.covers).toEqual(["DefaultOp"]);
+  });
+
+  it("returns empty covers when variable is an empty array", () => {
+    const op = describeOp(
+      `query Preloader($ops: [String!]) @cache(covers: $ops) { field }`,
+      { ops: [] },
+    );
+    expect(op.covers).toEqual([]);
+  });
+
+  it("returns empty covers when variable is null", () => {
+    const op = describeOp(
+      `query Preloader($ops: [String!]) @cache(covers: $ops) { field }`,
+      { ops: null },
+    );
+    expect(op.covers).toEqual([]);
   });
 
   it("supports both keyVars and covers in same @cache directive", () => {
