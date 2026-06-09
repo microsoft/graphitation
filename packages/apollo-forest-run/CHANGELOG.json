@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Tue, 09 Jun 2026 15:15:31 GMT",
+      "version": "0.24.1",
+      "tag": "@graphitation/apollo-forest-run_v0.24.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "ae41c57d5ce2469c7a45fbfcd67f72c1e6a2e9ec",
+            "comment": "fix(apollo-forest-run): do not throw on empty covers value"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 30 Apr 2026 12:37:52 GMT",
       "version": "0.24.0",
       "tag": "@graphitation/apollo-forest-run_v0.24.0",

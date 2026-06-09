@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Thu, 30 Apr 2026 12:37:52 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 09 Jun 2026 15:15:31 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.24.1
+
+Tue, 09 Jun 2026 15:15:31 GMT
+
+### Patches
+
+- fix(apollo-forest-run): do not throw on empty covers value (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.24.0
 
