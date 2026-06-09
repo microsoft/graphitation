@@ -150,12 +150,15 @@ function getCovers(
     return EMPTY_COVERS;
   }
   const value = valueFromASTUntyped(astValue, variables);
-  if (value === undefined) {
+  if (
+    value === undefined ||
+    value === null ||
+    (Array.isArray(value) && value.length === 0)
+  ) {
     return EMPTY_COVERS;
   }
   if (
     !Array.isArray(value) ||
-    !value.length ||
     value.some((variable) => typeof variable !== "string" || variable === "")
   ) {
     throw new Error(
