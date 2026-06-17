@@ -47,14 +47,10 @@ extends:
               - checkout: self
                 persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
                 fetchDepth: 2
-              - task: npmAuthenticate@0
-                inputs:
-                  workingFile: ".azure-devops/npm-mirror/.npmrc"
-                displayName: Authenticate npm mirror registry
+              - script: yarn config set registry https://domoreexp.pkgs.visualstudio.com/_packaging/npm-mirror/npm/registry/
+                displayName: Set yarn registry
               - script: yarn
                 displayName: yarn
-                env:
-                  NPM_CONFIG_USERCONFIG: .azure-devops/npm-mirror/.npmrc
               # - script: |
               #     yarn ci
               #   displayName: build and test [test]
