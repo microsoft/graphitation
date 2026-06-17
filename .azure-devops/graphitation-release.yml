@@ -10,8 +10,6 @@ variables:
     value: ade7d667-42f5-485a-91a9-f1dc6482a9b0
   - name: adoNpmFeedBaseUrl
     value: https://pkgs.dev.azure.com/DomoreexpGithub/_packaging/GraphQL/npm/registry/
-  - name: adoNpmMirrorUrl
-    value: https://domoreexp.pkgs.visualstudio.com/_packaging/npm-mirror/npm/registry/
 
 resources:
   repositories:
@@ -49,19 +47,19 @@ extends:
               - checkout: self
                 persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
                 fetchDepth: 2
-              - script: |
-                  echo "always-auth=true" > .npmrc
-                  echo "registry=$(adoNpmMirrorUrl)" >> .npmrc
-                displayName: Configure npm mirror registry
               - task: npmAuthenticate@0
                 inputs:
-                  workingFile: ".npmrc"
+                  workingFile: ".azure-devops/.npmrc-mirror"
                 displayName: Authenticate npm mirror registry
               - script: yarn
                 displayName: yarn
+                env:
+                  NPM_CONFIG_USERCONFIG: .azure-devops/.npmrc-mirror
               - script: |
                   yarn ci
                 displayName: build and test [test]
+                env:
+                  NPM_CONFIG_USERCONFIG: .azure-devops/.npmrc-mirror
               - script: |
                   git config user.email "gql-svc@microsoft.com"
                   git config user.name "Graphitation Service Account"
@@ -79,12 +77,10 @@ extends:
               - script: |
                   git restore .
                 displayName: Discard beachball's changes
-              - script: |
-                  echo "always-auth=true" > .npmrc
-                  echo "registry=$(adoNpmFeedBaseUrl)" >> .npmrc
               - task: npmAuthenticate@0
                 inputs:
-                  workingFile: ".npmrc"
+                  workingFile: ".azure-devops/.npmrc-ado-feed"
+                displayName: Authenticate ADO npm feed
               - script: |
                   releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
 
@@ -94,6 +90,8 @@ extends:
                     yarn beachball canary -b "$releaseBranch" -t canary -y --registry $(adoNpmFeedBaseUrl)
                   fi
                 displayName: Release to the ado npm feed
+                env:
+                  NPM_CONFIG_USERCONFIG: .azure-devops/.npmrc-ado-feed
               - task: 1ES.PublishPipelineArtifact@1
                 displayName: 📒 Publish Manifest
                 inputs:
