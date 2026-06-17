@@ -49,7 +49,7 @@ extends:
                 fetchDepth: 2
               - task: npmAuthenticate@0
                 inputs:
-                  workingFile: ".azure-devops/npm-mirror/.npmrc"
+                  workingFile: ".npmrc"
                 displayName: Authenticate npm mirror registry
               - script: corepack enable
                 displayName: Enable Corepack
