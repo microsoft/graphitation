@@ -10,6 +10,8 @@ variables:
     value: ade7d667-42f5-485a-91a9-f1dc6482a9b0
   - name: adoNpmFeedBaseUrl
     value: https://pkgs.dev.azure.com/DomoreexpGithub/_packaging/GraphQL/npm/registry/
+  - name: adoNpmMirrorUrl
+    value: https://domoreexp.pkgs.visualstudio.com/_packaging/npm-mirror/npm/registry/
 
 resources:
   repositories:
@@ -47,6 +49,14 @@ extends:
               - checkout: self
                 persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
                 fetchDepth: 2
+              - script: |
+                  echo "always-auth=true" > .npmrc
+                  echo "registry=$(adoNpmMirrorUrl)" >> .npmrc
+                displayName: Configure npm mirror registry
+              - task: npmAuthenticate@0
+                inputs:
+                  workingFile: ".npmrc"
+                displayName: Authenticate npm mirror registry
               - script: yarn
                 displayName: yarn
               - script: |
