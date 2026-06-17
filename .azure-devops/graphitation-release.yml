@@ -51,6 +51,8 @@ extends:
                 inputs:
                   workingFile: ".azure-devops/npm-mirror/.npmrc"
                 displayName: Authenticate npm mirror registry
+              - script: corepack enable
+                displayName: Enable Corepack
               - script: yarn install --registry https://domoreexp.pkgs.visualstudio.com/_packaging/npm-mirror/npm/registry/
                 displayName: yarn
                 env:
