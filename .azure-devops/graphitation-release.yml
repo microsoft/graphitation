@@ -47,10 +47,8 @@ extends:
               - checkout: self
                 persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
                 fetchDepth: 2
-              - script: yarn config set registry https://domoreexp.pkgs.visualstudio.com/_packaging/npm-mirror/npm/registry/
-                displayName: Set yarn registry
               - script: yarn
-                displayName: yarn
+                displayName: yarn install --registry https://domoreexp.pkgs.visualstudio.com/_packaging/npm-mirror/npm/registry/
               # - script: |
               #     yarn ci
               #   displayName: build and test [test]

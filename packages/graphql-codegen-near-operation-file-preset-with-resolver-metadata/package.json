@@ -16,10 +16,10 @@
     "just": "monorepo-scripts"
   },
   "dependencies": {
+    "@graphql-codegen/add": "^2.0.2",
+    "@graphql-codegen/near-operation-file-preset": "1.17.13",
     "@graphql-codegen/plugin-helpers": "^1.18.2",
     "@graphql-codegen/visitor-plugin-common": "^1.17.22",
-    "@graphql-codegen/near-operation-file-preset": "1.17.13",
-    "@graphql-codegen/add": "^2.0.2",
     "parse-filepath": "^1.0.2",
     "tslib": "~2.0.1"
   },
