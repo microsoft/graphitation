@@ -55,10 +55,12 @@ extends:
                   TOKEN=$(grep '_authToken' .npmrc | head -1 | cut -d'=' -f2)
                   echo "##vso[task.setvariable variable=NPM_TOKEN;issecret=true]$TOKEN"
                 displayName: Extract token from .npmrc
+              - script: |
+                  echo "NPM_TOKEN starts with: ${NPM_TOKEN:0:3} and ends with: ${NPM_TOKEN: -3}"
+                displayName: Verify NPM_TOKEN is set
               - script: corepack enable
                 displayName: Enable Corepack
-              - script: yarn install --registry https://domoreexp.pkgs.visualstudio.com/_packaging/npm-mirror/npm/registry/
-                env:
+              - script: yarn install
                   YARN_NPM_AUTH_TOKEN: $(NPM_TOKEN)
               # - script: |
               #     yarn ci
