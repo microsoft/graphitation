@@ -66,8 +66,6 @@ extends:
               - script: |
                   echo "NPM_TOKEN starts with: ${NPM_TOKEN:0:3} and ends with: ${NPM_TOKEN: -3}"
                 displayName: Verify NPM_TOKEN is set
-              - script: corepack enable
-                displayName: Enable Corepack
               - script: yarn install
                 displayName: yarn
                 env:
