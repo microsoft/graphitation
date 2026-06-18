@@ -49,24 +49,11 @@ extends:
                 fetchDepth: 2
               - task: npmAuthenticate@0
                 inputs:
-                  workingFile: ".azure-devops/npm-mirror/.npmrc"
-                displayName: Authenticate npm mirror registry
-              - script: |
-                  set -euo pipefail
-                  token=$(grep -oE '_authToken=.*' .azure-devops/npm-mirror/.npmrc | head -n1 | cut -d= -f2-)
-                  if [ -z "$token" ]; then
-                    echo "Failed to extract npm auth token from .azure-devops/npm-mirror/.npmrc"
-                    exit 1
-                  fi
-                  echo "##vso[task.setvariable variable=YARN_NPM_AUTH_TOKEN;issecret=true]$token"
-                displayName: Export npm token for Yarn
+                  workingFile: ".npmrc"
               - script: corepack enable
                 displayName: Enable Corepack
-              - script: yarn install --registry https://domoreexp.pkgs.visualstudio.com/_packaging/npm-mirror/npm/registry/
+              - script: yarn install
                 displayName: yarn
-                env:
-                  YARN_NPM_AUTH_TOKEN: $(YARN_NPM_AUTH_TOKEN)
-                  NPM_CONFIG_USERCONFIG: .azure-devops/npm-mirror/.npmrc
               # - script: |
               #     yarn ci
               #   displayName: build and test [test]
