@@ -61,6 +61,8 @@ extends:
               - script: corepack enable
                 displayName: Enable Corepack
               - script: yarn install
+                displayName: yarn
+                env:
                   YARN_NPM_AUTH_TOKEN: $(NPM_TOKEN)
               # - script: |
               #     yarn ci
