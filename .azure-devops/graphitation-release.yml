@@ -50,10 +50,16 @@ extends:
               - task: npmAuthenticate@0
                 inputs:
                   workingFile: ".npmrc"
+              - script: |
+                  # Extract the token from .npmrc and set it as a pipeline variable
+                  TOKEN=$(grep '_authToken' .npmrc | head -1 | cut -d'=' -f2)
+                  echo "##vso[task.setvariable variable=NPM_TOKEN;issecret=true]$TOKEN"
+                displayName: Extract token from .npmrc
               - script: corepack enable
                 displayName: Enable Corepack
-              - script: yarn install
-                displayName: yarn
+              - script: yarn install --registry https://domoreexp.pkgs.visualstudio.com/_packaging/npm-mirror/npm/registry/
+                env:
+                  YARN_NPM_AUTH_TOKEN: $(NPM_TOKEN)
               # - script: |
               #     yarn ci
               #   displayName: build and test [test]
