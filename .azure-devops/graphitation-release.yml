@@ -53,9 +53,9 @@ extends:
               - script: |
                   set -euo pipefail
                   npmrcFile="$(System.DefaultWorkingDirectory)/.npmrc"
-                  echo "Previewing first 5 characters of each line in $npmrcFile"
+                  echo "Previewing first 10 characters of each line in $npmrcFile"
                   while IFS= read -r line; do
-                    printf '%s\n' "${line:0:5}"
+                    printf '%s\n' "${line:0:10}"
                   done < "$npmrcFile"
                 displayName: Debug .npmrc line prefixes
               - script: |
