@@ -99,15 +99,15 @@ extends:
               - task: npmAuthenticate@0
                 inputs:
                   workingFile: ".npmrc"
-              - script: |
-                  releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
+              # - script: |
+              #     releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
 
-                  if [ "${BUILD_SOURCEBRANCH}" = "refs/heads/main" ]; then
-                    yarn beachball publish -b "$releaseBranch" -t latest -y --registry $(adoNpmFeedBaseUrl)
-                  else
-                    yarn beachball canary -b "$releaseBranch" -t canary -y --registry $(adoNpmFeedBaseUrl)
-                  fi
-                displayName: Release to the ado npm feed
+              #     if [ "${BUILD_SOURCEBRANCH}" = "refs/heads/main" ]; then
+              #       yarn beachball publish -b "$releaseBranch" -t latest -y --registry $(adoNpmFeedBaseUrl)
+              #     else
+              #       yarn beachball canary -b "$releaseBranch" -t canary -y --registry $(adoNpmFeedBaseUrl)
+              #     fi
+              #   displayName: Release to the ado npm feed
               - task: 1ES.PublishPipelineArtifact@1
                 displayName: 📒 Publish Manifest
                 inputs:
