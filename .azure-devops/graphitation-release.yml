@@ -48,7 +48,7 @@ extends:
             steps:
               - checkout: self
                 persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
-                fetchDepth: 2
+                fetchDepth: 0
               - script: |
                   cat <<'EOF' > "$(Agent.TempDirectory)/npm-mirror.npmrc"
                   always-auth=true
@@ -79,7 +79,7 @@ extends:
               - script: |
                   git config user.email "gql-svc@microsoft.com"
                   git config user.name "Graphitation Service Account"
-                  git fetch --depth=2
+                  git fetch origin main
                 displayName: Configure git for release
               - script: |
                   releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
