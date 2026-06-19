@@ -3056,6 +3056,7 @@ __metadata:
     "@graphitation/apollo-forest-run": "npm:*"
     "@types/node": "npm:*"
     graphql: "npm:^15.0.0"
+    monorepo-scripts: "npm:*"
     typescript: "npm:^5.5.3"
   languageName: unknown
   linkType: soft
@@ -3199,6 +3200,7 @@ __metadata:
     "@graphql-codegen/plugin-helpers": "npm:^1.18.2"
     "@graphql-codegen/visitor-plugin-common": "npm:^1.17.22"
     "@types/parse-filepath": "npm:1.0.0"
+    monorepo-scripts: "npm:*"
     parse-filepath: "npm:^1.0.2"
     tslib: "npm:~2.0.1"
   peerDependencies:
@@ -3265,6 +3267,7 @@ __metadata:
     "@graphql-codegen/typescript": "npm:^1.19.0"
     "@graphql-codegen/visitor-plugin-common": "npm:^1.17.22"
     auto-bind: "npm:~4.0.0"
+    monorepo-scripts: "npm:*"
     tslib: "npm:~2.0.1"
   peerDependencies:
     graphql: ^15.0.0
@@ -3366,6 +3369,7 @@ __metadata:
     hotkeys-js: "npm:^3.8.7"
     lodash.debounce: "npm:^4.0.8"
     lodash.isequal: "npm:^4.5.0"
+    monorepo-scripts: "npm:*"
     object-sizeof: "npm:^1.6.1"
     react: "npm:^18.2.0"
     react-dom: "npm:^18.2.0"
@@ -3460,6 +3464,7 @@ __metadata:
     "@graphql-tools/optimize": "npm:^1.1.1"
     "@graphql-tools/webpack-loader-runtime": "npm:7.0.0"
     "@types/webpack": "npm:^5.28.0"
+    monorepo-scripts: "npm:*"
     tslib: "npm:^2.4.0"
   peerDependencies:
     "@graphitation/supermassive": ^3.17.0
