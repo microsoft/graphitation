@@ -60,8 +60,6 @@ extends:
                 displayName: Configure yarn for ADO npm feed
               - script: yarn install
                 displayName: yarn
-                env:
-                  YARN_NPM_AUTH_TOKEN: $(NPM_TOKEN)
               # - script: |
               #     yarn ci
               #   displayName: build and test [test]
