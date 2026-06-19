@@ -51,21 +51,9 @@ extends:
                 inputs:
                   workingFile: "$(System.DefaultWorkingDirectory)/.npmrc"
               - script: |
-                  set -euo pipefail
-                  npmrcFile="$(System.DefaultWorkingDirectory)/.npmrc"
-                  echo "Previewing first 10 characters of each line in $npmrcFile"
-                  while IFS= read -r line; do
-                    printf '%s\n' "${line:0:10}"
-                  done < "$npmrcFile"
-                displayName: Debug .npmrc line prefixes
-              - script: |
-                  # Extract the token from .npmrc and set it as a pipeline variable
                   TOKEN=$(grep '_authToken' "$(System.DefaultWorkingDirectory)/.npmrc" | head -1 | cut -d'=' -f2)
                   echo "##vso[task.setvariable variable=NPM_TOKEN;issecret=true]$TOKEN"
                 displayName: Extract token from .npmrc
-              - script: |
-                  echo "NPM_TOKEN starts with: ${NPM_TOKEN:0:3} and ends with: ${NPM_TOKEN: -3}"
-                displayName: Verify NPM_TOKEN is set
               - script: yarn install
                 displayName: yarn
                 env:
