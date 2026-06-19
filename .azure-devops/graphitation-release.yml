@@ -60,9 +60,11 @@ extends:
                 displayName: Configure yarn for ADO npm feed
               - script: yarn install
                 displayName: yarn
-              # - script: |
-              #     yarn ci
-              #   displayName: build and test [test]
+                env:
+                  YARN_NPM_AUTH_TOKEN: $(NPM_TOKEN)
+              - script: |
+                  yarn ci
+                displayName: build and test [test]
               #   env:
               #     NPM_CONFIG_USERCONFIG: .azure-devops/npm-mirror/.npmrc
               # - script: |
