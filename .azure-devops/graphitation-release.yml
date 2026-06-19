@@ -75,11 +75,11 @@ extends:
                 displayName: build and test [test]
                 env:
                   NPM_CONFIG_USERCONFIG: $(Agent.TempDirectory)/npm-mirror.npmrc
-              - script: |
-                  git config user.email "gql-svc@microsoft.com"
-                  git config user.name "Graphitation Service Account"
-                  git fetch origin main
-                displayName: Configure git for release
+              # - script: |
+              #     git config user.email "gql-svc@microsoft.com"
+              #     git config user.name "Graphitation Service Account"
+              #     git fetch origin main
+              #   displayName: Configure git for release
               # - script: |
               #     releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
 
