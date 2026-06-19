@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "yarn upgrade",
+  "packageName": "@graphitation/graphql-codegen-typescript-typemap-plugin",
+  "email": "pavelglac@gmail.com",
+  "dependentChangeType": "patch"
+}
