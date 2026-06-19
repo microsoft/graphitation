@@ -48,7 +48,6 @@ extends:
             steps:
               - checkout: self
                 persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
-                fetchDepth: 2
               - script: |
                   cat <<'EOF' > "$(Agent.TempDirectory)/npm-mirror.npmrc"
                   always-auth=true
