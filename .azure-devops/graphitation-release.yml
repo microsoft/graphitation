@@ -10,6 +10,8 @@ variables:
     value: ade7d667-42f5-485a-91a9-f1dc6482a9b0
   - name: adoNpmFeedBaseUrl
     value: https://pkgs.dev.azure.com/DomoreexpGithub/_packaging/GraphQL/npm/registry/
+  - name: adoMirrorNpmFeedBaseUrl
+    value: https://pkgs.dev.azure.com/DomoreexpGithub/Github_Pipelines/_packaging/github-npm-mirror/npm/registry/
 
 resources:
   repositories:
@@ -47,24 +49,33 @@ extends:
               - checkout: self
                 persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
                 fetchDepth: 2
+              - script: |
+                  cat <<'EOF' > "$(Agent.TempDirectory)/npm-mirror.npmrc"
+                  always-auth=true
+                  registry=$(adoMirrorNpmFeedBaseUrl)
+                  EOF
+                displayName: Create temporary .npmrc for mirror feed
               - task: npmAuthenticate@0
                 inputs:
-                  workingFile: "$(System.DefaultWorkingDirectory)/.npmrc"
+                  workingFile: "$(Agent.TempDirectory)/npm-mirror.npmrc"
               - script: |
-                  TOKEN=$(grep '_authToken' "$(System.DefaultWorkingDirectory)/.npmrc" | head -1 | cut -d'=' -f2)
+                  TOKEN=$(grep '_authToken' "$(Agent.TempDirectory)/npm-mirror.npmrc" | head -1 | cut -d'=' -f2)
                   echo "##vso[task.setvariable variable=NPM_TOKEN;issecret=true]$TOKEN"
                 displayName: Extract token from .npmrc
               - script: |
                   yarn config set npmAlwaysAuth true
-                  yarn config set npmRegistryServer https://pkgs.dev.azure.com/DomoreexpGithub/Github_Pipelines/_packaging/github-npm-mirror/npm/registry/
+                  yarn config set npmRegistryServer $(adoMirrorNpmFeedBaseUrl)
                 displayName: Configure yarn for ADO npm feed
               - script: yarn install
                 displayName: yarn
                 env:
                   YARN_NPM_AUTH_TOKEN: $(NPM_TOKEN)
+                  NPM_CONFIG_USERCONFIG: $(Agent.TempDirectory)/npm-mirror.npmrc
               - script: |
                   yarn ci
                 displayName: build and test [test]
+                env:
+                  NPM_CONFIG_USERCONFIG: $(Agent.TempDirectory)/npm-mirror.npmrc
               #   env:
               #     NPM_CONFIG_USERCONFIG: .azure-devops/npm-mirror/.npmrc
               # - script: |

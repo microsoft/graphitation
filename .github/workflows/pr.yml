@@ -18,6 +18,5 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-      - run: corepack enable
       - run: yarn install --immutable
       - run: yarn ci
