@@ -1,4 +1,3 @@
-// import { InMemoryCache } from "@apollo/client/cache";
 import { gql } from "../__tests__/helpers/descriptor";
 import { ForestRun } from "../ForestRun";
 
@@ -1207,73 +1206,6 @@ test("reports an object diff reaching a cache key collision", () => {
 
   expectInvariantViolation(run, INCOMPATIBLE_OBJECT_DIFF_ERROR);
 });
-
-// Apollo currently replaces these incompatible values. Keep this comparison
-// available in case we decide to implement Apollo-compatible recovery later.
-test.skip.each([
-  {
-    name: "an inconsistent repeated entity",
-    config: undefined,
-    objectTypename: "Entity",
-    listTypename: "Entity",
-    entityKey: "Entity:1",
-  },
-  {
-    name: "a cache key collision",
-    config: { dataIdFromObject: (object: any) => object.id },
-    objectTypename: "ObjectEntity",
-    listTypename: "ListEntity",
-    entityKey: "1",
-  },
-])(
-  "stock Apollo replaces incompatible values for $name",
-  async ({ config, objectTypename, listTypename, entityKey }) => {
-    const { InMemoryCache } = await import("@apollo/client/cache");
-    const cache = new InMemoryCache(config);
-    const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
-
-    try {
-      cache.writeQuery({
-        query: inconsistentEntityQuery,
-        data: {
-          objectVariant: {
-            __typename: objectTypename,
-            id: "1",
-            value: { note: "old" },
-          },
-          listVariant: {
-            __typename: listTypename,
-            id: "1",
-            value: [{ note: "old" }],
-          },
-        },
-      });
-      cache.writeQuery({
-        query: objectVariantQuery,
-        data: {
-          objectVariant: {
-            __typename: objectTypename,
-            id: "1",
-            value: { note: "new" },
-          },
-        },
-      });
-
-      const expectedEntity = {
-        __typename: objectTypename,
-        id: "1",
-        value: { note: "new" },
-      };
-      expect(cache.extract()[entityKey]).toEqual(expectedEntity);
-      expect(cache.readQuery({ query: inconsistentEntityQuery })).toEqual({
-        objectVariant: expectedEntity,
-        listVariant: expectedEntity,
-      });
-    } finally {
-      warn.mockRestore();
-    }
-  },
-);
 
 test("matches apollo InMemoryCache behavior on incorrect cache overwrites", () => {
   const listQuery = gql`
