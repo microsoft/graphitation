@@ -98,7 +98,10 @@ function updateObjectValue(
         continue;
       }
 
-      const updated = updateValue(context, value, fieldDiff);
+      const updated = updateValue(context, value, fieldDiff, {
+        kind: "field",
+        fieldName: fieldInfo.name,
+      });
 
       if (valueIsMissing && updated !== undefined) {
         context.missingFields.get(base.data)?.delete(fieldInfo);
@@ -147,22 +150,45 @@ function updateObjectValue(
   return copy ?? base.data;
 }
 
+type UpdateValueLocation =
+  | { kind: "field"; fieldName: string }
+  | { kind: "listItem"; index: number };
+
 function updateValue(
   context: UpdateTreeContext,
   base: GraphChunk,
   difference: ValueDifference,
+  location: UpdateValueLocation,
 ): SourceValue | undefined {
   switch (difference.kind) {
     case DifferenceKind.Replacement:
       return replaceValue(context, base, difference.newValue);
 
     case DifferenceKind.ObjectDifference: {
-      assert(Value.isObjectValue(base));
+      assert(
+        Value.isObjectValue(base),
+        incompatibleDifferenceMessage(
+          context,
+          base,
+          difference,
+          location,
+          "Object",
+        ),
+      );
       return updateObjectValue(context, base, difference);
     }
 
     case DifferenceKind.CompositeListDifference: {
-      assert(Value.isCompositeListValue(base));
+      assert(
+        Value.isCompositeListValue(base),
+        incompatibleDifferenceMessage(
+          context,
+          base,
+          difference,
+          location,
+          "CompositeList",
+        ),
+      );
       return updateCompositeListValue(context, base, difference);
     }
 
@@ -176,6 +202,74 @@ function updateValue(
     }
     default:
       assertNever(difference);
+  }
+}
+
+function incompatibleDifferenceMessage(
+  context: UpdateTreeContext,
+  base: GraphChunk,
+  difference: ObjectDifference | CompositeListDifference,
+  location: UpdateValueLocation,
+  expectedKind: "Object" | "CompositeList",
+): string {
+  const locationDescription =
+    location.kind === "field"
+      ? `field "${location.fieldName}"`
+      : `list item at index ${location.index}`;
+  const differenceKind = Difference.isObjectDifference(difference)
+    ? "ObjectDifference"
+    : "CompositeListDifference";
+  const differenceState = Difference.isObjectDifference(difference)
+    ? `dirty fields=${difference.dirtyFields?.size ?? 0}, pending fields=${
+        difference.fieldQueue.size
+      }, field states=${difference.fieldState.size}`
+    : `dirty items=${difference.dirtyItems?.size ?? 0}, pending items=${
+        difference.itemQueue.size
+      }, item states=${difference.itemState.size}, layout change=${Boolean(
+        difference.layout,
+      )}`;
+
+  return (
+    `cannot apply ${differenceKind} to ${valueKindName(
+      base,
+    )} at ${locationDescription} ` +
+    `while updating a ${context.operation.definition.operation} operation; ` +
+    `expected value kind=${expectedKind}, actual value kind=${valueKindName(
+      base,
+    )}; ` +
+    `difference metadata: ${differenceState}. ` +
+    `This indicates inconsistent structural representations for the same normalized object. ` +
+    `Likely causes include inconsistent response shapes for a repeated normalized entity or a cache-key collision. ` +
+    `Object keys, operation names, aliases, arguments, variables, type names, and cached values are omitted to protect privacy.`
+  );
+}
+
+function valueKindName(value: GraphChunk): string {
+  if (Value.isScalarValue(value)) {
+    return "Scalar";
+  }
+  if (Value.isLeafNull(value)) {
+    return "LeafNull";
+  }
+  switch (value.kind) {
+    case ValueKind.Object:
+      return "Object";
+    case ValueKind.CompositeList:
+      return "CompositeList";
+    case ValueKind.CompositeNull:
+      return "CompositeNull";
+    case ValueKind.CompositeUndefined:
+      return "CompositeUndefined";
+    case ValueKind.LeafList:
+      return "LeafList";
+    case ValueKind.LeafError:
+      return "LeafError";
+    case ValueKind.LeafUndefined:
+      return "LeafUndefined";
+    case ValueKind.ComplexScalar:
+      return "ComplexScalar";
+    default:
+      return assertNever(value);
   }
 }
 
@@ -202,6 +296,7 @@ function updateCompositeListValue(
       context,
       Value.resolveListItemChunk(base, index),
       itemDiff,
+      { kind: "listItem", index },
     );
     if (updatedValue === base.data[index]) {
       continue;
