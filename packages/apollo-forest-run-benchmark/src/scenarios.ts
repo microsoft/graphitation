@@ -2,14 +2,34 @@ import type { ForestRun } from "@graphitation/apollo-forest-run";
 import type { Scenario, ScenarioContext } from "./types";
 import { parse } from "graphql";
 
-// Pre-parse 50 unique named queries to simulate a real app with many active operations.
-// Each has its own operation name and data, creating separate trees in the forest.
-// This is the setup that exposes O(n) scans in getCoveringOperationIds.
-const EXTRA_OPS_COUNT = 50;
-const extraOperations = Array.from({ length: EXTRA_OPS_COUNT }, (_, i) => ({
-  query: parse(`query BgQuery${i} { node${i}(id: "${i}") { id value } }`),
-  data: { [`node${i}`]: { __typename: `Node${i}`, id: `${i}`, value: i } },
-}));
+const bdQuery = parse(`query BgQuery($id: ID!) { node(id: $ID) { id value } }`);
+const userQuery = parse(
+  `query User($id: ID!) { user(id: $ID) { id name status } }`,
+);
+
+// Those are operations that just inflates cache size, which may affect some scenarios
+// that need to loop through all operations to find some node.
+const backgroundQueries = (count: number) =>
+  Array.from({ length: count }, (_, i) => ({
+    query: bdQuery,
+    variables: { id: `${i}` },
+    data: { node: { __typename: `Node${i}`, id: `${i}`, value: i } },
+  }));
+
+// User queries, useful to read many unique queries
+const userQueries = (count: number) =>
+  Array.from({ length: count }, (_, i) => ({
+    query: userQuery,
+    variables: { id: `user_${i}` },
+    data: {
+      user: {
+        __typename: "User",
+        id: `user_${i}`,
+        name: `User ${i}`,
+        status: "available",
+      },
+    },
+  }));
 
 const addWatchers = (
   watcherCount: number,
@@ -421,8 +441,8 @@ export const scenarios = [
       const cache = new CacheFactory(configuration);
 
       // Populate the cache with many unrelated operations (simulating real app)
-      for (const { query, data } of extraOperations) {
-        cache.writeQuery({ query, data });
+      for (const { query, data, variables } of backgroundQueries(50)) {
+        cache.writeQuery({ query, data, variables });
       }
 
       // Write the main query, add watchers, then measure a write with a change.
@@ -438,6 +458,28 @@ export const scenarios = [
             query,
             data: data["complex-nested-single-field-change"],
           });
+        },
+      };
+    },
+  },
+  {
+    name: "cache-misses-with-background",
+    prepare: (ctx: ScenarioContext) => {
+      const { CacheFactory, configuration } = ctx;
+      const cache = new CacheFactory(configuration);
+
+      // Populate the cache with many unrelated operations (simulating real app)
+      for (const { query, data, variables } of backgroundQueries(50)) {
+        cache.writeQuery({ query, data, variables });
+      }
+
+      const users = userQueries(5);
+
+      return {
+        run() {
+          for (const { query, variables } of users) {
+            cache.readQuery({ query, variables });
+          }
         },
       };
     },
