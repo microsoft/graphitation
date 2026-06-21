@@ -89,9 +89,9 @@ extends:
               #       yarn beachball canary -b "$releaseBranch" -t canary -y -n $(ossNpmToken) --access public
               #     fi
               #   displayName: Release to the npm registry
-              - script: |
-                  git restore .
-                displayName: Discard beachball's changes
+              # - script: |
+              #     git restore .
+              #   displayName: Discard beachball's changes
               - script: |
                   echo "always-auth=true" > .npmrc
                   echo "registry=$(adoNpmFeedBaseUrl)" >> .npmrc
