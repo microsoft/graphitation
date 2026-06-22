@@ -82,33 +82,33 @@ extends:
                   git config user.name "Graphitation Service Account"
                   git fetch origin main
                 displayName: Configure git for release
-              - script: |
-                  releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
-
-                  if [ "${BUILD_SOURCEBRANCH}" = "refs/heads/main" ]; then
-                    yarn beachball publish -b "$releaseBranch" -t latest -y -n $(ossNpmToken) --access public --no-push --keep-change-files
-                  else
-                    yarn beachball canary -b "$releaseBranch" -t canary -y -n $(ossNpmToken) --access public
-                  fi
-                displayName: Release to the npm registry
-              # - script: |
-              #     git restore .
-              #   displayName: Discard beachball's changes
-              # - script: |
-              #     echo "always-auth=true" > .npmrc
-              #     echo "registry=$(adoNpmFeedBaseUrl)" >> .npmrc
-              # - task: npmAuthenticate@0
-              #   inputs:
-              #     workingFile: ".npmrc"
               # - script: |
               #     releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
 
               #     if [ "${BUILD_SOURCEBRANCH}" = "refs/heads/main" ]; then
-              #       yarn beachball publish -b "$releaseBranch" -t latest -y --registry $(adoNpmFeedBaseUrl)
+              #       yarn beachball publish -b "$releaseBranch" -t latest -y -n $(ossNpmToken) --access public --no-push --keep-change-files
               #     else
-              #       yarn beachball canary -b "$releaseBranch" -t canary -y --registry $(adoNpmFeedBaseUrl)
+              #       yarn beachball canary -b "$releaseBranch" -t canary -y -n $(ossNpmToken) --access public
               #     fi
-              #   displayName: Release to the ado npm feed
+              #   displayName: Release to the npm registry
+              - script: |
+                  git restore .
+                displayName: Discard beachball's changes
+              - script: |
+                  echo "always-auth=true" > .npmrc
+                  echo "registry=$(adoNpmFeedBaseUrl)" >> .npmrc
+              - task: npmAuthenticate@0
+                inputs:
+                  workingFile: ".npmrc"
+              - script: |
+                  releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
+
+                  if [ "${BUILD_SOURCEBRANCH}" = "refs/heads/main" ]; then
+                    yarn beachball publish -b "$releaseBranch" -t latest -y --registry $(adoNpmFeedBaseUrl)
+                  else
+                    yarn beachball canary -b "$releaseBranch" -t canary -y --registry $(adoNpmFeedBaseUrl)
+                  fi
+                displayName: Release to the ado npm feed
               - task: 1ES.PublishPipelineArtifact@1
                 displayName: 📒 Publish Manifest
                 inputs:
