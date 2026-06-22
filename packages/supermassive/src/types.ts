@@ -257,6 +257,8 @@ export interface CommonExecutionArgs {
   subscribeFieldResolver?: Maybe<FunctionFieldResolver<unknown, unknown>>;
   fieldExecutionHooks?: ExecutionHooks;
   enablePerEventContext?: boolean;
+  enableEarlyExecution?: boolean;
+  enableDeferredMerge?: boolean;
 }
 export type ExecutionWithoutSchemaArgs = CommonExecutionArgs & {
   schemaFragment: SchemaFragment;

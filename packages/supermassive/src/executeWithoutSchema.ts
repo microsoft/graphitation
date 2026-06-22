@@ -13,8 +13,10 @@ import {
   collectSubfields as _collectSubfields,
   FieldGroup,
   GroupedFieldSet,
+  PatchFields,
 } from "./collectFields";
 import { devAssert } from "./jsutils/devAssert";
+import { getObjectAtPath } from "./jsutils/getObjectAtPath";
 import { inspect } from "./jsutils/inspect";
 import { invariant } from "./jsutils/invariant";
 import { isIterableObject } from "./jsutils/isIterableObject";
@@ -122,6 +124,8 @@ export interface ExecutionContext {
   fieldExecutionHooks?: ExecutionHooks;
   subsequentPayloads: Set<IncrementalDataRecord>;
   enablePerEventContext: boolean;
+  enableEarlyExecution: boolean;
+  enableDeferredMerge: boolean;
 }
 
 /**
@@ -193,6 +197,8 @@ function buildExecutionContext(
     subscribeFieldResolver,
     fieldExecutionHooks,
     enablePerEventContext,
+    enableEarlyExecution,
+    enableDeferredMerge,
   } = args;
 
   assertValidExecutionArguments(document, variableValues);
@@ -262,6 +268,8 @@ function buildExecutionContext(
     fieldExecutionHooks,
     subsequentPayloads: new Set(),
     enablePerEventContext: enablePerEventContext ?? true,
+    enableEarlyExecution: enableEarlyExecution ?? false,
+    enableDeferredMerge: enableDeferredMerge ?? false,
   };
 }
 
@@ -328,6 +336,7 @@ function executeOperation(
           path,
           groupedFieldSet,
           undefined,
+          exeContext.enableEarlyExecution ? patches : undefined,
         );
         result = buildResponse(exeContext, result);
         break;
@@ -338,6 +347,7 @@ function executeOperation(
           rootValue,
           path,
           groupedFieldSet,
+          exeContext.enableEarlyExecution ? patches : undefined,
         );
         result = buildResponse(exeContext, result);
         break;
@@ -359,16 +369,18 @@ function executeOperation(
         );
     }
 
-    for (const patch of patches) {
-      const { label, groupedFieldSet: patchGroupedFieldSet } = patch;
-      executeDeferredFragment(
-        exeContext,
-        rootTypeName,
-        rootValue,
-        patchGroupedFieldSet,
-        label,
-        path,
-      );
+    if (!exeContext.enableEarlyExecution) {
+      for (const patch of patches) {
+        const { label, groupedFieldSet: patchGroupedFieldSet } = patch;
+        executeDeferredFragment(
+          exeContext,
+          rootTypeName,
+          rootValue,
+          patchGroupedFieldSet,
+          label,
+          path,
+        );
+      }
     }
 
     return result;
@@ -398,6 +410,10 @@ function buildResponse(
 
   const hooks = exeContext.fieldExecutionHooks;
   try {
+    if (exeContext.enableDeferredMerge) {
+      includeCompletedDeferredFragmentsInResult(exeContext, data);
+    }
+
     const initialResult =
       exeContext.errors.length === 0
         ? { data }
@@ -442,7 +458,18 @@ function executeFieldsSerially(
   sourceValue: unknown,
   path: Path | undefined,
   groupedFieldSet: GroupedFieldSet,
+  patches?: Array<PatchFields>,
 ): PromiseOrValue<ObjMap<unknown>> {
+  if (exeContext.enableEarlyExecution) {
+    startExecutingPatches(
+      exeContext,
+      parentTypeName,
+      sourceValue,
+      path,
+      patches,
+      undefined,
+    );
+  }
   return promiseReduce(
     groupedFieldSet,
     (results, [responseName, fieldGroup]) => {
@@ -486,6 +513,7 @@ function executeFields(
   path: Path | undefined,
   groupedFieldSet: GroupedFieldSet,
   incrementalDataRecord: IncrementalDataRecord | undefined,
+  patches?: Array<PatchFields>,
 ): PromiseOrValue<ObjMap<unknown>> {
   const results = Object.create(null);
   let containsPromise = false;
@@ -519,6 +547,15 @@ function executeFields(
     throw error;
   }
 
+  startExecutingPatches(
+    exeContext,
+    parentTypeName,
+    sourceValue,
+    path,
+    patches,
+    incrementalDataRecord,
+  );
+
   // If there are no promises, we can just return the object
   if (!containsPromise) {
     return results;
@@ -528,6 +565,64 @@ function executeFields(
   // field, which is possibly a promise. Return a promise that will return this
   // same map, but with any promises replaced with the values they resolved to.
   return promiseForObject(results);
+}
+
+function startExecutingPatches(
+  exeContext: ExecutionContext,
+  parentTypeName: string,
+  sourceValue: unknown,
+  path: Path | undefined,
+  patches: Array<PatchFields> | undefined,
+  incrementalDataRecord: IncrementalDataRecord | undefined,
+): void {
+  if (!patches) {
+    return;
+  }
+
+  for (const { label, groupedFieldSet: patchGroupedFieldSet } of patches) {
+    executeDeferredFragment(
+      exeContext,
+      parentTypeName,
+      sourceValue,
+      patchGroupedFieldSet,
+      label,
+      path,
+      incrementalDataRecord,
+    );
+  }
+}
+
+function includeCompletedDeferredFragmentsInResult(
+  exeContext: ExecutionContext,
+  result: ObjMap<unknown> | null,
+): void {
+  if (result == null) {
+    return;
+  }
+
+  for (const incrementalDataRecord of exeContext.subsequentPayloads) {
+    if (
+      !isDeferredFragmentRecord(incrementalDataRecord) ||
+      !incrementalDataRecord.isCompleted
+    ) {
+      continue;
+    }
+
+    const target = getObjectAtPath(result, incrementalDataRecord.path);
+    if (!target) {
+      continue;
+    }
+
+    if (incrementalDataRecord.data != null) {
+      Object.assign(target, incrementalDataRecord.data);
+    }
+
+    if (incrementalDataRecord.errors.length > 0) {
+      exeContext.errors.push(...incrementalDataRecord.errors);
+    }
+
+    exeContext.subsequentPayloads.delete(incrementalDataRecord);
+  }
 }
 
 /**
@@ -2003,6 +2098,18 @@ function collectAndExecuteSubfields(
   const { groupedFieldSet: subGroupedFieldSet, patches: subPatches } =
     collectSubfields(exeContext, { name: returnTypeName }, fieldGroup);
 
+  if (exeContext.enableEarlyExecution) {
+    return executeFields(
+      exeContext,
+      returnTypeName,
+      result,
+      path,
+      subGroupedFieldSet,
+      incrementalDataRecord,
+      subPatches,
+    );
+  }
+
   const subFields = executeFields(
     exeContext,
     returnTypeName,
@@ -2875,6 +2982,12 @@ function isStreamItemsRecord(
   return incrementalDataRecord.type === "stream";
 }
 
+function isDeferredFragmentRecord(
+  incrementalDataRecord: IncrementalDataRecord,
+): incrementalDataRecord is DeferredFragmentRecord {
+  return incrementalDataRecord.type === "defer";
+}
+
 class DeferredFragmentRecord {
   type: "defer";
   errors: Array<GraphQLError>;
@@ -2906,10 +3019,12 @@ class DeferredFragmentRecord {
       this._resolve = (promiseOrValue) => {
         resolve(promiseOrValue);
       };
-    }).then((data) => {
-      this.data = data;
-      this.isCompleted = true;
-    });
+    }).then((data) => this.complete(data));
+  }
+
+  private complete(data: ObjMap<unknown> | null): void {
+    this.data = data;
+    this.isCompleted = true;
   }
 
   addData(data: PromiseOrValue<ObjMap<unknown> | null>) {
@@ -2917,6 +3032,9 @@ class DeferredFragmentRecord {
     if (parentData) {
       this._resolve?.(parentData.then(() => data));
       return;
+    }
+    if (!isPromise(data)) {
+      this.complete(data);
     }
     this._resolve?.(data);
   }
