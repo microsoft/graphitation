@@ -24,8 +24,8 @@ extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
 
   parameters:
-    settings:
-      networkIsolationPolicy: Permissive,CFSClean
+    # settings:
+    #   networkIsolationPolicy: Permissive,CFSClean
     sdl:
       sourceAnalysisPool:
         name: Azure-Pipelines-1ESPT-ExDShared
@@ -82,15 +82,15 @@ extends:
                   git config user.name "Graphitation Service Account"
                   git fetch origin main
                 displayName: Configure git for release
-              # - script: |
-              #     releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
+              - script: |
+                  releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
 
-              #     if [ "${BUILD_SOURCEBRANCH}" = "refs/heads/main" ]; then
-              #       yarn beachball publish -b "$releaseBranch" -t latest -y -n $(ossNpmToken) --access public --no-push --keep-change-files
-              #     else
-              #       yarn beachball canary -b "$releaseBranch" -t canary -y -n $(ossNpmToken) --access public
-              #     fi
-              #   displayName: Release to the npm registry
+                  if [ "${BUILD_SOURCEBRANCH}" = "refs/heads/main" ]; then
+                    yarn beachball publish -b "$releaseBranch" -t latest -y -n $(ossNpmToken) --access public --no-push --keep-change-files
+                  else
+                    yarn beachball canary -b "$releaseBranch" -t canary -y -n $(ossNpmToken) --access public
+                  fi
+                displayName: Release to the npm registry
               - script: |
                   git restore .
                 displayName: Discard beachball's changes
