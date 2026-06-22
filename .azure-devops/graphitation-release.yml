@@ -92,9 +92,9 @@ extends:
               # - script: |
               #     git restore .
               #   displayName: Discard beachball's changes
-              - script: |
-                  echo "always-auth=true" > .npmrc
-                  echo "registry=$(adoNpmFeedBaseUrl)" >> .npmrc
+              # - script: |
+              #     echo "always-auth=true" > .npmrc
+              #     echo "registry=$(adoNpmFeedBaseUrl)" >> .npmrc
               # - task: npmAuthenticate@0
               #   inputs:
               #     workingFile: ".npmrc"
