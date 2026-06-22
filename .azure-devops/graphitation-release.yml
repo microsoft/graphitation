@@ -95,9 +95,9 @@ extends:
               - script: |
                   echo "always-auth=true" > .npmrc
                   echo "registry=$(adoNpmFeedBaseUrl)" >> .npmrc
-              - task: npmAuthenticate@0
-                inputs:
-                  workingFile: ".npmrc"
+              # - task: npmAuthenticate@0
+              #   inputs:
+              #     workingFile: ".npmrc"
               # - script: |
               #     releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
 
