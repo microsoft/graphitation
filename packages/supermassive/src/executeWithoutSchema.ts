@@ -518,6 +518,17 @@ function executeFields(
   const results = Object.create(null);
   let containsPromise = false;
 
+  if (exeContext.enableEarlyExecution) {
+    startExecutingPatches(
+      exeContext,
+      parentTypeName,
+      sourceValue,
+      path,
+      patches,
+      incrementalDataRecord,
+    );
+  }
+
   try {
     for (const [responseName, fieldGroup] of groupedFieldSet) {
       const fieldPath = addPath(path, responseName, parentTypeName);
@@ -546,15 +557,6 @@ function executeFields(
     }
     throw error;
   }
-
-  startExecutingPatches(
-    exeContext,
-    parentTypeName,
-    sourceValue,
-    path,
-    patches,
-    incrementalDataRecord,
-  );
 
   // If there are no promises, we can just return the object
   if (!containsPromise) {
