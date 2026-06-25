@@ -53,9 +53,9 @@ export function updateTree(
   const rootChunks = base.nodes.get(base.rootNodeKey);
   assert(
     rootChunks?.length === 1,
-    `Failed to update "${base.operation.debugName}": expected a single root chunk, got ${
-      rootChunks?.length ?? 0
-    }`,
+    `Failed to update "${
+      base.operation.debugName
+    }": expected a single root chunk, got ${rootChunks?.length ?? 0}`,
   );
   const rootChunk = rootChunks[0];
   const context: UpdateTreeContext = {
@@ -114,9 +114,9 @@ export function updateTree(
       const at = debugPathClause(context, chunk);
       assert(
         difference,
-        `Failed to update "${base.operation.debugName}"${at}: missing difference for ${
-          chunk.type || "object"
-        }`,
+        `Failed to update "${
+          base.operation.debugName
+        }"${at}: missing difference for ${chunk.type || "object"}`,
       );
     }
 

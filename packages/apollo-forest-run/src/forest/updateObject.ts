@@ -222,7 +222,9 @@ function incompatibleReplacementMessage(
   return updateFailureMessage(
     context,
     base,
-    `cannot replace ${valueKindName(base)} with ${replacementKind}${typeClause}`,
+    `cannot replace ${valueKindName(
+      base,
+    )} with ${replacementKind}${typeClause}`,
   );
 }
 
@@ -292,8 +294,8 @@ function updateFailureMessage(
   const pathString = basePath?.length
     ? basePath.join(".")
     : location
-      ? describeLocation(location)
-      : undefined;
+    ? describeLocation(location)
+    : undefined;
   const nodeClause = nodeTypeClause(context, base);
   return pathString
     ? `${prefix} at path ${pathString}${nodeClause}: ${detail}`

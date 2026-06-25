@@ -127,6 +127,8 @@ describe("incompatible object difference invariant", () => {
     }
 
     expect(error).toBeInstanceOf(Error);
-    expect((error as Error).message).toBe(NESTED_INCOMPATIBLE_OBJECT_DIFF_ERROR);
+    expect((error as Error).message).toBe(
+      NESTED_INCOMPATIBLE_OBJECT_DIFF_ERROR,
+    );
   });
 });
