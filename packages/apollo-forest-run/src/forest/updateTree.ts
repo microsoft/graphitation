@@ -51,12 +51,14 @@ export function updateTree(
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
 ): UpdateTreeResult {
   const rootChunks = base.nodes.get(base.rootNodeKey);
-  assert(
-    rootChunks?.length === 1,
-    `Failed to update "${
-      base.operation.debugName
-    }": expected a single root chunk, got ${rootChunks?.length ?? 0}`,
-  );
+  if (rootChunks?.length !== 1) {
+    assert(
+      false,
+      `Failed to update "${
+        base.operation.debugName
+      }": expected a single root chunk, got ${rootChunks?.length ?? 0}`,
+    );
+  }
   const rootChunk = rootChunks[0];
   const context: UpdateTreeContext = {
     operation: base.operation,

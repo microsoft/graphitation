@@ -166,18 +166,24 @@ function updateValue(
       return replaceValue(context, base, difference.newValue);
 
     case DifferenceKind.ObjectDifference: {
-      assert(
-        Value.isObjectValue(base),
-        incompatibleDifferenceMessage(context, base, difference, location),
-      );
+      // Note: building the diagnostic message is expensive (path/type lookups), so it is
+      //   constructed only on the failure path rather than eagerly passed to assert().
+      if (!Value.isObjectValue(base)) {
+        assert(
+          false,
+          incompatibleDifferenceMessage(context, base, difference, location),
+        );
+      }
       return updateObjectValue(context, base, difference);
     }
 
     case DifferenceKind.CompositeListDifference: {
-      assert(
-        Value.isCompositeListValue(base),
-        incompatibleDifferenceMessage(context, base, difference, location),
-      );
+      if (!Value.isCompositeListValue(base)) {
+        assert(
+          false,
+          incompatibleDifferenceMessage(context, base, difference, location),
+        );
+      }
       return updateCompositeListValue(context, base, difference);
     }
 
@@ -514,24 +520,30 @@ export function replaceValue(
   }
   switch (replacement.kind) {
     case ValueKind.Object: {
-      assert(
-        Value.isCompositeValue(base),
-        incompatibleReplacementMessage(context, base, replacement, "Object"),
-      );
+      if (!Value.isCompositeValue(base)) {
+        assert(
+          false,
+          incompatibleReplacementMessage(context, base, replacement, "Object"),
+        );
+      }
       return replaceObject(context, replacement, base.possibleSelections);
     }
     case ValueKind.CompositeList: {
-      assert(
-        Value.isCompositeListValue(base) ||
-          Value.isCompositeNullValue(base) ||
-          Value.isCompositeUndefinedValue(base),
-        incompatibleReplacementMessage(
-          context,
-          base,
-          replacement,
-          "CompositeList",
-        ),
-      );
+      if (
+        !Value.isCompositeListValue(base) &&
+        !Value.isCompositeNullValue(base) &&
+        !Value.isCompositeUndefinedValue(base)
+      ) {
+        assert(
+          false,
+          incompatibleReplacementMessage(
+            context,
+            base,
+            replacement,
+            "CompositeList",
+          ),
+        );
+      }
       return replaceCompositeList(context, base, replacement);
     }
 
