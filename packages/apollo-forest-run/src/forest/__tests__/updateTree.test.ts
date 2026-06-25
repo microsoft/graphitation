@@ -23,6 +23,7 @@ import { diffTree, GraphDifference } from "../../diff/diffTree";
 import { cloneDeep, maybeDeepFreeze } from "@apollo/client/utilities";
 import { DiffEnv } from "../../diff/types";
 import { isCompositeListEntryTuple } from "../../values/predicates";
+import * as DifferenceKind from "../../diff/differenceKind";
 
 test("no-op when there are no changes", () => {
   const before = completeObject();
@@ -1971,6 +1972,58 @@ describe("ApolloCompat: orphan nodes", () => {
     expect(updatedTree2.nodes.get("orphan")?.length).toBe(1);
     expect(updatedTree2.nodes.get("orphan")?.[0]?.data).toBe(updatedOrphan);
     expect(updatedTree.result.data.entityList).toEqual([]);
+  });
+});
+
+describe("invariant diagnostics", () => {
+  const env: ForestEnv = { objectKey: (o: any) => `${o.__typename}:${o.id}` };
+
+  test("reports the operation when the tree has no single root chunk", () => {
+    const op = createTestOperation(gql`
+      query RootChunkTest {
+        node {
+          __typename
+          id
+        }
+      }
+    `);
+    const base = createTestTree(op, {
+      node: { __typename: "Node", id: "1" },
+    } as any);
+    base.nodes.set(base.rootNodeKey, []);
+
+    expect(() => updateTree(env, base, new Map())).toThrow(
+      'Invariant violation: Failed to update "query RootChunkTest": expected a single root chunk, got 0',
+    );
+  });
+
+  test("reports operation, path and type when a difference is missing for an affected chunk", () => {
+    const op = createTestOperation(gql`
+      query MissingDifferenceTest {
+        node {
+          __typename
+          id
+        }
+      }
+    `);
+    const base = createTestTree(op, {
+      node: { __typename: "Node", id: "1" },
+    } as any);
+
+    // White-box: alias the node chunk under a "ghost" key that has no matching
+    // chunk.key, so resolveAffectedChunks yields a chunk absent from the map.
+    const nodeKey = [...base.nodes.keys()].find(
+      (key) => key !== base.rootNodeKey,
+    );
+    const nodeChunks = base.nodes.get(nodeKey as string);
+    base.nodes.set("GHOST", nodeChunks as any);
+    const differenceMap = new Map<string, any>([
+      ["GHOST", { kind: DifferenceKind.Replacement }],
+    ]);
+
+    expect(() => updateTree(env, base, differenceMap)).toThrow(
+      'Invariant violation: Failed to update "query MissingDifferenceTest" at path node: missing difference for Node',
+    );
   });
 });
 

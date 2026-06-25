@@ -9,6 +9,7 @@ import type {
   NodeKey,
   NodeChunk,
   CompositeValueChunk,
+  CompositeListChunk,
   ObjectDraft,
   SourceObject,
 } from "../values/types";
@@ -26,6 +27,7 @@ import { isDirty } from "../diff/difference";
 import {
   createDraft,
   createParentLocator,
+  getDataPathForDebugging,
   hydrateDraft,
   isNodeValue,
   isObjectValue,
@@ -33,6 +35,7 @@ import {
   isRootRef,
   isSourceObject,
   resolveObjectKey,
+  TraverseEnv,
 } from "../values";
 import { updateObject } from "./updateObject";
 import { createUpdateLogger } from "../telemetry/updateStats/updateLogger";
@@ -48,7 +51,12 @@ export function updateTree(
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
 ): UpdateTreeResult {
   const rootChunks = base.nodes.get(base.rootNodeKey);
-  assert(rootChunks?.length === 1);
+  assert(
+    rootChunks?.length === 1,
+    `Failed to update "${base.operation.debugName}": expected a single root chunk, got ${
+      rootChunks?.length ?? 0
+    }`,
+  );
   const rootChunk = rootChunks[0];
   const context: UpdateTreeContext = {
     operation: base.operation,
@@ -102,7 +110,15 @@ export function updateTree(
 
   for (const chunk of chunkQueue) {
     const difference = differenceMap.get(chunk.key as string);
-    assert(difference);
+    if (!difference) {
+      const at = debugPathClause(context, chunk);
+      assert(
+        difference,
+        `Failed to update "${base.operation.debugName}"${at}: missing difference for ${
+          chunk.type || "object"
+        }`,
+      );
+    }
 
     statsLogger?.startChunkUpdate(chunk);
     const result = updateObject(context, chunk, difference);
@@ -190,6 +206,20 @@ function resolveAffectedChunks(
     }
   }
   return affectedChunks;
+}
+
+// Builds a " at path <path>" clause for invariant messages. Wrapped in try/catch because
+//   it runs while reporting a violation, when the tree may already be inconsistent.
+function debugPathClause(
+  env: TraverseEnv,
+  chunk: ObjectChunk | CompositeListChunk,
+): string {
+  try {
+    const path = getDataPathForDebugging(env, chunk);
+    return path.length ? ` at path ${path.join(".")}` : "";
+  } catch {
+    return "";
+  }
 }
 
 function completeObject(

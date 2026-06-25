@@ -1117,12 +1117,16 @@ const objectVariantQuery = gql`
 `;
 
 const INCOMPATIBLE_OBJECT_DIFF_ERROR =
-  'Invariant violation: cannot apply ObjectDifference to CompositeList at field "value" while updating a query operation; ' +
-  "expected value kind=Object, actual value kind=CompositeList; " +
-  "difference metadata: dirty fields=1, pending fields=1, field states=1. " +
-  "This indicates inconsistent structural representations for the same normalized object. " +
-  "Likely causes include inconsistent response shapes for a repeated normalized entity or a cache-key collision. " +
-  "Object keys, operation names, aliases, arguments, variables, type names, and cached values are omitted to protect privacy.";
+  'Invariant violation: Failed to update "query {\n' +
+  "  objectVariant {...}\n" +
+  "  listVariant {...}\n" +
+  '}" at path listVariant.value (in Entity): expected CompositeList, got ObjectDifference';
+
+const INCOMPATIBLE_OBJECT_DIFF_ERROR_KEY_COLLISION =
+  'Invariant violation: Failed to update "query {\n' +
+  "  objectVariant {...}\n" +
+  "  listVariant {...}\n" +
+  '}" at path listVariant.value (in ListEntity): expected CompositeList, got ObjectDifference';
 
 function expectInvariantViolation(run: () => unknown, message: string) {
   let error: unknown;
@@ -1204,7 +1208,7 @@ test("reports an object diff reaching a cache key collision", () => {
       },
     });
 
-  expectInvariantViolation(run, INCOMPATIBLE_OBJECT_DIFF_ERROR);
+  expectInvariantViolation(run, INCOMPATIBLE_OBJECT_DIFF_ERROR_KEY_COLLISION);
 });
 
 test("matches apollo InMemoryCache behavior on incorrect cache overwrites", () => {
