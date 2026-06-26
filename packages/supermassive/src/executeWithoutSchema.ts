@@ -274,8 +274,7 @@ function buildExecutionContext(
     enablePerEventContext: enablePerEventContext ?? true,
     enableEarlyExecution: enableEarlyExecution ?? false,
     enableDeferredMerge: enableDeferredMerge ?? false,
-    enableIncrementalPayloadBatching:
-      enableIncrementalPayloadBatching ?? false,
+    enableIncrementalPayloadBatching: enableIncrementalPayloadBatching ?? false,
   };
 }
 
