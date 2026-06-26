@@ -1086,6 +1086,131 @@ test("does not crash when object diff is applied to list field with key collisio
   expect(run).not.toThrow();
 });
 
+const inconsistentEntityQuery = gql`
+  {
+    objectVariant {
+      __typename
+      id
+      value {
+        note
+      }
+    }
+    listVariant {
+      __typename
+      id
+      value {
+        note
+      }
+    }
+  }
+`;
+const objectVariantQuery = gql`
+  {
+    objectVariant {
+      __typename
+      id
+      value {
+        note
+      }
+    }
+  }
+`;
+
+const INCOMPATIBLE_OBJECT_DIFF_ERROR =
+  'Invariant violation: Failed to update "query {\n' +
+  "  objectVariant {...}\n" +
+  "  listVariant {...}\n" +
+  '}" at path listVariant.value (in Entity): expected CompositeList, got ObjectDifference';
+
+const INCOMPATIBLE_OBJECT_DIFF_ERROR_KEY_COLLISION =
+  'Invariant violation: Failed to update "query {\n' +
+  "  objectVariant {...}\n" +
+  "  listVariant {...}\n" +
+  '}" at path listVariant.value (in ListEntity): expected CompositeList, got ObjectDifference';
+
+function expectInvariantViolation(run: () => unknown, message: string) {
+  let error: unknown;
+  try {
+    run();
+  } catch (thrown) {
+    error = thrown;
+  }
+
+  expect(error).toBeInstanceOf(Error);
+  expect((error as Error).message.startsWith("Invariant violation")).toBe(true);
+  expect((error as Error).message).toBe(message);
+}
+
+test("reports an object diff reaching an inconsistent repeated entity", () => {
+  const cache = new ForestRun();
+
+  cache.write({
+    query: inconsistentEntityQuery,
+    result: {
+      objectVariant: {
+        __typename: "Entity",
+        id: "1",
+        value: { note: "old" },
+      },
+      listVariant: {
+        __typename: "Entity",
+        id: "1",
+        value: [{ note: "old" }],
+      },
+    },
+  });
+
+  const run = () =>
+    cache.write({
+      query: objectVariantQuery,
+      result: {
+        objectVariant: {
+          __typename: "Entity",
+          id: "1",
+          value: { note: "new" },
+        },
+      },
+    });
+
+  expectInvariantViolation(run, INCOMPATIBLE_OBJECT_DIFF_ERROR);
+});
+
+test("reports an object diff reaching a cache key collision", () => {
+  const cache = new ForestRun({
+    dataIdFromObject: (object: any) => object.id,
+  });
+
+  cache.write({
+    query: inconsistentEntityQuery,
+    result: {
+      objectVariant: {
+        __typename: "ObjectEntity",
+        id: "1",
+        value: { note: "old" },
+      },
+      listVariant: {
+        __typename: "ListEntity",
+        id: "1",
+        value: [{ note: "old" }],
+      },
+    },
+  });
+
+  const run = () =>
+    cache.write({
+      query: objectVariantQuery,
+      result: {
+        objectVariant: {
+          __typename: "ObjectEntity",
+          id: "1",
+          value: { note: "new" },
+        },
+      },
+    });
+
+  expectInvariantViolation(run, INCOMPATIBLE_OBJECT_DIFF_ERROR_KEY_COLLISION);
+});
+
 test("matches apollo InMemoryCache behavior on incorrect cache overwrites", () => {
   const listQuery = gql`
     query ListQuery {

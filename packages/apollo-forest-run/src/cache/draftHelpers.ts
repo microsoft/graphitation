@@ -2,6 +2,8 @@ import type {
   ChunkMatcher,
   ChunkProvider,
   CompositeListChunk,
+  CompositeListValue,
+  GraphValue,
   GraphValueReference,
   NodeChunk,
   ObjectChunk,
@@ -21,6 +23,7 @@ import {
   isNodeValue,
   isObjectValue,
   findClosestNode,
+  getDataPathForDebugging,
   resolveGraphValueReference,
   retrieveEmbeddedValue,
   TraverseEnv,
@@ -59,7 +62,9 @@ export function getObjectChunks(
   );
 }
 
-function* getEmbeddedObjectChunks(
+// Exported for unit testing of the invariant message only (defensive guard,
+//   not reachable through the public cache API).
+export function* getEmbeddedObjectChunks(
   pathEnv: TraverseEnv,
   nodeChunks: Iterable<NodeChunk>,
   ref: GraphValueReference,
@@ -69,7 +74,18 @@ function* getEmbeddedObjectChunks(
     if (value === undefined || isMissingValue(value)) {
       continue;
     }
-    assert(isObjectValue(value) && value.key === false);
+    if (!isObjectValue(value) || value.key !== false) {
+      const at = embeddedPathClause(pathEnv, value);
+      const nodeType = chunk.type ? ` (in ${chunk.type})` : "";
+      assert(
+        false,
+        `Failed to resolve embedded object in "${
+          chunk.operation.debugName
+        }"${at}${nodeType}: expected an embedded object, got ${describeEmbeddedValue(
+          value,
+        )}`,
+      );
+    }
     if (value.isAggregate) {
       for (const embeddedChunk of value.chunks) {
         yield embeddedChunk;
@@ -78,6 +94,57 @@ function* getEmbeddedObjectChunks(
       yield value;
     }
   }
+}
+
+// Builds a " at path <path>" clause for invariant messages. Wrapped in try/catch because
+//   it runs while reporting a violation, when the tree may already be inconsistent.
+function embeddedPathClause(env: TraverseEnv, value: GraphValue): string {
+  if (
+    (!isObjectValue(value) && !isCompositeListValue(value)) ||
+    value.isAggregate
+  ) {
+    return "";
+  }
+  try {
+    const path = getDataPathForDebugging(env, value);
+    return path.length ? ` at path ${path.join(".")}` : "";
+  } catch {
+    return "";
+  }
+}
+
+function describeEmbeddedValue(value: GraphValue): string {
+  if (isCompositeListValue(value)) {
+    const itemType = listItemTypeName(value);
+    return itemType ? `a list of ${itemType}` : "a list";
+  }
+  if (isObjectValue(value)) {
+    // An object value with a key is a normalized node, not an embedded object.
+    return value.key !== false
+      ? `a node (${value.type || "unknown type"})`
+      : "an object";
+  }
+  return "a scalar";
+}
+
+// Best-effort __typename of the first typed item in a list, for diagnostics.
+//   Defensive: wrapped in try/catch and skips aggregates; returns undefined when no
+//   typed item is found (lists of plain objects/scalars carry no __typename).
+function listItemTypeName(value: CompositeListValue): string | undefined {
+  if (value.isAggregate) {
+    return undefined;
+  }
+  try {
+    for (const item of value.itemChunks) {
+      const itemValue = item?.value;
+      if (itemValue && isObjectValue(itemValue) && itemValue.type) {
+        return itemValue.type;
+      }
+    }
+  } catch {
+    // ignore - diagnostics only
+  }
+  return undefined;
 }
 
 export function* getNodeChunks(
