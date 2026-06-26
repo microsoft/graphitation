@@ -727,4 +727,175 @@ describe("executeWithSchema - @defer behavior", () => {
     expect(errors).toHaveLength(1);
     expect(errors?.[0].message).toBe("Critical boom");
   });
+
+  const messageListDefinitions = parse(`
+    type Query { messages: [Message!]! }
+    type Message {
+      id: String!
+      name: String
+    }
+  `);
+
+  const messageListDocument = parse(`
+    {
+      messages {
+        id
+        ... on Message @defer {
+          name
+        }
+      }
+    }
+  `);
+
+  test("batches deferred patches that complete within the batching interval", async () => {
+    const firstName = createDeferred<string>();
+    const secondName = createDeferred<string>();
+    const thirdName = createDeferred<string>();
+
+    const result = await Promise.resolve(
+      executeWithSchema({
+        document: messageListDocument,
+        definitions: messageListDefinitions,
+        enableEarlyExecution: true,
+        enableDeferredMerge: true,
+        enableIncrementalPayloadBatching: true,
+        resolvers: {
+          Query: {
+            messages: () => [
+              { id: "1", name: firstName.promise },
+              { id: "2", name: secondName.promise },
+              { id: "3", name: thirdName.promise },
+            ],
+          },
+        },
+      }),
+    );
+
+    expect(result).toMatchObject({
+      initialResult: {
+        data: {
+          messages: [{ id: "1" }, { id: "2" }, { id: "3" }],
+        },
+        hasNext: true,
+      },
+    });
+
+    if (!("initialResult" in result)) {
+      throw new Error("Expected an incremental result");
+    }
+
+    const subsequentResultPromise = result.subsequentResults.next();
+    firstName.resolve("Ada");
+    setTimeout(() => secondName.resolve("Grace"), 0);
+    setTimeout(() => thirdName.resolve("Linus"), 0);
+
+    await expect(subsequentResultPromise).resolves.toMatchObject({
+      value: {
+        incremental: [
+          {
+            data: {
+              name: "Ada",
+            },
+            path: ["messages", 0],
+          },
+          {
+            data: {
+              name: "Grace",
+            },
+            path: ["messages", 1],
+          },
+          {
+            data: {
+              name: "Linus",
+            },
+            path: ["messages", 2],
+          },
+        ],
+        hasNext: false,
+      },
+      done: false,
+    });
+  });
+
+  test("emits deferred patches individually by default", async () => {
+    const firstName = createDeferred<string>();
+    const secondName = createDeferred<string>();
+    const thirdName = createDeferred<string>();
+
+    const result = await Promise.resolve(
+      executeWithSchema({
+        document: messageListDocument,
+        definitions: messageListDefinitions,
+        enableEarlyExecution: true,
+        enableDeferredMerge: true,
+        resolvers: {
+          Query: {
+            messages: () => [
+              { id: "1", name: firstName.promise },
+              { id: "2", name: secondName.promise },
+              { id: "3", name: thirdName.promise },
+            ],
+          },
+        },
+      }),
+    );
+
+    if (!("initialResult" in result)) {
+      throw new Error("Expected an incremental result");
+    }
+
+    const firstSubsequentResultPromise = result.subsequentResults.next();
+    firstName.resolve("Ada");
+
+    await expect(firstSubsequentResultPromise).resolves.toMatchObject({
+      value: {
+        incremental: [
+          {
+            data: {
+              name: "Ada",
+            },
+            path: ["messages", 0],
+          },
+        ],
+        hasNext: true,
+      },
+      done: false,
+    });
+
+    const secondSubsequentResultPromise = result.subsequentResults.next();
+    secondName.resolve("Grace");
+
+    await expect(secondSubsequentResultPromise).resolves.toMatchObject({
+      value: {
+        incremental: [
+          {
+            data: {
+              name: "Grace",
+            },
+            path: ["messages", 1],
+          },
+        ],
+        hasNext: true,
+      },
+      done: false,
+    });
+
+    const thirdSubsequentResultPromise = result.subsequentResults.next();
+    thirdName.resolve("Linus");
+
+    await expect(thirdSubsequentResultPromise).resolves.toMatchObject({
+      value: {
+        incremental: [
+          {
+            data: {
+              name: "Linus",
+            },
+            path: ["messages", 2],
+          },
+        ],
+        hasNext: false,
+      },
+      done: false,
+    });
+  });
 });

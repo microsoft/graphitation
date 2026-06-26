@@ -18,6 +18,7 @@ export function executeWithSchema({
   enablePerEventContext,
   enableEarlyExecution,
   enableDeferredMerge,
+  enableIncrementalPayloadBatching,
 }: ExecutionWithSchemaArgs): PromiseOrValue<ExecutionResult> {
   const extracted = extractMinimalViableSchemaForRequestDocument(
     buildASTSchema(definitions),
@@ -40,5 +41,6 @@ export function executeWithSchema({
     enablePerEventContext,
     enableEarlyExecution,
     enableDeferredMerge,
+    enableIncrementalPayloadBatching,
   });
 }
