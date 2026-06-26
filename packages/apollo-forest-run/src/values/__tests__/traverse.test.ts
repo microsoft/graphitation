@@ -690,4 +690,34 @@ describe(retrieveEmbeddedValue, () => {
 
     expect(result).toBeUndefined();
   });
+
+  it("throws a descriptive invariant when the reference does not descend from the source node", () => {
+    const query = `query DescendTest {
+      nodeA {
+        __typename @mock(value: "NodeA")
+        id @mock(value: "A")
+        child {
+          name
+        }
+      }
+      nodeB {
+        __typename @mock(value: "NodeB")
+        id @mock(value: "B")
+      }
+    }`;
+    const { value: root, dataMap } = generateChunk(query);
+    const env = { findParent: createParentLocator(dataMap) };
+
+    const nodeA = resolveFieldValue(root, "nodeA") as NodeChunk;
+    const childA = resolveFieldValue(nodeA, "child") as ObjectChunk;
+    const nodeB = resolveFieldValue(root, "nodeB") as NodeValue;
+
+    // A reference pointing into "nodeA" cannot be resolved against "nodeB".
+    const childRef = getGraphValueReference(env, childA);
+    const run = () => retrieveEmbeddedValue(env, nodeB, childRef);
+
+    expect(run).toThrow(
+      'Invariant violation: Failed to resolve embedded value in "query DescendTest" at path nodeB: reference does not descend from NodeB',
+    );
+  });
 });

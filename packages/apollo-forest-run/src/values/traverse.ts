@@ -51,6 +51,20 @@ export function getDataPathForDebugging(
   return path;
 }
 
+// Builds a " at path <path>" clause for invariant messages. Wrapped in try/catch because
+//   it runs while reporting a violation, when the tree may already be inconsistent.
+function embeddedPathClause(env: TraverseEnv, source: NodeValue): string {
+  if (source.isAggregate) {
+    return "";
+  }
+  try {
+    const path = getDataPathForDebugging(env, source);
+    return path.length ? ` at path ${path.join(".")}` : "";
+  } catch {
+    return "";
+  }
+}
+
 export function findClosestNode(
   chunk: ObjectChunk | CompositeListChunk,
   findParent: ParentLocator,
@@ -222,11 +236,23 @@ export function retrieveEmbeddedValue(
     );
     parentRef = refParentLocator(parentRef.parent);
   }
-  assert(
-    parentRef &&
-      Predicates.isParentObjectRef(parentRef) &&
-      parentRef.parent.key === source.key,
-  );
+  if (
+    !parentRef ||
+    !Predicates.isParentObjectRef(parentRef) ||
+    parentRef.parent.key !== source.key
+  ) {
+    const operationClause =
+      "operation" in source ? ` in "${source.operation.debugName}"` : "";
+    assert(
+      false,
+      `Failed to resolve embedded value${operationClause}${embeddedPathClause(
+        env,
+        source,
+      )}: reference does not descend from ${
+        source.type || "the expected node"
+      }`,
+    );
+  }
   if (source === resolveGraphValueReference(parentRef)) {
     return resolveGraphValueReference(ref[0]);
   }
