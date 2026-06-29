@@ -402,6 +402,7 @@ function executeOperation(
 function buildResponse(
   exeContext: ExecutionContext,
   data: PromiseOrValue<ObjMap<unknown> | null>,
+  didWaitForDeferredMerge?: boolean,
 ): PromiseOrValue<ExecutionResult> {
   if (isPromise(data)) {
     return data.then(
@@ -416,6 +417,13 @@ function buildResponse(
   const hooks = exeContext.fieldExecutionHooks;
   try {
     if (exeContext.enableDeferredMerge) {
+      if (
+        shouldWaitForDeferredMerge(exeContext, data, didWaitForDeferredMerge)
+      ) {
+        return waitForNextTick().then(() =>
+          buildResponse(exeContext, data, true),
+        );
+      }
       includeCompletedDeferredFragmentsInResult(exeContext, data);
     }
 
@@ -451,6 +459,35 @@ function buildResponse(
     exeContext.errors.push(error as GraphQLError);
     return buildResponse(exeContext, null);
   }
+}
+
+function shouldWaitForDeferredMerge(
+  exeContext: ExecutionContext,
+  result: ObjMap<unknown> | null,
+  didWaitForDeferredMerge: boolean | undefined,
+): boolean {
+  if (didWaitForDeferredMerge || result == null) {
+    return false;
+  }
+
+  let hasDeferredFragment = false;
+  for (const incrementalDataRecord of exeContext.subsequentPayloads) {
+    if (!isDeferredFragmentRecord(incrementalDataRecord)) {
+      continue;
+    }
+
+    if (incrementalDataRecord.isCompleted) {
+      return false;
+    }
+
+    hasDeferredFragment = true;
+  }
+
+  return hasDeferredFragment;
+}
+
+function waitForNextTick(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 /**

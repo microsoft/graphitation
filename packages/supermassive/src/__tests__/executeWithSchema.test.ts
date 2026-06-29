@@ -132,7 +132,7 @@ describe("executeWithSchema - @defer behavior", () => {
     );
   }
 
-  test("returns the initial response as soon as critical fields are ready", async () => {
+  test("returns the initial response without waiting for deferred fields beyond the merge tick", async () => {
     const critical = createDeferred<string>();
     const deferred = createDeferred<string>();
 
@@ -142,14 +142,7 @@ describe("executeWithSchema - @defer behavior", () => {
     });
 
     critical.resolve("critical");
-    const result = await Promise.race([
-      resultPromise,
-      new Promise<"blocked">((resolve) => setTimeout(resolve, 0, "blocked")),
-    ]);
-
-    if (result === "blocked") {
-      throw new Error("Initial response waited for deferred field");
-    }
+    const result = await resultPromise;
 
     expect(result).toMatchObject({
       initialResult: {
@@ -183,6 +176,24 @@ describe("executeWithSchema - @defer behavior", () => {
       },
       done: false,
     });
+  });
+
+  test("includes deferred fields in the initial response when they complete on the merge tick", async () => {
+    const result = await executeTestQuery({
+      critical: () => "critical",
+      deferred: () =>
+        new Promise<string>((resolve) => setTimeout(resolve, 0, "deferred")),
+    });
+
+    expect(result).toEqual({
+      data: {
+        obj: {
+          critical: "critical",
+          deferred: "deferred",
+        },
+      },
+    });
+    expect("initialResult" in (result as object)).toBe(false);
   });
 
   test("includes deferred fields in the initial response when they complete before the critical fields", async () => {
