@@ -73,7 +73,11 @@ export function* getEmbeddedObjectChunks(
   for (const chunk of nodeChunks) {
     const value = retrieveEmbeddedValue(pathEnv, chunk, ref);
     // An explicit `null` (CompositeNull) parent has no embedded object to resolve.
-    if (value === undefined || isMissingValue(value) || isCompositeNullValue(value)) {
+    if (
+      value === undefined ||
+      isMissingValue(value) ||
+      isCompositeNullValue(value)
+    ) {
       continue;
     }
     if (!isObjectValue(value) || value.key !== false) {
