@@ -38,6 +38,7 @@ export function createTestForest(): IndexedForest {
     operationsByName: new Map(),
     operationsByCoveredName: new Map(),
     operationsByPartitions: new Map(),
+    fieldIndex: new Map(),
     deletedNodes: new Set(),
   };
 }
