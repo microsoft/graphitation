@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Fri, 26 Jun 2026 09:51:44 GMT",
+      "version": "0.24.2",
+      "tag": "@graphitation/apollo-forest-run_v0.24.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "1fa674f5354f02d63347be0b3a87caa5a3cc0774",
+            "comment": "Enrich incompatible update invariant violation messages with operation, path, and type diagnostics"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 09 Jun 2026 15:15:31 GMT",
       "version": "0.24.1",
       "tag": "@graphitation/apollo-forest-run_v0.24.1",

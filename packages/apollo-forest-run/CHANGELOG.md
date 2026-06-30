@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Tue, 09 Jun 2026 15:15:31 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 26 Jun 2026 09:51:44 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.24.2
+
+Fri, 26 Jun 2026 09:51:44 GMT
+
+### Patches
+
+- Enrich incompatible update invariant violation messages with operation, path, and type diagnostics (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.24.1
 

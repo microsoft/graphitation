@@ -9,6 +9,7 @@ import type {
   ObjectChunk,
   ObjectDraft,
   ObjectValue,
+  ParentLocator,
   SourceCompositeList,
   SourceLeafValue,
   SourceNull,
@@ -98,7 +99,10 @@ function updateObjectValue(
         continue;
       }
 
-      const updated = updateValue(context, value, fieldDiff);
+      const updated = updateValue(context, value, fieldDiff, {
+        kind: "field",
+        fieldName: fieldInfo.name,
+      });
 
       if (valueIsMissing && updated !== undefined) {
         context.missingFields.get(base.data)?.delete(fieldInfo);
@@ -147,22 +151,39 @@ function updateObjectValue(
   return copy ?? base.data;
 }
 
+type UpdateValueLocation =
+  | { kind: "field"; fieldName: string }
+  | { kind: "listItem"; index: number };
+
 function updateValue(
   context: UpdateTreeContext,
   base: GraphChunk,
   difference: ValueDifference,
+  location: UpdateValueLocation,
 ): SourceValue | undefined {
   switch (difference.kind) {
     case DifferenceKind.Replacement:
       return replaceValue(context, base, difference.newValue);
 
     case DifferenceKind.ObjectDifference: {
-      assert(Value.isObjectValue(base));
+      // Note: building the diagnostic message is expensive (path/type lookups), so it is
+      //   constructed only on the failure path rather than eagerly passed to assert().
+      if (!Value.isObjectValue(base)) {
+        assert(
+          false,
+          incompatibleDifferenceMessage(context, base, difference, location),
+        );
+      }
       return updateObjectValue(context, base, difference);
     }
 
     case DifferenceKind.CompositeListDifference: {
-      assert(Value.isCompositeListValue(base));
+      if (!Value.isCompositeListValue(base)) {
+        assert(
+          false,
+          incompatibleDifferenceMessage(context, base, difference, location),
+        );
+      }
       return updateCompositeListValue(context, base, difference);
     }
 
@@ -176,6 +197,189 @@ function updateValue(
     }
     default:
       assertNever(difference);
+  }
+}
+
+function incompatibleDifferenceMessage(
+  context: UpdateTreeContext,
+  base: GraphChunk,
+  difference: ObjectDifference | CompositeListDifference,
+  location: UpdateValueLocation,
+): string {
+  const differenceKind = Difference.isObjectDifference(difference)
+    ? "ObjectDifference"
+    : "CompositeListDifference";
+  const typeClause = incomingTypeClause(differenceTypeName(difference));
+  return updateFailureMessage(
+    context,
+    base,
+    `expected ${valueKindName(base)}, got ${differenceKind}${typeClause}`,
+    location,
+  );
+}
+
+function incompatibleReplacementMessage(
+  context: UpdateTreeContext,
+  base: GraphChunk,
+  replacement: GraphValue,
+  replacementKind: "Object" | "CompositeList",
+): string {
+  const typeClause = incomingTypeClause(graphValueTypeName(replacement));
+  return updateFailureMessage(
+    context,
+    base,
+    `cannot replace ${valueKindName(
+      base,
+    )} with ${replacementKind}${typeClause}`,
+  );
+}
+
+// Best-effort " (of type <TypeName>)" clause naming the __typename of the value being
+//   written, for diagnostics. Returns "" when no typename is available (plain embedded
+//   objects, lists and scalars carry no __typename).
+function incomingTypeClause(typeName: string | undefined): string {
+  return typeName ? ` (of type ${typeName})` : "";
+}
+
+// __typename of an incoming value, when it is a typed object/node.
+//   Defensive: the tree may be inconsistent when an invariant fires, so wrapped in try/catch.
+function graphValueTypeName(value: GraphValue): string | undefined {
+  try {
+    if (Value.isObjectValue(value)) {
+      return value.type || undefined;
+    }
+  } catch {
+    // ignore - diagnostics only
+  }
+  return undefined;
+}
+
+// Best-effort __typename of the value an incompatible difference is trying to write,
+//   for diagnostics. For object differences it is recovered from a dirty "__typename"
+//   field (present only when the typename itself changed); for list differences it is the
+//   type of the first typed item being inserted. Defensive and diagnostics-only.
+function differenceTypeName(
+  difference: ObjectDifference | CompositeListDifference,
+): string | undefined {
+  try {
+    if (difference.kind === DifferenceKind.ObjectDifference) {
+      const entry = difference.fieldState?.get("__typename");
+      const state = (Array.isArray(entry) ? entry[0] : entry)?.state;
+      if (
+        state &&
+        (state.kind === DifferenceKind.Replacement ||
+          state.kind === DifferenceKind.Filler)
+      ) {
+        return typeof state.newValue === "string" ? state.newValue : undefined;
+      }
+      return undefined;
+    }
+    if (difference.kind === DifferenceKind.CompositeListDifference) {
+      for (const item of difference.layout ?? EMPTY_ARRAY) {
+        if (item && typeof item === "object" && Value.isObjectValue(item)) {
+          if (item.type) {
+            return item.type;
+          }
+        }
+      }
+    }
+  } catch {
+    // ignore - diagnostics only
+  }
+  return undefined;
+}
+
+function updateFailureMessage(
+  context: UpdateTreeContext,
+  base: GraphChunk,
+  detail: string,
+  location?: UpdateValueLocation,
+): string {
+  const prefix = `Failed to update "${context.operation.debugName}"`;
+  const basePath = chunkPath(context, base);
+  const pathString = basePath?.length
+    ? basePath.join(".")
+    : location
+    ? describeLocation(location)
+    : undefined;
+  const nodeClause = nodeTypeClause(context, base);
+  return pathString
+    ? `${prefix} at path ${pathString}${nodeClause}: ${detail}`
+    : `${prefix}${nodeClause}: ${detail}`;
+}
+
+function describeLocation(location: UpdateValueLocation): string {
+  return location.kind === "field"
+    ? location.fieldName
+    : String(location.index);
+}
+
+// Best-effort " (in <TypeName>)" clause naming the closest enclosing node's __typename.
+//   Defensive: the tree may already be inconsistent when an invariant fires, so it is
+//   wrapped in try/catch and falls back to an empty clause (and aggregates are skipped,
+//   as they are not addressable by the path utils).
+function nodeTypeClause(
+  env: { findParent: ParentLocator },
+  chunk: GraphChunk,
+): string {
+  if (
+    (!Value.isObjectValue(chunk) && !Value.isCompositeListValue(chunk)) ||
+    chunk.isAggregate
+  ) {
+    return "";
+  }
+  try {
+    const node = Value.findClosestNode(chunk, env.findParent);
+    return node.type ? ` (in ${node.type})` : "";
+  } catch {
+    return "";
+  }
+}
+
+// Path of a chunk within its tree, e.g. ["listContainer", "items", 0, "value"].
+//   Returns undefined for values that are not addressable by the path utils (e.g. leaf values).
+//   Wrapped in try/catch: this runs while reporting an invariant, so the tree may already
+//   be in an inconsistent state and path resolution could throw.
+function chunkPath(
+  env: { findParent: ParentLocator },
+  chunk: GraphChunk,
+): (string | number)[] | undefined {
+  if (!Value.isObjectValue(chunk) && !Value.isCompositeListValue(chunk)) {
+    return undefined;
+  }
+  try {
+    return Value.getDataPathForDebugging(env, chunk);
+  } catch {
+    return undefined;
+  }
+}
+
+function valueKindName(value: GraphChunk): string {
+  if (Value.isScalarValue(value)) {
+    return "Scalar";
+  }
+  if (Value.isLeafNull(value)) {
+    return "LeafNull";
+  }
+  switch (value.kind) {
+    case ValueKind.Object:
+      return "Object";
+    case ValueKind.CompositeList:
+      return "CompositeList";
+    case ValueKind.CompositeNull:
+      return "CompositeNull";
+    case ValueKind.CompositeUndefined:
+      return "CompositeUndefined";
+    case ValueKind.LeafList:
+      return "LeafList";
+    case ValueKind.LeafError:
+      return "LeafError";
+    case ValueKind.LeafUndefined:
+      return "LeafUndefined";
+    case ValueKind.ComplexScalar:
+      return "ComplexScalar";
+    default:
+      return assertNever(value);
   }
 }
 
@@ -202,6 +406,7 @@ function updateCompositeListValue(
       context,
       Value.resolveListItemChunk(base, index),
       itemDiff,
+      { kind: "listItem", index },
     );
     if (updatedValue === base.data[index]) {
       continue;
@@ -300,7 +505,9 @@ function updateCompositeListValue(
   return copy ?? base.data;
 }
 
-function replaceValue(
+// Exported for unit testing of the invariant message only (defensive guard,
+//   not reachable through the public cache API).
+export function replaceValue(
   context: UpdateTreeContext,
   base: GraphChunk,
   replacement: GraphValue,
@@ -313,15 +520,30 @@ function replaceValue(
   }
   switch (replacement.kind) {
     case ValueKind.Object: {
-      assert(Value.isCompositeValue(base));
+      if (!Value.isCompositeValue(base)) {
+        assert(
+          false,
+          incompatibleReplacementMessage(context, base, replacement, "Object"),
+        );
+      }
       return replaceObject(context, replacement, base.possibleSelections);
     }
     case ValueKind.CompositeList: {
-      assert(
-        Value.isCompositeListValue(base) ||
-          Value.isCompositeNullValue(base) ||
-          Value.isCompositeUndefinedValue(base),
-      );
+      if (
+        !Value.isCompositeListValue(base) &&
+        !Value.isCompositeNullValue(base) &&
+        !Value.isCompositeUndefinedValue(base)
+      ) {
+        assert(
+          false,
+          incompatibleReplacementMessage(
+            context,
+            base,
+            replacement,
+            "CompositeList",
+          ),
+        );
+      }
       return replaceCompositeList(context, base, replacement);
     }
 
