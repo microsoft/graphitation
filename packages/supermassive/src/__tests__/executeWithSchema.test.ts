@@ -758,7 +758,7 @@ describe("executeWithSchema - @defer behavior", () => {
     }
   `);
 
-  test("batches deferred patches that complete within the batching interval", async () => {
+  test("batches deferred patches that complete in the same microtask queue", async () => {
     const firstName = createDeferred<string>();
     const secondName = createDeferred<string>();
     const thirdName = createDeferred<string>();
@@ -797,8 +797,8 @@ describe("executeWithSchema - @defer behavior", () => {
 
     const subsequentResultPromise = result.subsequentResults.next();
     firstName.resolve("Ada");
-    setTimeout(() => secondName.resolve("Grace"), 0);
-    setTimeout(() => thirdName.resolve("Linus"), 0);
+    secondName.resolve("Grace");
+    thirdName.resolve("Linus");
 
     await expect(subsequentResultPromise).resolves.toMatchObject({
       value: {

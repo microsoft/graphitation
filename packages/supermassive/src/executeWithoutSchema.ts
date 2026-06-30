@@ -82,8 +82,6 @@ const collectSubfields = memoize3(
   ) => _collectSubfields(exeContext, returnTypeName.name, fieldGroup),
 );
 
-const SUBSEQUENT_PAYLOAD_BATCH_INTERVAL_MS = 5;
-
 /**
  * Terminology
  *
@@ -2953,31 +2951,11 @@ function waitForCompletedSubsequentPayload(
   );
 }
 
-function waitForBatchInterval(): Promise<"timeout"> {
-  return new Promise((resolve) =>
-    setTimeout(resolve, SUBSEQUENT_PAYLOAD_BATCH_INTERVAL_MS, "timeout"),
-  );
-}
-
 async function getCompletedIncrementalResultsWithBatching(
   exeContext: ExecutionContext,
 ): Promise<Array<IncrementalResult>> {
-  const incremental = getCompletedIncrementalResults(exeContext);
-
-  while (incremental.length && exeContext.subsequentPayloads.size > 0) {
-    const result = await Promise.race([
-      waitForCompletedSubsequentPayload(exeContext).then(() => "payload"),
-      waitForBatchInterval(),
-    ]);
-
-    if (result === "timeout") {
-      break;
-    }
-
-    incremental.push(...getCompletedIncrementalResults(exeContext));
-  }
-
-  return incremental;
+  await Promise.resolve();
+  return getCompletedIncrementalResults(exeContext);
 }
 
 function yieldSubsequentPayloads(
