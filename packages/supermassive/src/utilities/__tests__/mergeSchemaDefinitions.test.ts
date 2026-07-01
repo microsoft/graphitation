@@ -447,4 +447,42 @@ describe("mergeSchemaDefinitions", () => {
       }
     `);
   });
+
+  it("should copy interfaces from source when interface extension has none", () => {
+    const defs1 = schema(`
+      extend interface Entity {
+        id: ID
+      }
+    `);
+
+    const defs2 = schema(` 
+      interface Entity implements Node & Named {
+        name: String
+      }
+    `);
+    const mergeResult1 = mergeSchemaDefinitions(
+      { types: {}, directives: [] },
+      defs1,
+    );
+
+    const mergeResult2 = mergeSchemaDefinitions(mergeResult1, defs2);
+    expect(mergeResult2).toMatchInlineSnapshot(`
+      {
+        "directives": [],
+        "types": {
+          "Entity": [
+            3,
+            {
+              "id": 5,
+              "name": 1,
+            },
+            [
+              "Node",
+              "Named",
+            ],
+          ],
+        },
+      }
+    `);
+  });
 });
