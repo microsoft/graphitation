@@ -22,6 +22,7 @@ import {
   isMissingValue,
   isNodeValue,
   isObjectValue,
+  isCompositeNullValue,
   findClosestNode,
   getDataPathForDebugging,
   resolveGraphValueReference,
@@ -71,7 +72,12 @@ export function* getEmbeddedObjectChunks(
 ): Generator<ObjectChunk> {
   for (const chunk of nodeChunks) {
     const value = retrieveEmbeddedValue(pathEnv, chunk, ref);
-    if (value === undefined || isMissingValue(value)) {
+    // An explicit `null` (CompositeNull) parent has no embedded object to resolve.
+    if (
+      value === undefined ||
+      isMissingValue(value) ||
+      isCompositeNullValue(value)
+    ) {
       continue;
     }
     if (!isObjectValue(value) || value.key !== false) {
