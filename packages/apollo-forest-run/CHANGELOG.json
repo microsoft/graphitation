@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Wed, 01 Jul 2026 08:15:20 GMT",
+      "version": "0.24.3",
+      "tag": "@graphitation/apollo-forest-run_v0.24.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "d72dc560a38326c0c94f43228e791a607d6ed8a8",
+            "comment": "Tolerate an explicit null embedded parent when applying a merge policy at write time"
+          }
+        ]
+      }
+    },
+    {
       "date": "Fri, 26 Jun 2026 09:51:44 GMT",
       "version": "0.24.2",
       "tag": "@graphitation/apollo-forest-run_v0.24.2",

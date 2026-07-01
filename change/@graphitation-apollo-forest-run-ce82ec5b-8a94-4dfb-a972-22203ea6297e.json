@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Tolerate an explicit null embedded parent when applying a merge policy at write time",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "vrazuvaev@microsoft.com_msteamsmdb",
-  "dependentChangeType": "patch"
-}
