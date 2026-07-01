@@ -2923,19 +2923,13 @@ async function getCompletedIncrementalResultsWithBatching(
   const incremental = getCompletedIncrementalResults(exeContext);
 
   if (incremental.length && exeContext.subsequentPayloads.size > 0) {
-    await waitForSubsequentPayloadBatch(exeContext);
+    await raceIncrementalPayloadBatch(
+      Array.from(exeContext.subsequentPayloads).map((p) => p.promise),
+    );
     incremental.push(...getCompletedIncrementalResults(exeContext));
   }
 
   return incremental;
-}
-
-function waitForSubsequentPayloadBatch(
-  exeContext: ExecutionContext,
-): Promise<void> {
-  return raceIncrementalPayloadBatch(
-    Array.from(exeContext.subsequentPayloads).map((p) => p.promise),
-  );
 }
 
 function raceIncrementalPayloadBatch(
