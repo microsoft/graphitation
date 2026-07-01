@@ -82,6 +82,8 @@ const collectSubfields = memoize3(
   ) => _collectSubfields(exeContext, returnTypeName.name, fieldGroup),
 );
 
+const INCREMENTAL_PAYLOAD_BATCH_TIMEOUT_MS = 10;
+
 /**
  * Terminology
  *
@@ -418,7 +420,7 @@ function buildResponse(
       if (
         shouldWaitForDeferredMerge(exeContext, data, didWaitForDeferredMerge)
       ) {
-        return waitForNextTick().then(() =>
+        return waitForDeferredMerge(exeContext).then(() =>
           buildResponse(exeContext, data, true),
         );
       }
@@ -474,18 +476,28 @@ function shouldWaitForDeferredMerge(
       continue;
     }
 
-    if (incrementalDataRecord.isCompleted) {
-      return false;
+    if (!incrementalDataRecord.isCompleted) {
+      hasDeferredFragment = true;
+      break;
     }
-
-    hasDeferredFragment = true;
   }
 
   return hasDeferredFragment;
 }
 
-function waitForNextTick(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 0));
+function waitForDeferredMerge(exeContext: ExecutionContext): Promise<void> {
+  const pendingDeferredFragments = Array.from(exeContext.subsequentPayloads)
+    .filter(
+      (incrementalDataRecord) =>
+        isDeferredFragmentRecord(incrementalDataRecord) &&
+        !incrementalDataRecord.isCompleted,
+    )
+    .map((incrementalDataRecord) => incrementalDataRecord.promise);
+
+  return Promise.race([
+    Promise.all(pendingDeferredFragments).then(() => undefined),
+    waitForIncrementalPayloadBatchTimeout(),
+  ]);
 }
 
 /**
@@ -2954,8 +2966,31 @@ function waitForCompletedSubsequentPayload(
 async function getCompletedIncrementalResultsWithBatching(
   exeContext: ExecutionContext,
 ): Promise<Array<IncrementalResult>> {
-  await Promise.resolve();
-  return getCompletedIncrementalResults(exeContext);
+  const incremental = getCompletedIncrementalResults(exeContext);
+
+  if (incremental.length && exeContext.subsequentPayloads.size > 0) {
+    await waitForSubsequentPayloadBatch(exeContext);
+    incremental.push(...getCompletedIncrementalResults(exeContext));
+  }
+
+  return incremental;
+}
+
+function waitForSubsequentPayloadBatch(
+  exeContext: ExecutionContext,
+): Promise<void> {
+  return Promise.race([
+    Promise.all(
+      Array.from(exeContext.subsequentPayloads).map((p) => p.promise),
+    ).then(() => undefined),
+    waitForIncrementalPayloadBatchTimeout(),
+  ]);
+}
+
+function waitForIncrementalPayloadBatchTimeout(): Promise<void> {
+  return new Promise((resolve) =>
+    setTimeout(resolve, INCREMENTAL_PAYLOAD_BATCH_TIMEOUT_MS),
+  );
 }
 
 function yieldSubsequentPayloads(

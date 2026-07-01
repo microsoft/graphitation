@@ -132,7 +132,7 @@ describe("executeWithSchema - @defer behavior", () => {
     );
   }
 
-  test("returns the initial response without waiting for deferred fields beyond the merge tick", async () => {
+  test("returns the initial response without waiting for deferred fields beyond the merge timeout", async () => {
     const critical = createDeferred<string>();
     const deferred = createDeferred<string>();
 
@@ -178,7 +178,7 @@ describe("executeWithSchema - @defer behavior", () => {
     });
   });
 
-  test("includes deferred fields in the initial response when they complete on the merge tick", async () => {
+  test("includes deferred fields in the initial response when they complete within the merge timeout", async () => {
     const result = await executeTestQuery({
       critical: () => "critical",
       deferred: () =>
@@ -758,7 +758,7 @@ describe("executeWithSchema - @defer behavior", () => {
     }
   `);
 
-  test("batches deferred patches that complete in the same microtask queue", async () => {
+  test("batches deferred patches that complete within the batching timeout", async () => {
     const firstName = createDeferred<string>();
     const secondName = createDeferred<string>();
     const thirdName = createDeferred<string>();
@@ -797,8 +797,8 @@ describe("executeWithSchema - @defer behavior", () => {
 
     const subsequentResultPromise = result.subsequentResults.next();
     firstName.resolve("Ada");
-    secondName.resolve("Grace");
-    thirdName.resolve("Linus");
+    setTimeout(() => secondName.resolve("Grace"), 0);
+    setTimeout(() => thirdName.resolve("Linus"), 0);
 
     await expect(subsequentResultPromise).resolves.toMatchObject({
       value: {
