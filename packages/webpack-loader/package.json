@@ -16,8 +16,8 @@
     "just": "monorepo-scripts"
   },
   "peerDependencies": {
-    "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0",
-    "@graphitation/supermassive": "^3.17.0"
+    "@graphitation/supermassive": "^3.17.0",
+    "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0"
   },
   "dependencies": {
     "@graphql-tools/optimize": "^1.1.1",
@@ -25,7 +25,8 @@
     "tslib": "^2.4.0"
   },
   "devDependencies": {
-    "@types/webpack": "^5.28.0"
+    "@types/webpack": "^5.28.0",
+    "monorepo-scripts": "*"
   },
   "sideEffects": false,
   "access": "public",

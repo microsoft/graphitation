@@ -17,8 +17,8 @@
   },
   "devDependencies": {
     "@types/jest": "^26.0.22",
-    "typescript": "^5.5.3",
-    "monorepo-scripts": "*"
+    "monorepo-scripts": "*",
+    "typescript": "^5.5.3"
   },
   "sideEffects": false,
   "access": "public",

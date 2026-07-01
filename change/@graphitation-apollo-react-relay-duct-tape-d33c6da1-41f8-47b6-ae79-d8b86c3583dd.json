@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "yarn upgrade",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape",
+  "email": "pavelglac@gmail.com",
+  "dependentChangeType": "patch"
+}
