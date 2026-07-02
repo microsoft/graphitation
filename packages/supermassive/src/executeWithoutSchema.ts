@@ -82,8 +82,6 @@ const collectSubfields = memoize3(
   ) => _collectSubfields(exeContext, returnTypeName.name, fieldGroup),
 );
 
-const INCREMENTAL_PAYLOAD_BATCH_TIMEOUT_MS = 20;
-
 /**
  * Terminology
  *
@@ -128,7 +126,7 @@ export interface ExecutionContext {
   enablePerEventContext: boolean;
   enableEarlyExecution: boolean;
   enableDeferredMerge: boolean;
-  enableIncrementalPayloadBatching: boolean;
+  enableIncrementalPayloadBatching?: number;
 }
 
 /**
@@ -274,7 +272,7 @@ function buildExecutionContext(
     enablePerEventContext: enablePerEventContext ?? true,
     enableEarlyExecution: enableEarlyExecution ?? false,
     enableDeferredMerge: enableDeferredMerge ?? false,
-    enableIncrementalPayloadBatching: enableIncrementalPayloadBatching ?? false,
+    enableIncrementalPayloadBatching,
   };
 }
 
@@ -419,10 +417,16 @@ function buildResponse(
     if (exeContext.enableDeferredMerge && data !== null) {
       const pendingDeferredFragments =
         includeCompletedDeferredFragmentsInResult(exeContext, data);
-      if (!deferredMergeAwaited && pendingDeferredFragments.length > 0) {
-        return raceIncrementalPayloadBatch(pendingDeferredFragments).then(() =>
-          buildResponse(exeContext, data, true),
-        );
+      const batchTimeout = exeContext.enableIncrementalPayloadBatching;
+      if (
+        batchTimeout !== undefined &&
+        !deferredMergeAwaited &&
+        pendingDeferredFragments.length > 0
+      ) {
+        return raceIncrementalPayloadBatch(
+          pendingDeferredFragments,
+          batchTimeout,
+        ).then(() => buildResponse(exeContext, data, true));
       }
     }
 
@@ -2919,12 +2923,14 @@ function getCompletedIncrementalResults(
 
 async function getCompletedIncrementalResultsWithBatching(
   exeContext: ExecutionContext,
+  batchTimeout: number,
 ): Promise<Array<IncrementalResult>> {
   const incremental = getCompletedIncrementalResults(exeContext);
 
   if (incremental.length && exeContext.subsequentPayloads.size > 0) {
     await raceIncrementalPayloadBatch(
       Array.from(exeContext.subsequentPayloads).map((p) => p.promise),
+      batchTimeout,
     );
     incremental.push(...getCompletedIncrementalResults(exeContext));
   }
@@ -2934,17 +2940,18 @@ async function getCompletedIncrementalResultsWithBatching(
 
 function raceIncrementalPayloadBatch(
   promises: Array<Promise<unknown>>,
+  batchTimeout: number,
 ): Promise<void> {
   return Promise.race([
     Promise.all(promises).then(() => undefined),
-    waitForIncrementalPayloadBatchTimeout(),
+    waitForIncrementalPayloadBatchTimeout(batchTimeout),
   ]);
 }
 
-function waitForIncrementalPayloadBatchTimeout(): Promise<void> {
-  return new Promise((resolve) =>
-    setTimeout(resolve, INCREMENTAL_PAYLOAD_BATCH_TIMEOUT_MS),
-  );
+function waitForIncrementalPayloadBatchTimeout(
+  batchTimeout: number,
+): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, batchTimeout));
 }
 
 function yieldSubsequentPayloads(
@@ -2968,9 +2975,14 @@ function yieldSubsequentPayloads(
       return { value: undefined, done: true };
     }
 
-    const incremental = exeContext.enableIncrementalPayloadBatching
-      ? await getCompletedIncrementalResultsWithBatching(exeContext)
-      : getCompletedIncrementalResults(exeContext);
+    const batchTimeout = exeContext.enableIncrementalPayloadBatching;
+    const incremental =
+      batchTimeout !== undefined
+        ? await getCompletedIncrementalResultsWithBatching(
+            exeContext,
+            batchTimeout,
+          )
+        : getCompletedIncrementalResults(exeContext);
     const hasNext = exeContext.subsequentPayloads.size > 0;
 
     if (!incremental.length && hasNext) {

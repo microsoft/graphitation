@@ -259,7 +259,7 @@ export interface CommonExecutionArgs {
   enablePerEventContext?: boolean;
   enableEarlyExecution?: boolean;
   enableDeferredMerge?: boolean;
-  enableIncrementalPayloadBatching?: boolean;
+  enableIncrementalPayloadBatching?: number;
 }
 export type ExecutionWithoutSchemaArgs = CommonExecutionArgs & {
   schemaFragment: SchemaFragment;

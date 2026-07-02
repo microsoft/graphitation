@@ -72,13 +72,17 @@ describe("executeWithSchema - @defer behavior", () => {
 
   type Resolver = () => string | Promise<string>;
 
-  function executeTestQuery(Obj: { critical: Resolver; deferred: Resolver }) {
+  function executeTestQuery(
+    Obj: { critical: Resolver; deferred: Resolver },
+    enableIncrementalPayloadBatching?: number,
+  ) {
     return Promise.resolve(
       executeWithSchema({
         document,
         definitions,
         enableEarlyExecution: true,
         enableDeferredMerge: true,
+        enableIncrementalPayloadBatching,
         resolvers: {
           Query: {
             obj: () => ({}),
@@ -179,11 +183,14 @@ describe("executeWithSchema - @defer behavior", () => {
   });
 
   test("includes deferred fields in the initial response when they complete within the merge timeout", async () => {
-    const result = await executeTestQuery({
-      critical: () => "critical",
-      deferred: () =>
-        new Promise<string>((resolve) => setTimeout(resolve, 0, "deferred")),
-    });
+    const result = await executeTestQuery(
+      {
+        critical: () => "critical",
+        deferred: () =>
+          new Promise<string>((resolve) => setTimeout(resolve, 0, "deferred")),
+      },
+      10,
+    );
 
     expect(result).toEqual({
       data: {
@@ -769,7 +776,7 @@ describe("executeWithSchema - @defer behavior", () => {
         definitions: messageListDefinitions,
         enableEarlyExecution: true,
         enableDeferredMerge: true,
-        enableIncrementalPayloadBatching: true,
+        enableIncrementalPayloadBatching: 10,
         resolvers: {
           Query: {
             messages: () => [
