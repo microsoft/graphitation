@@ -419,7 +419,7 @@ function buildResponse(
         includeCompletedDeferredFragmentsInResult(exeContext, data);
       const batchTimeout = exeContext.enableIncrementalPayloadBatching;
       if (
-        batchTimeout !== undefined &&
+        typeof batchTimeout === "number" &&
         !deferredMergeAwaited &&
         pendingDeferredFragments.length > 0
       ) {
@@ -2977,7 +2977,7 @@ function yieldSubsequentPayloads(
 
     const batchTimeout = exeContext.enableIncrementalPayloadBatching;
     const incremental =
-      batchTimeout !== undefined
+      typeof batchTimeout === "number"
         ? await getCompletedIncrementalResultsWithBatching(
             exeContext,
             batchTimeout,
