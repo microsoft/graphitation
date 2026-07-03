@@ -1558,3 +1558,149 @@ test("correctly handles optimistic fragment write for deeply nested node", () =>
     { items: [item1, item2] },
   ]);
 });
+
+test("update must not crash when a node field is null in one chunk and an object in another", () => {
+  // Aliasing produces an Object chunk and a CompositeNull chunk for the same
+  // node; a later ObjectDifference is applied to both, asserting
+  // isObjectValue(base) on the null chunk.
+  const cache = new ForestRun();
+
+  const aliasedQuery = gql`
+    query Aliased {
+      x: foo {
+        __typename
+        id
+        details {
+          __typename
+          a
+          b
+        }
+      }
+      y: foo {
+        __typename
+        id
+        details {
+          __typename
+          a
+          b
+        }
+      }
+    }
+  `;
+  const singleQuery = gql`
+    query Single {
+      foo {
+        __typename
+        id
+        details {
+          __typename
+          a
+          b
+        }
+      }
+    }
+  `;
+
+  // Same node written twice in one operation: object via `x`, null via `y`.
+  cache.write({
+    query: aliasedQuery,
+    result: {
+      x: {
+        __typename: "Foo",
+        id: "1",
+        details: { __typename: "Detail", a: 1, b: 1 },
+      },
+      y: {
+        __typename: "Foo",
+        id: "1",
+        details: null,
+      },
+    },
+  });
+
+  // Changing details yields one ObjectDifference applied to every chunk,
+  // including the CompositeNull one.
+  const writeChanged = () =>
+    cache.write({
+      query: singleQuery,
+      result: {
+        foo: {
+          __typename: "Foo",
+          id: "1",
+          details: { __typename: "Detail", a: 2, b: 1 },
+        },
+      },
+    });
+
+  expect(writeChanged).not.toThrow();
+});
+
+test("update must not crash when the same node id appears twice with divergent details (no alias)", () => {
+  // Same regression via a normalized node-id collision rather than aliasing:
+  // the same node id appears twice in one list result with `details` an object
+  // in one occurrence and null in the other, yielding an Object chunk and a
+  // CompositeNull chunk without aliasing.
+  const cache = new ForestRun();
+
+  const listQuery = gql`
+    query List {
+      foos {
+        __typename
+        id
+        details {
+          __typename
+          a
+          b
+        }
+      }
+    }
+  `;
+  const singleQuery = gql`
+    query Single {
+      foo {
+        __typename
+        id
+        details {
+          __typename
+          a
+          b
+        }
+      }
+    }
+  `;
+
+  // Same node id twice in one list result: object then null.
+  cache.write({
+    query: listQuery,
+    result: {
+      foos: [
+        {
+          __typename: "Foo",
+          id: "1",
+          details: { __typename: "Detail", a: 1, b: 1 },
+        },
+        {
+          __typename: "Foo",
+          id: "1",
+          details: null,
+        },
+      ],
+    },
+  });
+
+  // Changing details yields one ObjectDifference applied to every chunk,
+  // including the CompositeNull one.
+  const writeChanged = () =>
+    cache.write({
+      query: singleQuery,
+      result: {
+        foo: {
+          __typename: "Foo",
+          id: "1",
+          details: { __typename: "Detail", a: 2, b: 1 },
+        },
+      },
+    });
+
+  expect(writeChanged).not.toThrow();
+});
