@@ -136,52 +136,6 @@ describe("executeWithSchema - @defer behavior", () => {
     );
   }
 
-  test("returns the initial response without waiting for deferred fields beyond the merge timeout", async () => {
-    const critical = createDeferred<string>();
-    const deferred = createDeferred<string>();
-
-    const resultPromise = executeTestQuery({
-      critical: () => critical.promise,
-      deferred: () => deferred.promise,
-    });
-
-    critical.resolve("critical");
-    const result = await resultPromise;
-
-    expect(result).toMatchObject({
-      initialResult: {
-        data: {
-          obj: {
-            critical: "critical",
-          },
-        },
-        hasNext: true,
-      },
-    });
-
-    if (!("initialResult" in result)) {
-      throw new Error("Expected an incremental result");
-    }
-
-    const subsequentResultPromise = result.subsequentResults.next();
-    deferred.resolve("deferred");
-
-    await expect(subsequentResultPromise).resolves.toMatchObject({
-      value: {
-        incremental: [
-          {
-            data: {
-              deferred: "deferred",
-            },
-            path: ["obj"],
-          },
-        ],
-        hasNext: false,
-      },
-      done: false,
-    });
-  });
-
   test("includes deferred fields in the initial response when they complete within the merge timeout", async () => {
     const result = await executeTestQuery(
       {
@@ -835,12 +789,12 @@ describe("executeWithSchema - @defer behavior", () => {
     });
   });
 
-  test("emits deferred patches individually by default", async () => {
+  test("emits deferred patches individually without additional waiting by default", async () => {
     const firstName = createDeferred<string>();
     const secondName = createDeferred<string>();
     const thirdName = createDeferred<string>();
 
-    const result = await Promise.resolve(
+    const resultPromise = Promise.resolve(
       executeWithSchema({
         document: messageListDocument,
         definitions: messageListDefinitions,
@@ -857,6 +811,15 @@ describe("executeWithSchema - @defer behavior", () => {
         },
       }),
     );
+
+    const result = await Promise.race([
+      resultPromise,
+      new Promise<"blocked">((resolve) => setTimeout(resolve, 0, "blocked")),
+    ]);
+
+    if (result === "blocked") {
+      throw new Error("Initial response waited without batching enabled");
+    }
 
     if (!("initialResult" in result)) {
       throw new Error("Expected an incremental result");
