@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "remove empty nodes",
+  "packageName": "@graphitation/ts-transform-graphql-js-tag",
+  "email": "pavelglac@microsoft.com",
+  "dependentChangeType": "patch"
+}
