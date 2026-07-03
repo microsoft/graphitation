@@ -2,6 +2,6 @@
   "type": "minor",
   "comment": "early execution and merge",
   "packageName": "@graphitation/supermassive",
-  "email": "pavelglac@gmail.com",
+  "email": "pavelglac@microsoft.com",
   "dependentChangeType": "patch"
 }
