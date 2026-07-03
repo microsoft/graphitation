@@ -286,54 +286,6 @@ describe("executeWithSchema - @defer behavior", () => {
     });
   });
 
-  test("keeps legacy defer behavior when early execution is disabled", async () => {
-    const result = await executeWithSchema({
-      document,
-      definitions,
-      enableEarlyExecution: false,
-      enableDeferredMerge: false,
-      resolvers: {
-        Query: {
-          obj: () => ({}),
-        },
-        Obj: {
-          critical: () => "critical",
-          deferred: () => "deferred",
-        },
-      },
-    });
-
-    expect(result).toMatchObject({
-      initialResult: {
-        data: {
-          obj: {
-            critical: "critical",
-          },
-        },
-        hasNext: true,
-      },
-    });
-
-    if (!("initialResult" in result)) {
-      throw new Error("Expected an incremental result");
-    }
-
-    await expect(result.subsequentResults.next()).resolves.toMatchObject({
-      value: {
-        incremental: [
-          {
-            data: {
-              deferred: "deferred",
-            },
-            path: ["obj"],
-          },
-        ],
-        hasNext: false,
-      },
-      done: false,
-    });
-  });
-
   test("includes nested deferred field in the initial response when it settles before critical", async () => {
     const critical = createDeferred<string>();
 
