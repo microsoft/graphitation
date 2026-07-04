@@ -1704,3 +1704,140 @@ test("update must not crash when the same node id appears twice with divergent d
 
   expect(writeChanged).not.toThrow();
 });
+
+test("merge policy on embedded object must not crash when a prior operation wrote null (draftHelpers:72)", () => {
+  // A keyless ("embedded") type with a field `merge` policy. If a previous
+  // operation wrote that position as an explicit `null`, the merge machinery
+  // must not crash resolving the existing parent at write time.
+  const cache = new ForestRun({
+    typePolicies: {
+      Container: {
+        keyFields: false,
+        fields: {
+          items: {
+            merge(existing = [], incoming) {
+              return [...existing, ...incoming];
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const queryA = gql`
+    query A {
+      container {
+        __typename
+        items {
+          __typename
+          id
+          value
+        }
+      }
+    }
+  `;
+  const queryB = gql`
+    query B {
+      container {
+        __typename
+        items {
+          __typename
+          id
+          value
+        }
+      }
+    }
+  `;
+
+  // Prior operation commits an explicit null for the embedded field.
+  cache.write({ query: queryA, result: { container: null } });
+
+  const writeRealResult = () =>
+    cache.write({
+      query: queryB,
+      result: {
+        container: {
+          __typename: "Container",
+          items: [{ __typename: "Item", id: "1", value: "hi" }],
+        },
+      },
+    });
+
+  expect(writeRealResult).not.toThrow();
+
+  expect(cache.read({ query: queryB, optimistic: true })).toEqual({
+    container: {
+      __typename: "Container",
+      items: [{ __typename: "Item", id: "1", value: "hi" }],
+    },
+  });
+});
+
+test("merge policy on embedded object must not crash when a prior null operation has a broader selection (draftHelpers:72)", () => {
+  // As above, but the prior null operation has a broader selection than the
+  // later write, which may take a different cross-operation resolution path.
+  const cache = new ForestRun({
+    typePolicies: {
+      Container: {
+        keyFields: false,
+        fields: {
+          items: {
+            merge(existing = [], incoming) {
+              return [...existing, ...incoming];
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // `extra` makes query A's selection broader than query B's.
+  const queryA = gql`
+    query A {
+      container {
+        __typename
+        extra
+        items {
+          __typename
+          id
+          value
+        }
+      }
+    }
+  `;
+  const queryB = gql`
+    query B {
+      container {
+        __typename
+        items {
+          __typename
+          id
+          value
+        }
+      }
+    }
+  `;
+
+  // Prior operation commits an explicit null for the embedded field.
+  cache.write({ query: queryA, result: { container: null } });
+
+  const writeRealResult = () =>
+    cache.write({
+      query: queryB,
+      result: {
+        container: {
+          __typename: "Container",
+          items: [{ __typename: "Item", id: "1", value: "hi" }],
+        },
+      },
+    });
+
+  expect(writeRealResult).not.toThrow();
+
+  expect(cache.read({ query: queryB, optimistic: true })).toEqual({
+    container: {
+      __typename: "Container",
+      items: [{ __typename: "Item", id: "1", value: "hi" }],
+    },
+  });
+});
