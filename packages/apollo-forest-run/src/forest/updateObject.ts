@@ -258,8 +258,8 @@ function divergentNullFieldMessage(
     `field is an explicit null (CompositeNull) in this chunk, but the incoming ` +
     `${differenceKind}${typeClause} expects a composite ${expectedShape}; the node has ` +
     `divergent chunks for this field (null in one, ${expectedShape} in another). ` +
-    `Leaving the null chunk unchanged - it will be reconciled on the next write of this ` +
-    `node. This usually means the same node was written with conflicting values in a single ` +
+    `Leaving the null value unchanged. This usually means the same node was written with ` +
+    `conflicting values in a single ` +
     `operation (e.g. aliased selections or a repeated node id) or via a partial/errored ` +
     `write; ensure such selections resolve this field consistently.`;
   return updateFailureMessage(
