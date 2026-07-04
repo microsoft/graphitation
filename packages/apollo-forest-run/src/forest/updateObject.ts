@@ -99,6 +99,25 @@ function updateObjectValue(
         continue;
       }
 
+      // A node can have divergent chunks for the same field: an explicit null
+      //   (CompositeNull) in one chunk and a composite object/list in another (e.g. aliased
+      //   selections or a repeated node id in a single write, or a partial/errored write).
+      //   The one object/list difference computed for the node is applied to every chunk, so
+      //   skip the null chunk here instead of asserting on it downstream in updateValue.
+      if (
+        Value.isCompositeNullValue(value) &&
+        (Difference.isObjectDifference(fieldDiff) ||
+          Difference.isCompositeListDifference(fieldDiff))
+      ) {
+        context.env.logger?.warn(
+          divergentNullFieldMessage(context, base, fieldDiff, {
+            kind: "field",
+            fieldName: fieldInfo.name,
+          }),
+        );
+        continue;
+      }
+
       const updated = updateValue(context, value, fieldDiff, {
         kind: "field",
         fieldName: fieldInfo.name,
@@ -218,6 +237,40 @@ function incompatibleDifferenceMessage(
   );
 }
 
+// Diagnostic for a node field that resolves to an explicit null (CompositeNull) in one
+//   chunk while an incoming ObjectDifference/CompositeListDifference expects a composite
+//   value in another. Such divergent chunks are skipped (left for a later write to
+//   reconcile) rather than crashing; this message stays at least as descriptive as the
+//   previous invariant and adds best-effort, actionable advice.
+function divergentNullFieldMessage(
+  context: UpdateTreeContext,
+  base: ObjectChunk,
+  fieldDiff: ObjectDifference | CompositeListDifference,
+  location: UpdateValueLocation,
+): string {
+  const isObject = Difference.isObjectDifference(fieldDiff);
+  const differenceKind = isObject
+    ? "ObjectDifference"
+    : "CompositeListDifference";
+  const expectedShape = isObject ? "object" : "list";
+  const typeClause = incomingTypeClause(differenceTypeName(fieldDiff));
+  const detail =
+    `field is an explicit null (CompositeNull) in this chunk, but the incoming ` +
+    `${differenceKind}${typeClause} expects a composite ${expectedShape}; the node has ` +
+    `divergent chunks for this field (null in one, ${expectedShape} in another). ` +
+    `Leaving the null chunk unchanged - it will be reconciled on the next write of this ` +
+    `node. This usually means the same node was written with conflicting values in a single ` +
+    `operation (e.g. aliased selections or a repeated node id) or via a partial/errored ` +
+    `write; ensure such selections resolve this field consistently.`;
+  return updateFailureMessage(
+    context,
+    base,
+    detail,
+    location,
+    `Skipping update for "${context.operation.debugName}"`,
+  );
+}
+
 function incompatibleReplacementMessage(
   context: UpdateTreeContext,
   base: GraphChunk,
@@ -294,8 +347,8 @@ function updateFailureMessage(
   base: GraphChunk,
   detail: string,
   location?: UpdateValueLocation,
+  prefix = `Failed to update "${context.operation.debugName}"`,
 ): string {
-  const prefix = `Failed to update "${context.operation.debugName}"`;
   const basePath = chunkPath(context, base);
   const pathString = basePath?.length
     ? basePath.join(".")
