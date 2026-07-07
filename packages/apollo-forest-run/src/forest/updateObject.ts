@@ -99,25 +99,6 @@ function updateObjectValue(
         continue;
       }
 
-      // A node can have divergent chunks for the same field: an explicit null
-      //   (CompositeNull) in one chunk and a composite object/list in another (e.g. aliased
-      //   selections or a repeated node id in a single write, or a partial/errored write).
-      //   The one object/list difference computed for the node is applied to every chunk, so
-      //   skip the null chunk here instead of asserting on it downstream in updateValue.
-      if (
-        Value.isCompositeNullValue(value) &&
-        (Difference.isObjectDifference(fieldDiff) ||
-          Difference.isCompositeListDifference(fieldDiff))
-      ) {
-        context.env.logger?.warn(
-          divergentNullFieldMessage(context, base, fieldDiff, {
-            kind: "field",
-            fieldName: fieldInfo.name,
-          }),
-        );
-        continue;
-      }
-
       const updated = updateValue(context, value, fieldDiff, {
         kind: "field",
         fieldName: fieldInfo.name,
@@ -188,6 +169,18 @@ function updateValue(
       // Note: building the diagnostic message is expensive (path/type lookups), so it is
       //   constructed only on the failure path rather than eagerly passed to assert().
       if (!Value.isObjectValue(base)) {
+        // A node can have divergent chunks for the same position: an explicit null
+        //   (CompositeNull) or a missing value (CompositeUndefined) in one chunk and a
+        //   composite object in another (e.g. aliased selections, a repeated node id in a
+        //   single write, or a partial/errored write). The one difference computed for the
+        //   node is applied to every chunk, so skip the null/missing chunk instead of
+        //   crashing. Genuine type mismatches (e.g. leaf null, scalars) still assert.
+        if (isNullOrMissingCompositeBase(base)) {
+          context.env.logger?.warn(
+            divergentCompositeMessage(context, base, difference, location),
+          );
+          return getSourceValue(base);
+        }
         assert(
           false,
           incompatibleDifferenceMessage(context, base, difference, location),
@@ -198,6 +191,12 @@ function updateValue(
 
     case DifferenceKind.CompositeListDifference: {
       if (!Value.isCompositeListValue(base)) {
+        if (isNullOrMissingCompositeBase(base)) {
+          context.env.logger?.warn(
+            divergentCompositeMessage(context, base, difference, location),
+          );
+          return getSourceValue(base);
+        }
         assert(
           false,
           incompatibleDifferenceMessage(context, base, difference, location),
@@ -237,31 +236,46 @@ function incompatibleDifferenceMessage(
   );
 }
 
-// Diagnostic for a node field that resolves to an explicit null (CompositeNull) in one
-//   chunk while an incoming ObjectDifference/CompositeListDifference expects a composite
-//   value in another. Such divergent chunks are skipped (left for a later write to
-//   reconcile) rather than crashing; this message stays at least as descriptive as the
-//   previous invariant and adds best-effort, actionable advice.
-function divergentNullFieldMessage(
+// True when an incoming composite (Object/CompositeList) difference is being applied to a
+//   base that is an explicit null (CompositeNull) or missing (CompositeUndefined). This
+//   happens when a node has divergent chunks for the same field/list-item across a single
+//   operation; such chunks are skipped rather than crashing. Genuine type mismatches (leaf
+//   null, scalars, complex scalars, etc.) are excluded and still assert.
+function isNullOrMissingCompositeBase(base: GraphChunk): boolean {
+  return Value.isCompositeNullValue(base) || Value.isMissingValue(base);
+}
+
+// Diagnostic for a field or list item that resolves to an explicit null (CompositeNull) or
+//   a missing value (CompositeUndefined) in one chunk while an incoming composite
+//   Object/CompositeList difference expects an object/list in another. Such divergent chunks
+//   are skipped (left unchanged) rather than crashing; this message stays at least as
+//   descriptive as the previous invariant and adds best-effort, actionable advice.
+function divergentCompositeMessage(
   context: UpdateTreeContext,
-  base: ObjectChunk,
-  fieldDiff: ObjectDifference | CompositeListDifference,
+  base: GraphChunk,
+  difference: ObjectDifference | CompositeListDifference,
   location: UpdateValueLocation,
 ): string {
-  const isObject = Difference.isObjectDifference(fieldDiff);
+  const isObject = Difference.isObjectDifference(difference);
   const differenceKind = isObject
     ? "ObjectDifference"
     : "CompositeListDifference";
   const expectedShape = isObject ? "object" : "list";
-  const typeClause = incomingTypeClause(differenceTypeName(fieldDiff));
+  const typeClause = incomingTypeClause(differenceTypeName(difference));
+  const isNull = Value.isCompositeNullValue(base);
+  const baseDesc = isNull
+    ? "an explicit null (CompositeNull)"
+    : "missing (CompositeUndefined)";
+  const otherDesc = isNull ? "null" : "missing";
+  const position = location.kind === "field" ? "field" : "list item";
   const detail =
-    `field is an explicit null (CompositeNull) in this chunk, but the incoming ` +
-    `${differenceKind}${typeClause} expects a composite ${expectedShape}; the node has ` +
-    `divergent chunks for this field (null in one, ${expectedShape} in another). ` +
-    `Leaving the null value unchanged. This usually means the same node was written with ` +
-    `conflicting values in a single ` +
-    `operation (e.g. aliased selections or a repeated node id) or via a partial/errored ` +
-    `write; ensure such selections resolve this field consistently.`;
+    `${position} is ${baseDesc} in this chunk, but the incoming ${differenceKind}` +
+    `${typeClause} expects a composite ${expectedShape}; the node has divergent chunks for ` +
+    `this ${position} (${otherDesc} in one, ${expectedShape} in another). ` +
+    `Leaving the ${otherDesc} value unchanged. This usually means the same node was written ` +
+    `with conflicting values in a single operation (e.g. aliased selections or a repeated ` +
+    `node id) or via a partial/errored write; ensure such selections resolve this ` +
+    `${position} consistently.`;
   return updateFailureMessage(
     context,
     base,

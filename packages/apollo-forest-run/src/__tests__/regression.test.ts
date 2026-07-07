@@ -1841,3 +1841,77 @@ test("merge policy on embedded object must not crash when a prior null operation
     },
   });
 });
+
+test("update must not crash when a list item is null in one chunk and an object in another", () => {
+  // Same divergent-chunk regression, but the null/object divergence is on a *list item*
+  // rather than a field. The list difference is applied to every chunk of the node, so the
+  // per-item ObjectDifference reaches the CompositeNull element of the divergent chunk
+  // (updateValue is called for list items without a null guard). It must be skipped, not crash.
+  const cache = new ForestRun();
+
+  const aliasedQuery = gql`
+    query Aliased {
+      x: foo {
+        __typename
+        id
+        items {
+          __typename
+          value
+        }
+      }
+      y: foo {
+        __typename
+        id
+        items {
+          __typename
+          value
+        }
+      }
+    }
+  `;
+  const singleQuery = gql`
+    query Single {
+      foo {
+        __typename
+        id
+        items {
+          __typename
+          value
+        }
+      }
+    }
+  `;
+
+  // Same node written twice in one operation: item object via `x`, null item via `y`.
+  cache.write({
+    query: aliasedQuery,
+    result: {
+      x: {
+        __typename: "Foo",
+        id: "1",
+        items: [{ __typename: "Item", value: 1 }],
+      },
+      y: {
+        __typename: "Foo",
+        id: "1",
+        items: [null],
+      },
+    },
+  });
+
+  // Changing the item yields one CompositeListDifference (with a per-item ObjectDifference)
+  // applied to every chunk, including the one whose item is CompositeNull.
+  const writeChanged = () =>
+    cache.write({
+      query: singleQuery,
+      result: {
+        foo: {
+          __typename: "Foo",
+          id: "1",
+          items: [{ __typename: "Item", value: 2 }],
+        },
+      },
+    });
+
+  expect(writeChanged).not.toThrow();
+});
