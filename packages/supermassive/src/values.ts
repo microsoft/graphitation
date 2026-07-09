@@ -38,6 +38,14 @@ type CoercedVariableValues =
   | { errors: Array<GraphQLError>; coerced?: never }
   | { coerced: { [variable: string]: unknown }; errors?: never };
 
+type VariableCoercionContext = {
+  schemaFragment: SchemaFragment;
+  variableValues: { [variable: string]: unknown };
+  rawVariableValues: { [variable: string]: unknown };
+  variableDefinitions: { [variable: string]: VariableDefinitionNode };
+  variableCoercionResults: Map<string, VariableCoercionResult>;
+};
+
 /**
  * Prepares an object map of variableValues of the correct type based on the
  * provided variable definitions and arbitrary input. If the input cannot be
@@ -57,24 +65,37 @@ export function getVariableValues(
 ): CoercedVariableValues {
   const errors: GraphQLError[] = [];
   const maxErrors = options?.maxErrors;
-  try {
-    const coerced = coerceVariableValues(
-      schemaFragment,
-      varDefNodes,
-      inputs,
-      (error) => {
-        if (maxErrors != null && errors.length >= maxErrors) {
-          throw locatedError(
-            "Too many errors processing variables, error limit reached. Execution aborted.",
-            [],
-          );
-        }
-        errors.push(error);
-      },
-    );
+  const variableContext = {
+    schemaFragment,
+    variableValues: {},
+    rawVariableValues: inputs,
+    variableDefinitions: getVariableDefinitionMap(varDefNodes),
+    variableCoercionResults: new Map(),
+  };
+  const onError = (error: GraphQLError) => {
+    if (maxErrors != null && errors.length >= maxErrors) {
+      throw locatedError(
+        "Too many errors processing variables, error limit reached. Execution aborted.",
+        [],
+      );
+    }
+    errors.push(error);
+  };
 
+  try {
+    for (const varDefNode of varDefNodes) {
+      const result = getVariableValue(
+        variableContext,
+        varDefNode.variable.name.value,
+      );
+      if (result.status === "error") {
+        for (const error of result.errors) {
+          onError(error);
+        }
+      }
+    }
     if (errors.length === 0) {
-      return { coerced };
+      return { coerced: variableContext.variableValues };
     }
   } catch (error) {
     errors.push(error as GraphQLError);
@@ -83,81 +104,19 @@ export function getVariableValues(
   return { errors: errors };
 }
 
-function coerceVariableValues(
-  schemaFragment: SchemaFragment,
+export function getVariableDefinitionMap(
   varDefNodes: ReadonlyArray<VariableDefinitionNode>,
-  inputs: { [variable: string]: unknown },
-  onError: (error: GraphQLError) => void,
-): { [variable: string]: unknown } {
-  const coercedValues: { [variable: string]: unknown } = {};
+): { [variable: string]: VariableDefinitionNode } {
+  const variableDefinitionMap: { [variable: string]: VariableDefinitionNode } =
+    Object.create(null);
   for (const varDefNode of varDefNodes) {
-    const varName = varDefNode.variable.name.value;
-    const varTypeReference = typeReferenceFromNode(varDefNode.type);
-
-    if (!isInputType(schemaFragment.definitions, varTypeReference)) {
-      // Must use input types for variables. This should be caught during
-      // validation, however is checked again here for safety.
-      const varTypeStr = inspectTypeReference(varTypeReference);
-      onError(
-        locatedError(
-          `Variable "$${varName}" expected value of type "${varTypeStr}" which cannot be used as an input type.`,
-          [varDefNode.type],
-        ),
-      );
-      continue;
-    }
-
-    if (!hasOwnProperty(inputs, varName)) {
-      if (varDefNode.defaultValue) {
-        coercedValues[varName] = valueFromAST(
-          varDefNode.defaultValue,
-          varTypeReference,
-          schemaFragment,
-        );
-      } else if (isNonNullType(varTypeReference)) {
-        const varTypeStr = inspectTypeReference(varTypeReference);
-        onError(
-          locatedError(
-            `Variable "$${varName}" of required type "${varTypeStr}" was not provided.`,
-            [varDefNode],
-          ),
-        );
-      }
-      continue;
-    }
-
-    const value = inputs[varName];
-    if (value === null && isNonNullType(varTypeReference)) {
-      const varTypeStr = inspectTypeReference(varTypeReference);
-      onError(
-        locatedError(
-          `Variable "$${varName}" of non-null type "${varTypeStr}" must not be null.`,
-          [varDefNode],
-        ),
-      );
-      continue;
-    }
-
-    coercedValues[varName] = coerceInputValue(
-      value,
-      varTypeReference,
-      schemaFragment,
-      (path, invalidValue, error) => {
-        let prefix =
-          `Variable "$${varName}" got invalid value ` + inspect(invalidValue);
-        if (path.length > 0) {
-          prefix += ` at "${varName}${printPathArray(path)}"`;
-        }
-        onError(locatedError(prefix + "; " + error.message, [varDefNode]));
-      },
-    );
+    variableDefinitionMap[varDefNode.variable.name.value] = varDefNode;
   }
-
-  return coercedValues;
+  return variableDefinitionMap;
 }
 
 function getVariableValue(
-  exeContext: ExecutionContext,
+  exeContext: VariableCoercionContext,
   variableName: string,
 ): VariableCoercionResult {
   const existingResult = exeContext.variableCoercionResults.get(variableName);

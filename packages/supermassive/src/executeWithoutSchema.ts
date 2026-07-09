@@ -44,7 +44,11 @@ import type {
   SchemaFragmentLoader,
   SchemaFragmentRequest,
 } from "./types";
-import { getArgumentValues, getDirectiveValues } from "./values";
+import {
+  getArgumentValues,
+  getDirectiveValues,
+  getVariableDefinitionMap,
+} from "./values";
 import type { ExecutionHooks } from "./hooks/types";
 import { arraysAreEqual } from "./utilities/array";
 import { isAsyncIterable } from "./jsutils/isAsyncIterable";
@@ -237,12 +241,7 @@ function buildExecutionContext(
 
   // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
   const variableDefinitions = operation.variableDefinitions ?? [];
-  const variableDefinitionMap: { [variable: string]: VariableDefinitionNode } =
-    Object.create(null);
-  for (const variableDefinition of variableDefinitions) {
-    variableDefinitionMap[variableDefinition.variable.name.value] =
-      variableDefinition;
-  }
+  const variableDefinitionMap = getVariableDefinitionMap(variableDefinitions);
 
   return {
     schemaFragment,
