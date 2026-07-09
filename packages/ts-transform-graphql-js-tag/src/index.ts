@@ -1,9 +1,12 @@
 import ts from "typescript";
 import {
+  ASTNode,
+  DocumentNode,
   FragmentDefinitionNode,
   OperationDefinitionNode,
   parse,
   Kind,
+  visit,
 } from "graphql";
 
 type TaggedTemplateTransformer = (
@@ -12,12 +15,15 @@ type TaggedTemplateTransformer = (
   interpolations: (ts.Identifier | ts.PropertyAccessExpression)[],
 ) => ts.Expression;
 
+type AstEmitOptions = Pick<GraphQLTagTransformContext, "noEmptyNodes">;
+
 interface GraphQLTagTransformContext {
   graphqlTagModuleRegexp: RegExp;
   graphqlTagModuleExport: string;
   transformer?: (
     node: FragmentDefinitionNode | OperationDefinitionNode,
   ) => unknown;
+  noEmptyNodes: boolean;
 }
 export interface GraphQLTagTransformOptions {
   graphqlTagModule?: string;
@@ -25,11 +31,13 @@ export interface GraphQLTagTransformOptions {
   transformer?: (
     node: FragmentDefinitionNode | OperationDefinitionNode,
   ) => unknown;
+  noEmptyNodes?: boolean;
 }
 
 const DefaultContext: GraphQLTagTransformContext = {
   graphqlTagModuleRegexp: new RegExp(/^['"]@graphitation\/graphql-js-tag['"]$/),
   graphqlTagModuleExport: "graphql",
+  noEmptyNodes: false,
 };
 
 export function getTransformer(
@@ -113,6 +121,7 @@ export function createTransformerContext(
   }
 
   context.transformer = options.transformer;
+  context.noEmptyNodes = options.noEmptyNodes ?? context.noEmptyNodes;
 
   return context;
 }
@@ -296,9 +305,9 @@ function inlineAstTaggedTemplateTransformer(
   transformerContext: GraphQLTagTransformContext,
   interpolations: (ts.Identifier | ts.PropertyAccessExpression)[],
 ) {
-  const definitions = getDefinitions(source, transformerContext.transformer);
+  const definitions = getDefinitions(source, transformerContext);
 
-  return createDocument(definitions, interpolations);
+  return createDocument(definitions, interpolations, transformerContext);
 }
 
 function getRelayVisitor(
@@ -341,13 +350,13 @@ function getRelayVisitor(
             ) {
               const definitions = getDefinitions(
                 text.initializer.text,
-                transformerContext.transformer,
+                transformerContext,
               );
 
               const newText = ts.factory.updatePropertyAssignment(
                 text,
                 text.name,
-                createDocument(definitions, []),
+                createDocument(definitions, [], transformerContext),
               );
               const newParamsObject = ts.factory.updateObjectLiteralExpression(
                 paramsObject,
@@ -433,11 +442,14 @@ function collectTemplateInterpolations(
 
 function getDefinitions(
   source: string,
-  transformer: GraphQLTagTransformContext["transformer"] | undefined,
+  transformerContext: GraphQLTagTransformContext,
 ): Array<unknown> {
-  const queryDocument = parse(source, {
+  let queryDocument = parse(source, {
     noLocation: true,
   });
+  if (transformerContext.noEmptyNodes) {
+    queryDocument = removeEmptyNodes(queryDocument);
+  }
   const definitions = [];
 
   for (const definition of queryDocument.definitions) {
@@ -445,19 +457,45 @@ function getDefinitions(
       definition.kind === Kind.OPERATION_DEFINITION ||
       definition.kind === Kind.FRAGMENT_DEFINITION
     ) {
-      definitions.push(transformer ? transformer(definition) : definition);
+      definitions.push(
+        transformerContext.transformer
+          ? transformerContext.transformer(definition)
+          : definition,
+      );
     }
   }
 
   return definitions;
 }
 
+function removeEmptyNodes(input: DocumentNode): DocumentNode {
+  function transformNode<TNode extends ASTNode>(node: TNode): TNode {
+    const resultNode: Record<string, unknown> = { ...node };
+    let hasChanges = false;
+
+    for (const key of Object.keys(resultNode)) {
+      const value = resultNode[key];
+      if (value == null || (Array.isArray(value) && value.length === 0)) {
+        delete resultNode[key];
+        hasChanges = true;
+      }
+    }
+
+    return hasChanges ? (resultNode as TNode) : node;
+  }
+
+  return visit(input, {
+    leave: transformNode,
+  });
+}
+
 function createDocument(
   definitions: Array<unknown>,
   interpolations: Array<ts.Identifier | ts.PropertyAccessExpression>,
+  transformerContext?: AstEmitOptions,
 ) {
   const baseDefinitions = ts.factory.createArrayLiteralExpression(
-    definitions.map((def) => toAst(def)),
+    definitions.map((def) => toAst(def, transformerContext)),
   );
 
   const extraDefinitions = interpolations.map((expr) => {
@@ -467,16 +505,19 @@ function createDocument(
     );
   });
 
-  const allDefinitions = ts.factory.createCallExpression(
-    ts.factory.createPropertyAccessExpression(
-      baseDefinitions,
-      ts.factory.createIdentifier("concat"),
-    ),
-    undefined,
-    extraDefinitions.length
-      ? extraDefinitions
-      : [ts.factory.createArrayLiteralExpression()],
-  );
+  const allDefinitions =
+    extraDefinitions.length || !transformerContext?.noEmptyNodes
+      ? ts.factory.createCallExpression(
+          ts.factory.createPropertyAccessExpression(
+            baseDefinitions,
+            ts.factory.createIdentifier("concat"),
+          ),
+          undefined,
+          extraDefinitions.length
+            ? extraDefinitions
+            : [ts.factory.createArrayLiteralExpression()],
+        )
+      : baseDefinitions;
 
   return ts.factory.createObjectLiteralExpression([
     ts.factory.createPropertyAssignment(
@@ -487,7 +528,10 @@ function createDocument(
   ]);
 }
 
-function toAst(literal: any): ts.Expression {
+function toAst(
+  literal: unknown,
+  transformerContext?: AstEmitOptions,
+): ts.Expression {
   if (literal === null) {
     return ts.factory.createNull();
   }
@@ -503,18 +547,25 @@ function toAst(literal: any): ts.Expression {
       return literal ? ts.factory.createTrue() : ts.factory.createFalse();
     case "undefined":
       return ts.factory.createIdentifier("undefined");
-    default:
+    case "object": {
       if (Array.isArray(literal)) {
         return ts.factory.createArrayLiteralExpression(
-          literal.map((item) => toAst(item)),
+          literal.map((item) => toAst(item, transformerContext)),
         );
       }
 
+      const objectLiteral = literal as Record<string, unknown>;
       return ts.factory.createObjectLiteralExpression(
-        Object.keys(literal).map((k) => {
-          return ts.factory.createPropertyAssignment(k, toAst(literal[k]));
+        Object.keys(objectLiteral).map((k) => {
+          return ts.factory.createPropertyAssignment(
+            k,
+            toAst(objectLiteral[k], transformerContext),
+          );
         }),
       );
+    }
+    default:
+      throw new Error(`\`${typeof literal}\` is the wrong type in JSON.`);
   }
 }
 

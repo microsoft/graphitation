@@ -43,3 +43,5 @@ var config = {
 - `graphqlTagModuleExport?: "default" | string;` - what export from that module is graphql template tag. Default: `gql`.
 - `transformer?: (node: FragmentDefinitionNode | OperationDefinitionNode) => unknown` - optional transformer to apply to graphql definitions before
   emitting them. Note that result should be emittable by TypeScript, so it should be a plain object.
+- `noEmptyNodes?: boolean;` - when enabled, omit `null`/`undefined` GraphQL AST node properties and empty array GraphQL AST node properties from the
+  emitted document. Default: `false`.
