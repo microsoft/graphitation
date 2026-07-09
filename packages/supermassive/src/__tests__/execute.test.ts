@@ -677,4 +677,126 @@ describe("executeWithoutSchema - regression tests", () => {
     const events = await drainExecution(result);
     expect(events).toMatchSnapshot();
   });
+
+  interface MissingInputTypeTestCase {
+    name: string;
+    document: string;
+    vars?: Record<string, unknown>;
+    partialSchema: string;
+    fullSchema: string;
+  }
+
+  const partialDownloadFileSchema = `
+    type Mutation { 
+      downloadFile(input: FileCoordinates!): DownloadFileResult
+    }
+
+    type DownloadFileResult {
+      downloadUrl: String!
+    }`;
+
+  const fullDownloadFileSchema = `
+    type Mutation { 
+      downloadFile(input: FileCoordinates!): DownloadFileResult
+    }
+
+    input FileCoordinates { 
+      name: String!
+      options: FileDownloadOptions
+    }
+    
+    input FileDownloadOptions {
+      compression: CompressionMode
+    }
+
+    enum CompressionMode {
+      NONE
+      RAR
+      ZIP
+    }
+
+    type DownloadFileResult {
+      downloadUrl: String!
+    }`;
+
+  const missingInputTypeCases: MissingInputTypeTestCase[] = [
+    {
+      name: "missing input variable type",
+      document: `mutation DownloadFile($input: FileCoordinates!) {
+        downloadFile(input: $input) { downloadUrl }
+      }`,
+      vars: { input: { name: "test-file" } },
+      partialSchema: partialDownloadFileSchema,
+      fullSchema: fullDownloadFileSchema,
+    },
+    {
+      name: "missing nested input variable type",
+      document: `mutation DownloadFile($input: FileCoordinates!) {
+        downloadFile(input: $input) { downloadUrl }
+      }`,
+      vars: { input: { name: "test-file", options: { compression: "NONE" } } },
+      partialSchema: `
+        type Mutation { 
+          downloadFile(input: FileCoordinates!): DownloadFileResult
+        }
+
+        input FileCoordinates { 
+          name: String!
+          options: FileDownloadOptions
+        }
+
+        type DownloadFileResult {
+          downloadUrl: String!
+        }`,
+      fullSchema: fullDownloadFileSchema,
+    },
+    {
+      name: "missing inline argument type",
+      document: `mutation DownloadFile {
+        downloadFile(input: {name: "bar-file", options:{ compression: "RAR" }}) { downloadUrl }
+      }`,
+      partialSchema: partialDownloadFileSchema,
+      fullSchema: fullDownloadFileSchema,
+    },
+  ];
+
+  test.each(missingInputTypeCases)(
+    "$name",
+    async ({
+      document,
+      vars,
+      fullSchema,
+      partialSchema,
+    }: MissingInputTypeTestCase) => {
+      expect.assertions(1);
+
+      const fullDefinitions = encodeASTSchema(parse(fullSchema))[0];
+      const partialDefinitions = encodeASTSchema(parse(partialSchema))[0];
+
+      const schemaFragment = {
+        schemaId: "test",
+        definitions: partialDefinitions,
+        resolvers: {
+          Mutation: {
+            downloadFile: () => {
+              return { downloadUrl: "hi" };
+            },
+          },
+        },
+      };
+
+      const parsedDocument = parse(document);
+      const result = await executeWithoutSchema({
+        document: parsedDocument,
+        variableValues: vars,
+        schemaFragment,
+        schemaFragmentLoader: (currentFragment, _context, req) => {
+          currentFragment.definitions = fullDefinitions;
+          return Promise.resolve({ mergedFragment: currentFragment });
+        },
+      });
+
+      expect(result).toEqual({ data: { downloadFile: { downloadUrl: "hi" } } });
+    },
+  );
 });

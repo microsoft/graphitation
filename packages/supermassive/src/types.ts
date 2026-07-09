@@ -277,6 +277,10 @@ export type SchemaFragment = {
   operationTypes?: OperationTypes;
 };
 
+export type SchemaFragmentForInputTypeRequest = {
+  kind: "InputType";
+  typeName: string;
+};
 export type SchemaFragmentForReturnTypeRequest = {
   kind: "ReturnType";
   parentTypeName: TypeName;
@@ -290,7 +294,8 @@ export type SchemaFragmentForRuntimeTypeRequest = {
 
 export type SchemaFragmentRequest =
   | SchemaFragmentForReturnTypeRequest
-  | SchemaFragmentForRuntimeTypeRequest;
+  | SchemaFragmentForRuntimeTypeRequest
+  | SchemaFragmentForInputTypeRequest;
 
 export type SchemaFragmentLoaderResult = {
   mergedFragment: SchemaFragment;
