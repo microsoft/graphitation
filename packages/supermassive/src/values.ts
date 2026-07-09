@@ -6,10 +6,14 @@ import {
   DirectiveNode,
   FieldNode,
   VariableDefinitionNode,
+  ValueNode,
 } from "graphql";
 import { inspect } from "./jsutils/inspect";
 import { printPathArray } from "./jsutils/printPathArray";
-import { ExecutionContext } from "./executeWithoutSchema";
+import type {
+  ExecutionContext,
+  VariableCoercionResult,
+} from "./executeWithoutSchema";
 import {
   DirectiveDefinitionTuple,
   FieldDefinition,
@@ -152,6 +156,143 @@ function coerceVariableValues(
   return coercedValues;
 }
 
+function getVariableValue(
+  exeContext: ExecutionContext,
+  variableName: string,
+): VariableCoercionResult {
+  const existingResult = exeContext.variableCoercionResults.get(variableName);
+  if (existingResult) {
+    return existingResult;
+  }
+
+  const varDefNode = exeContext.variableDefinitions[variableName];
+  if (!varDefNode) {
+    const result: VariableCoercionResult = { status: "missing" };
+    exeContext.variableCoercionResults.set(variableName, result);
+    return result;
+  }
+
+  const result = coerceVariableValue(
+    exeContext.schemaFragment,
+    varDefNode,
+    exeContext.rawVariableValues,
+  );
+  exeContext.variableCoercionResults.set(variableName, result);
+
+  if (result.status === "coerced") {
+    exeContext.variableValues[variableName] = result.value;
+  }
+
+  return result;
+}
+
+function coerceVariableValue(
+  schemaFragment: SchemaFragment,
+  varDefNode: VariableDefinitionNode,
+  inputs: { [variable: string]: unknown },
+): VariableCoercionResult {
+  const errors: GraphQLError[] = [];
+  const onError = (error: GraphQLError) => errors.push(error);
+  const varName = varDefNode.variable.name.value;
+  const varTypeReference = typeReferenceFromNode(varDefNode.type);
+
+  if (!isInputType(schemaFragment.definitions, varTypeReference)) {
+    const varTypeStr = inspectTypeReference(varTypeReference);
+    onError(
+      locatedError(
+        `Variable "$${varName}" expected value of type "${varTypeStr}" which cannot be used as an input type.`,
+        [varDefNode.type],
+      ),
+    );
+    return { status: "error", errors };
+  }
+
+  if (!hasOwnProperty(inputs, varName)) {
+    if (varDefNode.defaultValue) {
+      const value = valueFromAST(
+        varDefNode.defaultValue,
+        varTypeReference,
+        schemaFragment,
+      );
+      return { status: "coerced", value };
+    }
+    if (isNonNullType(varTypeReference)) {
+      const varTypeStr = inspectTypeReference(varTypeReference);
+      onError(
+        locatedError(
+          `Variable "$${varName}" of required type "${varTypeStr}" was not provided.`,
+          [varDefNode],
+        ),
+      );
+      return { status: "error", errors };
+    }
+    return { status: "missing" };
+  }
+
+  const value = inputs[varName];
+  if (value === null && isNonNullType(varTypeReference)) {
+    const varTypeStr = inspectTypeReference(varTypeReference);
+    onError(
+      locatedError(
+        `Variable "$${varName}" of non-null type "${varTypeStr}" must not be null.`,
+        [varDefNode],
+      ),
+    );
+    return { status: "error", errors };
+  }
+
+  const coerced = coerceInputValue(
+    value,
+    varTypeReference,
+    schemaFragment,
+    (path, invalidValue, error) => {
+      let prefix =
+        `Variable "$${varName}" got invalid value ` + inspect(invalidValue);
+      if (path.length > 0) {
+        prefix += ` at "${varName}${printPathArray(path)}"`;
+      }
+      onError(locatedError(prefix + "; " + error.message, [varDefNode]));
+    },
+  );
+
+  return errors.length > 0
+    ? { status: "error", errors }
+    : { status: "coerced", value: coerced };
+}
+
+function ensureVariableValue(
+  exeContext: ExecutionContext,
+  variableName: string,
+): void {
+  const result = getVariableValue(exeContext, variableName);
+  if (result.status === "error") {
+    throw result.errors[0];
+  }
+}
+
+function ensureVariablesInValue(
+  exeContext: ExecutionContext,
+  valueNode: ValueNode,
+): void {
+  if (valueNode.kind === Kind.VARIABLE) {
+    ensureVariableValue(exeContext, valueNode.name.value);
+    return;
+  }
+
+  if (valueNode.kind === Kind.LIST) {
+    for (const itemNode of valueNode.values) {
+      ensureVariablesInValue(exeContext, itemNode);
+    }
+    return;
+  }
+
+  if (valueNode.kind === Kind.OBJECT) {
+    for (const fieldNode of valueNode.fields) {
+      ensureVariablesInValue(exeContext, fieldNode.value);
+    }
+  }
+}
+
 function isFieldDefinition(
   def: FieldDefinition | DirectiveDefinitionTuple,
   node: FieldNode | DirectiveNode,
@@ -224,6 +365,7 @@ export function getArgumentValues(
 
     if (valueNode.kind === Kind.VARIABLE) {
       const variableName = valueNode.name.value;
+      ensureVariableValue(exeContext, variableName);
       if (
         exeContext.variableValues == null ||
         !hasOwnProperty(exeContext.variableValues, variableName)
@@ -241,6 +383,8 @@ export function getArgumentValues(
         continue;
       }
       isNull = exeContext.variableValues[variableName] == null;
+    } else {
+      ensureVariablesInValue(exeContext, valueNode);
     }
 
     if (isNull && isNonNullType(argumentTypeRef)) {

@@ -7,6 +7,7 @@ import {
   FragmentDefinitionNode,
   OperationDefinitionNode,
   OperationTypeDefinitionNode,
+  VariableDefinitionNode,
 } from "graphql";
 import {
   collectFields,
@@ -43,11 +44,7 @@ import type {
   SchemaFragmentLoader,
   SchemaFragmentRequest,
 } from "./types";
-import {
-  getArgumentValues,
-  getVariableValues,
-  getDirectiveValues,
-} from "./values";
+import { getArgumentValues, getDirectiveValues } from "./values";
 import type { ExecutionHooks } from "./hooks/types";
 import { arraysAreEqual } from "./utilities/array";
 import { isAsyncIterable } from "./jsutils/isAsyncIterable";
@@ -115,6 +112,9 @@ export interface ExecutionContext {
   buildContextValue?: (contextValue?: unknown) => unknown;
   operation: OperationDefinitionNode;
   variableValues: { [variable: string]: unknown };
+  rawVariableValues: { [variable: string]: unknown };
+  variableDefinitions: { [variable: string]: VariableDefinitionNode };
+  variableCoercionResults: Map<string, VariableCoercionResult>;
   fieldResolver: FunctionFieldResolver<unknown, unknown>;
   typeResolver: TypeResolver<unknown, unknown>;
   subscribeFieldResolver: FunctionFieldResolver<unknown, unknown>;
@@ -123,6 +123,11 @@ export interface ExecutionContext {
   subsequentPayloads: Set<IncrementalDataRecord>;
   enablePerEventContext: boolean;
 }
+
+export type VariableCoercionResult =
+  | { status: "coerced"; value: unknown }
+  | { status: "missing" }
+  | { status: "error"; errors: ReadonlyArray<GraphQLError> };
 
 /**
  * Implements the "Executing requests" section of the GraphQL specification.
@@ -232,16 +237,11 @@ function buildExecutionContext(
 
   // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
   const variableDefinitions = operation.variableDefinitions ?? [];
-
-  const coercedVariableValues = getVariableValues(
-    schemaFragment,
-    variableDefinitions,
-    variableValues ?? {},
-    { maxErrors: 50 },
-  );
-
-  if (coercedVariableValues.errors) {
-    return coercedVariableValues.errors;
+  const variableDefinitionMap: { [variable: string]: VariableDefinitionNode } =
+    Object.create(null);
+  for (const variableDefinition of variableDefinitions) {
+    variableDefinitionMap[variableDefinition.variable.name.value] =
+      variableDefinition;
   }
 
   return {
@@ -254,7 +254,10 @@ function buildExecutionContext(
       : contextValue,
     buildContextValue,
     operation,
-    variableValues: coercedVariableValues.coerced,
+    variableValues: {},
+    rawVariableValues: variableValues ?? {},
+    variableDefinitions: variableDefinitionMap,
+    variableCoercionResults: new Map(),
     fieldResolver: fieldResolver ?? defaultFieldResolver,
     typeResolver: typeResolver ?? defaultTypeResolver,
     subscribeFieldResolver: subscribeFieldResolver ?? defaultFieldResolver,

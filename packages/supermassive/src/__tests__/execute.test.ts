@@ -3,6 +3,8 @@ import {
   execute as graphQLExecute,
   subscribe as graphQLSubscribe,
   GraphQLSchema,
+  GraphQLScalarType,
+  Kind,
 } from "graphql";
 import { makeSchema } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
@@ -676,5 +678,227 @@ describe("executeWithoutSchema - regression tests", () => {
 
     const events = await drainExecution(result);
     expect(events).toMatchSnapshot();
+  });
+
+  test("coerces input variables after loading the root field schema fragment", async () => {
+    expect.assertions(3);
+
+    let resolvedArgs: unknown;
+    const loaderRequests: string[] = [];
+
+    const result = await executeWithoutSchema({
+      document: parse(`
+        mutation useReorderConversationFoldersMutation(
+          $input: OneGQL_ReorderConversationFoldersInput!
+        ) {
+          reorderConversationFolders(input: $input) {
+            ... on OneGQL_ConversationFoldersConnection {
+              __id
+              edges {
+                id
+              }
+            }
+            ... on OneGQL_ReorderConversationFoldersError {
+              errorCode
+              errorDetail
+              isExpected
+            }
+          }
+        }
+      `),
+      variableValues: {
+        input: {
+          ids: ["folder-1"],
+        },
+      },
+      schemaFragment: {
+        schemaId: "test",
+        definitions: { types: {} },
+        resolvers: {
+          Mutation: {
+            reorderConversationFolders(
+              _source: unknown,
+              args: { input: { ids: string[] } },
+            ) {
+              resolvedArgs = args;
+              return {
+                __typename: "OneGQL_ConversationFoldersConnection",
+                __id: "connection-1",
+                edges: [{ id: args.input.ids[0] }],
+              };
+            },
+          },
+        },
+      },
+      schemaFragmentLoader: (currentFragment, _context, req) => {
+        if (req.kind !== "ReturnType") {
+          throw new Error(`Unexpected schema fragment request: ${req.kind}`);
+        }
+        loaderRequests.push(
+          `${req.kind}:${req.parentTypeName}.${req.fieldName}`,
+        );
+        currentFragment.definitions = encodeASTSchema(
+          parse(`
+            type Mutation {
+              reorderConversationFolders(input: OneGQL_ReorderConversationFoldersInput!): OneGQL_ReorderConversationFoldersResult!
+            }
+
+            union OneGQL_ReorderConversationFoldersResult =
+              OneGQL_ConversationFoldersConnection
+              | OneGQL_ReorderConversationFoldersError
+
+            type OneGQL_ConversationFoldersConnection {
+              __id: ID!
+              edges: [OneGQL_ConversationFolderEdge!]!
+            }
+
+            type OneGQL_ConversationFolderEdge {
+              id: ID!
+            }
+
+            type OneGQL_ReorderConversationFoldersError {
+              errorCode: String
+              errorDetail: String
+              isExpected: Boolean!
+            }
+
+            input OneGQL_ReorderConversationFoldersInput {
+              ids: [ID!]!
+              folderId: ID = "default-folder"
+            }
+          `),
+        )[0];
+        return Promise.resolve({ mergedFragment: currentFragment });
+      },
+    });
+
+    expect(await drainExecution(result)).toEqual({
+      data: {
+        reorderConversationFolders: {
+          __id: "connection-1",
+          edges: [{ id: "folder-1" }],
+        },
+      },
+    });
+    expect(resolvedArgs).toEqual({
+      input: {
+        ids: ["folder-1"],
+        folderId: "default-folder",
+      },
+    });
+    expect(loaderRequests).toEqual([
+      "ReturnType:Mutation.reorderConversationFolders",
+    ]);
+  });
+
+  test("does not load schema fragments for unused input variable definitions", async () => {
+    expect.assertions(2);
+
+    const result = await executeWithoutSchema({
+      document: parse(`
+        mutation WithUnusedInput($input: MissingInput) {
+          ping
+        }
+      `),
+      variableValues: {
+        input: {
+          id: "unused",
+        },
+      },
+      schemaFragment: {
+        schemaId: "test",
+        definitions: { types: {} },
+        resolvers: {
+          Mutation: {
+            ping() {
+              return "pong";
+            },
+          },
+        },
+      },
+      schemaFragmentLoader: (currentFragment, _context, req) => {
+        expect(req).toMatchObject({
+          kind: "ReturnType",
+          parentTypeName: "Mutation",
+          fieldName: "ping",
+        });
+        currentFragment.definitions = encodeASTSchema(
+          parse(`
+            type Mutation {
+              ping: String!
+            }
+          `),
+        )[0];
+        return Promise.resolve({ mergedFragment: currentFragment });
+      },
+    });
+
+    expect(await drainExecution(result)).toEqual({ data: { ping: "pong" } });
+  });
+
+  test("coerces a used variable only once", async () => {
+    expect.assertions(3);
+
+    let parseValueCalls = 0;
+    const argsAtResolver: unknown[] = [];
+    const CountedScalar = new GraphQLScalarType({
+      name: "CountedScalar",
+      serialize(value) {
+        return value;
+      },
+      parseValue(value) {
+        parseValueCalls++;
+        return `coerced:${value}`;
+      },
+      parseLiteral(node) {
+        return node.kind === Kind.STRING ? `literal:${node.value}` : undefined;
+      },
+    });
+    const definitions = encodeASTSchema(
+      parse(`
+        scalar CountedScalar
+
+        type Query {
+          echo(value: CountedScalar!): String!
+        }
+      `),
+    )[0];
+
+    const result = await executeWithoutSchema({
+      document: parse(`
+        query UsesVariableTwice($value: CountedScalar!) {
+          first: echo(value: $value)
+          second: echo(value: $value)
+        }
+      `),
+      variableValues: {
+        value: "raw",
+      },
+      schemaFragment: {
+        schemaId: "test",
+        definitions,
+        resolvers: {
+          CountedScalar,
+          Query: {
+            echo(_source: unknown, args: { value: string }) {
+              argsAtResolver.push(args);
+              return args.value;
+            },
+          },
+        },
+      },
+    });
+
+    expect(await drainExecution(result)).toEqual({
+      data: {
+        first: "coerced:raw",
+        second: "coerced:raw",
+      },
+    });
+    expect(argsAtResolver).toEqual([
+      { value: "coerced:raw" },
+      { value: "coerced:raw" },
+    ]);
+    expect(parseValueCalls).toBe(1);
   });
 });
