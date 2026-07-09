@@ -691,19 +691,7 @@ describe("executeWithoutSchema - regression tests", () => {
         mutation useReorderConversationFoldersMutation(
           $input: OneGQL_ReorderConversationFoldersInput!
         ) {
-          reorderConversationFolders(input: $input) {
-            ... on OneGQL_ConversationFoldersConnection {
-              __id
-              edges {
-                id
-              }
-            }
-            ... on OneGQL_ReorderConversationFoldersError {
-              errorCode
-              errorDetail
-              isExpected
-            }
-          }
+          reorderConversationFolders(input: $input)
         }
       `),
       variableValues: {
@@ -721,11 +709,7 @@ describe("executeWithoutSchema - regression tests", () => {
               args: { input: { ids: string[] } },
             ) {
               resolvedArgs = args;
-              return {
-                __typename: "OneGQL_ConversationFoldersConnection",
-                __id: "connection-1",
-                edges: [{ id: args.input.ids[0] }],
-              };
+              return args.input.ids[0];
             },
           },
         },
@@ -740,26 +724,7 @@ describe("executeWithoutSchema - regression tests", () => {
         currentFragment.definitions = encodeASTSchema(
           parse(`
             type Mutation {
-              reorderConversationFolders(input: OneGQL_ReorderConversationFoldersInput!): OneGQL_ReorderConversationFoldersResult!
-            }
-
-            union OneGQL_ReorderConversationFoldersResult =
-              OneGQL_ConversationFoldersConnection
-              | OneGQL_ReorderConversationFoldersError
-
-            type OneGQL_ConversationFoldersConnection {
-              __id: ID!
-              edges: [OneGQL_ConversationFolderEdge!]!
-            }
-
-            type OneGQL_ConversationFolderEdge {
-              id: ID!
-            }
-
-            type OneGQL_ReorderConversationFoldersError {
-              errorCode: String
-              errorDetail: String
-              isExpected: Boolean!
+              reorderConversationFolders(input: OneGQL_ReorderConversationFoldersInput!): ID!
             }
 
             input OneGQL_ReorderConversationFoldersInput {
@@ -774,10 +739,7 @@ describe("executeWithoutSchema - regression tests", () => {
 
     expect(await drainExecution(result)).toEqual({
       data: {
-        reorderConversationFolders: {
-          __id: "connection-1",
-          edges: [{ id: "folder-1" }],
-        },
+        reorderConversationFolders: "folder-1",
       },
     });
     expect(resolvedArgs).toEqual({
