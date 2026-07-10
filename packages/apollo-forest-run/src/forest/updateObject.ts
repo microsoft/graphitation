@@ -316,17 +316,23 @@ function resolveFailurePath(
   base: GraphChunk,
   location?: UpdateValueLocation,
 ): string | undefined {
-  if (location) {
-    const parentPath = chunkPath(context, location.parent);
-    if (parentPath) {
-      return parentPath.concat(describeLocation(location)).join(".");
+  try {
+    if (location) {
+      const parentPath = chunkPath(context, location.parent);
+      if (parentPath) {
+        return parentPath.concat(describeLocation(location)).join(".");
+      }
     }
+    const basePath = chunkPath(context, base);
+    if (basePath?.length) {
+      return basePath.join(".");
+    }
+    return location ? describeLocation(location) : undefined;
+  } catch {
+    // Diagnostics only: the tree is already inconsistent when an invariant fires,
+    //   so path resolution is best-effort and must never throw over the invariant.
+    return undefined;
   }
-  const basePath = chunkPath(context, base);
-  if (basePath?.length) {
-    return basePath.join(".");
-  }
-  return location ? describeLocation(location) : undefined;
 }
 
 function describeLocation(location: UpdateValueLocation): string {

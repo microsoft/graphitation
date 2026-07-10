@@ -35,6 +35,41 @@ describe("replaceValue invariant", () => {
       'Invariant violation: Failed to update "query ReplaceScalar": cannot replace Scalar with Object (of type Widget)',
     );
   });
+
+  it("still reports the invariant when path/node resolution throws", () => {
+    const operation = createTestOperation(gql`
+      query ReplaceObject {
+        node {
+          id
+        }
+      }
+    `);
+    // base is an addressable, keyless embedded object, so both path resolution and
+    // enclosing-node resolution must ascend the tree via findParent. A corrupt tree can
+    // make findParent throw while an invariant is being reported; the message builder must
+    // swallow that and still surface the invariant rather than the internal exception.
+    const objectBase = resolveFieldValue(
+      generateChunk(`query ObjectSource { embedded { field } }`).value,
+      "embedded",
+    ) as ObjectChunk;
+    const listReplacement = resolveFieldValue(
+      generateChunk(`query ListSource { items @mock(count: 2) { id } }`).value,
+      "items",
+    );
+
+    const context = {
+      operation,
+      findParent: () => {
+        throw new Error("corrupt tree: findParent exploded");
+      },
+    } as unknown as UpdateTreeContext;
+
+    expect(() =>
+      replaceValue(context, objectBase as any, listReplacement as any),
+    ).toThrow(
+      'Invariant violation: Failed to update "query ReplaceObject": cannot replace Object with CompositeList',
+    );
+  });
 });
 
 const nestedFeedListQuery = gql`
