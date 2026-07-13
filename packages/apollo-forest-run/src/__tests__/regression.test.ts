@@ -939,6 +939,46 @@ test("bad manual writes shouldn't cause invariant violation", () => {
   expect(cache.readQuery({ query })).toEqual({ foo: { bar: "baz" } });
 });
 
+test("malformed update result shouldn't corrupt a fresh query tree", () => {
+  const nodeByIdQuery = gql`
+    query ConsumerNodeByIdQuery($nodeId: ID!) {
+      nodeByID(nodeId: $nodeId) {
+        __typename
+        id
+        state
+      }
+    }
+  `;
+  const variables = { nodeId: "node-1" };
+  const node = {
+    __typename: "Node",
+    id: "node-1",
+    state: "active",
+  };
+  const cache = new ForestRun();
+
+  const previousValues = { nodeByID: node };
+
+  // A malformed update spreads an entity into the operation root. Installing
+  // it as a fresh tree indexes both the query root and child with the same key.
+  cache.writeQuery({
+    query: nodeByIdQuery,
+    variables,
+    data: { ...previousValues, ...node },
+  });
+
+  const writeNullNodeResult = () =>
+    cache.writeQuery({
+      query: nodeByIdQuery,
+      variables,
+      data: {
+        nodeByID: null,
+      },
+    });
+
+  expect(writeNullNodeResult).not.toThrow();
+});
+
 test("writes of non-object data should not throw", () => {
   // Note: this is a no-op in Apollo today
   const query = gql`
