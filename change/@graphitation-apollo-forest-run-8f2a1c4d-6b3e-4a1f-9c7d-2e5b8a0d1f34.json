@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Report the full data path (not just the last field/index) in incompatible-update invariant messages when the failing value is a non-addressable CompositeNull/CompositeUndefined",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "vrazuvaev@microsoft.com_msteamsmdb",
-  "dependentChangeType": "patch"
-}
