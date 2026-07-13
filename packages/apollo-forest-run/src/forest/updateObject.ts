@@ -101,7 +101,8 @@ function updateObjectValue(
 
       const updated = updateValue(context, value, fieldDiff, {
         kind: "field",
-        fieldName: fieldInfo.name,
+        parent: base,
+        field: fieldInfo,
       });
 
       if (valueIsMissing && updated !== undefined) {
@@ -152,8 +153,8 @@ function updateObjectValue(
 }
 
 type UpdateValueLocation =
-  | { kind: "field"; fieldName: string }
-  | { kind: "listItem"; index: number };
+  | { kind: "field"; parent: GraphChunk; field: FieldInfo }
+  | { kind: "listItem"; parent: GraphChunk; index: number };
 
 function updateValue(
   context: UpdateTreeContext,
@@ -363,44 +364,83 @@ function updateFailureMessage(
   location?: UpdateValueLocation,
   prefix = `Failed to update "${context.operation.debugName}"`,
 ): string {
-  const basePath = chunkPath(context, base);
-  const pathString = basePath?.length
-    ? basePath.join(".")
-    : location
-    ? describeLocation(location)
-    : undefined;
-  const nodeClause = nodeTypeClause(context, base);
+  const pathString = resolveFailurePath(context, base, location);
+  const nodeClause = nodeTypeClause(context, base, location);
   return pathString
     ? `${prefix} at path ${pathString}${nodeClause}: ${detail}`
     : `${prefix}${nodeClause}: ${detail}`;
 }
 
+// Full path to the failing value, e.g. "listContainer.items.0.value".
+//   The failing value itself may not be addressable by the path utils (e.g. a CompositeNull
+//   or CompositeUndefined, whose source data is null/undefined and cannot be located in the
+//   tree). In that case its own path resolves to nothing and we would otherwise only report
+//   the final field/index. So we prefer to derive the path from the failing value's parent
+//   chunk (always an ObjectChunk or CompositeListChunk, which *is* addressable) and append
+//   the field/index step, falling back to the value's own path or the bare step.
+function resolveFailurePath(
+  context: UpdateTreeContext,
+  base: GraphChunk,
+  location?: UpdateValueLocation,
+): string | undefined {
+  try {
+    if (location) {
+      const parentPath = chunkPath(context, location.parent);
+      if (parentPath) {
+        return parentPath.concat(describeLocation(location)).join(".");
+      }
+    }
+    const basePath = chunkPath(context, base);
+    if (basePath?.length) {
+      return basePath.join(".");
+    }
+    return location ? describeLocation(location) : undefined;
+  } catch {
+    // Diagnostics only: the tree is already inconsistent when an invariant fires,
+    //   so path resolution is best-effort and must never throw over the invariant.
+    return undefined;
+  }
+}
+
 function describeLocation(location: UpdateValueLocation): string {
   return location.kind === "field"
-    ? location.fieldName
+    ? location.field.dataKey
     : String(location.index);
 }
 
 // Best-effort " (in <TypeName>)" clause naming the closest enclosing node's __typename.
 //   Defensive: the tree may already be inconsistent when an invariant fires, so it is
 //   wrapped in try/catch and falls back to an empty clause (and aggregates are skipped,
-//   as they are not addressable by the path utils).
+//   as they are not addressable by the path utils). When the failing value itself is not
+//   addressable (e.g. a CompositeNull), the enclosing node is resolved from its parent.
 function nodeTypeClause(
   env: { findParent: ParentLocator },
   chunk: GraphChunk,
+  location?: UpdateValueLocation,
 ): string {
-  if (
-    (!Value.isObjectValue(chunk) && !Value.isCompositeListValue(chunk)) ||
-    chunk.isAggregate
-  ) {
+  const anchor = nodeAnchor(chunk) ?? nodeAnchor(location?.parent);
+  if (!anchor) {
     return "";
   }
   try {
-    const node = Value.findClosestNode(chunk, env.findParent);
+    const node = Value.findClosestNode(anchor, env.findParent);
     return node.type ? ` (in ${node.type})` : "";
   } catch {
     return "";
   }
+}
+
+function nodeAnchor(
+  chunk: GraphChunk | undefined,
+): ObjectChunk | CompositeListChunk | undefined {
+  if (
+    chunk &&
+    (Value.isObjectValue(chunk) || Value.isCompositeListValue(chunk)) &&
+    !chunk.isAggregate
+  ) {
+    return chunk;
+  }
+  return undefined;
 }
 
 // Path of a chunk within its tree, e.g. ["listContainer", "items", 0, "value"].
@@ -473,7 +513,7 @@ function updateCompositeListValue(
       context,
       Value.resolveListItemChunk(base, index),
       itemDiff,
-      { kind: "listItem", index },
+      { kind: "listItem", parent: base, index },
     );
     if (updatedValue === base.data[index]) {
       continue;

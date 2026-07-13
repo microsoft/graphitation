@@ -127,6 +127,39 @@ describe("transformer tests", () => {
     `);
   });
 
+  it("should omit nullish values and empty arrays when noEmptyNodes is configured", () => {
+    expect.assertions(7);
+    const transformer = new Transformer()
+      .addTransformer((_program: ts.Program) =>
+        getTransformer({
+          noEmptyNodes: true,
+        }),
+      )
+      .addMock({
+        name: "@graphitation/graphql-js-tag",
+        content: `export const graphql:any = () => {}`,
+      })
+      .setFilePath("/index.tsx");
+
+    const actual = transformer.transform(`
+    import { graphql } from "@graphitation/graphql-js-tag"
+
+    export const query = graphql\`
+      query Foo {
+        foo
+      }
+     \`
+   `);
+
+    expect(actual).not.toContain("undefined");
+    expect(actual).not.toContain("[]");
+    expect(actual).not.toContain("alias:");
+    expect(actual).not.toContain("arguments:");
+    expect(actual).not.toContain("directives:");
+    expect(actual).not.toContain("variableDefinitions:");
+    expect(actual).toContain('kind: "Document"');
+  });
+
   it("should throw an error if namespace import is used and graphql tag is used", () => {
     const transformer = new Transformer()
       .addTransformer((_program: ts.Program) =>
@@ -364,25 +397,72 @@ describe("transformer tests", () => {
       export default node;
     `);
       expect(actual).toMatchInlineSnapshot(`
-              "const node = (function () {
-                  return {
-                      "fragment": {},
-                      "kind": "Request",
-                      "operation": {},
-                      "params": {
-                          "cacheID": "d40e68211358413fd00f0d3e3a480fda",
-                          "id": null,
-                          "metadata": {},
-                          "name": "useSimpleCollabConversationFolderNameValidationQuery",
-                          "operationKind": "query",
-                          "text": { kind: "Document", definitions: [{ kind: "OperationDefinition", operation: "query", name: { kind: "Name", value: "Foo", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: "SelectionSet", selections: [{ kind: "Field", alias: undefined, name: { kind: "Name", value: "foo", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) }
-                      }
-                  };
-              })();
-              node.hash = "7b70df8117cf21bf42464a3c9e910ebd";
-              export default node;
-              "
-          `);
+        "const node = (function () {
+            return {
+                "fragment": {},
+                "kind": "Request",
+                "operation": {},
+                "params": {
+                    "cacheID": "d40e68211358413fd00f0d3e3a480fda",
+                    "id": null,
+                    "metadata": {},
+                    "name": "useSimpleCollabConversationFolderNameValidationQuery",
+                    "operationKind": "query",
+                    "text": { kind: "Document", definitions: [{ kind: "OperationDefinition", operation: "query", name: { kind: "Name", value: "Foo", loc: undefined }, variableDefinitions: [], directives: [], selectionSet: { kind: "SelectionSet", selections: [{ kind: "Field", alias: undefined, name: { kind: "Name", value: "foo", loc: undefined }, arguments: [], directives: [], selectionSet: undefined, loc: undefined }], loc: undefined }, loc: undefined }].concat([]) }
+                }
+            };
+        })();
+        node.hash = "7b70df8117cf21bf42464a3c9e910ebd";
+        export default node;
+        "
+      `);
+    });
+
+    it("should omit nullish values and empty arrays when noEmptyNodes is configured", () => {
+      expect.assertions(7);
+      const transformer = new Transformer()
+        .addTransformer((_program: ts.Program) =>
+          getRelayTransformer({
+            noEmptyNodes: true,
+          }),
+        )
+        .addMock({
+          name: "relay-runtime",
+          content: `export type ConcreteRequest = any; export type Query = any;`,
+        })
+        .setFilePath("/index.tsx");
+
+      const actual = transformer.transform(`
+    import { ConcreteRequest, Query } from 'relay-runtime';
+
+    const node: ConcreteRequest = (function(){
+      return {
+        "fragment": {},
+        "kind": "Request",
+        "operation": {},
+        "params": {
+          "cacheID": "d40e68211358413fd00f0d3e3a480fda",
+          "id": null,
+          "metadata": {},
+          "name": "useSimpleCollabConversationFolderNameValidationQuery",
+          "operationKind": "query",
+          "text": "query Foo { foo }"
+        }
+      };
+      })();
+      
+      (node as any).hash = "7b70df8117cf21bf42464a3c9e910ebd";
+      
+      export default node;
+    `);
+
+      expect(actual).not.toContain("undefined");
+      expect(actual).not.toContain("[]");
+      expect(actual).not.toContain("alias:");
+      expect(actual).not.toContain("arguments:");
+      expect(actual).not.toContain("directives:");
+      expect(actual).not.toContain("variableDefinitions:");
+      expect(actual).toContain('"text": { kind: "Document"');
     });
   });
 
@@ -435,12 +515,12 @@ describe("transformer tests", () => {
         }
       `);
       expect(actual).toMatchInlineSnapshot(`
-      "import * as Hooks from "@graphitation/graphql-js-tag";
-      const ProviderHooks = {
-          ...Hooks,
-      };
-      "
-    `);
+              "import * as Hooks from "@graphitation/graphql-js-tag";
+              const ProviderHooks = {
+                  ...Hooks,
+              };
+              "
+          `);
     });
   });
 });
