@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "yarn upgrade",
+  "packageName": "@graphitation/webpack-loader",
+  "email": "pavelglac@gmail.com",
+  "dependentChangeType": "patch"
+}

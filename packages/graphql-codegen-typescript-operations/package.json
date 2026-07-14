@@ -24,7 +24,8 @@
   },
   "devDependencies": {
     "@graphql-codegen/testing": "1.17.7",
-    "@graphql-codegen/typescript": "^1.19.0"
+    "@graphql-codegen/typescript": "^1.19.0",
+    "monorepo-scripts": "*"
   },
   "peerDependencies": {
     "graphql": "^15.0.0"

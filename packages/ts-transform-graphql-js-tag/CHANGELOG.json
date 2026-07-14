@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-transform-graphql-js-tag",
   "entries": [
     {
+      "date": "Thu, 09 Jul 2026 12:08:15 GMT",
+      "version": "1.7.0",
+      "tag": "@graphitation/ts-transform-graphql-js-tag_v1.7.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/ts-transform-graphql-js-tag",
+            "commit": "7953db3e5c91e1320d45485568f6c25f9f8a0fb5",
+            "comment": "remove empty nodes"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 15 Jul 2025 14:18:32 GMT",
       "version": "1.6.0",
       "tag": "@graphitation/ts-transform-graphql-js-tag_v1.6.0",

@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "yarn upgrade",
+  "packageName": "@graphitation/apollo-mock-client",
+  "email": "pavelglac@gmail.com",
+  "dependentChangeType": "patch"
+}

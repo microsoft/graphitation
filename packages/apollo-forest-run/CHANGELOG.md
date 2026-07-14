@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Fri, 26 Jun 2026 09:51:44 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 01 Jul 2026 08:15:20 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.24.3
+
+Wed, 01 Jul 2026 08:15:20 GMT
+
+### Patches
+
+- Tolerate an explicit null embedded parent when applying a merge policy at write time (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.24.2
 

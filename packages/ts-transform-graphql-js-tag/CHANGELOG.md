@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-transform-graphql-js-tag
 
-<!-- This log was last generated on Tue, 15 Jul 2025 14:18:32 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 09 Jul 2026 12:08:15 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.7.0
+
+Thu, 09 Jul 2026 12:08:15 GMT
+
+### Minor changes
+
+- remove empty nodes (pavelglac@microsoft.com)
 
 ## 1.6.0
 

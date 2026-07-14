@@ -20,12 +20,12 @@
   "dependencies": {
     "@types/relay-test-utils": ">=17.0.0",
     "deepmerge": "^4.2.2",
-    "invariant": "^2.2.4",
-    "graphql": "^15.0.0"
+    "graphql": "^15.0.0",
+    "invariant": "^2.2.4"
   },
   "devDependencies": {
-    "@graphitation/graphql-js-tag": "^0.11.0",
     "@graphitation/graphql-codegen-typescript-typemap-plugin": "^1.1.0",
+    "@graphitation/graphql-js-tag": "^0.11.0",
     "@graphql-codegen/cli": "^2.6.2",
     "@graphql-codegen/typescript": "^2.5.1",
     "@types/jest": "^26.0.22",
