@@ -33,7 +33,7 @@ describe("executeWithSchema - @defer behavior", () => {
 
   function executeTestQuery(
     Obj: { critical: Resolver; deferred: Resolver },
-    enableIncrementalPayloadBatching?: number,
+    incrementalPayloadBatchingTimeoutMs?: number,
   ) {
     return Promise.resolve(
       executeWithSchema({
@@ -41,7 +41,7 @@ describe("executeWithSchema - @defer behavior", () => {
         definitions,
         enableEarlyExecution: true,
         enableDeferredMerge: true,
-        enableIncrementalPayloadBatching,
+        incrementalPayloadBatchingTimeoutMs,
         resolvers: {
           Query: {
             obj: () => ({}),
@@ -277,7 +277,7 @@ describe("executeWithSchema - @defer behavior", () => {
         definitions: messageListDefinitions,
         enableEarlyExecution: true,
         enableDeferredMerge: true,
-        enableIncrementalPayloadBatching: 10,
+        incrementalPayloadBatchingTimeoutMs: 10,
         resolvers: {
           Query: {
             messages: () => [

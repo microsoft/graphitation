@@ -126,7 +126,7 @@ export interface ExecutionContext {
   enablePerEventContext: boolean;
   enableEarlyExecution: boolean;
   enableDeferredMerge: boolean;
-  enableIncrementalPayloadBatching?: number;
+  incrementalPayloadBatchingTimeoutMs?: number;
 }
 
 /**
@@ -200,7 +200,7 @@ function buildExecutionContext(
     enablePerEventContext,
     enableEarlyExecution,
     enableDeferredMerge,
-    enableIncrementalPayloadBatching,
+    incrementalPayloadBatchingTimeoutMs,
   } = args;
 
   assertValidExecutionArguments(document, variableValues);
@@ -272,7 +272,7 @@ function buildExecutionContext(
     enablePerEventContext: enablePerEventContext ?? true,
     enableEarlyExecution: enableEarlyExecution ?? false,
     enableDeferredMerge: enableDeferredMerge ?? false,
-    enableIncrementalPayloadBatching,
+    incrementalPayloadBatchingTimeoutMs,
   };
 }
 
@@ -417,7 +417,7 @@ function buildResponse(
     if (exeContext.enableDeferredMerge && data !== null) {
       const pendingDeferredFragments =
         includeCompletedDeferredFragmentsInResult(exeContext, data);
-      const batchTimeout = exeContext.enableIncrementalPayloadBatching;
+      const batchTimeout = exeContext.incrementalPayloadBatchingTimeoutMs;
       if (
         typeof batchTimeout === "number" &&
         !deferredMergeAwaited &&
@@ -2982,7 +2982,7 @@ function yieldSubsequentPayloads(
       return { value: undefined, done: true };
     }
 
-    const batchTimeout = exeContext.enableIncrementalPayloadBatching;
+    const batchTimeout = exeContext.incrementalPayloadBatchingTimeoutMs;
     const incremental =
       typeof batchTimeout === "number"
         ? await getCompletedIncrementalResultsWithBatching(
