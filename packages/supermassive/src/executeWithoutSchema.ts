@@ -341,6 +341,16 @@ function executeOperation(
           undefined,
           exeContext.enableEarlyExecution ? patches : undefined,
         );
+        if (!exeContext.enableEarlyExecution) {
+          startExecutingPatches(
+            exeContext,
+            rootTypeName,
+            rootValue,
+            path,
+            patches,
+            undefined,
+          );
+        }
         result = buildResponse(exeContext, result);
         break;
       case "mutation":
@@ -352,6 +362,16 @@ function executeOperation(
           groupedFieldSet,
           exeContext.enableEarlyExecution ? patches : undefined,
         );
+        if (!exeContext.enableEarlyExecution) {
+          startExecutingPatches(
+            exeContext,
+            rootTypeName,
+            rootValue,
+            path,
+            patches,
+            undefined,
+          );
+        }
         result = buildResponse(exeContext, result);
         break;
       case "subscription": {
@@ -370,20 +390,6 @@ function executeOperation(
           false,
           `Operation "${operation.operation}" is not a part of GraphQL spec`,
         );
-    }
-
-    if (!exeContext.enableEarlyExecution) {
-      for (const patch of patches) {
-        const { label, groupedFieldSet: patchGroupedFieldSet } = patch;
-        executeDeferredFragment(
-          exeContext,
-          rootTypeName,
-          rootValue,
-          patchGroupedFieldSet,
-          label,
-          path,
-        );
-      }
     }
 
     return result;

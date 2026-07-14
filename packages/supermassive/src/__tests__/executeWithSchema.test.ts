@@ -52,6 +52,69 @@ describe("executeWithSchema - @defer behavior", () => {
     );
   }
 
+  const topLevelDeferDefinitions = parse(`
+    type Query {
+      critical: String
+      deferred: String
+    }
+  `);
+
+  const topLevelDeferDocument = parse(`
+    {
+      critical
+      ... @defer {
+        deferred
+      }
+    }
+  `);
+
+  test("emits top-level deferred patches when early execution is disabled and initial fields are synchronous", async () => {
+    const deferred = createDeferred<string>();
+
+    const result = await Promise.resolve(
+      executeWithSchema({
+        document: topLevelDeferDocument,
+        definitions: topLevelDeferDefinitions,
+        resolvers: {
+          Query: {
+            critical: () => "critical",
+            deferred: () => deferred.promise,
+          },
+        },
+      }),
+    );
+
+    expect(result).toMatchObject({
+      initialResult: {
+        data: {
+          critical: "critical",
+        },
+        hasNext: true,
+      },
+    });
+
+    if (!("initialResult" in result)) {
+      throw new Error("Expected an incremental result");
+    }
+
+    const subsequentResultPromise = result.subsequentResults.next();
+    deferred.resolve("deferred");
+
+    await expect(subsequentResultPromise).resolves.toMatchObject({
+      value: {
+        incremental: [
+          {
+            data: {
+              deferred: "deferred",
+            },
+          },
+        ],
+        hasNext: false,
+      },
+      done: false,
+    });
+  });
+
   test("includes deferred fields in the initial response when they complete within the merge timeout", async () => {
     const result = await executeTestQuery(
       {
