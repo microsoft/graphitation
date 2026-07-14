@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "yarn upgrade",
+  "packageName": "@graphitation/ts-transform-graphql-js-tag",
+  "email": "pavelglac@gmail.com",
+  "dependentChangeType": "patch"
+}

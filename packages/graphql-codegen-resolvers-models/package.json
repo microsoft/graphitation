@@ -19,15 +19,14 @@
     "@graphql-codegen/plugin-helpers": "^1.18.2",
     "@graphql-codegen/visitor-plugin-common": "^1.17.20",
     "@types/jest": "^26.0.22",
-    "typescript": "^5.5.3",
-    "monorepo-scripts": "*"
+    "monorepo-scripts": "*",
+    "typescript": "^5.5.3"
   },
   "peerDependencies": {
     "@graphql-codegen/plugin-helpers": ">= 1.18.0 < 2",
     "@graphql-codegen/visitor-plugin-common": ">= 1.17.0 < 2",
     "typescript": "^5.5.3"
   },
-  "dependencies": {},
   "sideEffects": false,
   "access": "public",
   "publishConfig": {
