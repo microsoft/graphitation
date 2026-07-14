@@ -31,7 +31,7 @@ query MyQuery {
 
 If you have configured
 [the webpack @graphitation/webpack-loader](#webpack-loading-and-preprocessing), you can import
-modules containing graphQL queries. The imported value will be the pre-built AST.
+modules containing GraphQL queries. The imported value will be the pre-built AST.
 
 ```ts
 import MyQuery from "./query.graphql";
