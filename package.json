@@ -26,7 +26,7 @@
   "devDependencies": {
     "@babel/core": "^7.14.0",
     "@babel/preset-typescript": "^7.14.0",
-    "beachball": "^2.47.1",
+    "beachball": "3.0.0-alpha.4",
     "graphql": "^15.0.0",
     "lage": "^2.7.14",
     "patch-package": "^7.0.0",
