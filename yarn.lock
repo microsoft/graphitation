@@ -3061,7 +3061,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/apollo-forest-run@npm:*, @graphitation/apollo-forest-run@npm:0.24.1, @graphitation/apollo-forest-run@npm:^0.24.1, @graphitation/apollo-forest-run@workspace:packages/apollo-forest-run":
+"@graphitation/apollo-forest-run@npm:*, @graphitation/apollo-forest-run@npm:0.24.3, @graphitation/apollo-forest-run@npm:^0.24.3, @graphitation/apollo-forest-run@workspace:packages/apollo-forest-run":
   version: 0.0.0-use.local
   resolution: "@graphitation/apollo-forest-run@workspace:packages/apollo-forest-run"
   dependencies:
@@ -3353,7 +3353,7 @@ __metadata:
     "@fluentui/react-data-grid-react-window": "npm:^9.0.0-beta.21"
     "@fluentui/react-icons": "npm:2.0.166-rc.3"
     "@fluentui/react-virtualizer": "npm:9.0.0-alpha.47"
-    "@graphitation/apollo-forest-run": "npm:^0.24.1"
+    "@graphitation/apollo-forest-run": "npm:^0.24.3"
     "@graphql-tools/schema": "npm:^7.1.5"
     "@types/lodash.debounce": "npm:^4.0.6"
     "@types/lodash.isequal": "npm:^4.5.5"
@@ -3441,7 +3441,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/ts-transform-graphql-js-tag@npm:^1.6.0, @graphitation/ts-transform-graphql-js-tag@workspace:packages/ts-transform-graphql-js-tag":
+"@graphitation/ts-transform-graphql-js-tag@npm:^1.7.0, @graphitation/ts-transform-graphql-js-tag@workspace:packages/ts-transform-graphql-js-tag":
   version: 0.0.0-use.local
   resolution: "@graphitation/ts-transform-graphql-js-tag@workspace:packages/ts-transform-graphql-js-tag"
   dependencies:
@@ -11312,7 +11312,7 @@ __metadata:
   dependencies:
     "@apollo/client": "npm:~3.6.0"
     "@fluentui/react-components": "npm:^9.18.9"
-    "@graphitation/apollo-forest-run": "npm:0.24.1"
+    "@graphitation/apollo-forest-run": "npm:0.24.3"
     "@graphql-tools/schema": "npm:^7.1.5"
     "@types/node": "npm:^12.0.0"
     "@types/react": "npm:^18.2.29"
@@ -16835,7 +16835,7 @@ __metadata:
     "@graphitation/apollo-react-relay-duct-tape-compiler": "npm:^1.9.7"
     "@graphitation/graphql-js-tag": "npm:^0.11.0"
     "@graphitation/supermassive": "npm:^3.17.0"
-    "@graphitation/ts-transform-graphql-js-tag": "npm:^1.6.0"
+    "@graphitation/ts-transform-graphql-js-tag": "npm:^1.7.0"
     "@graphitation/webpack-loader": "npm:^1.1.25"
     "@graphql-codegen/cli": "npm:^2.2.2"
     "@graphql-codegen/import-types-preset": "npm:^2.1.7"
