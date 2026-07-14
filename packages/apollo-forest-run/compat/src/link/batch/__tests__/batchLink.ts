@@ -520,6 +520,7 @@ describe('OperationBatcher', () => {
   });
 
   itAsync('should correctly batch multiple queries', (resolve, reject) => {
+    jest.useFakeTimers();
     const data = {
       lastName: 'Ever',
       firstName: 'Greatest',
@@ -556,26 +557,28 @@ describe('OperationBatcher', () => {
       reject(e);
     }
 
-    setTimeout(() => {
-      // The batch shouldn't be fired yet, so we can add one more request.
-      batcher.enqueueRequest({ operation: operation3 }).subscribe({});
-      try {
-        expect(batcher["batchesByKey"].get('')!.size).toBe(3);
-      } catch (e) {
-        reject(e);
-      }
-    }, 5);
+    // Advance 5ms — the batch timer (10ms) hasn't fired yet.
+    jest.advanceTimersByTime(5);
 
-    setTimeout(
-      terminatingCheck(resolve, reject, () => {
-        // The batch should've been fired by now.
-        expect(batcher["batchesByKey"].get('')).toBeUndefined();
-      }),
-      20,
-    );
+    // The batch shouldn't be fired yet, so we can add one more request.
+    batcher.enqueueRequest({ operation: operation3 }).subscribe({});
+    try {
+      expect(batcher["batchesByKey"].get('')!.size).toBe(3);
+    } catch (e) {
+      reject(e);
+    }
+
+    // Advance 15ms more (20ms total) — the batch timer fires at 10ms.
+    jest.advanceTimersByTime(15);
+
+    terminatingCheck(resolve, reject, () => {
+      // The batch should've been fired by now.
+      expect(batcher["batchesByKey"].get('')).toBeUndefined();
+    })();
   });
 
   itAsync('should cancel multiple queries in queue when unsubscribing and let pass still subscribed one', (resolve, reject) => {
+    jest.useFakeTimers();
     const data2 = {
       lastName: 'Hauser',
       firstName: 'Evans',
@@ -618,14 +621,19 @@ describe('OperationBatcher', () => {
     sub1.unsubscribe();
     expect(batcher["batchesByKey"].get('')!.size).toBe(1);
 
-    setTimeout(() => {
-      // The batch shouldn't be fired yet, so we can add one more request.
-      const sub3 = batcher.enqueueRequest({operation: operation3}).subscribe(() => reject('next should never be called'));
-      expect(batcher["batchesByKey"].get('')!.size).toBe(2);
+    // Advance 5ms — the batch timer (10ms) hasn't fired yet.
+    jest.advanceTimersByTime(5);
 
-      sub3.unsubscribe();
-      expect(batcher["batchesByKey"].get('')!.size).toBe(1);
-    }, 5);
+    // The batch shouldn't be fired yet, so we can add one more request.
+    const sub3 = batcher.enqueueRequest({operation: operation3}).subscribe(() => reject('next should never be called'));
+    expect(batcher["batchesByKey"].get('')!.size).toBe(2);
+
+    sub3.unsubscribe();
+    expect(batcher["batchesByKey"].get('')!.size).toBe(1);
+
+    // Advance 5ms more (10ms total) — the batch timer fires, delivering the
+    // result to operation2's subscriber which calls resolve().
+    jest.advanceTimersByTime(5);
   });
 
   itAsync('should reject the promise if there is a network error', (resolve, reject) => {
