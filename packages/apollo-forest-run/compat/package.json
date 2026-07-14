@@ -42,7 +42,7 @@
     "clean": "rimraf -r dist coverage lib temp",
     "ci:precheck": "node config/precheck.js",
     "test": "jest --config ./config/jest.config.js",
-    "test:ci": "jest --config ./config/jest.config.js --ci --maxWorkers=2 --forceExit",
+    "test:ci": "jest --config ./config/jest.config.js --ci --maxWorkers=2",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand --testTimeout 99999",
     "test:ci_original": "npm run test:coverage && npm run test:memory",
     "test:watch": "jest --config ./config/jest.config.js --watch",
