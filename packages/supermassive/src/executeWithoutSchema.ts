@@ -13,6 +13,7 @@ import {
   collectSubfields as _collectSubfields,
   FieldGroup,
   GroupedFieldSet,
+  PatchFields,
 } from "./collectFields";
 import { devAssert } from "./jsutils/devAssert";
 import { inspect } from "./jsutils/inspect";
@@ -321,12 +322,13 @@ function executeOperation(
     // Note: cannot use OperationTypeNode from graphql-js as it doesn't exist in 15.x
     switch (operation.operation) {
       case "query":
-        result = executeFields(
+        result = executeFieldsAndPatches(
           exeContext,
           rootTypeName,
           rootValue,
           path,
           groupedFieldSet,
+          patches,
           undefined,
         );
         result = buildResponse(exeContext, result);
@@ -359,16 +361,18 @@ function executeOperation(
         );
     }
 
-    for (const patch of patches) {
-      const { label, groupedFieldSet: patchGroupedFieldSet } = patch;
-      executeDeferredFragment(
-        exeContext,
-        rootTypeName,
-        rootValue,
-        patchGroupedFieldSet,
-        label,
-        path,
-      );
+    if (operation.operation !== "query") {
+      for (const patch of patches) {
+        const { label, groupedFieldSet: patchGroupedFieldSet } = patch;
+        executeDeferredFragment(
+          exeContext,
+          rootTypeName,
+          rootValue,
+          patchGroupedFieldSet,
+          label,
+          path,
+        );
+      }
     }
 
     return result;
@@ -528,6 +532,76 @@ function executeFields(
   // field, which is possibly a promise. Return a promise that will return this
   // same map, but with any promises replaced with the values they resolved to.
   return promiseForObject(results);
+}
+
+function executeFieldsAndPatches(
+  exeContext: ExecutionContext,
+  parentTypeName: string,
+  sourceValue: unknown,
+  path: Path | undefined,
+  groupedFieldSet: GroupedFieldSet,
+  patches: Array<PatchFields>,
+  incrementalDataRecord: IncrementalDataRecord | undefined,
+): PromiseOrValue<ObjMap<unknown>> {
+  const result = executeFields(
+    exeContext,
+    parentTypeName,
+    sourceValue,
+    path,
+    groupedFieldSet,
+    incrementalDataRecord,
+  );
+
+  if (!patches.length) {
+    return result;
+  }
+
+  const deferredRecords = patches.map(
+    ({ label, groupedFieldSet: patchGroupedFieldSet }) =>
+      executeDeferredFragment(
+        exeContext,
+        parentTypeName,
+        sourceValue,
+        patchGroupedFieldSet,
+        label,
+        path,
+        incrementalDataRecord,
+      ),
+  );
+
+  const includeCompletedDeferredFragments = (resolved: ObjMap<unknown>) => {
+    includeCompletedDeferredFragmentsInResult(
+      exeContext,
+      resolved,
+      deferredRecords,
+    );
+    return resolved;
+  };
+
+  return isPromise(result)
+    ? result.then(includeCompletedDeferredFragments)
+    : includeCompletedDeferredFragments(result);
+}
+
+function includeCompletedDeferredFragmentsInResult(
+  exeContext: ExecutionContext,
+  result: ObjMap<unknown>,
+  deferredRecords: Array<DeferredFragmentRecord>,
+) {
+  for (const deferredRecord of deferredRecords) {
+    if (!deferredRecord.isCompleted) {
+      continue;
+    }
+
+    if (deferredRecord.data != null) {
+      Object.assign(result, deferredRecord.data);
+    }
+    exeContext.subsequentPayloads.delete(deferredRecord);
+
+    if (deferredRecord.errors.length > 0) {
+      exeContext.errors.push(...deferredRecord.errors);
+    }
+  }
 }
 
 /**
@@ -2003,29 +2077,15 @@ function collectAndExecuteSubfields(
   const { groupedFieldSet: subGroupedFieldSet, patches: subPatches } =
     collectSubfields(exeContext, { name: returnTypeName }, fieldGroup);
 
-  const subFields = executeFields(
+  return executeFieldsAndPatches(
     exeContext,
     returnTypeName,
     result,
     path,
     subGroupedFieldSet,
+    subPatches,
     incrementalDataRecord,
   );
-
-  for (const subPatch of subPatches) {
-    const { label, groupedFieldSet: subPatchGroupedFieldSet } = subPatch;
-    executeDeferredFragment(
-      exeContext,
-      returnTypeName,
-      result,
-      subPatchGroupedFieldSet,
-      label,
-      path,
-      incrementalDataRecord,
-    );
-  }
-
-  return subFields;
 }
 
 function invokeBeforeFieldSubscribeHook(
@@ -2460,35 +2520,43 @@ function executeDeferredFragment(
   label?: string,
   path?: Path,
   parentContext?: IncrementalDataRecord,
-): void {
+): DeferredFragmentRecord {
   const incrementalDataRecord = new DeferredFragmentRecord({
     label,
     path,
     parentContext,
     exeContext,
   });
-  let promiseOrData;
-  try {
-    promiseOrData = executeFields(
-      exeContext,
-      parentTypeName,
-      sourceValue,
-      path,
-      fields,
-      incrementalDataRecord,
+
+  // Deferred fragments must never run on the critical path. Even a fully
+  // synchronous resolver can do heavy work, so we always schedule the
+  // deferred selection set on a microtask. This guarantees the critical
+  // fields are resolved (and the initial response can be built) before any
+  // deferred work executes. Whether a deferred fragment is included inline
+  // or streamed is then decided purely by timing - i.e. whether it has
+  // already completed by the time the critical fields are ready - rather
+  // than by whether its resolvers happened to be synchronous.
+  const promisedData = Promise.resolve()
+    .then(() =>
+      executeFields(
+        exeContext,
+        parentTypeName,
+        sourceValue,
+        path,
+        fields,
+        incrementalDataRecord,
+      ),
+    )
+    .then(
+      (data) => data,
+      (e) => {
+        incrementalDataRecord.errors.push(e as GraphQLError);
+        return null;
+      },
     );
 
-    if (isPromise(promiseOrData)) {
-      promiseOrData = promiseOrData.then(null, (e) => {
-        incrementalDataRecord.errors.push(e);
-        return null;
-      });
-    }
-  } catch (e) {
-    incrementalDataRecord.errors.push(e as GraphQLError);
-    promiseOrData = null;
-  }
-  incrementalDataRecord.addData(promiseOrData);
+  incrementalDataRecord.addData(promisedData);
+  return incrementalDataRecord;
 }
 
 function executeStreamField(
@@ -2918,6 +2986,12 @@ class DeferredFragmentRecord {
       this._resolve?.(parentData.then(() => data));
       return;
     }
+    // Completion (and therefore eligibility to be included inline in the
+    // initial response) is always observed asynchronously, when the deferred
+    // data settles. We intentionally do not flip `isCompleted` synchronously
+    // for non-promise data: doing so would force every synchronous deferred
+    // fragment to be piggybacked onto the initial response, defeating the
+    // purpose of `@defer` for fields whose synchronous resolvers are heavy.
     this._resolve?.(data);
   }
 }

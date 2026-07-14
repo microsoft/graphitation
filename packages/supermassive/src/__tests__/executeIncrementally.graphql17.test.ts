@@ -7,6 +7,7 @@ import {
 import { makeSchema } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
 import { createExecutionUtils } from "../__testUtils__/execute";
+import { executeWithSchema } from "../executeWithSchema";
 
 const {
   compareResultsForExecuteWithSchema,
@@ -19,6 +20,12 @@ interface TestCase {
   name: string;
   document: string;
   variables?: Record<string, unknown>;
+  /**
+   * Set to true when supermassive intentionally diverges from graphql-js.
+   * Tests marked this way are excluded from the cross-executor parity checks
+   * but the divergence is covered by a dedicated test in the non-blocking suite.
+   */
+  divergesFromGraphQLJs?: boolean;
 }
 
 const testCases: Array<TestCase> = [
@@ -416,6 +423,7 @@ const testCases: Array<TestCase> = [
 
   {
     name: "@stream/defer errors",
+    divergesFromGraphQLJs: true,
     document: `
       {
         person(id: 1) {
@@ -428,6 +436,13 @@ const testCases: Array<TestCase> = [
       }`,
   },
 ];
+
+/**
+ * Subset of testCases that are expected to produce identical results to
+ * graphql-js. Cases marked divergesFromGraphQLJs are covered by dedicated
+ * tests in the non-blocking semantics suite instead.
+ */
+const comparableTestCases = testCases.filter((t) => !t.divergesFromGraphQLJs);
 
 describe("graphql-js snapshot check to ensure test stability", () => {
   let schema: GraphQLSchema;
@@ -460,7 +475,7 @@ describe("executeWithSchema", () => {
     schema = makeSchema();
   });
 
-  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
+  test.each(comparableTestCases)("$name", async ({ document, variables }: TestCase) => {
     await compareResultsForExecuteWithSchema(schema, document, variables);
   });
 });
@@ -471,11 +486,215 @@ describe("executeWithoutSchema - minimal viable schema annotation", () => {
     jest.resetAllMocks();
     schema = makeSchema();
   });
-  test.each(testCases)("$name", async ({ document, variables }: TestCase) => {
+  test.each(comparableTestCases)("$name", async ({ document, variables }: TestCase) => {
     await compareResultForExecuteWithoutSchemaWithMVSAnnotation(
       schema,
       document,
       variables,
     );
+  });
+});
+
+describe("executeWithSchema - @defer non-blocking semantics", () => {
+  function createDeferred<T>() {
+    let resolve: (value: T) => void;
+    const promise = new Promise<T>((innerResolve) => {
+      resolve = innerResolve;
+    });
+    return { promise, resolve: resolve! };
+  }
+
+  const definitions = parse(`
+    type Query { obj: Obj }
+    type Obj {
+      critical: String
+      deferred: String
+    }
+  `);
+
+  const document = parse(`
+    {
+      obj {
+        critical
+        ... on Obj @defer {
+          deferred
+        }
+      }
+    }
+  `);
+
+  type Resolver = () => string | Promise<string>;
+
+  function executeTestQuery(Obj: { critical: Resolver; deferred: Resolver }) {
+    return Promise.resolve(
+      executeWithSchema({
+        document,
+        definitions,
+        resolvers: {
+          Query: {
+            obj: () => ({}),
+          },
+          Obj,
+        },
+      }),
+    );
+  }
+
+  test("returns the initial response as soon as critical fields are ready", async () => {
+    const critical = createDeferred<string>();
+    const deferred = createDeferred<string>();
+
+    const resultPromise = executeTestQuery({
+      critical: () => critical.promise,
+      deferred: () => deferred.promise,
+    });
+
+    critical.resolve("critical");
+    const result = await Promise.race([
+      resultPromise,
+      new Promise<"blocked">((resolve) => setTimeout(resolve, 0, "blocked")),
+    ]);
+
+    if (result === "blocked") {
+      throw new Error("Initial response waited for deferred field");
+    }
+
+    expect(result).toMatchObject({
+      initialResult: {
+        data: {
+          obj: {
+            critical: "critical",
+          },
+        },
+        hasNext: true,
+      },
+    });
+
+    if (!("initialResult" in result)) {
+      throw new Error("Expected an incremental result");
+    }
+
+    const subsequentResultPromise = result.subsequentResults.next();
+    deferred.resolve("deferred");
+
+    await expect(subsequentResultPromise).resolves.toMatchObject({
+      value: {
+        incremental: [
+          {
+            data: {
+              deferred: "deferred",
+            },
+            path: ["obj"],
+          },
+        ],
+        hasNext: false,
+      },
+      done: false,
+    });
+  });
+
+  test("includes deferred fields in the initial response when they complete before the critical fields", async () => {
+    const critical = createDeferred<string>();
+
+    const resultPromise = executeTestQuery({
+      // The deferred resolver settles during microtask processing, well before
+      // the critical field, which is only resolved on a later macrotask below.
+      deferred: () => Promise.resolve("deferred"),
+      critical: () => critical.promise,
+    });
+
+    setTimeout(() => critical.resolve("critical"), 0);
+
+    await expect(resultPromise).resolves.toEqual({
+      data: {
+        obj: {
+          critical: "critical",
+          deferred: "deferred",
+        },
+      },
+    });
+  });
+
+  test("surfaces deferred errors at the top level when piggybacked onto the initial response", async () => {
+    // When a deferred fragment is piggybacked onto the initial response (because
+    // it completed before an asynchronous critical field), its errors are
+    // promoted to the top-level `errors` array, mirroring how they would appear
+    // had the field never been deferred. graphql-js instead reports them inside
+    // a separate incremental payload - this is the intended divergence captured
+    // by the `@stream/defer errors` parity case.
+    const critical = createDeferred<string>();
+
+    const resultPromise = executeTestQuery({
+      deferred: () => {
+        throw new Error("Deferred boom");
+      },
+      critical: () => critical.promise,
+    });
+
+    setTimeout(() => critical.resolve("critical"), 0);
+
+    const result = await resultPromise;
+
+    expect(result).toMatchObject({
+      data: {
+        obj: {
+          critical: "critical",
+          deferred: null,
+        },
+      },
+    });
+    expect("initialResult" in (result as object)).toBe(false);
+    expect(
+      (result as { errors?: ReadonlyArray<{ message: string }> }).errors,
+    ).toHaveLength(1);
+    expect(
+      (result as { errors: ReadonlyArray<{ message: string }> }).errors[0]
+        .message,
+    ).toBe("Deferred boom");
+  });
+
+  test("streams a synchronous deferred field when the critical fields are ready first", async () => {
+    // Both resolvers are synchronous. A synchronous resolver may still be
+    // expensive, so marking the field with @defer must keep it off the
+    // critical path: the critical field is flushed first and the deferred
+    // field is streamed as a subsequent payload rather than forced inline.
+    const result = await executeTestQuery({
+      critical: () => "critical",
+      deferred: () => "deferred",
+    });
+
+    expect(result).toMatchObject({
+      initialResult: {
+        data: {
+          obj: {
+            critical: "critical",
+          },
+        },
+        hasNext: true,
+      },
+    });
+
+    if (!("initialResult" in result)) {
+      throw new Error("Expected an incremental result");
+    }
+
+    expect(result.initialResult.data).toEqual({
+      obj: { critical: "critical" },
+    });
+
+    await expect(result.subsequentResults.next()).resolves.toMatchObject({
+      value: {
+        incremental: [
+          {
+            data: {
+              deferred: "deferred",
+            },
+            path: ["obj"],
+          },
+        ],
+        hasNext: false,
+      },
+      done: false,
+    });
   });
 });
