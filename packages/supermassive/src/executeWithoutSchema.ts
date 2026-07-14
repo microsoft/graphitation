@@ -2942,16 +2942,23 @@ function raceIncrementalPayloadBatch(
   promises: Array<Promise<unknown>>,
   batchTimeout: number,
 ): Promise<void> {
+  if (!Number.isFinite(batchTimeout) || batchTimeout <= 0) {
+    return Promise.resolve();
+  }
+
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<void>((resolve) => {
+    timeoutId = setTimeout(resolve, batchTimeout);
+  });
+
   return Promise.race([
     Promise.all(promises).then(() => undefined),
-    waitForIncrementalPayloadBatchTimeout(batchTimeout),
-  ]);
-}
-
-function waitForIncrementalPayloadBatchTimeout(
-  batchTimeout: number,
-): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, batchTimeout));
+    timeoutPromise,
+  ]).finally(() => {
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId);
+    }
+  });
 }
 
 function yieldSubsequentPayloads(
