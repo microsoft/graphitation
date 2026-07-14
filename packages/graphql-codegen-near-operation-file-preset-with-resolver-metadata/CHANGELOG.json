@@ -2,6 +2,21 @@
   "name": "@graphitation/graphql-codegen-near-operation-file-preset-with-resolver-metadata",
   "entries": [
     {
+      "date": "Tue, 14 Jul 2026 09:11:43 GMT",
+      "version": "1.2.1",
+      "tag": "@graphitation/graphql-codegen-near-operation-file-preset-with-resolver-metadata_v1.2.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@gmail.com",
+            "package": "@graphitation/graphql-codegen-near-operation-file-preset-with-resolver-metadata",
+            "commit": "d14e7263f622dcc1afc28539a76a341d2aa0d126",
+            "comment": "yarn upgrade"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 15 Apr 2026 15:45:05 GMT",
       "version": "1.2.0",
       "tag": "@graphitation/graphql-codegen-near-operation-file-preset-with-resolver-metadata_v1.2.0",

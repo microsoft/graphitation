@@ -15,11 +15,11 @@
   "dependencies": {
     "@apollo/client": "~3.6.0",
     "@babel/runtime": "^7.12.0",
-    "@graphitation/apollo-react-relay-duct-tape": "^1.4.38",
-    "@graphitation/apollo-react-relay-duct-tape-compiler": "^1.9.7",
-    "@graphitation/graphql-js-tag": "^0.11.0",
-    "@graphitation/supermassive": "^3.17.0",
-    "@graphitation/ts-transform-graphql-js-tag": "^1.7.0",
+    "@graphitation/apollo-react-relay-duct-tape": "^1.4.39",
+    "@graphitation/apollo-react-relay-duct-tape-compiler": "^1.9.8",
+    "@graphitation/graphql-js-tag": "^0.11.1",
+    "@graphitation/supermassive": "^3.17.1",
+    "@graphitation/ts-transform-graphql-js-tag": "^1.7.1",
     "concurrently": "^6.5.1",
     "graphql": "^15.6.1",
     "graphql-tools": "^8.2.0",
@@ -48,7 +48,7 @@
     "yargs-parser": ">=13.1.2"
   },
   "devDependencies": {
-    "@graphitation/webpack-loader": "^1.1.25",
+    "@graphitation/webpack-loader": "^1.1.26",
     "@graphql-codegen/cli": "^2.2.2",
     "@graphql-codegen/import-types-preset": "^2.1.7",
     "@graphql-codegen/typescript": "^2.3.0",

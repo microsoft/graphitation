@@ -1,8 +1,18 @@
 # Change Log - @graphitation/cli
 
-<!-- This log was last generated on Wed, 28 Jan 2026 12:22:13 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 14 Jul 2026 09:11:43 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.3.5
+
+Tue, 14 Jul 2026 09:11:43 GMT
+
+### Patches
+
+- yarn upgrade (pavelglac@gmail.com)
+- Bump @graphitation/supermassive-extractors to v2.3.1
+- Bump @graphitation/ts-codegen to v5.5.2
 
 ## 3.3.4
 

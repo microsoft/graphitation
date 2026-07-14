@@ -3061,7 +3061,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/apollo-forest-run@npm:*, @graphitation/apollo-forest-run@npm:0.24.3, @graphitation/apollo-forest-run@npm:^0.24.3, @graphitation/apollo-forest-run@workspace:packages/apollo-forest-run":
+"@graphitation/apollo-forest-run@npm:*, @graphitation/apollo-forest-run@npm:0.24.4, @graphitation/apollo-forest-run@npm:^0.24.4, @graphitation/apollo-forest-run@workspace:packages/apollo-forest-run":
   version: 0.0.0-use.local
   resolution: "@graphitation/apollo-forest-run@workspace:packages/apollo-forest-run"
   dependencies:
@@ -3078,13 +3078,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/apollo-mock-client@npm:^0.13.0, @graphitation/apollo-mock-client@workspace:packages/apollo-mock-client":
+"@graphitation/apollo-mock-client@npm:^0.13.1, @graphitation/apollo-mock-client@workspace:packages/apollo-mock-client":
   version: 0.0.0-use.local
   resolution: "@graphitation/apollo-mock-client@workspace:packages/apollo-mock-client"
   dependencies:
     "@apollo/client": "npm:>= 3.3.0 < 3.7.0"
-    "@graphitation/graphql-js-operation-payload-generator": "npm:^0.13.1"
-    "@graphitation/graphql-js-tag": "npm:^0.11.0"
+    "@graphitation/graphql-js-operation-payload-generator": "npm:^0.13.2"
+    "@graphitation/graphql-js-tag": "npm:^0.11.1"
     "@types/invariant": "npm:^2.2.34"
     "@types/jest": "npm:^26.0.22"
     "@types/react": "npm:^18.2.29"
@@ -3100,11 +3100,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/apollo-react-relay-duct-tape-compiler@npm:^1.9.7, @graphitation/apollo-react-relay-duct-tape-compiler@workspace:packages/apollo-react-relay-duct-tape-compiler":
+"@graphitation/apollo-react-relay-duct-tape-compiler@npm:^1.9.8, @graphitation/apollo-react-relay-duct-tape-compiler@workspace:packages/apollo-react-relay-duct-tape-compiler":
   version: 0.0.0-use.local
   resolution: "@graphitation/apollo-react-relay-duct-tape-compiler@workspace:packages/apollo-react-relay-duct-tape-compiler"
   dependencies:
-    "@graphitation/graphql-js-tag": "npm:^0.11.0"
+    "@graphitation/graphql-js-tag": "npm:^0.11.1"
     "@graphitation/supermassive-ast": "npm:*"
     "@graphql-tools/optimize": "npm:^1.1.1"
     "@types/dedent": "npm:^0.7.0"
@@ -3121,7 +3121,7 @@ __metadata:
     typescript: "npm:^5.5.3"
     yargs: "npm:^16.2.0"
   peerDependencies:
-    "@graphitation/supermassive": ^3.17.0
+    "@graphitation/supermassive": ^3.17.1
     graphql: ^15.0.0
     typescript: ^5.5.3
   bin:
@@ -3129,15 +3129,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/apollo-react-relay-duct-tape@npm:^1.4.38, @graphitation/apollo-react-relay-duct-tape@workspace:packages/apollo-react-relay-duct-tape":
+"@graphitation/apollo-react-relay-duct-tape@npm:^1.4.39, @graphitation/apollo-react-relay-duct-tape@workspace:packages/apollo-react-relay-duct-tape":
   version: 0.0.0-use.local
   resolution: "@graphitation/apollo-react-relay-duct-tape@workspace:packages/apollo-react-relay-duct-tape"
   dependencies:
     "@apollo/client": "npm:>= 3.3.0 < 3.7.0"
-    "@graphitation/apollo-mock-client": "npm:^0.13.0"
-    "@graphitation/apollo-react-relay-duct-tape-compiler": "npm:^1.9.7"
-    "@graphitation/graphql-js-operation-payload-generator": "npm:^0.13.1"
-    "@graphitation/graphql-js-tag": "npm:^0.11.0"
+    "@graphitation/apollo-mock-client": "npm:^0.13.1"
+    "@graphitation/apollo-react-relay-duct-tape-compiler": "npm:^1.9.8"
+    "@graphitation/graphql-js-operation-payload-generator": "npm:^0.13.2"
+    "@graphitation/graphql-js-tag": "npm:^0.11.1"
     "@types/jest": "npm:^26.0.22"
     "@types/lodash": "npm:^4.14.176"
     "@types/react": "npm:^18.2.29"
@@ -3158,8 +3158,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphitation/cli@workspace:packages/cli"
   dependencies:
-    "@graphitation/supermassive-extractors": "npm:^2.3.0"
-    "@graphitation/ts-codegen": "npm:^5.5.1"
+    "@graphitation/supermassive-extractors": "npm:^2.3.1"
+    "@graphitation/ts-codegen": "npm:^5.5.2"
     "@types/jest": "npm:^26.0.22"
     commander: "npm:^8.3.0"
     fast-glob: "npm:^3.2.12"
@@ -3173,7 +3173,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/embedded-document-artefact-loader@npm:^0.10.1, @graphitation/embedded-document-artefact-loader@workspace:packages/embedded-document-artefact-loader":
+"@graphitation/embedded-document-artefact-loader@npm:^0.10.2, @graphitation/embedded-document-artefact-loader@workspace:packages/embedded-document-artefact-loader":
   version: 0.0.0-use.local
   resolution: "@graphitation/embedded-document-artefact-loader@workspace:packages/embedded-document-artefact-loader"
   dependencies:
@@ -3228,7 +3228,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin@workspace:packages/graphql-codegen-supermassive-schema-extraction-plugin"
   dependencies:
-    "@graphitation/supermassive": "npm:^3.17.0"
+    "@graphitation/supermassive": "npm:^3.17.1"
     "@graphql-codegen/plugin-helpers": "npm:^1.18.2"
     "@types/jest": "npm:^26.0.22"
     graphql: "npm:^15.0.0"
@@ -3250,7 +3250,7 @@ __metadata:
     graphql-tag: "npm:^2.11.0"
     monorepo-scripts: "npm:*"
   peerDependencies:
-    "@graphitation/supermassive": ^3.17.0
+    "@graphitation/supermassive": ^3.17.1
     "@graphql-codegen/plugin-helpers": ">= 1.18.0 < 2"
     "@graphql-codegen/visitor-plugin-common": ">= 1.17.0 < 2"
     "@graphql-tools/optimize": ^1.0.1
@@ -3274,7 +3274,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/graphql-codegen-typescript-typemap-plugin@npm:^1.1.0, @graphitation/graphql-codegen-typescript-typemap-plugin@workspace:packages/graphql-codegen-typescript-typemap-plugin":
+"@graphitation/graphql-codegen-typescript-typemap-plugin@npm:^1.1.1, @graphitation/graphql-codegen-typescript-typemap-plugin@workspace:packages/graphql-codegen-typescript-typemap-plugin":
   version: 0.0.0-use.local
   resolution: "@graphitation/graphql-codegen-typescript-typemap-plugin@workspace:packages/graphql-codegen-typescript-typemap-plugin"
   dependencies:
@@ -3310,12 +3310,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/graphql-js-operation-payload-generator@npm:^0.13.1, @graphitation/graphql-js-operation-payload-generator@workspace:packages/graphql-js-operation-payload-generator":
+"@graphitation/graphql-js-operation-payload-generator@npm:^0.13.2, @graphitation/graphql-js-operation-payload-generator@workspace:packages/graphql-js-operation-payload-generator":
   version: 0.0.0-use.local
   resolution: "@graphitation/graphql-js-operation-payload-generator@workspace:packages/graphql-js-operation-payload-generator"
   dependencies:
-    "@graphitation/graphql-codegen-typescript-typemap-plugin": "npm:^1.1.0"
-    "@graphitation/graphql-js-tag": "npm:^0.11.0"
+    "@graphitation/graphql-codegen-typescript-typemap-plugin": "npm:^1.1.1"
+    "@graphitation/graphql-js-tag": "npm:^0.11.1"
     "@graphql-codegen/cli": "npm:^2.6.2"
     "@graphql-codegen/typescript": "npm:^2.5.1"
     "@types/jest": "npm:^26.0.22"
@@ -3329,7 +3329,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/graphql-js-tag@npm:^0.11.0, @graphitation/graphql-js-tag@workspace:packages/graphql-js-tag":
+"@graphitation/graphql-js-tag@npm:^0.11.1, @graphitation/graphql-js-tag@workspace:packages/graphql-js-tag":
   version: 0.0.0-use.local
   resolution: "@graphitation/graphql-js-tag@workspace:packages/graphql-js-tag"
   dependencies:
@@ -3353,7 +3353,7 @@ __metadata:
     "@fluentui/react-data-grid-react-window": "npm:^9.0.0-beta.21"
     "@fluentui/react-icons": "npm:2.0.166-rc.3"
     "@fluentui/react-virtualizer": "npm:9.0.0-alpha.47"
-    "@graphitation/apollo-forest-run": "npm:^0.24.3"
+    "@graphitation/apollo-forest-run": "npm:^0.24.4"
     "@graphql-tools/schema": "npm:^7.1.5"
     "@types/lodash.debounce": "npm:^4.0.6"
     "@types/lodash.isequal": "npm:^4.5.5"
@@ -3394,7 +3394,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphitation/supermassive-extractors@npm:^2.3.0, @graphitation/supermassive-extractors@workspace:packages/supermassive-extractors":
+"@graphitation/supermassive-extractors@npm:^2.3.1, @graphitation/supermassive-extractors@workspace:packages/supermassive-extractors":
   version: 0.0.0-use.local
   resolution: "@graphitation/supermassive-extractors@workspace:packages/supermassive-extractors"
   dependencies:
@@ -3407,7 +3407,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/supermassive@npm:^3.17.0, @graphitation/supermassive@workspace:packages/supermassive":
+"@graphitation/supermassive@npm:^3.17.1, @graphitation/supermassive@workspace:packages/supermassive":
   version: 0.0.0-use.local
   resolution: "@graphitation/supermassive@workspace:packages/supermassive"
   dependencies:
@@ -3430,7 +3430,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/ts-codegen@npm:^5.5.1, @graphitation/ts-codegen@workspace:packages/ts-codegen":
+"@graphitation/ts-codegen@npm:^5.5.2, @graphitation/ts-codegen@workspace:packages/ts-codegen":
   version: 0.0.0-use.local
   resolution: "@graphitation/ts-codegen@workspace:packages/ts-codegen"
   dependencies:
@@ -3441,7 +3441,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/ts-transform-graphql-js-tag@npm:^1.7.0, @graphitation/ts-transform-graphql-js-tag@workspace:packages/ts-transform-graphql-js-tag":
+"@graphitation/ts-transform-graphql-js-tag@npm:^1.7.1, @graphitation/ts-transform-graphql-js-tag@workspace:packages/ts-transform-graphql-js-tag":
   version: 0.0.0-use.local
   resolution: "@graphitation/ts-transform-graphql-js-tag@workspace:packages/ts-transform-graphql-js-tag"
   dependencies:
@@ -3457,7 +3457,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/webpack-loader@npm:^1.1.25, @graphitation/webpack-loader@workspace:packages/webpack-loader":
+"@graphitation/webpack-loader@npm:^1.1.26, @graphitation/webpack-loader@workspace:packages/webpack-loader":
   version: 0.0.0-use.local
   resolution: "@graphitation/webpack-loader@workspace:packages/webpack-loader"
   dependencies:
@@ -3467,7 +3467,7 @@ __metadata:
     monorepo-scripts: "npm:*"
     tslib: "npm:^2.4.0"
   peerDependencies:
-    "@graphitation/supermassive": ^3.17.0
+    "@graphitation/supermassive": ^3.17.1
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
   languageName: unknown
   linkType: soft
@@ -7343,11 +7343,11 @@ __metadata:
   resolution: "apollo-watch-fragments@workspace:examples/apollo-watch-fragments"
   dependencies:
     "@apollo/client": "npm:~3.6.0"
-    "@graphitation/apollo-react-relay-duct-tape": "npm:^1.4.38"
-    "@graphitation/apollo-react-relay-duct-tape-compiler": "npm:^1.9.7"
-    "@graphitation/embedded-document-artefact-loader": "npm:^0.10.1"
-    "@graphitation/graphql-js-tag": "npm:^0.11.0"
-    "@graphitation/supermassive": "npm:^3.17.0"
+    "@graphitation/apollo-react-relay-duct-tape": "npm:^1.4.39"
+    "@graphitation/apollo-react-relay-duct-tape-compiler": "npm:^1.9.8"
+    "@graphitation/embedded-document-artefact-loader": "npm:^0.10.2"
+    "@graphitation/graphql-js-tag": "npm:^0.11.1"
+    "@graphitation/supermassive": "npm:^3.17.1"
     "@graphql-codegen/cli": "npm:2.2.0"
     "@graphql-codegen/typescript": "npm:2.2.2"
     "@graphql-codegen/typescript-resolvers": "npm:^2.2.1"
@@ -11312,7 +11312,7 @@ __metadata:
   dependencies:
     "@apollo/client": "npm:~3.6.0"
     "@fluentui/react-components": "npm:^9.18.9"
-    "@graphitation/apollo-forest-run": "npm:0.24.3"
+    "@graphitation/apollo-forest-run": "npm:0.24.4"
     "@graphql-tools/schema": "npm:^7.1.5"
     "@types/node": "npm:^12.0.0"
     "@types/react": "npm:^18.2.29"
@@ -16831,12 +16831,12 @@ __metadata:
   dependencies:
     "@apollo/client": "npm:~3.6.0"
     "@babel/runtime": "npm:^7.12.0"
-    "@graphitation/apollo-react-relay-duct-tape": "npm:^1.4.38"
-    "@graphitation/apollo-react-relay-duct-tape-compiler": "npm:^1.9.7"
-    "@graphitation/graphql-js-tag": "npm:^0.11.0"
-    "@graphitation/supermassive": "npm:^3.17.0"
-    "@graphitation/ts-transform-graphql-js-tag": "npm:^1.7.0"
-    "@graphitation/webpack-loader": "npm:^1.1.25"
+    "@graphitation/apollo-react-relay-duct-tape": "npm:^1.4.39"
+    "@graphitation/apollo-react-relay-duct-tape-compiler": "npm:^1.9.8"
+    "@graphitation/graphql-js-tag": "npm:^0.11.1"
+    "@graphitation/supermassive": "npm:^3.17.1"
+    "@graphitation/ts-transform-graphql-js-tag": "npm:^1.7.1"
+    "@graphitation/webpack-loader": "npm:^1.1.26"
     "@graphql-codegen/cli": "npm:^2.2.2"
     "@graphql-codegen/import-types-preset": "npm:^2.1.7"
     "@graphql-codegen/typescript": "npm:^2.3.0"

@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-codegen-resolvers-models
 
-<!-- This log was last generated on Tue, 30 Sep 2025 06:26:46 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 14 Jul 2026 09:11:43 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.3.2
+
+Tue, 14 Jul 2026 09:11:43 GMT
+
+### Patches
+
+- yarn upgrade (pavelglac@gmail.com)
 
 ## 1.3.1
 

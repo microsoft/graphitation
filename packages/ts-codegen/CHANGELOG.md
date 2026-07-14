@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-<!-- This log was last generated on Wed, 28 Jan 2026 12:22:13 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 14 Jul 2026 09:11:43 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 5.5.2
+
+Tue, 14 Jul 2026 09:11:43 GMT
+
+### Patches
+
+- yarn upgrade (pavelglac@gmail.com)
 
 ## 5.5.1
 

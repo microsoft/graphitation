@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "yarn upgrade",
-  "packageName": "@graphitation/graphql-codegen-supermassive-typed-document-node-plugin",
-  "email": "pavelglac@gmail.com",
-  "dependentChangeType": "patch"
-}

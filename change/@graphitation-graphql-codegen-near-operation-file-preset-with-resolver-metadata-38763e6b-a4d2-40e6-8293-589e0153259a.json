@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "yarn upgrade",
-  "packageName": "@graphitation/graphql-codegen-near-operation-file-preset-with-resolver-metadata",
-  "email": "pavelglac@gmail.com",
-  "dependentChangeType": "patch"
-}

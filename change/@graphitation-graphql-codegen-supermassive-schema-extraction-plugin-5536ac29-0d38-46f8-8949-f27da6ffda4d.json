@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "yarn upgrade",
-  "packageName": "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin",
-  "email": "pavelglac@gmail.com",
-  "dependentChangeType": "patch"
-}

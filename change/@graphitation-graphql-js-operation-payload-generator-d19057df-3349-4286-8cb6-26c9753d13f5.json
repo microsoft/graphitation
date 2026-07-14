@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "yarn upgrade",
-  "packageName": "@graphitation/graphql-js-operation-payload-generator",
-  "email": "pavelglac@gmail.com",
-  "dependentChangeType": "patch"
-}

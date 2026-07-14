@@ -2,6 +2,21 @@
   "name": "@graphitation/embedded-document-artefact-loader",
   "entries": [
     {
+      "date": "Tue, 14 Jul 2026 09:11:43 GMT",
+      "version": "0.10.2",
+      "tag": "@graphitation/embedded-document-artefact-loader_v0.10.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@gmail.com",
+            "package": "@graphitation/embedded-document-artefact-loader",
+            "commit": "d14e7263f622dcc1afc28539a76a341d2aa0d126",
+            "comment": "yarn upgrade"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 12 Mar 2026 16:50:50 GMT",
       "version": "0.10.1",
       "tag": "@graphitation/embedded-document-artefact-loader_v0.10.1",

@@ -2,6 +2,33 @@
   "name": "@graphitation/cli",
   "entries": [
     {
+      "date": "Tue, 14 Jul 2026 09:11:43 GMT",
+      "version": "3.3.5",
+      "tag": "@graphitation/cli_v3.3.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@gmail.com",
+            "package": "@graphitation/cli",
+            "commit": "d14e7263f622dcc1afc28539a76a341d2aa0d126",
+            "comment": "yarn upgrade"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/supermassive-extractors to v2.3.1",
+            "commit": "not available"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/cli",
+            "comment": "Bump @graphitation/ts-codegen to v5.5.2",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 28 Jan 2026 12:22:13 GMT",
       "version": "3.3.4",
       "tag": "@graphitation/cli_v3.3.4",

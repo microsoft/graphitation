@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "yarn upgrade",
-  "packageName": "@graphitation/supermassive-extractors",
-  "email": "pavelglac@gmail.com",
-  "dependentChangeType": "patch"
-}

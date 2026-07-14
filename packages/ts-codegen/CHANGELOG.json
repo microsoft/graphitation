@@ -2,6 +2,21 @@
   "name": "@graphitation/ts-codegen",
   "entries": [
     {
+      "date": "Tue, 14 Jul 2026 09:11:43 GMT",
+      "version": "5.5.2",
+      "tag": "@graphitation/ts-codegen_v5.5.2",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@gmail.com",
+            "package": "@graphitation/ts-codegen",
+            "commit": "d14e7263f622dcc1afc28539a76a341d2aa0d126",
+            "comment": "yarn upgrade"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 28 Jan 2026 12:22:13 GMT",
       "version": "5.5.1",
       "tag": "@graphitation/ts-codegen_v5.5.1",

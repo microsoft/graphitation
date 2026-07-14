@@ -2,6 +2,27 @@
   "name": "@graphitation/webpack-loader",
   "entries": [
     {
+      "date": "Tue, 14 Jul 2026 09:11:43 GMT",
+      "version": "1.1.26",
+      "tag": "@graphitation/webpack-loader_v1.1.26",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@gmail.com",
+            "package": "@graphitation/webpack-loader",
+            "commit": "d14e7263f622dcc1afc28539a76a341d2aa0d126",
+            "comment": "yarn upgrade"
+          },
+          {
+            "author": "beachball",
+            "package": "@graphitation/webpack-loader",
+            "comment": "Bump @graphitation/supermassive to v3.17.1",
+            "commit": "not available"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 15 Apr 2026 15:45:05 GMT",
       "version": "1.1.25",
       "tag": "@graphitation/webpack-loader_v1.1.25",

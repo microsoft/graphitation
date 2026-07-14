@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Tue, 14 Jul 2026 09:11:43 GMT",
+      "version": "3.17.1",
+      "tag": "@graphitation/supermassive_v3.17.1",
+      "comments": {
+        "patch": [
+          {
+            "author": "pavelglac@gmail.com",
+            "package": "@graphitation/supermassive",
+            "commit": "d14e7263f622dcc1afc28539a76a341d2aa0d126",
+            "comment": "yarn upgrade"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 15 Apr 2026 15:45:05 GMT",
       "version": "3.17.0",
       "tag": "@graphitation/supermassive_v3.17.0",

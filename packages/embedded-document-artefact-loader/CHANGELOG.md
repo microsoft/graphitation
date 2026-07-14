@@ -1,8 +1,16 @@
 # Change Log - @graphitation/embedded-document-artefact-loader
 
-<!-- This log was last generated on Thu, 12 Mar 2026 16:50:50 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 14 Jul 2026 09:11:43 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.10.2
+
+Tue, 14 Jul 2026 09:11:43 GMT
+
+### Patches
+
+- yarn upgrade (pavelglac@gmail.com)
 
 ## 0.10.1
 

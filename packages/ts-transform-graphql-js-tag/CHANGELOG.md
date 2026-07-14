@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-transform-graphql-js-tag
 
-<!-- This log was last generated on Thu, 09 Jul 2026 12:08:15 GMT and should not be manually modified. -->
+<!-- This log was last generated on Tue, 14 Jul 2026 09:11:43 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.7.1
+
+Tue, 14 Jul 2026 09:11:43 GMT
+
+### Patches
+
+- yarn upgrade (pavelglac@gmail.com)
 
 ## 1.7.0
 
