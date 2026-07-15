@@ -3457,7 +3457,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/webpack-loader@npm:^1.1.26, @graphitation/webpack-loader@workspace:packages/webpack-loader":
+"@graphitation/webpack-loader@npm:^1.1.27, @graphitation/webpack-loader@workspace:packages/webpack-loader":
   version: 0.0.0-use.local
   resolution: "@graphitation/webpack-loader@workspace:packages/webpack-loader"
   dependencies:
@@ -16878,7 +16878,7 @@ __metadata:
     "@graphitation/graphql-js-tag": "npm:^0.11.1"
     "@graphitation/supermassive": "npm:^3.17.1"
     "@graphitation/ts-transform-graphql-js-tag": "npm:^1.7.1"
-    "@graphitation/webpack-loader": "npm:^1.1.26"
+    "@graphitation/webpack-loader": "npm:^1.1.27"
     "@graphql-codegen/cli": "npm:^2.2.2"
     "@graphql-codegen/import-types-preset": "npm:^2.1.7"
     "@graphql-codegen/typescript": "npm:^2.3.0"

@@ -48,7 +48,7 @@
     "yargs-parser": ">=13.1.2"
   },
   "devDependencies": {
-    "@graphitation/webpack-loader": "^1.1.26",
+    "@graphitation/webpack-loader": "^1.1.27",
     "@graphql-codegen/cli": "^2.2.2",
     "@graphql-codegen/import-types-preset": "^2.1.7",
     "@graphql-codegen/typescript": "^2.3.0",

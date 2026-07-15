@@ -1,8 +1,16 @@
 # Change Log - @graphitation/webpack-loader
 
-<!-- This log was last generated on Tue, 14 Jul 2026 09:11:43 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 15 Jul 2026 09:34:01 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 1.1.27
+
+Wed, 15 Jul 2026 09:34:01 GMT
+
+### Patches
+
+- test (pavelglac@microsoft.com)
 
 ## 1.1.26
 
