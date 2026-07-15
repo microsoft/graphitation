@@ -1,0 +1,25 @@
+# Reusable steps to authenticate against the ADO npm mirror feed and configure
+# both npm and yarn to use it. Consumed via `- template: templates/npm-auth-steps.yml`.
+parameters:
+  - name: adoMirrorNpmFeedBaseUrl
+    type: string
+
+steps:
+  - script: |
+      cat <<'EOF' > "$(Agent.TempDirectory)/npm-mirror.npmrc"
+      always-auth=true
+      registry=${{ parameters.adoMirrorNpmFeedBaseUrl }}
+      EOF
+    displayName: Create temporary .npmrc for mirror feed
+  - task: npmAuthenticate@0
+    displayName: npm authenticate
+    inputs:
+      workingFile: "$(Agent.TempDirectory)/npm-mirror.npmrc"
+  - script: |
+      TOKEN=$(grep '_authToken' "$(Agent.TempDirectory)/npm-mirror.npmrc" | head -1 | cut -d'=' -f2)
+      echo "##vso[task.setvariable variable=NPM_TOKEN;issecret=true]$TOKEN"
+    displayName: Extract token from .npmrc
+  - script: |
+      yarn config set npmAlwaysAuth true
+      yarn config set npmRegistryServer ${{ parameters.adoMirrorNpmFeedBaseUrl }}
+    displayName: Configure yarn for ADO npm feed

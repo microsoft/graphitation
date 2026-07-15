@@ -8,8 +8,6 @@ variables:
     value: production,externalfacing
   - name: serviceTreeID
     value: ade7d667-42f5-485a-91a9-f1dc6482a9b0
-  - name: nodeVersion
-    value: 22.18
   - name: packagesArtifactName
     value: packed-packages
   - name: adoMirrorNpmFeedBaseUrl
@@ -64,35 +62,9 @@ extends:
               - checkout: self
                 persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
 
-              - task: UseNode@1
-                displayName: Install Node.js ${{ variables.nodeVersion }}
-                retryCountOnTaskFailure: 1
-                inputs:
-                  version: ${{ variables.nodeVersion }}.x
-                  checkLatest: false
-
-              - script: |
-                  echo "##vso[task.setvariable variable=shellopts]braceexpand:hashall:interactive-comments:errexit:errtrace"
-                displayName: Force exit on error (bash)
-
-              - script: |
-                  cat <<'EOF' > "$(Agent.TempDirectory)/npm-mirror.npmrc"
-                  always-auth=true
-                  registry=$(adoMirrorNpmFeedBaseUrl)
-                  EOF
-                displayName: Create temporary .npmrc for mirror feed
-              - task: npmAuthenticate@0
-                displayName: npm authenticate
-                inputs:
-                  workingFile: "$(Agent.TempDirectory)/npm-mirror.npmrc"
-              - script: |
-                  TOKEN=$(grep '_authToken' "$(Agent.TempDirectory)/npm-mirror.npmrc" | head -1 | cut -d'=' -f2)
-                  echo "##vso[task.setvariable variable=NPM_TOKEN;issecret=true]$TOKEN"
-                displayName: Extract token from .npmrc
-              - script: |
-                  yarn config set npmAlwaysAuth true
-                  yarn config set npmRegistryServer $(adoMirrorNpmFeedBaseUrl)
-                displayName: Configure yarn for ADO npm feed
+              - template: templates/npm-auth-steps.yml
+                parameters:
+                  adoMirrorNpmFeedBaseUrl: ${{ variables.adoMirrorNpmFeedBaseUrl }}
               - script: yarn install
                 displayName: yarn
                 env:
@@ -103,11 +75,6 @@ extends:
                 displayName: build and test [test]
                 env:
                   NPM_CONFIG_USERCONFIG: $(Agent.TempDirectory)/npm-mirror.npmrc
-              - script: |
-                  git config user.email "gql-svc@microsoft.com"
-                  git config user.name "Graphitation Service Account"
-                  git fetch origin main
-                displayName: Configure git for release
               - script: |
                   mkdir -p "$(packagesArtifactPath)"
                   packLayersPath="$(Build.StagingDirectory)/beachball-packed-layers"
@@ -154,61 +121,32 @@ extends:
                   mainpublisher: ESRPRELPACMAN
                   domaintenantid: $(Release.DomainTenantId)
 
-          # - job: Bump
-          #   displayName: Bump package versions
-          #   dependsOn: Release
-          #   pool:
-          #     name: Azure-Pipelines-1ESPT-ExDShared
-          #     image: ubuntu-latest
-          #     os: linux
-          #   steps:
-          #     - checkout: self
-          #       persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
+          - job: Bump
+            displayName: Bump package versions
+            dependsOn: Release
+            pool:
+              name: Azure-Pipelines-1ESPT-ExDShared
+              image: ubuntu-latest
+              os: linux
+            steps:
+              - checkout: self
+                persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
 
-          #     - task: UseNode@1
-          #       displayName: Install Node.js ${{ variables.nodeVersion }}
-          #       retryCountOnTaskFailure: 1
-          #       inputs:
-          #         version: ${{ variables.nodeVersion }}.x
-          #         checkLatest: false
+              - template: templates/npm-auth-steps.yml
+                parameters:
+                  adoMirrorNpmFeedBaseUrl: ${{ variables.adoMirrorNpmFeedBaseUrl }}
 
-          #     - script: |
-          #         echo "##vso[task.setvariable variable=shellopts]braceexpand:hashall:interactive-comments:errexit:errtrace"
-          #       displayName: Force exit on error (bash)
+              - script: yarn install
+                displayName: yarn install
+                env:
+                  YARN_NPM_AUTH_TOKEN: $(NPM_TOKEN)
+                  NPM_CONFIG_USERCONFIG: $(Agent.TempDirectory)/npm-mirror.npmrc
 
-          #     - script: |
-          #         cat <<'EOF' > "$(Agent.TempDirectory)/npm-mirror.npmrc"
-          #         always-auth=true
-          #         registry=$(adoMirrorNpmFeedBaseUrl)
-          #         EOF
-          #       displayName: Create temporary .npmrc for mirror feed
-
-          #     - task: npmAuthenticate@0
-          #       displayName: npm authenticate
-          #       inputs:
-          #         workingFile: "$(Agent.TempDirectory)/npm-mirror.npmrc"
-
-          #     - script: |
-          #         TOKEN=$(grep '_authToken' "$(Agent.TempDirectory)/npm-mirror.npmrc" | head -1 | cut -d'=' -f2)
-          #         echo "##vso[task.setvariable variable=NPM_TOKEN;issecret=true]$TOKEN"
-          #       displayName: Extract token from .npmrc
-
-          #     - script: |
-          #         yarn config set npmAlwaysAuth true
-          #         yarn config set npmRegistryServer $(adoMirrorNpmFeedBaseUrl)
-          #       displayName: Configure yarn for ADO npm feed
-
-          #     - script: yarn install
-          #       displayName: yarn install
-          #       env:
-          #         YARN_NPM_AUTH_TOKEN: $(NPM_TOKEN)
-          #         NPM_CONFIG_USERCONFIG: $(Agent.TempDirectory)/npm-mirror.npmrc
-
-          #     - script: |
-          #         git config user.email "gql-svc@microsoft.com"
-          #         git config user.name "Graphitation Service Account"
-          #         git fetch origin main
-          #         yarn beachball publish -b origin/main -t latest -y --access public --no-publish --message "applying package updates [skip ci]"
-          #       displayName: Bump versions and push changelogs
-          #       env:
-          #         NPM_CONFIG_USERCONFIG: $(Agent.TempDirectory)/npm-mirror.npmrc
+              - script: |
+                  git config user.email "gql-svc@microsoft.com"
+                  git config user.name "Graphitation Service Account"
+                  git fetch origin main
+                  yarn beachball publish -b origin/main -t latest -y --access public --no-publish --message "applying package updates"
+                displayName: Bump versions and push changelogs
+                env:
+                  NPM_CONFIG_USERCONFIG: $(Agent.TempDirectory)/npm-mirror.npmrc
