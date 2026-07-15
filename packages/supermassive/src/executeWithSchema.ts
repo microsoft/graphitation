@@ -16,6 +16,9 @@ export function executeWithSchema({
   typeResolver,
   fieldExecutionHooks,
   enablePerEventContext,
+  enableEarlyExecution,
+  enableDeferredMerge,
+  incrementalPayloadBatchingTimeoutMs,
 }: ExecutionWithSchemaArgs): PromiseOrValue<ExecutionResult> {
   const extracted = extractMinimalViableSchemaForRequestDocument(
     buildASTSchema(definitions),
@@ -36,5 +39,8 @@ export function executeWithSchema({
     typeResolver,
     fieldExecutionHooks,
     enablePerEventContext,
+    enableEarlyExecution,
+    enableDeferredMerge,
+    incrementalPayloadBatchingTimeoutMs,
   });
 }
