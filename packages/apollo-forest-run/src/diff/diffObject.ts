@@ -25,6 +25,8 @@ import * as Difference from "./difference";
 import { DiffErrorKind } from "./types";
 import { ValueKind } from "../values/types";
 
+const EMPTY_ARRAY = Object.freeze([]);
+
 /**
  * Compares base object version with model version and returns a normalized Difference object,
  * describing how to update base object to the same state as a model.
@@ -125,6 +127,9 @@ function diffPlainObjectValue(
     }
   } else if (!diff || !Difference.isComplete(diff)) {
     diff = diffObjectChunk(context, base, model, diff);
+  }
+  if (diff) {
+    reconcileObjectDifference(base, model, diff);
   }
   return diff && (Difference.isDirty(diff) || !Difference.isComplete(diff))
     ? diff
@@ -490,9 +495,188 @@ function diffCompositeListValue(
       Difference.dequeueListItem(diff, index);
     }
   }
+  if (diff) {
+    reconcileCompositeListDifference(base, model, diff);
+  }
   return diff && (Difference.isDirty(diff) || !Difference.isComplete(diff))
     ? diff
     : undefined;
+}
+
+function reconcileNestedDifference(
+  base: GraphValue,
+  model: GraphValue,
+  difference: ValueDifference,
+): ValueDifference {
+  if (
+    Difference.isObjectDifference(difference) &&
+    Value.isObjectValue(base) &&
+    Value.isObjectValue(model)
+  ) {
+    reconcileObjectDifference(base, model, difference);
+  } else if (
+    Difference.isCompositeListDifference(difference) &&
+    Value.isCompositeListValue(base) &&
+    Value.isCompositeListValue(model)
+  ) {
+    reconcileCompositeListDifference(base, model, difference);
+  }
+  return difference;
+}
+
+function reconcileObjectDifference(
+  base: ObjectValue,
+  model: ObjectValue,
+  difference: ObjectDifference,
+) {
+  if (!Value.isAggregate(base)) {
+    return;
+  }
+  for (const fieldName of difference.dirtyFields ?? EMPTY_ARRAY) {
+    const fieldState = difference.fieldState.get(fieldName);
+    if (!fieldState) {
+      continue;
+    }
+    const entries = Array.isArray(fieldState) ? fieldState : [fieldState];
+    for (const entry of entries) {
+      const modelValue = Value.aggregateFieldValue(model, entry.fieldEntry);
+      if (modelValue === undefined) {
+        continue;
+      }
+      entry.state = reconcileObjectFieldDifference(
+        base,
+        modelValue,
+        entry.fieldEntry,
+        entry.state,
+      );
+    }
+  }
+}
+
+function reconcileObjectFieldDifference(
+  base: ObjectValue,
+  model: GraphValue,
+  fieldEntry: NormalizedFieldEntry,
+  difference: ValueDifference,
+): ValueDifference {
+  if (
+    !Value.isAggregate(base) ||
+    (!Difference.isObjectDifference(difference) &&
+      !Difference.isCompositeListDifference(difference))
+  ) {
+    return difference;
+  }
+
+  let nullValue: GraphValue | undefined;
+  let undefinedValue: GraphValue | undefined;
+  for (const chunk of base.chunks) {
+    const fields = Value.resolveMatchingFieldAliases(chunk, fieldEntry);
+    for (const field of fields ?? []) {
+      if (chunk.selection.skippedFields?.has(field)) {
+        continue;
+      }
+      const source = chunk.data[field.dataKey];
+      if (source === undefined || chunk.missingFields?.has(field)) {
+        undefinedValue ??= Value.resolveFieldChunk(chunk, field);
+      } else if (source === null) {
+        nullValue ??= Value.resolveFieldChunk(chunk, field);
+      } else if (!sourceMatchesDifference(source, difference)) {
+        return difference;
+      }
+    }
+  }
+
+  if (undefinedValue) {
+    return Difference.createFiller(model);
+  }
+  if (nullValue) {
+    return Difference.createReplacement(nullValue, model);
+  }
+
+  const baseValue = Value.aggregateFieldValue(base, fieldEntry);
+  return baseValue === undefined
+    ? difference
+    : reconcileNestedDifference(baseValue, model, difference);
+}
+
+function reconcileCompositeListDifference(
+  base: CompositeListValue,
+  model: CompositeListValue,
+  difference: CompositeListDifference,
+) {
+  if (!Value.isAggregate(base)) {
+    return;
+  }
+  for (const index of difference.dirtyItems ?? EMPTY_ARRAY) {
+    const itemDifference = difference.itemState.get(index);
+    if (!itemDifference) {
+      continue;
+    }
+    const baseIndex = difference.layout?.[index] ?? index;
+    if (typeof baseIndex !== "number") {
+      continue;
+    }
+    const modelValue = Value.aggregateListItemValue(model, index);
+    difference.itemState.set(
+      index,
+      reconcileListItemDifference(
+        base,
+        modelValue,
+        baseIndex,
+        itemDifference,
+      ),
+    );
+  }
+}
+
+function reconcileListItemDifference(
+  base: CompositeListValue,
+  model: GraphValue,
+  index: number,
+  difference: ValueDifference,
+): ValueDifference {
+  if (
+    !Value.isAggregate(base) ||
+    (!Difference.isObjectDifference(difference) &&
+      !Difference.isCompositeListDifference(difference))
+  ) {
+    return difference;
+  }
+
+  let nullValue: GraphValue | undefined;
+  let undefinedValue: GraphValue | undefined;
+  for (const chunk of base.chunks) {
+    const source = chunk.data[index];
+    if (source === undefined || chunk.missingItems?.has(index)) {
+      undefinedValue ??= Value.resolveListItemChunk(chunk, index);
+    } else if (source === null) {
+      nullValue ??= Value.resolveListItemChunk(chunk, index);
+    } else if (!sourceMatchesDifference(source, difference)) {
+      return difference;
+    }
+  }
+
+  if (undefinedValue) {
+    return Difference.createFiller(model);
+  }
+  if (nullValue) {
+    return Difference.createReplacement(nullValue, model);
+  }
+
+  return reconcileNestedDifference(
+    Value.aggregateListItemValue(base, index),
+    model,
+    difference,
+  );
+}
+
+function sourceMatchesDifference(
+  source: unknown,
+  difference: ObjectDifference | CompositeListDifference,
+): boolean {
+  return Difference.isObjectDifference(difference)
+    ? typeof source === "object" && !Array.isArray(source)
+    : Array.isArray(source);
 }
 
 function diffCompositeListLayout(

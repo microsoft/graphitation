@@ -12,6 +12,7 @@ import {
   DiffEnv,
   FieldEntryDifference,
   CompositeListDifference,
+  DifferenceKind,
 } from "../types";
 import {
   completeObject,
@@ -1823,6 +1824,181 @@ describe("kitchen-sink", () => {
     expect(listDiff.dirtyItems?.has(0)).toBe(true);
     // Item 1's bar change should also be dirty (missed due to enqueueListItem bug)
     expect(listDiff.dirtyItems?.has(1)).toBe(true);
+  });
+
+  test("replaces divergent null and object field chunks", () => {
+    const operation = createTestOperation(gql`
+      query {
+        value {
+          a
+          b
+        }
+      }
+    `);
+    const forestEnv = { objectKey: (): false => false };
+    const diffEnv = {};
+    const objectChunk = indexObject(
+      forestEnv,
+      operation,
+      { value: { a: 1, b: 1 } } as unknown as SourceObject,
+      operation.possibleSelections,
+    ).value;
+    const nullChunk = indexObject(
+      forestEnv,
+      operation,
+      { value: null } as unknown as SourceObject,
+      operation.possibleSelections,
+    ).value;
+    const modelChunk = indexObject(
+      forestEnv,
+      operation,
+      { value: { a: 2, b: 1 } } as unknown as SourceObject,
+      operation.possibleSelections,
+    ).value;
+
+    const result = diffObject(
+      createObjectAggregate([objectChunk, nullChunk]),
+      createObjectAggregate([modelChunk]),
+      diffEnv,
+    );
+    const fieldDiff = result.difference?.fieldState.get(
+      "value",
+    ) as FieldEntryDifference;
+
+    expect(fieldDiff.state.kind).toBe(DifferenceKind.Replacement);
+  });
+
+  test("fills divergent missing and object field chunks", () => {
+    const operation = createTestOperation(gql`
+      query {
+        value {
+          a
+          b
+        }
+      }
+    `);
+    const forestEnv = { objectKey: (): false => false };
+    const diffEnv = {};
+    const objectChunk = indexObject(
+      forestEnv,
+      operation,
+      { value: { a: 1, b: 1 } } as unknown as SourceObject,
+      operation.possibleSelections,
+    ).value;
+    const missingChunk = indexObject(
+      forestEnv,
+      operation,
+      {} as SourceObject,
+      operation.possibleSelections,
+    ).value;
+    const modelChunk = indexObject(
+      forestEnv,
+      operation,
+      { value: { a: 2, b: 1 } } as unknown as SourceObject,
+      operation.possibleSelections,
+    ).value;
+
+    const result = diffObject(
+      createObjectAggregate([objectChunk, missingChunk]),
+      createObjectAggregate([modelChunk]),
+      diffEnv,
+    );
+    const fieldDiff = result.difference?.fieldState.get(
+      "value",
+    ) as FieldEntryDifference;
+
+    expect(fieldDiff.state.kind).toBe(DifferenceKind.Filler);
+  });
+
+  test("replaces divergent null and object list-item chunks", () => {
+    const operation = createTestOperation(gql`
+      query {
+        values {
+          a
+          b
+        }
+      }
+    `);
+    const forestEnv = { objectKey: (): false => false };
+    const diffEnv = {};
+    const objectChunk = indexObject(
+      forestEnv,
+      operation,
+      { values: [{ a: 1, b: 1 }] } as unknown as SourceObject,
+      operation.possibleSelections,
+    ).value;
+    const nullChunk = indexObject(
+      forestEnv,
+      operation,
+      { values: [null] } as unknown as SourceObject,
+      operation.possibleSelections,
+    ).value;
+    const modelChunk = indexObject(
+      forestEnv,
+      operation,
+      { values: [{ a: 2, b: 1 }] } as unknown as SourceObject,
+      operation.possibleSelections,
+    ).value;
+
+    const result = diffObject(
+      createObjectAggregate([objectChunk, nullChunk]),
+      createObjectAggregate([modelChunk]),
+      diffEnv,
+    );
+    const fieldDiff = result.difference?.fieldState.get(
+      "values",
+    ) as FieldEntryDifference;
+    const listDiff = fieldDiff.state as CompositeListDifference;
+
+    expect(listDiff.itemState.get(0)?.kind).toBe(DifferenceKind.Replacement);
+  });
+
+  test("preserves object differences for genuinely incompatible chunks", () => {
+    const operation = createTestOperation(gql`
+      query {
+        value {
+          a
+          b
+        }
+      }
+    `);
+    const forestEnv = { objectKey: (): false => false };
+    const diffEnv = {};
+    const objectChunk = indexObject(
+      forestEnv,
+      operation,
+      { value: { a: 1, b: 1 } } as unknown as SourceObject,
+      operation.possibleSelections,
+    ).value;
+    const nullChunk = indexObject(
+      forestEnv,
+      operation,
+      { value: null } as unknown as SourceObject,
+      operation.possibleSelections,
+    ).value;
+    const listChunk = indexObject(
+      forestEnv,
+      operation,
+      { value: [{ a: 1, b: 1 }] } as unknown as SourceObject,
+      operation.possibleSelections,
+    ).value;
+    const modelChunk = indexObject(
+      forestEnv,
+      operation,
+      { value: { a: 2, b: 1 } } as unknown as SourceObject,
+      operation.possibleSelections,
+    ).value;
+
+    const result = diffObject(
+      createObjectAggregate([objectChunk, nullChunk, listChunk]),
+      createObjectAggregate([modelChunk]),
+      diffEnv,
+    );
+    const fieldDiff = result.difference?.fieldState.get(
+      "value",
+    ) as FieldEntryDifference;
+
+    expect(fieldDiff.state.kind).toBe(DifferenceKind.ObjectDifference);
   });
 });
 
