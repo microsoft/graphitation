@@ -41,7 +41,6 @@ import type {
   IncrementalExecutionResult,
   SchemaFragment,
   SchemaFragmentLoader,
-  SchemaFragmentRequest,
 } from "./types";
 import {
   getArgumentValues,
@@ -52,6 +51,7 @@ import type { ExecutionHooks } from "./hooks/types";
 import { arraysAreEqual } from "./utilities/array";
 import { isAsyncIterable } from "./jsutils/isAsyncIterable";
 import { mapAsyncIterator } from "./utilities/mapAsyncIterator";
+import { requestSchemaFragment } from "./utilities/requestSchemaFragment";
 import { GraphQLStreamDirective } from "./schema/directives";
 import { memoize3 } from "./jsutils/memoize3";
 import {
@@ -140,6 +140,13 @@ export function executeWithoutSchema(
   // If a valid execution context cannot be created due to incorrect arguments,
   // a "Response" with only errors is returned.
   const exeContext = buildExecutionContext(args);
+  if (isPromise(exeContext)) {
+    return exeContext.then((ctx) =>
+      "schemaFragment" in ctx
+        ? executeOperationWithBeforeHook(ctx)
+        : { errors: ctx },
+    );
+  }
 
   // Return early errors if execution context failed.
   if (!("schemaFragment" in exeContext)) {
@@ -178,13 +185,13 @@ export function assertValidExecutionArguments(
  */
 function buildExecutionContext(
   args: ExecutionWithoutSchemaArgs,
-): Array<GraphQLError> | ExecutionContext {
+): PromiseOrValue<Array<GraphQLError> | ExecutionContext> {
   const {
     schemaFragment,
     schemaFragmentLoader,
     document,
     rootValue,
-    contextValue,
+    contextValue: initialContextValue,
     buildContextValue,
     variableValues,
     operationName,
@@ -232,29 +239,25 @@ function buildExecutionContext(
 
   // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
   const variableDefinitions = operation.variableDefinitions ?? [];
+  const contextValue = buildContextValue
+    ? buildContextValue(initialContextValue)
+    : initialContextValue;
 
   const coercedVariableValues = getVariableValues(
-    schemaFragment,
+    { contextValue, schemaFragment, schemaFragmentLoader },
     variableDefinitions,
     variableValues ?? {},
     { maxErrors: 50 },
   );
 
-  if (coercedVariableValues.errors) {
-    return coercedVariableValues.errors;
-  }
-
-  return {
+  const exeContext: Omit<ExecutionContext, "variableValues"> = {
     schemaFragment,
     schemaFragmentLoader,
     fragments,
     rootValue,
-    contextValue: buildContextValue
-      ? buildContextValue(contextValue)
-      : contextValue,
+    contextValue,
     buildContextValue,
     operation,
-    variableValues: coercedVariableValues.coerced,
     fieldResolver: fieldResolver ?? defaultFieldResolver,
     typeResolver: typeResolver ?? defaultTypeResolver,
     subscribeFieldResolver: subscribeFieldResolver ?? defaultFieldResolver,
@@ -262,6 +265,28 @@ function buildExecutionContext(
     fieldExecutionHooks,
     subsequentPayloads: new Set(),
     enablePerEventContext: enablePerEventContext ?? true,
+  };
+
+  if (isPromise(coercedVariableValues)) {
+    return coercedVariableValues.then((r) => {
+      if (r.errors) {
+        return r.errors;
+      }
+
+      return {
+        ...exeContext,
+        variableValues: r.coerced,
+      };
+    });
+  }
+
+  if (coercedVariableValues.errors) {
+    return coercedVariableValues.errors;
+  }
+
+  return {
+    ...exeContext,
+    variableValues: coercedVariableValues.coerced,
   };
 }
 
@@ -609,32 +634,6 @@ function executeField(
   });
 }
 
-function requestSchemaFragment(
-  exeContext: ExecutionContext,
-  request: SchemaFragmentRequest,
-): PromiseOrValue<void> {
-  if (!exeContext.schemaFragmentLoader) {
-    return;
-  }
-  const currentSchemaId = exeContext.schemaFragment.schemaId;
-  return exeContext
-    .schemaFragmentLoader(
-      exeContext.schemaFragment,
-      exeContext.contextValue,
-      request,
-    )
-    .then(({ mergedFragment, mergedContextValue }) => {
-      if (currentSchemaId !== mergedFragment.schemaId) {
-        throw new Error(
-          `Cannot use new schema fragment: old and new fragments describe different schemas:` +
-            ` ${currentSchemaId} vs. ${mergedFragment.schemaId}`,
-        );
-      }
-      exeContext.contextValue = mergedContextValue ?? exeContext.contextValue;
-      exeContext.schemaFragment = mergedFragment;
-    });
-}
-
 /**
  * Implements the "CreateSourceEventStream" algorithm described in the
  * GraphQL specification, resolving the subscription source event stream.
@@ -822,7 +821,11 @@ function runSubscriptionResolver(
         result = hookContext.then((context) => {
           hookContext = context;
 
-          return resolveFn(rootValue, args, contextValue, info);
+          return isPromise(args)
+            ? args.then((resolvedArgs) =>
+                resolveFn(rootValue, resolvedArgs, contextValue, info),
+              )
+            : resolveFn(rootValue, args, contextValue, info);
         });
       }
     }
@@ -830,7 +833,11 @@ function runSubscriptionResolver(
     // Call the `subscribe()` resolver or the default resolver to produce an
     // AsyncIterable yielding raw payloads.
     if (result === undefined) {
-      result = resolveFn(rootValue, args, contextValue, info);
+      result = isPromise(args)
+        ? args.then((resolvedArgs) =>
+            resolveFn(rootValue, resolvedArgs, contextValue, info),
+          )
+        : resolveFn(rootValue, args, contextValue, info);
     }
 
     if (isPromise(result)) {
@@ -1150,10 +1157,18 @@ function resolveAndCompleteField(
           return null;
         }
 
-        return resolveFn(source, args, contextValue, info);
+        return isPromise(args)
+          ? args.then((resolvedArgs) =>
+              resolveFn(source, resolvedArgs, contextValue, info),
+            )
+          : resolveFn(source, args, contextValue, info);
       });
     } else {
-      result = resolveFn(source, args, contextValue, info);
+      result = isPromise(args)
+        ? args.then((resolvedArgs) =>
+            resolveFn(source, resolvedArgs, contextValue, info),
+          )
+        : resolveFn(source, args, contextValue, info);
     }
 
     let completed;
