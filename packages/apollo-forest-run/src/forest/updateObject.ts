@@ -85,15 +85,16 @@ function updateObjectValue(
       const fieldDiff = fieldDifference.state;
       const value = Value.resolveFieldChunk(base, fieldInfo);
       const valueIsMissing = Value.isMissingValue(value);
+      // A structural difference carrying its model value can recover this inconsistent state.
+      const isRecoverableMissingValue =
+        (Difference.isObjectDifference(fieldDiff) ||
+          Difference.isCompositeListDifference(fieldDiff)) &&
+        fieldDiff.newValue;
 
       if (
         valueIsMissing &&
         !Difference.isFiller(fieldDiff) &&
-        !(
-          (Difference.isObjectDifference(fieldDiff) ||
-            Difference.isCompositeListDifference(fieldDiff)) &&
-          fieldDiff.newValue
-        )
+        !isRecoverableMissingValue
       ) {
         // Inconsistent state - do not update this field
         //   (assuming it will be re-fetched from the server to resolve inconsistency)
