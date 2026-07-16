@@ -43,7 +43,7 @@ extends:
           Build.SDL.<Roslyn>.Enabled: false
           Build.SDL.<ESLint>.Enabled: true
         jobs:
-          - job: Build and prelease
+          - job: Build
             displayName: Build, test, and pack Graphitation packages
             pool:
               name: Azure-Pipelines-1ESPT-ExDShared
