@@ -85,12 +85,15 @@ function updateObjectValue(
       const fieldDiff = fieldDifference.state;
       const value = Value.resolveFieldChunk(base, fieldInfo);
       const valueIsMissing = Value.isMissingValue(value);
-      const collisionKind = structuralCollisionKind(value, fieldDiff);
 
       if (
         valueIsMissing &&
         !Difference.isFiller(fieldDiff) &&
-        collisionKind !== DifferenceKind.Filler
+        !(
+          (Difference.isObjectDifference(fieldDiff) ||
+            Difference.isCompositeListDifference(fieldDiff)) &&
+          fieldDiff.newValue
+        )
       ) {
         // Inconsistent state - do not update this field
         //   (assuming it will be re-fetched from the server to resolve inconsistency)
@@ -123,11 +126,11 @@ function updateObjectValue(
       copy[fieldInfo.dataKey] = updated;
 
       // Record immediately mutated fields (ignore changes caused by nested chunk mutations)
-      switch (collisionKind ?? fieldDiff.kind) {
+      switch (fieldDiff.kind) {
         case DifferenceKind.Filler:
           dirtyFields ??= [];
           dirtyFields.push({
-            kind: DifferenceKind.Filler,
+            kind: fieldDiff.kind,
             fieldInfo,
             newValue: context.env.historyConfig?.enableRichHistory
               ? updated
@@ -137,14 +140,10 @@ function updateObjectValue(
         case DifferenceKind.Replacement:
           dirtyFields ??= [];
           dirtyFields.push({
-            kind: DifferenceKind.Replacement,
+            kind: fieldDiff.kind,
             fieldInfo,
             oldValue: context.env.historyConfig?.enableRichHistory
-              ? getSourceValue(
-                  Difference.isReplacement(fieldDiff)
-                    ? fieldDiff.oldValue
-                    : value,
-                )
+              ? getSourceValue(fieldDiff.oldValue)
               : undefined,
             newValue: context.env.historyConfig?.enableRichHistory
               ? updated
@@ -170,14 +169,6 @@ function updateValue(
   difference: ValueDifference,
   location: UpdateValueLocation,
 ): SourceValue | undefined {
-  if (structuralCollisionKind(base, difference) !== undefined) {
-    assert(
-      Difference.isObjectDifference(difference) ||
-        Difference.isCompositeListDifference(difference),
-    );
-    assert(difference.newValue);
-    return replaceValue(context, base, difference.newValue);
-  }
   switch (difference.kind) {
     case DifferenceKind.Replacement:
       return replaceValue(context, base, difference.newValue);
@@ -186,6 +177,13 @@ function updateValue(
       // Note: building the diagnostic message is expensive (path/type lookups), so it is
       //   constructed only on the failure path rather than eagerly passed to assert().
       if (!Value.isObjectValue(base)) {
+        if (
+          (Value.isCompositeNullValue(base) ||
+            Value.isCompositeUndefinedValue(base)) &&
+          difference.newValue
+        ) {
+          return replaceValue(context, base, difference.newValue);
+        }
         assert(
           false,
           incompatibleDifferenceMessage(context, base, difference, location),
@@ -196,6 +194,13 @@ function updateValue(
 
     case DifferenceKind.CompositeListDifference: {
       if (!Value.isCompositeListValue(base)) {
+        if (
+          (Value.isCompositeNullValue(base) ||
+            Value.isCompositeUndefinedValue(base)) &&
+          difference.newValue
+        ) {
+          return replaceValue(context, base, difference.newValue);
+        }
         assert(
           false,
           incompatibleDifferenceMessage(context, base, difference, location),
@@ -410,12 +415,8 @@ function updateCompositeListValue(
   }
   const { drafts, operation, statsLogger } = context;
   const layoutDiff = difference.layout;
-  let historyLayout = layoutDiff;
-  let historyDeletedKeys = difference.deletedKeys;
   let dirty = false; // Only dirty on self changes - item replacement/filler, layout changes (ignores child changes)
   let copy = drafts.get(base.data);
-  let itemDrafts: Map<number, Draft> | undefined;
-  let layoutDestinationsBySource: Map<number, number[]> | undefined;
   assert(Array.isArray(copy) || copy === undefined);
   statsLogger?.copyChunkStats(base, copy);
 
@@ -423,84 +424,25 @@ function updateCompositeListValue(
   for (const index of difference.dirtyItems ?? EMPTY_ARRAY) {
     const itemDiff = Difference.getListItemDifference(difference, index);
     assert(itemDiff);
-    const layoutItem = layoutDiff?.[index];
-    const sourceIndex =
-      layoutItem === undefined
-        ? index
-        : typeof layoutItem === "number"
-        ? layoutItem
-        : undefined;
-    assert(sourceIndex !== undefined);
-    const baseItem = Value.resolveListItemChunk(base, sourceIndex);
-    const updatedValue = updateValue(context, baseItem, itemDiff, {
-      kind: "listItem",
-      index,
-    });
-    if (updatedValue === base.data[sourceIndex]) {
+    const updatedValue = updateValue(
+      context,
+      Value.resolveListItemChunk(base, index),
+      itemDiff,
+      { kind: "listItem", index },
+    );
+    if (updatedValue === base.data[index]) {
       continue;
     }
     if (!copy) {
       copy = [...base.data] as SourceCompositeList;
       drafts.set(base.data, copy);
     }
-    copy[sourceIndex] = updatedValue as Draft;
+    copy[index] = updatedValue as Draft;
     statsLogger?.itemMutation();
-    if (layoutDiff) {
-      itemDrafts ??= new Map();
-      itemDrafts.set(sourceIndex, updatedValue as Draft);
-    }
-    const sourceItem = base.data[sourceIndex];
-    if (sourceItem !== null && sourceItem !== undefined) {
-      drafts.set(sourceItem as Source, updatedValue as Draft);
-    }
-    const collisionKind = structuralCollisionKind(baseItem, itemDiff);
-    if (collisionKind !== undefined) {
-      assert(
-        Difference.isObjectDifference(itemDiff) ||
-          Difference.isCompositeListDifference(itemDiff),
-      );
-      assert(itemDiff.newValue);
-      if (layoutDiff && !layoutDestinationsBySource) {
-        layoutDestinationsBySource = new Map();
-        for (
-          let destination = 0;
-          destination < layoutDiff.length;
-          destination++
-        ) {
-          const itemRef = layoutDiff[destination];
-          if (typeof itemRef === "number") {
-            const destinations = layoutDestinationsBySource.get(itemRef) ?? [];
-            destinations.push(destination);
-            layoutDestinationsBySource.set(itemRef, destinations);
-          }
-        }
-      }
-      const collisionDestinations = layoutDiff
-        ? layoutDestinationsBySource?.get(sourceIndex) ?? []
-        : [index];
-      if (collisionDestinations.length) {
-        const collisionLayout =
-          historyLayout === layoutDiff
-            ? layoutDiff
-              ? [...layoutDiff]
-              : base.data.map((_, itemIndex) => itemIndex)
-            : historyLayout ?? base.data.map((_, itemIndex) => itemIndex);
-        for (const destination of collisionDestinations) {
-          collisionLayout[destination] = itemDiff.newValue;
-        }
-        historyLayout = collisionLayout;
-        const collisionDeletedKeys =
-          historyDeletedKeys === difference.deletedKeys
-            ? new Set(difference.deletedKeys)
-            : historyDeletedKeys ?? new Set<number>();
-        collisionDeletedKeys.add(sourceIndex);
-        historyDeletedKeys = collisionDeletedKeys;
-      }
-    }
+    drafts.set(base.data[index] as Source, updatedValue as Draft);
     if (
       itemDiff.kind === DifferenceKind.Replacement ||
-      itemDiff.kind === DifferenceKind.Filler ||
-      collisionKind !== undefined
+      itemDiff.kind === DifferenceKind.Filler
     ) {
       dirty = true;
     }
@@ -508,8 +450,8 @@ function updateCompositeListValue(
   if (dirty) {
     context.changes.set(base, {
       kind: difference.kind,
-      layout: historyLayout,
-      deletedKeys: historyDeletedKeys,
+      layout: layoutDiff,
+      deletedKeys: difference.deletedKeys,
     });
   }
   if (!layoutDiff) {
@@ -533,9 +475,8 @@ function updateCompositeListValue(
       dirty = true;
     }
     if (typeof itemRef === "number") {
-      result[i] = itemDrafts?.has(itemRef)
-        ? (itemDrafts.get(itemRef) as Draft)
-        : drafts.get(base.data[itemRef] as SourceObject) ?? base.data[itemRef];
+      result[i] =
+        drafts.get(base.data[itemRef] as SourceObject) ?? base.data[itemRef];
       continue;
     }
     if (itemRef === null) {
@@ -578,8 +519,8 @@ function updateCompositeListValue(
   if (dirty) {
     context.changes.set(base, {
       kind: difference.kind,
-      layout: historyLayout,
-      deletedKeys: historyDeletedKeys,
+      layout: layoutDiff,
+      deletedKeys: difference.deletedKeys,
     });
   }
 
@@ -720,29 +661,6 @@ function replaceCompositeList(
     assertNever(item);
   }
   return result;
-}
-
-function structuralCollisionKind(
-  base: GraphChunk,
-  difference: ValueDifference,
-):
-  | typeof DifferenceKind.Replacement
-  | typeof DifferenceKind.Filler
-  | undefined {
-  if (
-    (!Difference.isObjectDifference(difference) &&
-      !Difference.isCompositeListDifference(difference)) ||
-    !difference.newValue
-  ) {
-    return undefined;
-  }
-  if (Value.isCompositeNullValue(base)) {
-    return DifferenceKind.Replacement;
-  }
-  if (Value.isCompositeUndefinedValue(base)) {
-    return DifferenceKind.Filler;
-  }
-  return undefined;
 }
 
 function accumulateMissingFields(
