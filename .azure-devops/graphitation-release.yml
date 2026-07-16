@@ -59,7 +59,7 @@ extends:
               outputs:
                 - output: pipelineArtifact
                   artifactName: ${{ variables.packagesArtifactName }}
-                  path: $(packagesArtifactPath)
+                  targetPath: $(packagesArtifactPath)
             steps:
               - checkout: self
                 persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
@@ -75,6 +75,44 @@ extends:
               - script: |
                   yarn ci
                 displayName: build and test [test]
+                env:
+                  NPM_CONFIG_USERCONFIG: $(Agent.TempDirectory)/npm-mirror.npmrc
+
+              - script: |
+                  mkdir -p "$(packagesArtifactPath)"
+                  packLayersPath="$(Build.StagingDirectory)/beachball-packed-layers"
+                  releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
+
+                  yarn beachball publish -b "$releaseBranch" -t latest -y --access public --no-push --keep-change-files --pack-to-path "$packLayersPath"
+
+                  find "$packLayersPath" -type f -name "*.tgz" -exec cp {} "$(packagesArtifactPath)" \;
+                displayName: Pack packages with beachball
+                env:
+                  NPM_CONFIG_USERCONFIG: $(Agent.TempDirectory)/npm-mirror.npmrc
+
+          - job: PrivateAdoRelease
+            displayName: Release to ADO npm feed
+            dependsOn: Build
+            pool:
+              name: Azure-Pipelines-1ESPT-ExDShared
+              image: ubuntu-latest
+              os: linux
+            steps:
+              - checkout: self
+                persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
+
+              - template: /.azure-devops/steps/npm-auth-steps.yml@self
+                parameters:
+                  adoMirrorNpmFeedBaseUrl: ${{ variables.adoMirrorNpmFeedBaseUrl }}
+
+              - script: yarn install
+                displayName: yarn install
+                env:
+                  YARN_NPM_AUTH_TOKEN: $(NPM_TOKEN)
+                  NPM_CONFIG_USERCONFIG: $(Agent.TempDirectory)/npm-mirror.npmrc
+
+              - script: yarn build
+                displayName: build
                 env:
                   NPM_CONFIG_USERCONFIG: $(Agent.TempDirectory)/npm-mirror.npmrc
 
@@ -95,25 +133,8 @@ extends:
                 env:
                   NPM_CONFIG_USERCONFIG: $(Build.SourcesDirectory)/.npmrc
 
-              - script: |
-                  rm -f .npmrc
-                  git restore .
-                displayName: Discard private feed release changes
-
-              - script: |
-                  mkdir -p "$(packagesArtifactPath)"
-                  packLayersPath="$(Build.StagingDirectory)/beachball-packed-layers"
-                  releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
-
-                  yarn beachball publish -b "$releaseBranch" -t latest -y --access public --no-push --keep-change-files --pack-to-path "$packLayersPath"
-
-                  find "$packLayersPath" -type f -name "*.tgz" -exec cp {} "$(packagesArtifactPath)" \;
-                displayName: Pack packages with beachball
-                env:
-                  NPM_CONFIG_USERCONFIG: $(Agent.TempDirectory)/npm-mirror.npmrc
-
-          - job: Release
-            displayName: Graphitation Release
+          - job: PublicNpmRelease
+            displayName: ESRP release to public npm
             dependsOn: Build
             pool:
               name: Azure-Pipelines-1ESPT-ExDShared
@@ -149,7 +170,9 @@ extends:
 
           - job: Bump
             displayName: Bump package versions
-            dependsOn: Release
+            dependsOn:
+              - PrivateAdoRelease
+              - PublicNpmRelease
             condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/heads/'))
             pool:
               name: Azure-Pipelines-1ESPT-ExDShared
