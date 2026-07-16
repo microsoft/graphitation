@@ -183,6 +183,15 @@ function updateValue(
             Value.isCompositeUndefinedValue(base)) &&
           difference.newValue
         ) {
+          context.env.logger?.debug(
+            "Warning: " +
+              incompatibleDifferenceMessage(
+                context,
+                base,
+                difference,
+                location,
+              ),
+          );
           return replaceValue(context, base, difference.newValue);
         }
         assert(
@@ -200,6 +209,15 @@ function updateValue(
             Value.isCompositeUndefinedValue(base)) &&
           difference.newValue
         ) {
+          context.env.logger?.debug(
+            "Warning: " +
+              incompatibleDifferenceMessage(
+                context,
+                base,
+                difference,
+                location,
+              ),
+          );
           return replaceValue(context, base, difference.newValue);
         }
         assert(
