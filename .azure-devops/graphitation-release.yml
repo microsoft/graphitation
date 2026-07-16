@@ -64,7 +64,7 @@ extends:
               - checkout: self
                 persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
 
-              - template: templates/npm-auth-steps.yml
+              - template: /.azure-devops/steps/npm-auth-steps.yml@self
                 parameters:
                   adoMirrorNpmFeedBaseUrl: ${{ variables.adoMirrorNpmFeedBaseUrl }}
               - script: yarn install
@@ -159,7 +159,7 @@ extends:
               - checkout: self
                 persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
 
-              - template: templates/npm-auth-steps.yml
+              - template: /.azure-devops/steps/npm-auth-steps.yml@self
                 parameters:
                   adoMirrorNpmFeedBaseUrl: ${{ variables.adoMirrorNpmFeedBaseUrl }}
 
