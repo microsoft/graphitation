@@ -2,6 +2,21 @@
   "name": "@graphitation/supermassive",
   "entries": [
     {
+      "date": "Thu, 16 Jul 2026 09:12:46 GMT",
+      "version": "3.18.0",
+      "tag": "@graphitation/supermassive_v3.18.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/supermassive",
+            "commit": "fb628e1b37ee0c7069acccb09f7c010bca2fab4d",
+            "comment": "early execution and merge"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 14 Jul 2026 09:11:43 GMT",
       "version": "3.17.1",
       "tag": "@graphitation/supermassive_v3.17.1",

@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Tue, 14 Jul 2026 09:11:43 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 16 Jul 2026 09:12:46 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.18.0
+
+Thu, 16 Jul 2026 09:12:46 GMT
+
+### Minor changes
+
+- early execution and merge (pavelglac@microsoft.com)
 
 ## 3.17.1
 
