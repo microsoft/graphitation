@@ -1878,8 +1878,7 @@ describe("changed and affected nodes detection", () => {
 describe("inconsistent state", () => {
   // Note: this can happen if previous operation update failed and operation result is now stale.
   //   It is still possible to update _some_ "nodes", but others may be in a permanent stale state.
-  // TODO
-  test.skip("marks null fields as stale", () => {
+  test("replaces null values from structural differences", () => {
     const diffBase = completeObject({
       completeObject: completeObject({
         plainObject: plainObjectFoo({ foo: "foo" }),
@@ -1899,12 +1898,12 @@ describe("inconsistent state", () => {
     });
     const { data } = update(updatedBase, difference);
 
-    expect(data.plainObject).toEqual(null);
+    expect(data.completeObject.plainObject).toEqual(
+      plainObjectFoo({ foo: "updated" }),
+    );
   });
 
-  test("does not update missing values", () => {
-    // Assuming it will trigger re-fetching anyway, given it already has missing field
-
+  test("fills missing values from structural differences", () => {
     const diffBase = completeObject({
       completeObject: completeObject({
         plainObject: plainObjectFoo({ foo: "foo" }),
@@ -1924,7 +1923,96 @@ describe("inconsistent state", () => {
     });
     const { data } = update(updatedBase, difference);
 
-    expect(data).toBe(updatedBase);
+    expect(data).not.toBe(updatedBase);
+    expect(data.completeObject.plainObject).toEqual(
+      plainObjectFoo({ foo: "updated" }),
+    );
+  });
+
+  test("reports list item structural collisions as replacements", () => {
+    const diffBase = completeObject({
+      plainObjectList: [plainObjectFoo({ foo: "foo" })],
+    });
+    const model = completeObject({
+      plainObjectList: [plainObjectFoo({ foo: "updated" })],
+    });
+    const { difference } = diff(diffBase, model);
+
+    const updatedBase = completeObject({
+      plainObjectList: [null],
+    });
+    const { data, changes } = update(updatedBase, difference);
+
+    expect(data.plainObjectList).toEqual([plainObjectFoo({ foo: "updated" })]);
+    const listEntry = [...changes.entries()].find(
+      ([chunk]) => chunk.data === updatedBase.plainObjectList,
+    ) as ChangedChunksTuple | undefined;
+    if (!listEntry) {
+      throw new Error("Expected changed list chunk");
+    }
+    expect(isCompositeListEntryTuple(listEntry)).toBe(true);
+    if (isCompositeListEntryTuple(listEntry)) {
+      expect(listEntry[1].layout?.[0]).toMatchObject({
+        data: plainObjectFoo({ foo: "updated" }),
+      });
+      expect(listEntry[1].deletedKeys).toEqual(new Set([0]));
+    }
+  });
+
+  test("applies structural collisions before reordering list items", () => {
+    const listItemKey = (item: any) => item.slot as string;
+    const diffBase = completeObject({
+      entityOrPlainObjectUnionList: [
+        entityFoo({ id: "1" }),
+        plainObjectFoo({ foo: "a", slot: "a" }),
+        entityFoo({ id: "2" }),
+        plainObjectFoo({ foo: "b", slot: "b" }),
+      ],
+    });
+    const model = completeObject({
+      entityOrPlainObjectUnionList: [
+        plainObjectFoo({ foo: "updated-a", slot: "a" }),
+        entityFoo({ id: "1" }),
+        plainObjectFoo({ foo: "updated-b", slot: "b" }),
+        entityFoo({ id: "2" }),
+      ],
+    });
+    const { difference } = diff(diffBase, model, { listItemKey });
+
+    const updatedBase = completeObject({
+      entityOrPlainObjectUnionList: [
+        entityFoo({ id: "1" }),
+        null,
+        entityFoo({ id: "2" }),
+        null,
+      ],
+    });
+    const { data, changes } = update(updatedBase, difference);
+
+    expect(data.entityOrPlainObjectUnionList).toEqual([
+      plainObjectFoo({ foo: "updated-a", slot: "a" }),
+      entityFoo({ id: "1" }),
+      plainObjectFoo({ foo: "updated-b", slot: "b" }),
+      entityFoo({ id: "2" }),
+    ]);
+    const listEntry = [...changes.entries()].find(
+      ([chunk]) => chunk.data === updatedBase.entityOrPlainObjectUnionList,
+    ) as ChangedChunksTuple | undefined;
+    if (!listEntry) {
+      throw new Error("Expected changed list chunk");
+    }
+    if (!isCompositeListEntryTuple(listEntry)) {
+      throw new Error("Expected list change entry");
+    }
+    expect(listEntry[1].layout?.[0]).toMatchObject({
+      data: plainObjectFoo({ foo: "updated-a", slot: "a" }),
+    });
+    expect(listEntry[1].layout?.[1]).toBe(0);
+    expect(listEntry[1].layout?.[2]).toMatchObject({
+      data: plainObjectFoo({ foo: "updated-b", slot: "b" }),
+    });
+    expect(listEntry[1].layout?.[3]).toBe(2);
+    expect(listEntry[1].deletedKeys).toEqual(new Set([1, 3]));
   });
 });
 

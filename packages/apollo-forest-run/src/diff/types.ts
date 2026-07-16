@@ -83,6 +83,7 @@ export type DiffError =
  */
 export type ObjectDifference = {
   readonly kind: typeof DifferenceKind.ObjectDifference;
+  newValue?: ObjectValue;
   // readonly allFields: Iterable<FieldName>;
 
   fieldQueue: Set<FieldName>;
@@ -136,6 +137,7 @@ export type CompositeListLayoutChange =
 
 export type CompositeListDifference = {
   readonly kind: typeof DifferenceKind.CompositeListDifference;
+  newValue?: CompositeListValue;
   itemQueue: Set<number>;
   itemState: Map<number, ValueDifference>;
   dirtyItems?: Set<number>;
