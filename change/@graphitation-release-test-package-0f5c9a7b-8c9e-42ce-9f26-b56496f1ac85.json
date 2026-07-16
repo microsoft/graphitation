@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Add release test package",
+  "packageName": "@graphitation/release-test-package",
+  "email": "pavelglac@microsoft.com",
+  "dependentChangeType": "patch"
+}

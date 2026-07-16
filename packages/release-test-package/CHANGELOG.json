@@ -1,0 +1,20 @@
+{
+  "name": "@graphitation/release-test-package",
+  "entries": [
+    {
+      "date": "Thu, 16 Jul 2026 08:53:00 GMT",
+      "version": "0.1.0",
+      "tag": "@graphitation/release-test-package_v0.1.0",
+      "comments": {
+        "minor": [
+          {
+            "author": "pavelglac@microsoft.com",
+            "package": "@graphitation/release-test-package",
+            "commit": "",
+            "comment": "Add release test package"
+          }
+        ]
+      }
+    }
+  ]
+}
