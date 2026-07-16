@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "test release",
-  "packageName": "@graphitation/release-test-package",
-  "email": "pavelglac@microsoft.com",
-  "dependentChangeType": "patch"
-}
