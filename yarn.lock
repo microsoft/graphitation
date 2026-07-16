@@ -3343,15 +3343,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/release-test-package@workspace:packages/release-test-package":
-  version: 0.0.0-use.local
-  resolution: "@graphitation/release-test-package@workspace:packages/release-test-package"
-  dependencies:
-    "@types/jest": "npm:^26.0.22"
-    monorepo-scripts: "npm:*"
-  languageName: unknown
-  linkType: soft
-
 "@graphitation/rempl-apollo-devtools@workspace:packages/rempl-apollo-devtools":
   version: 0.0.0-use.local
   resolution: "@graphitation/rempl-apollo-devtools@workspace:packages/rempl-apollo-devtools"
