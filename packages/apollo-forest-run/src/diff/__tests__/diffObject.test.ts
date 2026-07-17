@@ -25,7 +25,7 @@ import {
 import { createPatches } from "../../__tests__/helpers/createPatches";
 import { createObjectAggregate } from "../../values/create";
 import { indexObject } from "../../forest/indexTree";
-import { isComplete, isDirty } from "../difference";
+import { isComplete, isDirty, isObjectDifference } from "../difference";
 import { gql, createTestOperation } from "../../__tests__/helpers/descriptor";
 import { createParentLocator, TraverseEnv } from "../../values";
 
@@ -1809,6 +1809,7 @@ describe("kitchen-sink", () => {
     expect(result.difference).toBeDefined();
     assert(result.difference);
     expect(isDirty(result.difference)).toBe(true);
+    expect(result.difference.newValue).toBe(model);
 
     // Drill into the list diff to verify item 1's bar change was detected
     const itemsFieldDiff = result.difference.fieldState.get(
@@ -1818,9 +1819,17 @@ describe("kitchen-sink", () => {
 
     const listDiff = itemsFieldDiff.state as CompositeListDifference;
     expect(listDiff).toBeDefined();
+    const modelItems = modelChunk.data.items;
+    assert(Array.isArray(modelItems));
+    expect(listDiff.newValue?.data).toBe(modelItems);
 
     // Item 0's foo change should be dirty
     expect(listDiff.dirtyItems?.has(0)).toBe(true);
+    const itemDiff = listDiff.itemState.get(0);
+    expect(isObjectDifference(itemDiff)).toBe(true);
+    if (isObjectDifference(itemDiff)) {
+      expect(itemDiff.newValue?.data).toBe(modelItems[0]);
+    }
     // Item 1's bar change should also be dirty (missed due to enqueueListItem bug)
     expect(listDiff.dirtyItems?.has(1)).toBe(true);
   });

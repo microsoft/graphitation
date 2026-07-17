@@ -85,8 +85,17 @@ function updateObjectValue(
       const fieldDiff = fieldDifference.state;
       const value = Value.resolveFieldChunk(base, fieldInfo);
       const valueIsMissing = Value.isMissingValue(value);
+      // A structural difference carrying its model value can recover this inconsistent state.
+      const isRecoverableMissingValue =
+        (Difference.isObjectDifference(fieldDiff) ||
+          Difference.isCompositeListDifference(fieldDiff)) &&
+        fieldDiff.newValue;
 
-      if (valueIsMissing && !Difference.isFiller(fieldDiff)) {
+      if (
+        valueIsMissing &&
+        !Difference.isFiller(fieldDiff) &&
+        !isRecoverableMissingValue
+      ) {
         // Inconsistent state - do not update this field
         //   (assuming it will be re-fetched from the server to resolve inconsistency)
         context.env.logger?.debug(
@@ -169,6 +178,22 @@ function updateValue(
       // Note: building the diagnostic message is expensive (path/type lookups), so it is
       //   constructed only on the failure path rather than eagerly passed to assert().
       if (!Value.isObjectValue(base)) {
+        if (
+          (Value.isCompositeNullValue(base) ||
+            Value.isCompositeUndefinedValue(base)) &&
+          difference.newValue
+        ) {
+          context.env.logger?.debug(
+            "Warning: " +
+              incompatibleDifferenceMessage(
+                context,
+                base,
+                difference,
+                location,
+              ),
+          );
+          return replaceValue(context, base, difference.newValue);
+        }
         assert(
           false,
           incompatibleDifferenceMessage(context, base, difference, location),
@@ -179,6 +204,22 @@ function updateValue(
 
     case DifferenceKind.CompositeListDifference: {
       if (!Value.isCompositeListValue(base)) {
+        if (
+          (Value.isCompositeNullValue(base) ||
+            Value.isCompositeUndefinedValue(base)) &&
+          difference.newValue
+        ) {
+          context.env.logger?.debug(
+            "Warning: " +
+              incompatibleDifferenceMessage(
+                context,
+                base,
+                difference,
+                location,
+              ),
+          );
+          return replaceValue(context, base, difference.newValue);
+        }
         assert(
           false,
           incompatibleDifferenceMessage(context, base, difference, location),

@@ -1878,8 +1878,7 @@ describe("changed and affected nodes detection", () => {
 describe("inconsistent state", () => {
   // Note: this can happen if previous operation update failed and operation result is now stale.
   //   It is still possible to update _some_ "nodes", but others may be in a permanent stale state.
-  // TODO
-  test.skip("marks null fields as stale", () => {
+  test("replaces null values from structural differences", () => {
     const diffBase = completeObject({
       completeObject: completeObject({
         plainObject: plainObjectFoo({ foo: "foo" }),
@@ -1899,12 +1898,12 @@ describe("inconsistent state", () => {
     });
     const { data } = update(updatedBase, difference);
 
-    expect(data.plainObject).toEqual(null);
+    expect(data.completeObject.plainObject).toEqual(
+      plainObjectFoo({ foo: "updated" }),
+    );
   });
 
-  test("does not update missing values", () => {
-    // Assuming it will trigger re-fetching anyway, given it already has missing field
-
+  test("fills missing values from structural differences", () => {
     const diffBase = completeObject({
       completeObject: completeObject({
         plainObject: plainObjectFoo({ foo: "foo" }),
@@ -1924,7 +1923,10 @@ describe("inconsistent state", () => {
     });
     const { data } = update(updatedBase, difference);
 
-    expect(data).toBe(updatedBase);
+    expect(data).not.toBe(updatedBase);
+    expect(data.completeObject.plainObject).toEqual(
+      plainObjectFoo({ foo: "updated" }),
+    );
   });
 });
 

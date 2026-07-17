@@ -1695,3 +1695,229 @@ test("merge policy on embedded object must not crash when a prior null operation
     },
   });
 });
+
+test("updates a node field that is null in one chunk and an object in another", () => {
+  const cache = new ForestRun();
+  const aliasedQuery = gql`
+    query Aliased {
+      x: foo {
+        __typename
+        id
+        details {
+          __typename
+          a
+          b
+        }
+      }
+      y: foo {
+        __typename
+        id
+        details {
+          __typename
+          a
+          b
+        }
+      }
+    }
+  `;
+  const singleQuery = gql`
+    query Single {
+      foo {
+        __typename
+        id
+        details {
+          __typename
+          a
+          b
+        }
+      }
+    }
+  `;
+
+  cache.write({
+    query: aliasedQuery,
+    result: {
+      x: {
+        __typename: "Foo",
+        id: "1",
+        details: { __typename: "Detail", a: 1, b: 1 },
+      },
+      y: {
+        __typename: "Foo",
+        id: "1",
+        details: null,
+      },
+    },
+  });
+  cache.write({
+    query: singleQuery,
+    result: {
+      foo: {
+        __typename: "Foo",
+        id: "1",
+        details: { __typename: "Detail", a: 2, b: 1 },
+      },
+    },
+  });
+
+  const details = { __typename: "Detail", a: 2, b: 1 };
+  const aliased = cache.diff({ query: aliasedQuery, optimistic: true });
+  const single = cache.diff({ query: singleQuery, optimistic: true });
+  expect(aliased.result).toEqual({
+    x: { __typename: "Foo", id: "1", details },
+    y: { __typename: "Foo", id: "1", details },
+  });
+  expect(aliased.complete).toBe(true);
+  expect(single.result).toEqual({
+    foo: { __typename: "Foo", id: "1", details },
+  });
+  expect(single.complete).toBe(true);
+});
+
+test("updates repeated node ids with divergent object and null fields", () => {
+  const cache = new ForestRun();
+  const listQuery = gql`
+    query List {
+      foos {
+        __typename
+        id
+        details {
+          __typename
+          a
+          b
+        }
+      }
+    }
+  `;
+  const singleQuery = gql`
+    query Single {
+      foo {
+        __typename
+        id
+        details {
+          __typename
+          a
+          b
+        }
+      }
+    }
+  `;
+
+  cache.write({
+    query: listQuery,
+    result: {
+      foos: [
+        {
+          __typename: "Foo",
+          id: "1",
+          details: { __typename: "Detail", a: 1, b: 1 },
+        },
+        {
+          __typename: "Foo",
+          id: "1",
+          details: null,
+        },
+      ],
+    },
+  });
+  cache.write({
+    query: singleQuery,
+    result: {
+      foo: {
+        __typename: "Foo",
+        id: "1",
+        details: { __typename: "Detail", a: 2, b: 1 },
+      },
+    },
+  });
+
+  const details = { __typename: "Detail", a: 2, b: 1 };
+  const list = cache.diff({ query: listQuery, optimistic: true });
+  const single = cache.diff({ query: singleQuery, optimistic: true });
+  expect(list.result).toEqual({
+    foos: [
+      { __typename: "Foo", id: "1", details },
+      { __typename: "Foo", id: "1", details },
+    ],
+  });
+  expect(list.complete).toBe(true);
+  expect(single.result).toEqual({
+    foo: { __typename: "Foo", id: "1", details },
+  });
+  expect(single.complete).toBe(true);
+});
+
+test("updates a list item that is null in one chunk and an object in another", () => {
+  const cache = new ForestRun();
+  const aliasedQuery = gql`
+    query Aliased {
+      x: foo {
+        __typename
+        id
+        items {
+          __typename
+          value
+        }
+      }
+      y: foo {
+        __typename
+        id
+        items {
+          __typename
+          value
+        }
+      }
+    }
+  `;
+  const singleQuery = gql`
+    query Single {
+      foo {
+        __typename
+        id
+        items {
+          __typename
+          value
+        }
+      }
+    }
+  `;
+
+  cache.write({
+    query: aliasedQuery,
+    result: {
+      x: {
+        __typename: "Foo",
+        id: "1",
+        items: [{ __typename: "Item", value: 1 }],
+      },
+      y: {
+        __typename: "Foo",
+        id: "1",
+        items: [null],
+      },
+    },
+  });
+  cache.write({
+    query: singleQuery,
+    result: {
+      foo: {
+        __typename: "Foo",
+        id: "1",
+        items: [{ __typename: "Item", value: 2 }],
+      },
+    },
+  });
+
+  const items = [{ __typename: "Item", value: 2 }];
+  const aliased = cache.diff({ query: aliasedQuery, optimistic: true });
+  const single = cache.diff({ query: singleQuery, optimistic: true });
+  expect(aliased.result).toEqual({
+    x: { __typename: "Foo", id: "1", items },
+    y: { __typename: "Foo", id: "1", items },
+  });
+  expect(aliased.complete).toBe(true);
+  expect(single.result).toEqual({
+    foo: { __typename: "Foo", id: "1", items },
+  });
+  expect(single.complete).toBe(true);
+});

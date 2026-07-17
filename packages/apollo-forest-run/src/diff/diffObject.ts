@@ -126,9 +126,11 @@ function diffPlainObjectValue(
   } else if (!diff || !Difference.isComplete(diff)) {
     diff = diffObjectChunk(context, base, model, diff);
   }
-  return diff && (Difference.isDirty(diff) || !Difference.isComplete(diff))
-    ? diff
-    : undefined;
+  if (diff && (Difference.isDirty(diff) || !Difference.isComplete(diff))) {
+    diff.newValue = model;
+    return diff;
+  }
+  return undefined;
 }
 
 function diffObjectChunk(
@@ -490,9 +492,11 @@ function diffCompositeListValue(
       Difference.dequeueListItem(diff, index);
     }
   }
-  return diff && (Difference.isDirty(diff) || !Difference.isComplete(diff))
-    ? diff
-    : undefined;
+  if (diff && (Difference.isDirty(diff) || !Difference.isComplete(diff))) {
+    diff.newValue = model;
+    return diff;
+  }
+  return undefined;
 }
 
 function diffCompositeListLayout(
