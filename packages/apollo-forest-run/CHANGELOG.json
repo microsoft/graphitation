@@ -2,6 +2,21 @@
   "name": "@graphitation/apollo-forest-run",
   "entries": [
     {
+      "date": "Fri, 17 Jul 2026 12:07:00 GMT",
+      "version": "0.24.5",
+      "tag": "@graphitation/apollo-forest-run_v0.24.5",
+      "comments": {
+        "patch": [
+          {
+            "author": "vrazuvaev@microsoft.com_msteamsmdb",
+            "package": "@graphitation/apollo-forest-run",
+            "commit": "2898c46d775fb985845e3ba538e307ab08e44bb1",
+            "comment": "fix(apollo-forest-run): reconcile divergent null and missing chunks during diffing"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 14 Jul 2026 09:11:43 GMT",
       "version": "0.24.4",
       "tag": "@graphitation/apollo-forest-run_v0.24.4",
