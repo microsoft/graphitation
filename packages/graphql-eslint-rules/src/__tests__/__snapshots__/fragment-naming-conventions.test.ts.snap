@@ -63,6 +63,21 @@ exports[`Invalid #4 1`] = `
 exports[`Invalid #5 1`] = `
 "#### ⌨️ Code
 
+      1 | fragment GraphqlEslintRulesUserFragment_2invalid on User { id name }
+
+#### ❌ Error
+
+    > 1 | fragment GraphqlEslintRulesUserFragment_2invalid on User { id name }
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Fragment should follow the naming conventions, the expected name is GraphqlEslintRulesUserFragment OR GraphqlEslintRulesUserFragment_optionalSuffix It's possible to chain suffixes using underscore
+
+#### 🔧 Autofix output
+
+      1 | fragment GraphqlEslintRulesUserFragment on User { id name }"
+`;
+
+exports[`Invalid #6 1`] = `
+"#### ⌨️ Code
+
       1 | fragment GraphqlEslintRulesUserFragment on User { id name }
 
 #### ❌ Error
@@ -71,7 +86,7 @@ exports[`Invalid #5 1`] = `
         | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Filename should start with the package directory name: "graphql-eslint-rules""
 `;
 
-exports[`Invalid #6 1`] = `
+exports[`Invalid #7 1`] = `
 "#### ⌨️ Code
 
       1 | fragment GraphqlEslintRulesUserFragment on User { id name }

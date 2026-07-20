@@ -3,7 +3,7 @@ import { pascalCase, getFileInfo } from "./utils";
 import { reportError } from "./operation-naming-conventions";
 
 const OPERATIONS = ["Query", "Mutation", "Subscription"];
-const CONDITIONAL_SUFFIX_REGEXP = /^[a-z]+(?:[A-Z][a-z]+)*$/;
+const CONDITIONAL_SUFFIX_REGEXP = /^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*)*$/;
 
 function getMissingLastDirectoryPrefixErrorMessage(lastDirectory: string) {
   return `Filename should start with the package directory name: "${lastDirectory}"`;
