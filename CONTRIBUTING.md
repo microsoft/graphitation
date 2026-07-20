@@ -60,7 +60,6 @@ Graphitation releases are managed by beachball and the Azure DevOps pipeline
 1. Add change files with `yarn change`. Change files determine which packages are released and what version bump each package receives.
 2. Run the release pipeline from `main` for a stable release. The pipeline publishes the changed packages to the private ADO npm feed and to npmjs through ESRP, then beachball bumps package versions, updates changelogs, removes consumed change files, and pushes the release commit.
 3. Run the release pipeline from a non-`main` branch to publish canaries only to the private ADO npm feed. Beachball's `canary` command publishes prerelease versions such as `0.21.1-canary.0` with the `canary` dist-tag and does not modify the branch.
-4. Install a private-feed canary with `npm i @graphitation/PACKAGE@canary` after configuring npm to use the GraphQL ADO feed.
 
 Notes:
 
