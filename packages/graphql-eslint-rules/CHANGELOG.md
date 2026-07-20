@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-eslint-rules
 
-<!-- This log was last generated on Tue, 14 Jul 2026 09:11:43 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 20 Jul 2026 14:10:41 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.13.2
+
+Mon, 20 Jul 2026 14:10:41 GMT
+
+### Patches
+
+- fragment suffixes now support numbers (77059398+vejrj@users.noreply.github.com)
 
 ## 0.13.1
 
