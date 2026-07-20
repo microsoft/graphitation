@@ -7,6 +7,7 @@ import {
   FragmentDefinitionNode,
   OperationDefinitionNode,
   OperationTypeDefinitionNode,
+  VariableDefinitionNode,
 } from "graphql";
 import {
   collectFields,
@@ -47,8 +48,8 @@ import type {
 } from "./types";
 import {
   getArgumentValues,
-  getVariableValues,
   getDirectiveValues,
+  getVariableDefinitionMap,
 } from "./values";
 import type { ExecutionHooks } from "./hooks/types";
 import { arraysAreEqual } from "./utilities/array";
@@ -117,6 +118,9 @@ export interface ExecutionContext {
   buildContextValue?: (contextValue?: unknown) => unknown;
   operation: OperationDefinitionNode;
   variableValues: { [variable: string]: unknown };
+  rawVariableValues: { [variable: string]: unknown };
+  variableDefinitions: { [variable: string]: VariableDefinitionNode };
+  variableCoercionResults: Map<string, VariableCoercionResult>;
   fieldResolver: FunctionFieldResolver<unknown, unknown>;
   typeResolver: TypeResolver<unknown, unknown>;
   subscribeFieldResolver: FunctionFieldResolver<unknown, unknown>;
@@ -128,6 +132,11 @@ export interface ExecutionContext {
   enableDeferredMerge: boolean;
   incrementalPayloadBatchingTimeoutMs?: number;
 }
+
+export type VariableCoercionResult =
+  | { status: "coerced"; value: unknown }
+  | { status: "missing" }
+  | { status: "error"; errors: ReadonlyArray<GraphQLError> };
 
 /**
  * Implements the "Executing requests" section of the GraphQL specification.
@@ -240,17 +249,7 @@ function buildExecutionContext(
 
   // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
   const variableDefinitions = operation.variableDefinitions ?? [];
-
-  const coercedVariableValues = getVariableValues(
-    schemaFragment,
-    variableDefinitions,
-    variableValues ?? {},
-    { maxErrors: 50 },
-  );
-
-  if (coercedVariableValues.errors) {
-    return coercedVariableValues.errors;
-  }
+  const variableDefinitionMap = getVariableDefinitionMap(variableDefinitions);
 
   return {
     schemaFragment,
@@ -262,7 +261,10 @@ function buildExecutionContext(
       : contextValue,
     buildContextValue,
     operation,
-    variableValues: coercedVariableValues.coerced,
+    variableValues: {},
+    rawVariableValues: variableValues ?? {},
+    variableDefinitions: variableDefinitionMap,
+    variableCoercionResults: new Map(),
     fieldResolver: fieldResolver ?? defaultFieldResolver,
     typeResolver: typeResolver ?? defaultTypeResolver,
     subscribeFieldResolver: subscribeFieldResolver ?? defaultFieldResolver,
