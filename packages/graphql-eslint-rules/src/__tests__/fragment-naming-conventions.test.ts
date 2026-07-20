@@ -45,6 +45,21 @@ ruleTester.runGraphQLTests(
         filename: "src/graphql-eslint-rules-user-fragment.graphql",
         code: `fragment GraphqlEslintRulesUserFragment_optionalSuffix_anotherOptionalSuffix on User { id name }`,
       },
+      {
+        ...WITH_SCHEMA,
+        filename: "src/graphql-eslint-rules-user-fragment.graphql",
+        code: `fragment GraphqlEslintRulesUserFragment_v2 on User { id name }`,
+      },
+      {
+        ...WITH_SCHEMA,
+        filename: "src/graphql-eslint-rules-user-fragment.graphql",
+        code: `fragment GraphqlEslintRulesUserFragment_someV2Suffix on User { id name }`,
+      },
+      {
+        ...WITH_SCHEMA,
+        filename: "src/graphql-eslint-rules-user-fragment.graphql",
+        code: `fragment GraphqlEslintRulesUserFragment_suffix2 on User { id name }`,
+      },
     ],
     invalid: [
       {
@@ -84,6 +99,17 @@ ruleTester.runGraphQLTests(
         ...WITH_SCHEMA,
         filename: "src/graphql-eslint-rules-user-query.graphql",
         code: `fragment UserFragment on User { id name }`,
+        output: "fragment GraphqlEslintRulesUserFragment on User { id name }",
+        errors: [
+          {
+            message: errorMessage,
+          },
+        ],
+      },
+      {
+        ...WITH_SCHEMA,
+        filename: "src/graphql-eslint-rules-user-query.graphql",
+        code: `fragment GraphqlEslintRulesUserFragment_2invalid on User { id name }`,
         output: "fragment GraphqlEslintRulesUserFragment on User { id name }",
         errors: [
           {
