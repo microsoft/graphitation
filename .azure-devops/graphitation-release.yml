@@ -128,7 +128,11 @@ extends:
 
               - script: |
                   releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
-                  yarn beachball publish -b "$releaseBranch" -t latest -y --registry $(adoNpmFeedBaseUrl) --no-push --keep-change-files
+                  if [ "${BUILD_SOURCEBRANCH}" = "refs/heads/main" ]; then
+                    yarn beachball publish -b "$releaseBranch" -t latest -y --registry $(adoNpmFeedBaseUrl) --no-push --keep-change-files
+                  else
+                    yarn beachball canary -b "$releaseBranch" -y --registry $(adoNpmFeedBaseUrl)
+                  fi
                 displayName: Release to the ADO npm feed
                 env:
                   NPM_CONFIG_USERCONFIG: $(Build.SourcesDirectory)/.npmrc
@@ -136,6 +140,7 @@ extends:
           - job: PublicNpmRelease
             displayName: ESRP release to public npm
             dependsOn: Build
+            condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
             pool:
               name: Azure-Pipelines-1ESPT-ExDShared
               image: ubuntu-latest
@@ -173,7 +178,7 @@ extends:
             dependsOn:
               - PrivateAdoRelease
               - PublicNpmRelease
-            condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/heads/'))
+            condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
             pool:
               name: Azure-Pipelines-1ESPT-ExDShared
               image: ubuntu-latest
