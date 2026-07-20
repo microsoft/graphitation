@@ -8,6 +8,8 @@ variables:
     value: production,externalfacing
   - name: serviceTreeID
     value: ade7d667-42f5-485a-91a9-f1dc6482a9b0
+  - name: packagesArtifactName
+    value: packed-packages
   - name: adoNpmFeedBaseUrl
     value: https://pkgs.dev.azure.com/DomoreexpGithub/_packaging/GraphQL/npm/registry/
   - name: adoMirrorNpmFeedBaseUrl
@@ -24,8 +26,8 @@ extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
 
   parameters:
-    # settings:
-    #   networkIsolationPolicy: Permissive,CFSClean
+    settings:
+      networkIsolationPolicy: Permissive,CFSClean
     sdl:
       sourceAnalysisPool:
         name: Azure-Pipelines-1ESPT-ExDShared
@@ -34,39 +36,37 @@ extends:
     stages:
       - stage: release
         variables:
-          # OPTIONAL: Set this varibale to 'true' to enable signing in a target stage.
-          # Remove if signing is not required.
-          Build.ESRP.CodeSign.Enabled: true
+          # ESRP publishing is handled by EsrpRelease@9.
+          Build.ESRP.CodeSign.Enabled: false
           # OPTIONAL: To disable required tools not applicable in the pipeline set to false.
           # Supported values: BinSkim, Roslyn, ESLint, PREFast.
           Build.SDL.<Roslyn>.Enabled: false
           Build.SDL.<ESLint>.Enabled: true
         jobs:
-          - job: Release
+          - job: Build
+            displayName: Build, test, and pack Graphitation packages
             pool:
               name: Azure-Pipelines-1ESPT-ExDShared
               image: ubuntu-latest
               os: linux
+            workspace:
+              clean: all
+            variables:
+              artifactPath: $(Build.StagingDirectory)/out
+              packagesArtifactPath: $(Build.StagingDirectory)/out/${{ variables.packagesArtifactName }}
+            templateContext:
+              outputParentDirectory: $(artifactPath)
+              outputs:
+                - output: pipelineArtifact
+                  artifactName: ${{ variables.packagesArtifactName }}
+                  targetPath: $(packagesArtifactPath)
             steps:
               - checkout: self
                 persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
-              - script: |
-                  cat <<'EOF' > "$(Agent.TempDirectory)/npm-mirror.npmrc"
-                  always-auth=true
-                  registry=$(adoMirrorNpmFeedBaseUrl)
-                  EOF
-                displayName: Create temporary .npmrc for mirror feed
-              - task: npmAuthenticate@0
-                inputs:
-                  workingFile: "$(Agent.TempDirectory)/npm-mirror.npmrc"
-              - script: |
-                  TOKEN=$(grep '_authToken' "$(Agent.TempDirectory)/npm-mirror.npmrc" | head -1 | cut -d'=' -f2)
-                  echo "##vso[task.setvariable variable=NPM_TOKEN;issecret=true]$TOKEN"
-                displayName: Extract token from .npmrc
-              - script: |
-                  yarn config set npmAlwaysAuth true
-                  yarn config set npmRegistryServer $(adoMirrorNpmFeedBaseUrl)
-                displayName: Configure yarn for ADO npm feed
+
+              - template: /.azure-devops/steps/npm-auth-steps.yml@self
+                parameters:
+                  adoMirrorNpmFeedBaseUrl: ${{ variables.adoMirrorNpmFeedBaseUrl }}
               - script: yarn install
                 displayName: yarn
                 env:
@@ -77,40 +77,128 @@ extends:
                 displayName: build and test [test]
                 env:
                   NPM_CONFIG_USERCONFIG: $(Agent.TempDirectory)/npm-mirror.npmrc
+
               - script: |
-                  git config user.email "gql-svc@microsoft.com"
-                  git config user.name "Graphitation Service Account"
-                  git fetch origin main
-                displayName: Configure git for release
-              - script: |
+                  mkdir -p "$(packagesArtifactPath)"
+                  packLayersPath="$(Build.StagingDirectory)/beachball-packed-layers"
                   releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
 
-                  if [ "${BUILD_SOURCEBRANCH}" = "refs/heads/main" ]; then
-                    yarn beachball publish -b "$releaseBranch" -t latest -y -n $(ossNpmToken) --access public --no-push --keep-change-files
-                  else
-                    yarn beachball canary -b "$releaseBranch" -t canary -y -n $(ossNpmToken) --access public
-                  fi
-                displayName: Release to the npm registry
-              - script: |
-                  git restore .
-                displayName: Discard beachball's changes
+                  yarn beachball publish -b "$releaseBranch" -t latest -y --access public --no-push --keep-change-files --pack-to-path "$packLayersPath"
+
+                  find "$packLayersPath" -type f -name "*.tgz" -exec cp {} "$(packagesArtifactPath)" \;
+                displayName: Pack packages with beachball
+                env:
+                  NPM_CONFIG_USERCONFIG: $(Agent.TempDirectory)/npm-mirror.npmrc
+
+          - job: PrivateAdoRelease
+            displayName: Release to ADO npm feed
+            dependsOn: Build
+            pool:
+              name: Azure-Pipelines-1ESPT-ExDShared
+              image: ubuntu-latest
+              os: linux
+            steps:
+              - checkout: self
+                persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
+
+              - template: /.azure-devops/steps/npm-auth-steps.yml@self
+                parameters:
+                  adoMirrorNpmFeedBaseUrl: ${{ variables.adoMirrorNpmFeedBaseUrl }}
+
+              - script: yarn install
+                displayName: yarn install
+                env:
+                  YARN_NPM_AUTH_TOKEN: $(NPM_TOKEN)
+                  NPM_CONFIG_USERCONFIG: $(Agent.TempDirectory)/npm-mirror.npmrc
+
+              - script: yarn build
+                displayName: build
+                env:
+                  NPM_CONFIG_USERCONFIG: $(Agent.TempDirectory)/npm-mirror.npmrc
+
               - script: |
                   echo "always-auth=true" > .npmrc
                   echo "registry=$(adoNpmFeedBaseUrl)" >> .npmrc
+                displayName: Create .npmrc for private ADO feed
+
               - task: npmAuthenticate@0
+                displayName: npm authenticate for private ADO feed
                 inputs:
                   workingFile: ".npmrc"
+
               - script: |
                   releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
+                  yarn beachball publish -b "$releaseBranch" -t latest -y --registry $(adoNpmFeedBaseUrl) --no-push --keep-change-files
+                displayName: Release to the ADO npm feed
+                env:
+                  NPM_CONFIG_USERCONFIG: $(Build.SourcesDirectory)/.npmrc
 
-                  if [ "${BUILD_SOURCEBRANCH}" = "refs/heads/main" ]; then
-                    yarn beachball publish -b "$releaseBranch" -t latest -y --registry $(adoNpmFeedBaseUrl)
-                  else
-                    yarn beachball canary -b "$releaseBranch" -t canary -y --registry $(adoNpmFeedBaseUrl)
-                  fi
-                displayName: Release to the ado npm feed
-              - task: 1ES.PublishPipelineArtifact@1
-                displayName: 📒 Publish Manifest
+          - job: PublicNpmRelease
+            displayName: ESRP release to public npm
+            dependsOn: Build
+            pool:
+              name: Azure-Pipelines-1ESPT-ExDShared
+              image: ubuntu-latest
+              os: linux
+            variables:
+              packagesArtifactPath: $(Agent.BuildDirectory)/${{ variables.packagesArtifactName }}
+            templateContext:
+              type: releaseJob
+              isProduction: true
+              inputs:
+                - input: pipelineArtifact
+                  artifactName: ${{ variables.packagesArtifactName }}
+                  targetPath: $(packagesArtifactPath)
+            steps:
+              - script: find "$(packagesArtifactPath)" -maxdepth 2 -type f -name "*.tgz" -print
+                displayName: Show packages artifact contents
+
+              - task: EsrpRelease@9
+                displayName: ESRP Release to npm
                 inputs:
-                  artifactName: SBom-$(System.JobAttempt)
-                  targetPath: $(System.DefaultWorkingDirectory)/_manifest
+                  connectedservicename: $(Release.ConnectedServiceName)
+                  usemanagedidentity: true
+                  keyvaultname: $(Release.KeyVaultName)
+                  signcertname: $(Release.SignCertName)
+                  clientid: $(Release.ClientId)
+                  contenttype: npm
+                  folderlocation: $(packagesArtifactPath)
+                  owners: $(Release.Owners)
+                  approvers: $(Release.Approvers)
+                  mainpublisher: ESRPRELPACMAN
+                  domaintenantid: $(Release.DomainTenantId)
+
+          - job: Bump
+            displayName: Bump package versions
+            dependsOn:
+              - PrivateAdoRelease
+              - PublicNpmRelease
+            condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/heads/'))
+            pool:
+              name: Azure-Pipelines-1ESPT-ExDShared
+              image: ubuntu-latest
+              os: linux
+            steps:
+              - checkout: self
+                persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
+
+              - template: /.azure-devops/steps/npm-auth-steps.yml@self
+                parameters:
+                  adoMirrorNpmFeedBaseUrl: ${{ variables.adoMirrorNpmFeedBaseUrl }}
+
+              - script: yarn install
+                displayName: yarn install
+                env:
+                  YARN_NPM_AUTH_TOKEN: $(NPM_TOKEN)
+                  NPM_CONFIG_USERCONFIG: $(Agent.TempDirectory)/npm-mirror.npmrc
+
+              - script: |
+                  git config user.email "gql-svc@microsoft.com"
+                  git config user.name "Graphitation Service Account"
+                  releaseBranchName="${BUILD_SOURCEBRANCH#refs/heads/}"
+                  releaseBranch="origin/$releaseBranchName"
+                  git fetch origin "$releaseBranchName"
+                  yarn beachball publish -b "$releaseBranch" -t latest -y --access public --no-publish --message "applying package updates [skip ci]"
+                displayName: Bump versions and push changelogs
+                env:
+                  NPM_CONFIG_USERCONFIG: $(Agent.TempDirectory)/npm-mirror.npmrc
