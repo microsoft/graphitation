@@ -52,15 +52,22 @@ yarn test
 yarn lint
 ```
 
-## Releasing canary versions
+## Releasing packages
 
-1. Generate change files: `yarn change`
-2. Run pipeline [microsoft.graphitation](https://dev.azure.com/DomoreexpGithub/Github_Pipelines/_build?definitionId=8) from your branch
-3. Pipeline uses `beachball canary` to publish versions like `0.21.1-canary.0` with the `canary` dist-tag
-4. Install via `npm i @graphitation/PACKAGE@canary`
+Graphitation releases are managed by beachball and the Azure DevOps pipeline
+[microsoft.graphitation](https://dev.azure.com/DomoreexpGithub/Github_Pipelines/_build?definitionId=8).
+
+1. Add change files with `yarn change`. Change files determine which packages are released and what version bump each package receives.
+2. Run the release pipeline from `main`.
+3. The pipeline builds and tests once, then packs the changed packages into `.tgz` artifacts with beachball.
+4. The private ADO npm feed release publishes the changed packages to the internal feed at `$(adoNpmFeedBaseUrl)`.
+5. The public npm release publishes the changed packages to npmjs through ESRP.
+6. After both release jobs succeed, beachball bumps package versions, updates changelogs, removes consumed change files, and pushes the release commit.
 
 Notes:
 
-- Change files are required — they determine _which_ packages to publish and the change type _is_ respected for the base bump (e.g. `minor` on `0.21.0` → `0.22.0`). Canary then adds an extra prerelease patch on top, so the final version is `0.22.1-canary.0`.
-- Canary versions auto-increment by checking the npm registry, so repeated runs are safe.
-- See [graphitation-release.yml](.azure-devops/graphitation-release.yml) for details.
+- Release jobs must stay network-isolated and cannot make arbitrary network calls.
+- The public npm release must go through ESRP; direct npm-token publishing is not used.
+- Packages are published to both npmjs and the private internal ADO feed.
+- The bump commit message includes `[skip ci]` to avoid triggering another release run.
+- See [graphitation-release.yml](.azure-devops/graphitation-release.yml) for the exact job graph.
