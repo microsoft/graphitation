@@ -33,7 +33,7 @@ export type InitialState = {
 
 export type FieldQueue = FieldInfo[];
 export type ObjectChunkQueue<TModel> = Iterable<TModel> & {
-  update?(fields: FieldQueue): void;
+  update?(fields: FieldQueue, selection?: ResolvedSelection): void;
 };
 
 export type Resolver<TModel, TListModel = NestedIterable<TModel>> = {
@@ -185,7 +185,7 @@ function executeObjectSelection<TModel, TListModel>(
       incompleteFields,
     );
   } else {
-    chunks.update?.(incompleteFields);
+    chunks.update?.(incompleteFields, selection);
     for (const chunk of chunks) {
       assert(incompleteFields?.length);
       incompleteFields = executeObjectChunkSelection(
@@ -199,7 +199,7 @@ function executeObjectSelection<TModel, TListModel>(
       if (!incompleteFields.length) {
         break;
       }
-      chunks.update?.(incompleteFields);
+      chunks.update?.(incompleteFields, selection);
     }
   }
   if (incompleteFields.length) {

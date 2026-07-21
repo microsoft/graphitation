@@ -48,6 +48,7 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
     logStaleOperations: config?.logStaleOperations ?? false,
     historyConfig: config?.historyConfig,
     optimizeFragmentReads: config?.optimizeFragmentReads ?? false,
+    indexedFields: config?.indexedFields,
     nonEvictableQueries: config?.nonEvictableQueries ?? new Set(),
     partitionConfig: resolvePartitionConfig(
       {
