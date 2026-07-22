@@ -63,30 +63,20 @@ However, APIs and response format _will_ change, expect breaking changes.
 > Note: see [this discussion](https://github.com/graphql/defer-stream-wg) of the new response format in the
 > defer and stream working group
 
-#### Incremental delivery flags
+#### Incremental delivery
 
-The following optional execution arguments tune how deferred/streamed payloads are executed and delivered.
+The executor always returns raw incremental payloads. It does not delay the initial result or merge deferred
+payloads into it; those are transport delivery policies. Deferred fragments can still be started early with:
 
 - **`enableEarlyExecution`** (`boolean`, default `false`) — When enabled, deferred fragments (`@defer`
   patches) start executing immediately alongside the main selection set, instead of only after the initial
   result has been resolved. This can reduce the overall latency of incremental payloads at the cost of doing
   more work up front.
 
-- **`enableDeferredMerge`** (`boolean`, default `false`) — When enabled, deferred fragments that have already
-  completed by the time the response is built are merged directly into their parent result instead of being
-  emitted as separate incremental payloads. This reduces the number of payloads a client has to process and
-  re-normalize.
-
-- **`incrementalPayloadBatchingTimeoutMs`** (`number`, optional) — Sets a time window (in milliseconds) used to
-  batch incremental payloads together before they are delivered:
-  - In combination with `enableDeferredMerge`, execution waits up to this many milliseconds for pending
-    deferred fragments so they can be merged into the initial result rather than streamed separately.
-  - For the subsequent payload stream, multiple incremental results that complete within the window are
-    grouped into a single delivery.
-
-  A value of `0` (or a non-finite value) disables the wait. Note that the merge-into-initial-result behavior
-  requires `enableDeferredMerge`; without it the timeout only affects batching of the subsequent payload
-  stream.
+When multiple patches resolve in the same microtask checkpoint, they are emitted in one subsequent result.
+This produces a single payload for concurrently resolved list items without introducing a timeout. Transports
+can retain the initial result and consume subsequent results according to their own merge, serialization,
+and delivery policy.
 
 ### Possible future - pre-normalized executor
 
