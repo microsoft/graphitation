@@ -17,7 +17,7 @@ export class IncrementalPayloadQueue<T extends { promise: Promise<void> }> {
     const entry = { isCompleted: false };
     this.entries.set(payload, entry);
     Promise.resolve().then(() => {
-      payload.promise.then(() => {
+      const complete = () => {
         if (this.entries.get(payload) !== entry) {
           return;
         }
@@ -26,7 +26,8 @@ export class IncrementalPayloadQueue<T extends { promise: Promise<void> }> {
         if (this.nextRequest) {
           this.scheduleFlush();
         }
-      });
+      };
+      payload.promise.then(complete, complete);
     });
   }
 
@@ -71,6 +72,7 @@ export class IncrementalPayloadQueue<T extends { promise: Promise<void> }> {
 
   return(): Promise<IteratorResult<ReadonlyArray<T>, void>> {
     this.isClosed = true;
+    this.entries.clear();
     if (this.nextRequest) {
       const resolve = this.nextRequest;
       this.nextRequest = undefined;

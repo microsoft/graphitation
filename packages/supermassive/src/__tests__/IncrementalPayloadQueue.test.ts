@@ -86,6 +86,27 @@ describe("IncrementalPayloadQueue", () => {
     });
   });
 
+  test("does not block behind a rejected payload", async () => {
+    const queue = createQueue();
+    const rejected: Payload = {
+      value: 1,
+      promise: Promise.reject(new Error("Rejected payload")),
+    };
+    rejected.promise.catch(() => {
+      // Queue attachment is deferred to support record initialization order.
+    });
+    const completed = createPayload(2);
+
+    queue.add(rejected);
+    queue.add(completed.payload);
+    completed.complete();
+
+    await expect(queue.next()).resolves.toMatchObject({
+      value: [{ value: 1 }, { value: 2 }],
+      done: false,
+    });
+  });
+
   test("cancels a pending batch", async () => {
     const queue = createQueue();
     const batch = queue.next();

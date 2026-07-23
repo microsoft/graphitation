@@ -2836,6 +2836,9 @@ function getCompletedIncrementalResults(
   const incrementalResults: Array<IncrementalResult> = [];
   for (const incrementalDataRecord of completedRecords) {
     const incrementalResult: IncrementalResult = {};
+    if (!incrementalDataRecord.isCompleted) {
+      continue;
+    }
     if (isStreamItemsRecord(incrementalDataRecord)) {
       const items = incrementalDataRecord.items;
       if (incrementalDataRecord.isCompletedAsyncIterator) {
@@ -2899,23 +2902,29 @@ function yieldSubsequentPayloads(
     };
   }
 
-  function cancelPendingStreams() {
-    const promises: Array<Promise<IteratorResult<unknown>>> = [];
+  function cancelPendingStreams(): Promise<void> {
+    const promises: Array<Promise<void>> = [];
     exeContext.subsequentPayloads.forEach((incrementalDataRecord) => {
       if (
         isStreamItemsRecord(incrementalDataRecord) &&
         incrementalDataRecord.asyncIterator?.return
       ) {
-        promises.push(incrementalDataRecord.asyncIterator.return());
+        promises.push(
+          incrementalDataRecord.asyncIterator.return().then(
+            () => undefined,
+            () => undefined,
+          ),
+        );
       }
     });
-    return Promise.all(promises);
+    return Promise.all(promises).then(() => undefined);
   }
 
   async function closeSubsequentPayloads(): Promise<void> {
+    const pendingStreamCancellation = cancelPendingStreams();
     await Promise.all([
       exeContext.subsequentPayloads.return(),
-      cancelPendingStreams(),
+      pendingStreamCancellation,
     ]);
   }
 
