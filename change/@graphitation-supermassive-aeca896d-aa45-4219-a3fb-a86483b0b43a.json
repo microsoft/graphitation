@@ -1,0 +1,7 @@
+{
+  "type": "major",
+  "comment": "queue",
+  "packageName": "@graphitation/supermassive",
+  "email": "pavelglac@microsoft.com",
+  "dependentChangeType": "patch"
+}
