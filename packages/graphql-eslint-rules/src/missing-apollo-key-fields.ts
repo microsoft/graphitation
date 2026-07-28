@@ -48,7 +48,9 @@ function parseKeySpecifier(specifier: KeySpecifier): KeyFieldSpec[] {
       }
       previous.nested = parseKeySpecifier(keyField);
     } else {
-      throw new Error("Expected keyFields to be array of strings");
+      throw new Error(
+        "Expected keyFields to be an array of strings and nested key specifiers",
+      );
     }
   }
   return specs;
@@ -71,7 +73,9 @@ function keyFieldsForType(
     if (Array.isArray(typePolicy.keyFields)) {
       return parseKeySpecifier(typePolicy.keyFields);
     }
-    throw new Error("Expected keyFields to be array of strings");
+    throw new Error(
+      "Expected keyFields to be an array of strings and nested key specifiers",
+    );
   } else if (type.getFields().id !== undefined) {
     return [{ name: DEFAULT_KEY_FIELD_NAME }];
   }
