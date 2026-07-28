@@ -10,7 +10,9 @@ import {
   GraphQLRuleTester,
   ParserOptions,
 } from "@graphql-eslint/eslint-plugin";
-import missingApolloKeyFieldsRule from "../missing-apollo-key-fields";
+import missingApolloKeyFieldsRule, {
+  parseKeySpecifier,
+} from "../missing-apollo-key-fields";
 
 const TEST_SCHEMA = /* GraphQL */ `
   type Query {
@@ -19,6 +21,7 @@ const TEST_SCHEMA = /* GraphQL */ `
     vehicles: [Vehicle!]!
     keyField: [KeyFieldType]!
     flying: [Flying!]!
+    books: [Book!]!
   }
   type NoId {
     name: String!
@@ -45,6 +48,14 @@ const TEST_SCHEMA = /* GraphQL */ `
     id: ID!
     name: String!
   }
+  type Book {
+    title: String!
+    author: Author!
+  }
+  type Author {
+    name: String!
+    age: Int
+  }
 `;
 
 const WITH_SCHEMA = {
@@ -54,6 +65,31 @@ const WITH_SCHEMA = {
       `fragment HasIdFields on HasId {
         id
       }`,
+      `fragment NestedHasIdFields on HasId {
+        ...HasIdFields
+      }`,
+      `fragment DeeplyNestedHasIdFields on HasId {
+        ...NestedHasIdFields
+      }`,
+      `fragment NestedNameOnly on HasId {
+        ...NameOnly
+      }`,
+      `fragment NameOnly on HasId {
+        name
+      }`,
+      `fragment InlineFragmentWithId on Vehicle {
+        ...on Car {
+          id
+        }
+      }`,
+      `fragment BookAuthorName on Book {
+        author {
+          name
+        }
+      }`,
+      `fragment AuthorName on Author {
+        name
+      }`,
     ],
   },
 };
@@ -62,6 +98,9 @@ const ruleTester = new GraphQLRuleTester();
 export const typePolicies = {
   KeyFieldType: {
     keyFields: ["objectId"],
+  },
+  Book: {
+    keyFields: ["title", "author", ["name"]],
   },
 };
 
@@ -88,6 +127,41 @@ ruleTester.runGraphQLTests(
       {
         ...WITH_SCHEMA,
         code: `query { hasId { ...HasIdFields } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { hasId { ...NestedHasIdFields } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { hasId { ...DeeplyNestedHasIdFields } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { vehicles { ...InlineFragmentWithId } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { books { title author { name } } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { books { title author { name age } } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { books { title ...BookAuthorName } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { books { title author { ...AuthorName } } }`,
         options: [{ typePolicies }],
       },
       {
@@ -134,6 +208,88 @@ ruleTester.runGraphQLTests(
         ],
         options: [{ typePolicies }],
       },
+      {
+        ...WITH_SCHEMA,
+        code: `query { hasId { name ...NestedNameOnly } }`,
+        output: `query { hasId { id\nname ...NestedNameOnly } }`,
+        errors: [
+          {
+            message: `The key-field "id" must be selected for proper Apollo Client store denormalisation purposes.`,
+          },
+        ],
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { books { author { name } } }`,
+        output: `query { books { title\nauthor { name } } }`,
+        errors: [
+          {
+            message: `The key-field "title" must be selected for proper Apollo Client store denormalisation purposes.`,
+          },
+        ],
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { books { title author { age } } }`,
+        errors: [
+          {
+            message: `The key-field "author.name" must be selected for proper Apollo Client store denormalisation purposes.`,
+          },
+        ],
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { books { author { age } } }`,
+        output: `query { books { title\nauthor { age } } }`,
+        errors: [
+          {
+            message: `The key-fields "title and author.name" must be selected for proper Apollo Client store denormalisation purposes.`,
+          },
+        ],
+        options: [{ typePolicies }],
+      },
     ],
   },
 );
+
+describe("parseKeySpecifier", () => {
+  it("parses a flat list of string key fields", () => {
+    expect(parseKeySpecifier(["objectId"])).toEqual([{ name: "objectId" }]);
+  });
+
+  it("parses nested key specifiers attached to the preceding field", () => {
+    expect(parseKeySpecifier(["title", "author", ["name"]])).toEqual([
+      { name: "title" },
+      { name: "author", nested: [{ name: "name" }] },
+    ]);
+  });
+
+  it("parses deeply nested key specifiers", () => {
+    expect(
+      parseKeySpecifier(["author", ["name", "address", ["street"]]]),
+    ).toEqual([
+      {
+        name: "author",
+        nested: [
+          { name: "name" },
+          { name: "address", nested: [{ name: "street" }] },
+        ],
+      },
+    ]);
+  });
+
+  it("throws when a key field is neither a string nor a nested specifier", () => {
+    expect(() => parseKeySpecifier([42 as unknown as string])).toThrowError(
+      "Expected keyFields to be an array of strings and nested key specifiers",
+    );
+  });
+
+  it("throws when a nested specifier does not follow a field name", () => {
+    expect(() => parseKeySpecifier([["name"]])).toThrowError(
+      "Expected a field name to precede nested keyFields",
+    );
+  });
+});
