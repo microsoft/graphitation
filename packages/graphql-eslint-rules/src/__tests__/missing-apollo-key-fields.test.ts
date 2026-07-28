@@ -19,6 +19,7 @@ const TEST_SCHEMA = /* GraphQL */ `
     vehicles: [Vehicle!]!
     keyField: [KeyFieldType]!
     flying: [Flying!]!
+    books: [Book!]!
   }
   type NoId {
     name: String!
@@ -45,6 +46,14 @@ const TEST_SCHEMA = /* GraphQL */ `
     id: ID!
     name: String!
   }
+  type Book {
+    title: String!
+    author: Author!
+  }
+  type Author {
+    name: String!
+    age: Int
+  }
 `;
 
 const WITH_SCHEMA = {
@@ -54,6 +63,31 @@ const WITH_SCHEMA = {
       `fragment HasIdFields on HasId {
         id
       }`,
+      `fragment NestedHasIdFields on HasId {
+        ...HasIdFields
+      }`,
+      `fragment DeeplyNestedHasIdFields on HasId {
+        ...NestedHasIdFields
+      }`,
+      `fragment NestedNameOnly on HasId {
+        ...NameOnly
+      }`,
+      `fragment NameOnly on HasId {
+        name
+      }`,
+      `fragment InlineFragmentWithId on Vehicle {
+        ...on Car {
+          id
+        }
+      }`,
+      `fragment BookAuthorName on Book {
+        author {
+          name
+        }
+      }`,
+      `fragment AuthorName on Author {
+        name
+      }`,
     ],
   },
 };
@@ -62,6 +96,9 @@ const ruleTester = new GraphQLRuleTester();
 export const typePolicies = {
   KeyFieldType: {
     keyFields: ["objectId"],
+  },
+  Book: {
+    keyFields: ["title", "author", ["name"]],
   },
 };
 
@@ -88,6 +125,41 @@ ruleTester.runGraphQLTests(
       {
         ...WITH_SCHEMA,
         code: `query { hasId { ...HasIdFields } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { hasId { ...NestedHasIdFields } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { hasId { ...DeeplyNestedHasIdFields } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { vehicles { ...InlineFragmentWithId } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { books { title author { name } } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { books { title author { name age } } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { books { title ...BookAuthorName } }`,
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { books { title author { ...AuthorName } } }`,
         options: [{ typePolicies }],
       },
       {
@@ -130,6 +202,49 @@ ruleTester.runGraphQLTests(
         errors: [
           {
             message: `The key-field "objectId" must be selected for proper Apollo Client store denormalisation purposes.`,
+          },
+        ],
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { hasId { name ...NestedNameOnly } }`,
+        output: `query { hasId { id\nname ...NestedNameOnly } }`,
+        errors: [
+          {
+            message: `The key-field "id" must be selected for proper Apollo Client store denormalisation purposes.`,
+          },
+        ],
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { books { author { name } } }`,
+        output: `query { books { title\nauthor { name } } }`,
+        errors: [
+          {
+            message: `The key-field "title" must be selected for proper Apollo Client store denormalisation purposes.`,
+          },
+        ],
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { books { title author { age } } }`,
+        errors: [
+          {
+            message: `The key-field "author.name" must be selected for proper Apollo Client store denormalisation purposes.`,
+          },
+        ],
+        options: [{ typePolicies }],
+      },
+      {
+        ...WITH_SCHEMA,
+        code: `query { books { author { age } } }`,
+        output: `query { books { title\nauthor { age } } }`,
+        errors: [
+          {
+            message: `The key-fields "title and author.name" must be selected for proper Apollo Client store denormalisation purposes.`,
           },
         ],
         options: [{ typePolicies }],

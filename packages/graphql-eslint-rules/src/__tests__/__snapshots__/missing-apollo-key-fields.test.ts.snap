@@ -13,6 +13,15 @@ exports[`Invalid #1 1`] = `
           "keyFields": [
             "objectId"
           ]
+        },
+        "Book": {
+          "keyFields": [
+            "title",
+            "author",
+            [
+              "name"
+            ]
+          ]
         }
       }
     }
@@ -41,6 +50,15 @@ exports[`Invalid #2 1`] = `
           "keyFields": [
             "objectId"
           ]
+        },
+        "Book": {
+          "keyFields": [
+            "title",
+            "author",
+            [
+              "name"
+            ]
+          ]
         }
       }
     }
@@ -54,4 +72,147 @@ exports[`Invalid #2 1`] = `
 
       1 | query { keyField { objectId
       2 | id name } }"
+`;
+
+exports[`Invalid #3 1`] = `
+"#### ⌨️ Code
+
+      1 | query { hasId { name ...NestedNameOnly } }
+
+#### ⚙️ Options
+
+    {
+      "typePolicies": {
+        "KeyFieldType": {
+          "keyFields": [
+            "objectId"
+          ]
+        },
+        "Book": {
+          "keyFields": [
+            "title",
+            "author",
+            [
+              "name"
+            ]
+          ]
+        }
+      }
+    }
+
+#### ❌ Error
+
+    > 1 | query { hasId { name ...NestedNameOnly } }
+        |               ^^^^^^^^^^^^^^^^^^^^^^^^^ The key-field "id" must be selected for proper Apollo Client store denormalisation purposes.
+
+#### 🔧 Autofix output
+
+      1 | query { hasId { id
+      2 | name ...NestedNameOnly } }"
+`;
+
+exports[`Invalid #4 1`] = `
+"#### ⌨️ Code
+
+      1 | query { books { author { name } } }
+
+#### ⚙️ Options
+
+    {
+      "typePolicies": {
+        "KeyFieldType": {
+          "keyFields": [
+            "objectId"
+          ]
+        },
+        "Book": {
+          "keyFields": [
+            "title",
+            "author",
+            [
+              "name"
+            ]
+          ]
+        }
+      }
+    }
+
+#### ❌ Error
+
+    > 1 | query { books { author { name } } }
+        |               ^^^^^^^^^^^^^^^^^^ The key-field "title" must be selected for proper Apollo Client store denormalisation purposes.
+
+#### 🔧 Autofix output
+
+      1 | query { books { title
+      2 | author { name } } }"
+`;
+
+exports[`Invalid #5 1`] = `
+"#### ⌨️ Code
+
+      1 | query { books { title author { age } } }
+
+#### ⚙️ Options
+
+    {
+      "typePolicies": {
+        "KeyFieldType": {
+          "keyFields": [
+            "objectId"
+          ]
+        },
+        "Book": {
+          "keyFields": [
+            "title",
+            "author",
+            [
+              "name"
+            ]
+          ]
+        }
+      }
+    }
+
+#### ❌ Error
+
+    > 1 | query { books { title author { age } } }
+        |               ^^^^^^^^^^^^^^^^^^^^^^^ The key-field "author.name" must be selected for proper Apollo Client store denormalisation purposes."
+`;
+
+exports[`Invalid #6 1`] = `
+"#### ⌨️ Code
+
+      1 | query { books { author { age } } }
+
+#### ⚙️ Options
+
+    {
+      "typePolicies": {
+        "KeyFieldType": {
+          "keyFields": [
+            "objectId"
+          ]
+        },
+        "Book": {
+          "keyFields": [
+            "title",
+            "author",
+            [
+              "name"
+            ]
+          ]
+        }
+      }
+    }
+
+#### ❌ Error
+
+    > 1 | query { books { author { age } } }
+        |               ^^^^^^^^^^^^^^^^^ The key-fields "title and author.name" must be selected for proper Apollo Client store denormalisation purposes.
+
+#### 🔧 Autofix output
+
+      1 | query { books { title
+      2 | author { age } } }"
 `;

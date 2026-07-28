@@ -31,6 +31,28 @@ type TypePolicies = Record<
   { keyFields?: KeySpecifier | false | (() => unknown) }
 >;
 type KeySpecifier = (string | KeySpecifier)[];
+interface KeyFieldSpec {
+  name: string;
+  nested?: KeyFieldSpec[];
+}
+
+function parseKeySpecifier(specifier: KeySpecifier): KeyFieldSpec[] {
+  const specs: KeyFieldSpec[] = [];
+  for (const keyField of specifier) {
+    if (typeof keyField === "string") {
+      specs.push({ name: keyField });
+    } else if (Array.isArray(keyField)) {
+      const previous = specs[specs.length - 1];
+      if (!previous) {
+        throw new Error("Expected a field name to precede nested keyFields");
+      }
+      previous.nested = parseKeySpecifier(keyField);
+    } else {
+      throw new Error("Expected keyFields to be array of strings");
+    }
+  }
+  return specs;
+}
 
 function getBaseType(type: GraphQLOutputType): GraphQLNamedType {
   if (isNonNullType(type) || isListType(type)) {
@@ -43,42 +65,17 @@ function getBaseType(type: GraphQLOutputType): GraphQLNamedType {
 function keyFieldsForType(
   type: GraphQLObjectType | GraphQLInterfaceType,
   typePolicies: TypePolicies,
-) {
-  const keyFields: string[] = [];
+): KeyFieldSpec[] {
   const typePolicy = typePolicies[type.name];
   if (typePolicy && typePolicy.keyFields) {
     if (Array.isArray(typePolicy.keyFields)) {
-      typePolicy.keyFields.forEach((keyField) => {
-        if (typeof keyField === "string") {
-          keyFields.push(keyField);
-        } else {
-          throw new Error("Expected keyFields to be array of strings");
-        }
-      });
-    } else {
-      throw new Error("Expected keyFields to be array of strings");
+      return parseKeySpecifier(typePolicy.keyFields);
     }
+    throw new Error("Expected keyFields to be array of strings");
   } else if (type.getFields().id !== undefined) {
-    keyFields.push(DEFAULT_KEY_FIELD_NAME);
+    return [{ name: DEFAULT_KEY_FIELD_NAME }];
   }
-  return keyFields;
-}
-
-function getKeyFieldsObjectForCheck(keyFields: string[]) {
-  return keyFields.reduce((acc, id) => {
-    acc[id] = false;
-    return acc;
-  }, {} as Record<string, boolean>);
-}
-
-function getUnusedKeyFields(keyFieldsObjectForCheck: Record<string, boolean>) {
-  return Object.entries(keyFieldsObjectForCheck).reduce((acc, [key, value]) => {
-    if (value) {
-      return acc;
-    }
-    acc.push(key);
-    return acc;
-  }, [] as string[]);
+  return [];
 }
 
 function hasIdFieldInInterfaceSelectionSet(node: unknown, keyFields: string[]) {
@@ -190,54 +187,122 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
             const checkedFragmentSpreads = new Set();
 
             if (keyFields.length) {
-              const keyFieldsFound = getKeyFieldsObjectForCheck(keyFields);
-
-              for (const selection of node.selections) {
-                if (
-                  selection.kind === "Field" &&
-                  keyFieldsFound[selection.name.value] === false
-                ) {
-                  keyFieldsFound[selection.name.value] = true;
-                } else if (selection.kind === "InlineFragment") {
-                  for (const fragmentSelection of selection.selectionSet
-                    ?.selections || []) {
-                    if (
-                      fragmentSelection.kind === "Field" &&
-                      keyFieldsFound[fragmentSelection.name.value] === false
-                    ) {
-                      keyFieldsFound[fragmentSelection.name.value] = true;
-                    }
+              const gatherPresentFields = (
+                selections: readonly ASTNode[] | undefined,
+                visited: Set<string>,
+              ): Map<string, (readonly ASTNode[])[]> => {
+                const fields = new Map<string, (readonly ASTNode[])[]>();
+                const mergeInto = (
+                  source: Map<string, (readonly ASTNode[])[]>,
+                ) => {
+                  for (const [name, subs] of source) {
+                    fields.set(name, (fields.get(name) ?? []).concat(subs));
                   }
-                } else if (siblings && selection.kind === "FragmentSpread") {
-                  const foundSpread = siblings.getFragment(
-                    selection.name.value,
-                  );
+                };
 
-                  if (foundSpread[0]) {
-                    checkedFragmentSpreads.add(
-                      foundSpread[0].document.name.value,
+                for (const selection of selections || []) {
+                  if (selection.kind === "Field") {
+                    const name = selection.name.value;
+                    const existing = fields.get(name) ?? [];
+                    if (selection.selectionSet?.selections) {
+                      existing.push(selection.selectionSet.selections);
+                    }
+                    fields.set(name, existing);
+                  } else if (selection.kind === "InlineFragment") {
+                    mergeInto(
+                      gatherPresentFields(
+                        selection.selectionSet?.selections,
+                        visited,
+                      ),
                     );
+                  } else if (siblings && selection.kind === "FragmentSpread") {
+                    const fragmentName = selection.name.value;
+                    if (visited.has(fragmentName)) {
+                      continue;
+                    }
+                    visited.add(fragmentName);
 
-                    for (const fragmentSpreadSelection of foundSpread[0]
-                      .document.selectionSet?.selections || []) {
-                      if (
-                        fragmentSpreadSelection.kind === "Field" &&
-                        keyFieldsFound[fragmentSpreadSelection.name.value] ===
-                          false
-                      ) {
-                        keyFieldsFound[fragmentSpreadSelection.name.value] =
-                          true;
-                      }
+                    const foundSpread = siblings.getFragment(fragmentName);
+                    if (foundSpread[0]) {
+                      checkedFragmentSpreads.add(
+                        foundSpread[0].document.name.value,
+                      );
+                      mergeInto(
+                        gatherPresentFields(
+                          foundSpread[0].document.selectionSet
+                            ?.selections as unknown as readonly ASTNode[],
+                          visited,
+                        ),
+                      );
                     }
                   }
                 }
-              }
+                return fields;
+              };
 
-              const unusedKeyFields = getUnusedKeyFields(keyFieldsFound);
+              const getUnusedKeyFieldPaths = (
+                specs: KeyFieldSpec[],
+                presentFields: Map<string, (readonly ASTNode[])[]>,
+              ): string[] => {
+                const unused: string[] = [];
+                for (const spec of specs) {
+                  const occurrences = presentFields.get(spec.name);
+                  if (!occurrences) {
+                    unused.push(spec.name);
+                    continue;
+                  }
+                  if (spec.nested && spec.nested.length) {
+                    const nestedFields = new Map<
+                      string,
+                      (readonly ASTNode[])[]
+                    >();
+                    for (const subSelections of occurrences) {
+                      const gathered = gatherPresentFields(
+                        subSelections,
+                        new Set<string>(),
+                      );
+                      for (const [name, subs] of gathered) {
+                        nestedFields.set(
+                          name,
+                          (nestedFields.get(name) ?? []).concat(subs),
+                        );
+                      }
+                    }
+                    for (const nestedUnused of getUnusedKeyFieldPaths(
+                      spec.nested,
+                      nestedFields,
+                    )) {
+                      unused.push(`${spec.name}.${nestedUnused}`);
+                    }
+                  }
+                }
+                return unused;
+              };
+
+              const presentFields = gatherPresentFields(
+                node.selections as unknown as readonly ASTNode[],
+                new Set<string>(),
+              );
+              const unusedKeyFields = getUnusedKeyFieldPaths(
+                keyFields,
+                presentFields,
+              );
+              const keyFieldNames = keyFields.map((spec) => spec.name);
+
               if (
                 unusedKeyFields.length &&
-                !hasIdFieldInInterfaceSelectionSet(node, keyFields)
+                !hasIdFieldInInterfaceSelectionSet(node, keyFieldNames)
               ) {
+                const nestedKeyFieldNames = new Set(
+                  keyFields
+                    .filter((spec) => spec.nested && spec.nested.length)
+                    .map((spec) => spec.name),
+                );
+                const fixableKeyFields = unusedKeyFields.filter(
+                  (field) =>
+                    !field.includes(".") && !nestedKeyFieldNames.has(field),
+                );
+
                 context.report({
                   node: node,
                   message: `The key-field${
@@ -250,7 +315,7 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
                         unusedKeyFields[unusedKeyFields.length - 1]
                   }" must be selected for proper Apollo Client store denormalisation purposes.`,
                   fix(fixer) {
-                    if (!node.selections.length) {
+                    if (!fixableKeyFields.length || !node.selections.length) {
                       return null;
                     }
 
@@ -263,7 +328,7 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
                     return fixer.insertTextBefore(
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       firstSelection as any,
-                      `${unusedKeyFields.join(`\n`)}\n`,
+                      `${fixableKeyFields.join(`\n`)}\n`,
                     );
                   },
                 });
