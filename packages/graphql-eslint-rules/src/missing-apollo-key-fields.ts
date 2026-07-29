@@ -64,19 +64,28 @@ function getBaseType(type: GraphQLOutputType): GraphQLNamedType {
   return type;
 }
 
-function keyFieldsForType(
+export function keyFieldsForType(
   type: GraphQLObjectType | GraphQLInterfaceType,
   typePolicies: TypePolicies,
 ): KeyFieldSpec[] {
   const typePolicy = typePolicies[type.name];
-  if (typePolicy && typePolicy.keyFields) {
-    if (Array.isArray(typePolicy.keyFields)) {
-      return parseKeySpecifier(typePolicy.keyFields);
+  if (typePolicy && "keyFields" in typePolicy) {
+    const { keyFields } = typePolicy;
+    if (Array.isArray(keyFields)) {
+      return parseKeySpecifier(keyFields);
     }
-    throw new Error(
-      "Expected keyFields to be an array of strings and nested key specifiers",
-    );
-  } else if (type.getFields().id !== undefined) {
+    // `false` disables normalization and a function computes key fields
+    // dynamically; in both cases no specific fields are required.
+    if (keyFields === false || typeof keyFields === "function") {
+      return [];
+    }
+    if (keyFields !== undefined) {
+      throw new Error(
+        "Expected keyFields to be an array of strings and nested key specifiers",
+      );
+    }
+  }
+  if (type.getFields().id !== undefined) {
     return [{ name: DEFAULT_KEY_FIELD_NAME }];
   }
   return [];
