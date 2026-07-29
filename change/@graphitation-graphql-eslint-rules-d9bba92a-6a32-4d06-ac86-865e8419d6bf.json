@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "feat(graphql-eslint-rules): recursively resolve fragments and support nested keyFields",
-  "packageName": "@graphitation/graphql-eslint-rules",
-  "email": "mnovikov@microsoft.com_msteamsmdb",
-  "dependentChangeType": "patch"
-}

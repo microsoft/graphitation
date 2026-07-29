@@ -1,8 +1,16 @@
 # Change Log - @graphitation/graphql-eslint-rules
 
-<!-- This log was last generated on Mon, 20 Jul 2026 14:10:41 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 29 Jul 2026 10:25:06 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.14.0
+
+Wed, 29 Jul 2026 10:25:06 GMT
+
+### Minor changes
+
+- feat(graphql-eslint-rules): recursively resolve fragments and support nested keyFields (mnovikov@microsoft.com_msteamsmdb)
 
 ## 0.13.2
 
