@@ -1,7 +1,0 @@
-{
-  "type": "major",
-  "comment": "Remove enableDeferredMerge execution option",
-  "packageName": "@graphitation/supermassive",
-  "email": "dsamsonov@microsoft.com",
-  "dependentChangeType": "patch"
-}

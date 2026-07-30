@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Thu, 16 Jul 2026 09:12:46 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 30 Jul 2026 12:02:56 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 4.0.0
+
+Thu, 30 Jul 2026 12:02:56 GMT
+
+### Major changes
+
+- Remove enableDeferredMerge execution option (dsamsonov@microsoft.com)
 
 ## 3.18.0
 
