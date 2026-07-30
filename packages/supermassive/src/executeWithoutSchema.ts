@@ -16,7 +16,6 @@ import {
   PatchFields,
 } from "./collectFields";
 import { devAssert } from "./jsutils/devAssert";
-import { getObjectAtPath } from "./jsutils/getObjectAtPath";
 import { inspect } from "./jsutils/inspect";
 import { invariant } from "./jsutils/invariant";
 import { isIterableObject } from "./jsutils/isIterableObject";
@@ -125,8 +124,6 @@ export interface ExecutionContext {
   subsequentPayloads: Set<IncrementalDataRecord>;
   enablePerEventContext: boolean;
   enableEarlyExecution: boolean;
-  enableDeferredMerge: boolean;
-  incrementalPayloadBatchingTimeoutMs?: number;
 }
 
 /**
@@ -199,8 +196,6 @@ function buildExecutionContext(
     fieldExecutionHooks,
     enablePerEventContext,
     enableEarlyExecution,
-    enableDeferredMerge,
-    incrementalPayloadBatchingTimeoutMs,
   } = args;
 
   assertValidExecutionArguments(document, variableValues);
@@ -271,8 +266,6 @@ function buildExecutionContext(
     subsequentPayloads: new Set(),
     enablePerEventContext: enablePerEventContext ?? true,
     enableEarlyExecution: enableEarlyExecution ?? false,
-    enableDeferredMerge: enableDeferredMerge ?? false,
-    incrementalPayloadBatchingTimeoutMs,
   };
 }
 
@@ -400,7 +393,6 @@ function executeOperation(
 function buildResponse(
   exeContext: ExecutionContext,
   data: PromiseOrValue<ObjMap<unknown> | null>,
-  deferredMergeAwaited = false,
 ): PromiseOrValue<ExecutionResult> {
   if (isPromise(data)) {
     return data.then(
@@ -414,22 +406,6 @@ function buildResponse(
 
   const hooks = exeContext.fieldExecutionHooks;
   try {
-    if (exeContext.enableDeferredMerge && data !== null) {
-      const pendingDeferredFragments =
-        includeCompletedDeferredFragmentsInResult(exeContext, data);
-      const batchTimeout = exeContext.incrementalPayloadBatchingTimeoutMs;
-      if (
-        typeof batchTimeout === "number" &&
-        !deferredMergeAwaited &&
-        pendingDeferredFragments.length > 0
-      ) {
-        return raceIncrementalPayloadBatch(
-          pendingDeferredFragments,
-          batchTimeout,
-        ).then(() => buildResponse(exeContext, data, true));
-      }
-    }
-
     const initialResult =
       exeContext.errors.length === 0
         ? { data }
@@ -608,41 +584,6 @@ function startExecutingPatches(
       incrementalDataRecord,
     );
   }
-}
-
-function includeCompletedDeferredFragmentsInResult(
-  exeContext: ExecutionContext,
-  result: ObjMap<unknown>,
-): Array<Promise<void>> {
-  const pendingDeferredFragments: Array<Promise<void>> = [];
-
-  for (const incrementalDataRecord of exeContext.subsequentPayloads) {
-    if (!isDeferredFragmentRecord(incrementalDataRecord)) {
-      continue;
-    }
-
-    if (!incrementalDataRecord.isCompleted) {
-      pendingDeferredFragments.push(incrementalDataRecord.promise);
-      continue;
-    }
-
-    const target = getObjectAtPath(result, incrementalDataRecord.path);
-    if (!target) {
-      continue;
-    }
-
-    if (incrementalDataRecord.data != null) {
-      Object.assign(target, incrementalDataRecord.data);
-    }
-
-    if (incrementalDataRecord.errors.length > 0) {
-      exeContext.errors.push(...incrementalDataRecord.errors);
-    }
-
-    exeContext.subsequentPayloads.delete(incrementalDataRecord);
-  }
-
-  return pendingDeferredFragments;
 }
 
 /**
@@ -2921,46 +2862,6 @@ function getCompletedIncrementalResults(
   return incrementalResults;
 }
 
-async function getCompletedIncrementalResultsWithBatching(
-  exeContext: ExecutionContext,
-  batchTimeout: number,
-): Promise<Array<IncrementalResult>> {
-  const incremental = getCompletedIncrementalResults(exeContext);
-
-  if (incremental.length && exeContext.subsequentPayloads.size > 0) {
-    await raceIncrementalPayloadBatch(
-      Array.from(exeContext.subsequentPayloads).map((p) => p.promise),
-      batchTimeout,
-    );
-    incremental.push(...getCompletedIncrementalResults(exeContext));
-  }
-
-  return incremental;
-}
-
-function raceIncrementalPayloadBatch(
-  promises: Array<Promise<unknown>>,
-  batchTimeout: number,
-): Promise<void> {
-  if (!Number.isFinite(batchTimeout) || batchTimeout <= 0) {
-    return Promise.resolve();
-  }
-
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  const timeoutPromise = new Promise<void>((resolve) => {
-    timeoutId = setTimeout(resolve, batchTimeout);
-  });
-
-  return Promise.race([
-    Promise.all(promises).then(() => undefined),
-    timeoutPromise,
-  ]).finally(() => {
-    if (timeoutId !== undefined) {
-      clearTimeout(timeoutId);
-    }
-  });
-}
-
 function yieldSubsequentPayloads(
   exeContext: ExecutionContext,
 ): AsyncGenerator<SubsequentIncrementalExecutionResult, void, void> {
@@ -2982,14 +2883,7 @@ function yieldSubsequentPayloads(
       return { value: undefined, done: true };
     }
 
-    const batchTimeout = exeContext.incrementalPayloadBatchingTimeoutMs;
-    const incremental =
-      typeof batchTimeout === "number"
-        ? await getCompletedIncrementalResultsWithBatching(
-            exeContext,
-            batchTimeout,
-          )
-        : getCompletedIncrementalResults(exeContext);
+    const incremental = getCompletedIncrementalResults(exeContext);
     const hasNext = exeContext.subsequentPayloads.size > 0;
 
     if (!incremental.length && hasNext) {
@@ -3047,12 +2941,6 @@ function isStreamItemsRecord(
   incrementalDataRecord: IncrementalDataRecord,
 ): incrementalDataRecord is StreamItemsRecord {
   return incrementalDataRecord.type === "stream";
-}
-
-function isDeferredFragmentRecord(
-  incrementalDataRecord: IncrementalDataRecord,
-): incrementalDataRecord is DeferredFragmentRecord {
-  return incrementalDataRecord.type === "defer";
 }
 
 class DeferredFragmentRecord {
