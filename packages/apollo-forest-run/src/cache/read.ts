@@ -46,7 +46,7 @@ import {
   touchOperation,
 } from "./store";
 import { assert } from "../jsutils/assert";
-import { addTree, trackTreeNodes } from "../forest/addTree";
+import { addTree, trackTreeNodes, trackIndexedFields } from "../forest/addTree";
 import { DirectiveNode, FragmentDefinitionNode } from "graphql";
 import { OPERATION_HISTORY_SYMBOL } from "../descriptor/operation";
 import { appendHistoryToData } from "../values/history";
@@ -290,6 +290,7 @@ function growOutputTree(
 
   tree.prev = null;
   trackTreeNodes(forest, tree);
+  trackIndexedFields(forest, tree);
   return { outputTree: tree, dirtyNodes: new Map() };
 }
 

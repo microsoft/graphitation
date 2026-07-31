@@ -119,7 +119,7 @@ export function hydrateDraft(
   const chunks =
     typeof chunkProvider === "function"
       ? draft.ref !== false
-        ? chunkProvider(draft.ref)
+        ? chunkProvider(draft.ref, draft.type)
         : []
       : getChunks(chunkProvider);
 
@@ -184,7 +184,7 @@ export function hydrateDraft(
           // For nodes, we want to traverse all chunks
           // (any incomplete embedded objects will be re-visited as a part of this traversal)
           return typeof chunkProvider === "function"
-            ? chunkProvider(model.key)
+            ? chunkProvider(model.key, model.type)
             : getChunks(model);
         }
         // For embedded objects we don't return possible chunks, because they will be naturally

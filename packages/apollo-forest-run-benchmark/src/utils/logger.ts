@@ -80,9 +80,9 @@ export const log = {
       const configName = change.current.cacheConfig;
       this.changeHeader(change.benchId, configName);
       this.metricDiff(
-        change.baseline.mean,
-        change.current.mean,
-        "ns",
+        change.baseline.mean / 1e6,
+        change.current.mean / 1e6,
+        "ms",
         EMOJIS.execution,
       );
       this.metricDiff(
@@ -139,9 +139,9 @@ export const printSignificantChanges = (changeReport: SummaryChangeReport) => {
 const generateMarkdownChangeRow = (change: SignificantChange): string => {
   const configName = change.current.cacheConfig;
   const executionText = getChangeText(
-    change.baseline.mean,
-    change.current.mean,
-    "ns",
+    change.baseline.mean / 1e6,
+    change.current.mean / 1e6,
+    "ms",
   );
   const memoryText = getChangeText(
     change.baseline.memoryStats,

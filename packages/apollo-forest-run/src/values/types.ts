@@ -348,7 +348,10 @@ export type TypeMap = Map<TypeName, Array<ObjectChunk>>;
 export type DataMap = Map<SourceObject | SourceCompositeList, ParentInfo>;
 export type ParentInfo = GraphChunkReference;
 
-export type ChunkProvider = (ref: GraphValueReference) => Iterable<ObjectChunk>;
+export type ChunkProvider = (
+  ref: GraphValueReference,
+  typeName?: TypeName | false,
+) => Iterable<ObjectChunk>;
 export type ChunkMatcher = (
   nodeKey: GraphValueReference,
   operation: OperationDescriptor,
