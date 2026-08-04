@@ -525,9 +525,79 @@ test("recycles a list with an unresolved item reference without crashing", () =>
   const [threadChunk] = tree.nodes.get("Thread:1");
   const messagesChunk = threadChunk.fieldChunks.get("messages").value;
   delete messagesChunk.itemChunks[1];
+  expect(1 in messagesChunk.itemChunks).toBe(false);
 
   // Writing another operation recycles the untouched part of the previously
   // indexed tree, which walks every item reference of the recycled list again.
+  expect(() =>
+    cache.write({
+      query: headerQuery,
+      result: { header: { __typename: "Header", id: "1", label: "Second" } },
+    }),
+  ).not.toThrow();
+});
+
+test("recycles a fully resolved list without crashing", () => {
+  const messagesQuery = gql`
+    query MessageListControl {
+      header {
+        __typename
+        id
+        label
+      }
+      conversation {
+        __typename
+        id
+        thread {
+          __typename
+          id
+          messages {
+            __typename
+            id
+            text
+          }
+        }
+      }
+    }
+  `;
+  const headerQuery = gql`
+    query HeaderControl {
+      header {
+        __typename
+        id
+        label
+      }
+    }
+  `;
+  const cache = new ForestRun();
+
+  cache.write({
+    query: messagesQuery,
+    result: {
+      header: { __typename: "Header", id: "1", label: "First" },
+      conversation: {
+        __typename: "Conversation",
+        id: "1",
+        thread: {
+          __typename: "Thread",
+          id: "1",
+          messages: [
+            { __typename: "Message", id: "1", text: "First" },
+            { __typename: "Message", id: "2", text: "Second" },
+          ],
+        },
+      },
+    },
+  });
+
+  // Control: a normal write always produces a dense itemChunks array.
+  const [tree] = (cache as any).store.dataForest.trees.values();
+  const [threadChunk] = tree.nodes.get("Thread:1");
+  const messagesChunk = threadChunk.fieldChunks.get("messages").value;
+  expect(messagesChunk.itemChunks).toHaveLength(2);
+  expect(0 in messagesChunk.itemChunks).toBe(true);
+  expect(1 in messagesChunk.itemChunks).toBe(true);
+
   expect(() =>
     cache.write({
       query: headerQuery,
