@@ -464,144 +464,191 @@ test("properly replaces objects containing nested composite lists", () => {
   });
 });
 
-test("recycles a list with an unresolved item reference without crashing", () => {
-  const messagesQuery = gql`
-    query MessageList {
-      header {
+// Repro for `TypeError: Cannot read properties of undefined (reading 'value')`
+// thrown by reIndexList (src/forest/indexTree.ts). Everything below goes through
+// the public cache API only.
+//
+// The minimal trigger is a four way conjunction:
+//  1. The same node (Thread:1) is selected twice in one operation with two
+//     *different* selections. aggregateFieldChunks only dedupes chunks sharing
+//     both selection and operation, so here the node value stays an aggregate.
+//  2. The two selections carry lists of different lengths (14 vs 3) and the
+//     aggregate iterates the longer one.
+//  3. The longer list starts with nulls. diffCompositeListLayout pushes `null`
+//     into the layout for them and diffCompositeListValue skips those indices
+//     (`baseItemIndex` is not a number), so index 4 is the *first* index
+//     resolved against the aggregate.
+//  4. aggregateListItemValue -> resolveListItemChunk assigns `itemChunks[4]` on
+//     the 3 item chunk with no bounds check. The array grows past its data
+//     length and index 3 is left unresolved.
+// The write is the operation's first one, so `write` keeps the incoming tree
+// as is (replaceTree) instead of rebuilding it, and the hole survives.
+const seedQuery = gql`
+  query MessageListSeed {
+    thread {
+      __typename
+      id
+      messages {
         __typename
         id
-        label
+        text
       }
-      conversation {
+    }
+  }
+`;
+
+const messageListQuery = gql`
+  query MessageList {
+    conversation {
+      __typename
+      id
+      thread {
         __typename
         id
-        thread {
+        messages {
           __typename
           id
-          messages {
+          text
+        }
+      }
+    }
+    pinned {
+      __typename
+      id
+      thread {
+        __typename
+        id
+        title
+        messages {
+          __typename
+          id
+          text
+          author {
             __typename
             id
-            text
           }
         }
       }
     }
-  `;
-  const headerQuery = gql`
-    query Header {
-      header {
-        __typename
-        id
-        label
-      }
-    }
-  `;
+  }
+`;
+
+const messageIds = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
+const message = (id: string) => ({ __typename: "Message", id, text: id });
+const pinnedMessage = (id: string) => ({
+  ...message(id),
+  author: { __typename: "User", id: "1" },
+});
+const conversation = (messages: unknown[]) => ({
+  __typename: "Conversation",
+  id: "1",
+  thread: { __typename: "Thread", id: "1", messages },
+});
+const createPinned = () => ({
+  __typename: "Pinned",
+  id: "1",
+  thread: {
+    __typename: "Thread",
+    id: "1",
+    title: "Pinned",
+    messages: ["1", "2", "3"].map(pinnedMessage),
+  },
+});
+
+function findPinnedMessagesChunk(cache: ForestRun) {
+  const trees = [...(cache as any).store.dataForest.trees.values()];
+  const pinnedThreadChunk = trees
+    .flatMap((tree: any) => tree.nodes.get("Thread:1") ?? [])
+    .find((chunk: any) => chunk.data.title === "Pinned");
+  expect(pinnedThreadChunk).toBeDefined();
+  return pinnedThreadChunk.fieldChunks.get("messages").value;
+}
+
+test("recycles a list with an unresolved item reference without crashing", () => {
   const cache = new ForestRun();
 
+  // Seeds Thread:1 so the first write of `messageListQuery` has a base to diff.
   cache.write({
-    query: messagesQuery,
+    query: seedQuery,
     result: {
-      header: { __typename: "Header", id: "1", label: "First" },
-      conversation: {
-        __typename: "Conversation",
+      thread: {
+        __typename: "Thread",
         id: "1",
-        thread: {
-          __typename: "Thread",
-          id: "1",
-          messages: [
-            { __typename: "Message", id: "1", text: "First" },
-            { __typename: "Message", id: "2", text: "Second" },
-          ],
-        },
+        messages: messageIds.map(message),
       },
     },
   });
 
-  // List chunks are allocated with `new Array(source.length)` and filled index by
-  // index (see createCompositeListChunk / resolveListItemChunk), so a chunk that
-  // was not resolved for every index keeps unresolved (empty) slots in itemChunks.
-  // Reproduce that state on the indexed tree.
-  const [tree] = (cache as any).store.dataForest.trees.values();
-  const [threadChunk] = tree.nodes.get("Thread:1");
-  const messagesChunk = threadChunk.fieldChunks.get("messages").value;
-  delete messagesChunk.itemChunks[1];
-  expect(1 in messagesChunk.itemChunks).toBe(false);
+  const conversationMessages = [
+    null,
+    null,
+    null,
+    null,
+    ...messageIds.map(message),
+  ];
+  const pinned = createPinned();
 
-  // Writing another operation recycles the untouched part of the previously
-  // indexed tree, which walks every item reference of the recycled list again.
+  cache.write({
+    query: messageListQuery,
+    result: { conversation: conversation(conversationMessages), pinned },
+  });
+
+  // The 3 item chunk was grown out of bounds and index 3 was never resolved.
+  const messagesChunk = findPinnedMessagesChunk(cache);
+  expect(messagesChunk.data).toHaveLength(3);
+  expect(messagesChunk.itemChunks.length).toBeGreaterThan(3);
+  expect(3 in messagesChunk.itemChunks).toBe(false);
+
+  // Reusing the same `pinned` source object makes indexTree recycle that subtree
+  // instead of indexing it again: reIndexObject -> reIndexObject -> reIndexList,
+  // which walks every item reference of the sparse list.
   expect(() =>
     cache.write({
-      query: headerQuery,
-      result: { header: { __typename: "Header", id: "1", label: "Second" } },
+      query: messageListQuery,
+      result: {
+        conversation: conversation([...conversationMessages, message("11")]),
+        pinned,
+      },
     }),
   ).not.toThrow();
 });
 
 test("recycles a fully resolved list without crashing", () => {
-  const messagesQuery = gql`
-    query MessageListControl {
-      header {
-        __typename
-        id
-        label
-      }
-      conversation {
-        __typename
-        id
-        thread {
-          __typename
-          id
-          messages {
-            __typename
-            id
-            text
-          }
-        }
-      }
-    }
-  `;
-  const headerQuery = gql`
-    query HeaderControl {
-      header {
-        __typename
-        id
-        label
-      }
-    }
-  `;
   const cache = new ForestRun();
 
   cache.write({
-    query: messagesQuery,
+    query: seedQuery,
     result: {
-      header: { __typename: "Header", id: "1", label: "First" },
-      conversation: {
-        __typename: "Conversation",
+      thread: {
+        __typename: "Thread",
         id: "1",
-        thread: {
-          __typename: "Thread",
-          id: "1",
-          messages: [
-            { __typename: "Message", id: "1", text: "First" },
-            { __typename: "Message", id: "2", text: "Second" },
-          ],
-        },
+        messages: messageIds.map(message),
       },
     },
   });
 
-  // Control: a normal write always produces a dense itemChunks array.
-  const [tree] = (cache as any).store.dataForest.trees.values();
-  const [threadChunk] = tree.nodes.get("Thread:1");
-  const messagesChunk = threadChunk.fieldChunks.get("messages").value;
-  expect(messagesChunk.itemChunks).toHaveLength(2);
-  expect(0 in messagesChunk.itemChunks).toBe(true);
-  expect(1 in messagesChunk.itemChunks).toBe(true);
+  // Control: without the leading nulls every index is resolved in order, so the
+  // out of bounds growth densifies the chunk instead of leaving a hole.
+  const conversationMessages = messageIds.map(message);
+  const pinned = createPinned();
+
+  cache.write({
+    query: messageListQuery,
+    result: { conversation: conversation(conversationMessages), pinned },
+  });
+
+  const messagesChunk = findPinnedMessagesChunk(cache);
+  for (let index = 0; index < messagesChunk.itemChunks.length; index++) {
+    expect(index in messagesChunk.itemChunks).toBe(true);
+  }
 
   expect(() =>
     cache.write({
-      query: headerQuery,
-      result: { header: { __typename: "Header", id: "1", label: "Second" } },
+      query: messageListQuery,
+      result: {
+        conversation: conversation([...conversationMessages, message("11")]),
+        pinned,
+      },
     }),
   ).not.toThrow();
 });
