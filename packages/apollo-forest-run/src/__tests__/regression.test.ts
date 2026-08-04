@@ -464,6 +464,48 @@ test("properly replaces objects containing nested composite lists", () => {
   });
 });
 
+test("recycles a list with a missing item reference without crashing", () => {
+  const query = gql`
+    query Messages {
+      conversation {
+        __typename
+        id
+        messages {
+          __typename
+          id
+          text
+        }
+      }
+    }
+  `;
+  // Model a previously indexed list whose indexing pass omitted one item reference.
+  class ListWithMissingEntry<T> extends Array<T> {
+    *entries(): IterableIterator<[number, T]> {
+      for (let index = 0; index < this.length; index++) {
+        if (index !== 1) {
+          yield [index, this[index]];
+        }
+      }
+    }
+  }
+  const messages = new ListWithMissingEntry(
+    { __typename: "Message", id: "1", text: "First" },
+    { __typename: "Message", id: "2", text: "Second" },
+  );
+  const conversation = {
+    __typename: "Conversation",
+    id: "1",
+    messages,
+  };
+  const cache = new ForestRun();
+
+  cache.write({ query, result: { conversation } });
+
+  expect(() =>
+    cache.write({ query, result: { conversation } }),
+  ).not.toThrow();
+});
+
 test("properly reads plain objects from nested lists", () => {
   const query1 = gql`
     {
