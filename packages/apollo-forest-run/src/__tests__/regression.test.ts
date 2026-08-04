@@ -464,45 +464,75 @@ test("properly replaces objects containing nested composite lists", () => {
   });
 });
 
-test("recycles a list with a missing item reference without crashing", () => {
-  const query = gql`
-    query Messages {
+test("recycles a list with an unresolved item reference without crashing", () => {
+  const messagesQuery = gql`
+    query MessageList {
+      header {
+        __typename
+        id
+        label
+      }
       conversation {
         __typename
         id
-        messages {
+        thread {
           __typename
           id
-          text
+          messages {
+            __typename
+            id
+            text
+          }
         }
       }
     }
   `;
-  // Model a previously indexed list whose indexing pass omitted one item reference.
-  class ListWithMissingEntry<T> extends Array<T> {
-    *entries(): IterableIterator<[number, T]> {
-      for (let index = 0; index < this.length; index++) {
-        if (index !== 1) {
-          yield [index, this[index]];
-        }
+  const headerQuery = gql`
+    query Header {
+      header {
+        __typename
+        id
+        label
       }
     }
-  }
-  const messages = new ListWithMissingEntry(
-    { __typename: "Message", id: "1", text: "First" },
-    { __typename: "Message", id: "2", text: "Second" },
-  );
-  const conversation = {
-    __typename: "Conversation",
-    id: "1",
-    messages,
-  };
+  `;
   const cache = new ForestRun();
 
-  cache.write({ query, result: { conversation } });
+  cache.write({
+    query: messagesQuery,
+    result: {
+      header: { __typename: "Header", id: "1", label: "First" },
+      conversation: {
+        __typename: "Conversation",
+        id: "1",
+        thread: {
+          __typename: "Thread",
+          id: "1",
+          messages: [
+            { __typename: "Message", id: "1", text: "First" },
+            { __typename: "Message", id: "2", text: "Second" },
+          ],
+        },
+      },
+    },
+  });
 
+  // List chunks are allocated with `new Array(source.length)` and filled index by
+  // index (see createCompositeListChunk / resolveListItemChunk), so a chunk that
+  // was not resolved for every index keeps unresolved (empty) slots in itemChunks.
+  // Reproduce that state on the indexed tree.
+  const [tree] = (cache as any).store.dataForest.trees.values();
+  const [threadChunk] = tree.nodes.get("Thread:1");
+  const messagesChunk = threadChunk.fieldChunks.get("messages").value;
+  delete messagesChunk.itemChunks[1];
+
+  // Writing another operation recycles the untouched part of the previously
+  // indexed tree, which walks every item reference of the recycled list again.
   expect(() =>
-    cache.write({ query, result: { conversation } }),
+    cache.write({
+      query: headerQuery,
+      result: { header: { __typename: "Header", id: "1", label: "Second" } },
+    }),
   ).not.toThrow();
 });
 
