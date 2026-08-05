@@ -127,6 +127,10 @@ export type Store = {
   partitions: WeakMap<IndexedTree, ResolvedPartition>;
   // Pending scheduled auto-eviction
   pendingEviction: ScheduledEvictionHandle | null;
+  // Descriptors of written operations whose results are not cached (mutations without `@cache`).
+  // Allocated lazily on the first such write and only when `env.cleanupNonCacheableOperations`
+  // is enabled; released and reset by the outermost transaction when it completes.
+  pendingNonCacheableOperations: Set<OperationDescriptor> | null;
 };
 
 export type Transaction = {
@@ -136,11 +140,6 @@ export type Transaction = {
   watchesToNotify: Set<Cache.WatchOptions> | null;
   forceOptimistic: boolean | null;
   changelog: (WriteResult | ModifyResult)[];
-  // Descriptors of operations whose results are not cached (mutations without `@cache`).
-  // Only populated when `env.cleanupNonCacheableOperations` is enabled.
-  // Owned by the outermost transaction: nested transactions share the same set by reference
-  // and the outermost one releases everything at once when it completes.
-  nonCacheableOperations: Set<OperationDescriptor> | null;
 };
 
 export type WriteResult = {

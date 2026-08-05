@@ -31,7 +31,7 @@ import {
   evictOldData,
   getEffectiveReadLayers,
   maybeEvictOldData,
-  releaseNonCacheableOperations,
+  releasePendingNonCacheableOperations,
   removeOptimisticLayers,
   resetStore,
 } from "./cache/store";
@@ -544,10 +544,6 @@ export class ForestRun<
       watchesToNotify: null,
       forceOptimistic,
       changelog: [],
-      // Accumulate into the outermost transaction, which releases them all at once on completion
-      nonCacheableOperations:
-        parentTransaction?.nonCacheableOperations ??
-        (this.env.cleanupNonCacheableOperations ? new Set() : null),
     };
     this.transactionStack.push(activeTransaction);
     let error;
@@ -573,11 +569,7 @@ export class ForestRun<
     if (!parentTransaction) {
       // Descriptors still referenced by an optimistic layer are skipped here and released
       // by removeOptimisticLayers instead (including the removeOptimistic calls below)
-      releaseNonCacheableOperations(
-        this.env,
-        this.store,
-        activeTransaction.nonCacheableOperations,
-      );
+      releasePendingNonCacheableOperations(this.store);
     }
 
     if (error) {
