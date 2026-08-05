@@ -516,7 +516,9 @@ test("rejects a single write repeating a node with lists of different lengths", 
         },
       },
     }),
-  ).toThrow(/^Attempting to write malformed payload to the cache/);
+  ).toThrow(
+    /^Invariant violation: Attempting to write malformed payload to the cache/,
+  );
 });
 
 // The same defect without two paths and without two selections: one node id
@@ -572,7 +574,7 @@ test("rejects a payload repeating a node id within a single list", () => {
   }
 
   expect(error?.message).toMatch(
-    /^Attempting to write malformed payload to the cache/,
+    /^Invariant violation: Attempting to write malformed payload to the cache/,
   );
   // Both occurrences select identical fields, so the data paths (including the
   // list index) are what tells them apart. The message must point at those
@@ -581,6 +583,8 @@ test("rejects a payload repeating a node id within a single list", () => {
   expect(error?.message).toContain("5 items at data.feed.messages.2.files");
   expect(error?.message).toContain("Both occurrences select the same fields");
   expect(error?.message).not.toContain("select different fields");
+  // The message ships to telemetry, so it must not leak the entity id.
+  expect(error?.message).not.toContain("Message:1");
 });
 
 // Regression coverage for `TypeError: Cannot read properties of undefined (reading 'value')`
@@ -718,11 +722,13 @@ test("rejects a payload repeating a node with lists of different lengths", () =>
   }
 
   expect(error?.message).toMatch(
-    /^Attempting to write malformed payload to the cache/,
+    /^Invariant violation: Attempting to write malformed payload to the cache/,
   );
-  expect(error?.message).toContain("Thread:1");
+  expect(error?.message).toContain('a "Thread" node occurs multiple times');
   expect(error?.message).toContain("data.conversation.thread.messages");
   expect(error?.message).toContain("data.pinned.thread.messages");
+  // The message ships to telemetry, so it must not leak the entity id.
+  expect(error?.message).not.toContain("Thread:1");
 });
 
 test("rejects lists of different lengths even when no item reference is left unresolved", () => {
@@ -740,7 +746,9 @@ test("rejects lists of different lengths even when no item reference is left unr
         pinned: createPinned(),
       },
     }),
-  ).toThrow(/^Attempting to write malformed payload to the cache/);
+  ).toThrow(
+    /^Invariant violation: Attempting to write malformed payload to the cache/,
+  );
 });
 
 test("accepts a payload repeating a node with lists of equal length", () => {

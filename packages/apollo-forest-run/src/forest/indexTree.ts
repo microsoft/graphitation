@@ -166,7 +166,8 @@ function assertConsistentListFields(context: Context) {
           continue;
         }
         if (first.list.data.length !== list.data.length) {
-          throw new Error(
+          assert(
+            false,
             malformedPayloadError(context, first, {
               fieldEntry,
               field: ref.field,
@@ -180,13 +181,19 @@ function assertConsistentListFields(context: Context) {
   }
 }
 
+/**
+ * Renders the violation. Everything printed here must be safe to ship to telemetry, so it is
+ * limited to schema level information - type names, field names, response keys - plus positions
+ * and item counts. In particular it must never include the node key (it embeds the entity id) or
+ * argument values (they routinely carry ids, emails and free text). The data paths carry list
+ * indices, which is what tells two occurrences of the same node apart without naming it.
+ */
 function malformedPayloadError(
   context: Context,
   first: ListFieldOccurrence,
   second: ListFieldOccurrence,
 ): string {
   const { operation } = context;
-  const nodeKey = first.chunk.key || "(unknown)";
   const typeName = first.chunk.type || "(unknown type)";
   const fieldName = getFieldName(first.fieldEntry);
   const firstFields = selectedFields(first);
@@ -194,22 +201,22 @@ function malformedPayloadError(
   const sameSelection = firstFields === secondFields;
 
   return [
-    `Attempting to write malformed payload to the cache: node "${nodeKey}" occurs multiple times ` +
-      `in a single write with a different number of items in the "${fieldName}" list.`,
+    `Attempting to write malformed payload to the cache: a "${typeName}" node occurs multiple ` +
+      `times in a single write with a different number of items in the "${fieldName}" list.`,
     ``,
     `  Operation:  ${operation.debugName}`,
-    `  Node:       ${nodeKey} (${typeName})`,
+    `  Node type:  ${typeName}`,
     `  Field:      ${describeFieldEntry(first.fieldEntry)}`,
     ``,
     describeOccurrence(context, 1, first, sameSelection ? null : firstFields),
     describeOccurrence(context, 2, second, sameSelection ? null : secondFields),
     ``,
     sameSelection
-      ? `Both occurrences select the same fields of ${nodeKey} (${firstFields}), so this is most ` +
-        `likely the same entity written twice with inconsistent data - check whether the payload ` +
-        `was built by appending to a list without de-duplicating against the entries already added.`
-      : `The two occurrences select different fields of ${nodeKey}, which is legal on its own: only ` +
-        `the disagreement about "${fieldName}" is a problem.`,
+      ? `Both occurrences select the same fields (${firstFields}), so this is most likely the same ` +
+        `entity written twice with inconsistent data - check whether the payload was built by ` +
+        `appending to a list without de-duplicating against the entries already added.`
+      : `The two occurrences select different fields, which is legal on its own: only the ` +
+        `disagreement about "${fieldName}" is a problem.`,
     ``,
     `All occurrences of the same node in one payload are aggregated into a single cache value, so ` +
       `they must agree on the value of every field. Lists of different lengths cannot be aggregated: ` +
@@ -217,7 +224,7 @@ function malformedPayloadError(
       `cache state and surfaces as "Cannot read properties of undefined (reading 'value')" on a ` +
       `later write.`,
     ``,
-    `Fix the payload so every occurrence of "${nodeKey}" carries the same "${fieldName}" value, or ` +
+    `Fix the payload so every occurrence of the node carries the same "${fieldName}" value, or ` +
       `remove the duplicate occurrence.`,
   ].join("\n");
 }
@@ -226,8 +233,9 @@ function describeFieldEntry(fieldEntry: NormalizedFieldEntry): string {
   if (typeof fieldEntry === "string") {
     return fieldEntry;
   }
-  const args = [...(fieldEntry.args?.entries() ?? [])]
-    .map(([name, value]) => `${name}: ${JSON.stringify(value)}`)
+  // Argument *names* are schema, argument values are not: elide the values.
+  const args = [...(fieldEntry.args?.keys() ?? [])]
+    .map((name) => `${name}: ...`)
     .join(", ");
   return args ? `${fieldEntry.name}(${args})` : fieldEntry.name;
 }
