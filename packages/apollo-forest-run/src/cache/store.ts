@@ -184,6 +184,101 @@ function canEvict(env: CacheEnv, store: Store, resultTree: DataTree) {
   return true;
 }
 
+/**
+ * Operation descriptors are memoized in `store.operations` for the whole lifetime of the cache.
+ * They are normally released by `removeDataTree` during LRU eviction — but eviction only ever
+ * sees operations that produced a data tree.
+ *
+ * Non-cacheable operations (mutations without the `@cache` directive) never produce one:
+ * `shouldCache` discards their result right after indexing it. So without an explicit release
+ * their descriptors — and the `variablesKey` strings used as their cache keys — accumulate
+ * forever, one per distinct set of variables.
+ *
+ * This returns true when nothing references the descriptor anymore, so that dropping it from
+ * the memo cannot cause two live descriptors to exist for the same operation.
+ */
+export function canReleaseOperationDescriptor(
+  store: Store,
+  operation: OperationDescriptor,
+): boolean {
+  if (operation.cache) {
+    // Results are cached, so the descriptor is owned by its data tree and released by eviction
+    return false;
+  }
+  if (
+    store.watches.has(operation) ||
+    store.optimisticReadResults.has(operation) ||
+    store.partialReadResults.has(operation)
+  ) {
+    return false;
+  }
+  if (isReferencedByForest(store.dataForest, operation)) {
+    return false;
+  }
+  for (const layer of store.optimisticLayers) {
+    if (isReferencedByForest(layer, operation)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function isReferencedByForest(
+  forest: DataForest | OptimisticLayer,
+  operation: OperationDescriptor,
+): boolean {
+  return (
+    forest.trees.has(operation.id) ||
+    forest.readResults.has(operation) ||
+    forest.operationsWithErrors.has(operation)
+  );
+}
+
+/**
+ * Removes an operation descriptor from the memo in `store.operations`.
+ *
+ * Note: this only drops the memoized entry. Any object still holding a reference to the
+ * descriptor keeps working — callers must ensure nothing does (see canReleaseOperationDescriptor),
+ * otherwise a subsequent lookup would mint a second descriptor for the same operation.
+ */
+export function releaseOperationDescriptor(
+  store: Store,
+  operation: OperationDescriptor,
+): boolean {
+  const variants = store.operations.get(operation.document);
+  const cacheKey = operationCacheKey(operation);
+  if (variants?.get(cacheKey) !== operation) {
+    // Already released, or superseded by a different descriptor
+    return false;
+  }
+  variants.delete(cacheKey);
+  if (!variants.size) {
+    store.operations.delete(operation.document);
+  }
+  store.atime.delete(operation.id);
+  return true;
+}
+
+export function releaseNonCacheableOperations(
+  env: CacheEnv,
+  store: Store,
+  operations: Iterable<OperationDescriptor> | null | undefined,
+): number {
+  if (!env.cleanupNonCacheableOperations || !operations) {
+    return 0;
+  }
+  let released = 0;
+  for (const operation of operations) {
+    if (
+      canReleaseOperationDescriptor(store, operation) &&
+      releaseOperationDescriptor(store, operation)
+    ) {
+      released++;
+    }
+  }
+  return released;
+}
+
 export function createOptimisticLayer(
   layerTag: string,
   replay: <T>(cache: T) => any,
@@ -269,6 +364,20 @@ export function removeOptimisticLayers<T>(
     if (!deletedLayers.includes(layer)) {
       layer.replay(cache);
     }
+  }
+
+  // Optimistic layers do store results of non-cacheable operations (e.g. optimistic mutation
+  // responses), which kept their descriptors alive. Now that the layers are gone, retry.
+  if (env.cleanupNonCacheableOperations) {
+    const candidates: OperationDescriptor[] = [];
+    for (const layer of deletedLayers) {
+      for (const tree of layer.trees.values()) {
+        if (!tree.operation.cache) {
+          candidates.push(tree.operation);
+        }
+      }
+    }
+    releaseNonCacheableOperations(env, store, candidates);
   }
   return affectedOperationSet;
 }

@@ -31,6 +31,7 @@ import {
   evictOldData,
   getEffectiveReadLayers,
   maybeEvictOldData,
+  releaseNonCacheableOperations,
   removeOptimisticLayers,
   resetStore,
 } from "./cache/store";
@@ -465,9 +466,17 @@ export class ForestRun<
   }
 
   public getStats() {
+    let operationCount = 0;
+    for (const variants of this.store.operations.values()) {
+      operationCount += variants.size;
+    }
     return {
       docCount: this.store.operations.size,
+      // Total number of memoized operation descriptors (one per document + variables combination)
+      operationCount,
       treeCount: this.store.dataForest.trees.size,
+      // Number of operations tracked for LRU eviction
+      atimeCount: this.store.atime.size,
     };
   }
 
@@ -535,6 +544,10 @@ export class ForestRun<
       watchesToNotify: null,
       forceOptimistic,
       changelog: [],
+      // Accumulate into the outermost transaction, which releases them all at once on completion
+      nonCacheableOperations:
+        parentTransaction?.nonCacheableOperations ??
+        (this.env.cleanupNonCacheableOperations ? new Set() : null),
     };
     this.transactionStack.push(activeTransaction);
     let error;
@@ -556,6 +569,16 @@ export class ForestRun<
     }
     assert(activeTransaction === peek(this.transactionStack));
     this.transactionStack.pop();
+
+    if (!parentTransaction) {
+      // Descriptors still referenced by an optimistic layer are skipped here and released
+      // by removeOptimisticLayers instead (including the removeOptimistic calls below)
+      releaseNonCacheableOperations(
+        this.env,
+        this.store,
+        activeTransaction.nonCacheableOperations,
+      );
+    }
 
     if (error) {
       // Cleanup

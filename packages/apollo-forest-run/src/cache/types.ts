@@ -136,6 +136,11 @@ export type Transaction = {
   watchesToNotify: Set<Cache.WatchOptions> | null;
   forceOptimistic: boolean | null;
   changelog: (WriteResult | ModifyResult)[];
+  // Descriptors of operations whose results are not cached (mutations without `@cache`).
+  // Only populated when `env.cleanupNonCacheableOperations` is enabled.
+  // Owned by the outermost transaction: nested transactions share the same set by reference
+  // and the outermost one releases everything at once when it completes.
+  nonCacheableOperations: Set<OperationDescriptor> | null;
 };
 
 export type WriteResult = {
@@ -191,6 +196,7 @@ export type ForestRunAdditionalConfig<
   logUpdateStats?: boolean;
   logStaleOperations?: boolean;
   optimizeFragmentReads?: boolean;
+  cleanupNonCacheableOperations?: boolean;
 
   historyConfig?: HistoryConfig<TPartitions>;
 };
@@ -265,6 +271,15 @@ export type CacheEnv<TPartitions extends HistoryPartitions = any> = {
   logUpdateStats: boolean;
   logStaleOperations: boolean;
   optimizeFragmentReads: boolean;
+  /**
+   * When enabled, operation descriptors of non-cacheable operations (i.e. mutations without
+   * the `@cache` directive) are released as soon as nothing references them anymore.
+   *
+   * Such operations never produce a data tree, so they are invisible to LRU eviction
+   * (which only iterates tree-backed operations) and would otherwise accumulate in
+   * `store.operations` for the lifetime of the cache.
+   */
+  cleanupNonCacheableOperations: boolean;
   historyConfig?: HistoryConfig<TPartitions>;
 };
 
