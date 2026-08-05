@@ -58,6 +58,10 @@ type Context = {
   incompleteChunks: Set<ObjectChunk>;
   recycleTree: IndexedTree | null;
   findParent: ParentLocator;
+  // Keys of nodes that were indexed more than once in this payload. Only those can hold
+  //   inconsistent field values, and they are rare, so collecting them while indexing keeps
+  //   the consistency check off the hot path for the overwhelmingly common single-chunk case.
+  repeatedNodes: Set<string> | null;
 };
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -97,6 +101,7 @@ export function indexTree(
     rootNodeKey,
     recycleTree: previousTreeState,
     findParent: createParentLocator(dataMap),
+    repeatedNodes: null,
   };
   const rootRef: RootChunkReference = {
     value: null,
@@ -144,12 +149,17 @@ type ListFieldOccurrence = {
  *
  * There is no correct way to merge lists of different lengths for the same node, so reject the
  * payload here, where the offending data is still available to point at.
+ *
+ * Only nodes that were actually indexed more than once are examined (collected during indexing),
+ * so payloads without repeated nodes - the overwhelmingly common case - pay nothing here.
  */
 function assertConsistentListFields(context: Context) {
-  for (const chunks of context.nodes.values()) {
-    if (chunks.length < 2) {
-      continue;
-    }
+  if (!context.repeatedNodes) {
+    return;
+  }
+  for (const key of context.repeatedNodes) {
+    const chunks = context.nodes.get(key);
+    assert(chunks);
     const seen: ListFieldOccurrence[] = [];
     for (const chunk of chunks) {
       for (const ref of chunk.fieldChunks.values()) {
@@ -178,6 +188,27 @@ function assertConsistentListFields(context: Context) {
         }
       }
     }
+  }
+}
+
+/**
+ * Adds a chunk to the node index, noting the key the first time it gets a second chunk: those
+ * are the only nodes `assertConsistentListFields` has to look at.
+ */
+function accumulateNodeChunk(
+  context: Context,
+  key: string,
+  chunk: ObjectChunk,
+) {
+  const { nodes } = context;
+  const group = nodes.get(key);
+  if (group === undefined) {
+    nodes.set(key, [chunk as NodeChunk]);
+    return;
+  }
+  group.push(chunk as NodeChunk);
+  if (group.length === 2) {
+    (context.repeatedNodes ??= new Set()).add(key);
   }
 }
 
@@ -301,6 +332,7 @@ export function indexObject(
     rootNodeKey,
     recycleTree: null,
     findParent: createParentLocator(dataMap),
+    repeatedNodes: null,
   };
   const result = {
     value: null as unknown,
@@ -384,7 +416,7 @@ function indexSourceObject(
     context.incompleteChunks.add(chunk);
   }
   if (key !== false) {
-    accumulate(nodes, key, chunk);
+    accumulateNodeChunk(context, key, chunk);
   }
   if (typeName !== undefined) {
     accumulate(typeMap, typeName, chunk as NodeChunk);
@@ -517,7 +549,7 @@ function reIndexObject(
     accumulate(typeMap, recyclable.type, recyclable);
   }
   if (recyclable.key !== false) {
-    accumulate(nodes, recyclable.key, recyclable);
+    accumulateNodeChunk(context, recyclable.key, recyclable);
   }
 
   for (const fieldRef of recyclable.fieldChunks.values()) {
