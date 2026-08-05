@@ -464,11 +464,66 @@ test("properly replaces objects containing nested composite lists", () => {
   });
 });
 
-// Repro for `TypeError: Cannot read properties of undefined (reading 'value')`
+// The smallest form of the defect: one write, one query, one node reached through
+// two paths with a different number of items in the same list field. No seed
+// write, no nulls, no second pass and no field policies are needed to produce it.
+const twoPathsQuery = gql`
+  query TwoPaths {
+    left {
+      __typename
+      id
+      thread {
+        __typename
+        id
+        messages {
+          __typename
+          id
+        }
+      }
+    }
+    right {
+      __typename
+      id
+      thread {
+        __typename
+        id
+        messages {
+          __typename
+          id
+        }
+      }
+    }
+  }
+`;
+
+test("rejects a single write repeating a node with lists of different lengths", () => {
+  const cache = new ForestRun();
+  const thread = (ids: string[]) => ({
+    __typename: "Thread",
+    id: "1",
+    messages: ids.map((id) => ({ __typename: "Message", id })),
+  });
+
+  expect(() =>
+    cache.write({
+      query: twoPathsQuery,
+      result: {
+        left: { __typename: "Left", id: "1", thread: thread(["1", "2"]) },
+        right: {
+          __typename: "Right",
+          id: "1",
+          thread: thread(["1", "2", "3", "4", "5", "6"]),
+        },
+      },
+    }),
+  ).toThrow(/^Attempting to write malformed payload to the cache/);
+});
+
+// Regression coverage for `TypeError: Cannot read properties of undefined (reading 'value')`
 // thrown by reIndexList (src/forest/indexTree.ts). Everything below goes through
 // the public cache API only.
 //
-// The minimal trigger is a four way conjunction:
+// The crash needed a four way conjunction:
 //  1. The same node (Thread:1) is selected twice in one operation with two
 //     *different* selections. aggregateFieldChunks only dedupes chunks sharing
 //     both selection and operation, so here the node value stays an aggregate.
@@ -480,9 +535,12 @@ test("properly replaces objects containing nested composite lists", () => {
 //     resolved against the aggregate.
 //  4. aggregateListItemValue -> resolveListItemChunk assigns `itemChunks[4]` on
 //     the 3 item chunk with no bounds check. The array grows past its data
-//     length and index 3 is left unresolved.
-// The write is the operation's first one, so `write` keeps the incoming tree
-// as is (replaceTree) instead of rebuilding it, and the hole survives.
+//     length and index 3 is left unresolved. A later write recycles that chunk,
+//     reIndexList walks the hole and dereferences `undefined`.
+//
+// Step 1+2 is the actual defect in the payload: two occurrences of one node
+// cannot be aggregated when they disagree on the length of a list field. That is
+// now rejected up front by indexTree, so steps 3 and 4 are unreachable.
 const seedQuery = gql`
   query MessageListSeed {
     thread {
@@ -544,21 +602,18 @@ const conversation = (messages: unknown[]) => ({
   id: "1",
   thread: { __typename: "Thread", id: "1", messages },
 });
-const createPinned = () => ({
+const createPinned = (ids: string[] = ["1", "2", "3"]) => ({
   __typename: "Pinned",
   id: "1",
   thread: {
     __typename: "Thread",
     id: "1",
     title: "Pinned",
-    messages: ["1", "2", "3"].map(pinnedMessage),
+    messages: ids.map(pinnedMessage),
   },
 });
 
-test("recycles a list with an unresolved item reference without crashing", () => {
-  const cache = new ForestRun();
-
-  // Seeds Thread:1 so the first write of `messageListQuery` has a base to diff.
+const seedThread = (cache: ForestRun) =>
   cache.write({
     query: seedQuery,
     result: {
@@ -570,6 +625,13 @@ test("recycles a list with an unresolved item reference without crashing", () =>
     },
   });
 
+test("rejects a payload repeating a node with lists of different lengths", () => {
+  const cache = new ForestRun();
+  seedThread(cache);
+
+  // Thread:1 appears twice: 14 messages under `conversation`, 3 under `pinned`.
+  // Without the leading nulls the same payload grows the 3 item chunk densely,
+  // with them it leaves a hole at index 3 that crashes the *next* write.
   const conversationMessages = [
     null,
     null,
@@ -577,58 +639,74 @@ test("recycles a list with an unresolved item reference without crashing", () =>
     null,
     ...messageIds.map(message),
   ];
-  const pinned = createPinned();
 
-  // This write leaves the pinned thread's 3 item list chunk grown past its data
-  // length with index 3 never resolved.
+  let error: Error | undefined;
+  try {
+    cache.write({
+      query: messageListQuery,
+      result: {
+        conversation: conversation(conversationMessages),
+        pinned: createPinned(),
+      },
+    });
+  } catch (e) {
+    error = e as Error;
+  }
+
+  expect(error?.message).toMatch(
+    /^Attempting to write malformed payload to the cache/,
+  );
+  expect(error?.message).toContain("Thread:1");
+  expect(error?.message).toContain("data.conversation.thread.messages");
+  expect(error?.message).toContain("data.pinned.thread.messages");
+});
+
+test("rejects lists of different lengths even when no item reference is left unresolved", () => {
+  const cache = new ForestRun();
+  seedThread(cache);
+
+  // Same defect, benign symptom: every index is resolved in order, so the out of
+  // bounds growth densifies the chunk instead of leaving a hole. The payload is
+  // malformed either way and the cache state it produces is still wrong.
+  expect(() =>
+    cache.write({
+      query: messageListQuery,
+      result: {
+        conversation: conversation(messageIds.map(message)),
+        pinned: createPinned(),
+      },
+    }),
+  ).toThrow(/^Attempting to write malformed payload to the cache/);
+});
+
+test("accepts a payload repeating a node with lists of equal length", () => {
+  const cache = new ForestRun();
+  seedThread(cache);
+
+  // Thread:1 still appears twice under two different selections (`pinned` also
+  // selects `title` and `author`), which is legal as long as the shared list
+  // field resolves to the same items. Guards the check against over rejecting.
+  const pinned = createPinned(messageIds);
+
   cache.write({
     query: messageListQuery,
-    result: { conversation: conversation(conversationMessages), pinned },
+    result: {
+      conversation: conversation(messageIds.map(message)),
+      pinned,
+    },
   });
 
   // Reusing the same `pinned` source object makes indexTree recycle that subtree
   // instead of indexing it again: reIndexObject -> reIndexObject -> reIndexList,
-  // which walks every item reference of the sparse list.
+  // which walks every item reference of the list. Both lists keep the same
+  // length, only the message text changes.
   expect(() =>
     cache.write({
       query: messageListQuery,
       result: {
-        conversation: conversation([...conversationMessages, message("11")]),
-        pinned,
-      },
-    }),
-  ).not.toThrow();
-});
-
-test("recycles a fully resolved list without crashing", () => {
-  const cache = new ForestRun();
-
-  cache.write({
-    query: seedQuery,
-    result: {
-      thread: {
-        __typename: "Thread",
-        id: "1",
-        messages: messageIds.map(message),
-      },
-    },
-  });
-
-  // Control: without the leading nulls every index is resolved in order, so the
-  // out of bounds growth densifies the chunk instead of leaving a hole.
-  const conversationMessages = messageIds.map(message);
-  const pinned = createPinned();
-
-  cache.write({
-    query: messageListQuery,
-    result: { conversation: conversation(conversationMessages), pinned },
-  });
-
-  expect(() =>
-    cache.write({
-      query: messageListQuery,
-      result: {
-        conversation: conversation([...conversationMessages, message("11")]),
+        conversation: conversation(
+          messageIds.map((id) => ({ ...message(id), text: `${id} edited` })),
+        ),
         pinned,
       },
     }),

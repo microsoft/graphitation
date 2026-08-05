@@ -17,12 +17,19 @@ import type {
   ParentLocator,
 } from "../values/types";
 import type {
+  FieldInfo,
+  NormalizedFieldEntry,
   OperationDescriptor,
   PossibleSelections,
 } from "../descriptor/types";
 import type { ForestEnv, IndexedTree } from "./types";
 import { ValueKind } from "../values/types";
-import { resolveSelection } from "../descriptor/resolvedSelection";
+import {
+  fieldEntriesAreEqual,
+  getFieldName,
+  resolveNormalizedField,
+  resolveSelection,
+} from "../descriptor/resolvedSelection";
 import { accumulate } from "../jsutils/map";
 import { assert } from "../jsutils/assert";
 import { CircularBuffer } from "../jsutils/circularBuffer";
@@ -32,6 +39,7 @@ import {
   createCompositeUndefinedChunk,
   createObjectChunk,
   createParentLocator,
+  getDataPathForDebugging,
   isRootRef,
   isSourceCompositeValue,
   isSourceObject,
@@ -101,6 +109,7 @@ export function indexTree(
     operation.possibleSelections,
     rootRef,
   );
+  assertConsistentListFields(context);
   return {
     operation,
     result,
@@ -113,6 +122,135 @@ export function indexTree(
     history:
       previousTreeState?.history ?? new CircularBuffer(operation.historySize),
   };
+}
+
+type ListFieldOccurrence = {
+  fieldEntry: NormalizedFieldEntry;
+  field: FieldInfo;
+  chunk: NodeChunk;
+  list: CompositeListChunk;
+};
+
+/**
+ * A single write may contain the same node in several places (reached through different paths or
+ * different selections). Indexing treats all those occurrences as one entity and aggregates their
+ * field values, which is only sound when every occurrence agrees on the value of a given field.
+ *
+ * Lists are where a disagreement becomes destructive: resolving an item of an aggregated list
+ * addresses chunks by index, so an index that is valid for the longest occurrence is applied to the
+ * shorter ones too. The shorter chunk then grows its internal item index past its own data, leaving
+ * holes behind. Those holes survive in cache state and blow up later, on an unrelated write that
+ * recycles the affected chunk ("Cannot read properties of undefined (reading 'value')").
+ *
+ * There is no correct way to merge lists of different lengths for the same node, so reject the
+ * payload here, where the offending data is still available to point at.
+ */
+function assertConsistentListFields(context: Context) {
+  for (const chunks of context.nodes.values()) {
+    if (chunks.length < 2) {
+      continue;
+    }
+    const seen: ListFieldOccurrence[] = [];
+    for (const chunk of chunks) {
+      for (const ref of chunk.fieldChunks.values()) {
+        if (ref.value.kind !== ValueKind.CompositeList) {
+          continue;
+        }
+        const list = ref.value;
+        const fieldEntry = resolveNormalizedField(chunk.selection, ref.field);
+        const first = seen.find((occurrence) =>
+          fieldEntriesAreEqual(occurrence.fieldEntry, fieldEntry),
+        );
+        if (!first) {
+          seen.push({ fieldEntry, field: ref.field, chunk, list });
+          continue;
+        }
+        if (first.list.data.length !== list.data.length) {
+          throw new Error(
+            malformedPayloadError(context, first, {
+              fieldEntry,
+              field: ref.field,
+              chunk,
+              list,
+            }),
+          );
+        }
+      }
+    }
+  }
+}
+
+function malformedPayloadError(
+  context: Context,
+  first: ListFieldOccurrence,
+  second: ListFieldOccurrence,
+): string {
+  const { operation } = context;
+  const nodeKey = first.chunk.key || "(unknown)";
+  const typeName = first.chunk.type || "(unknown type)";
+  const fieldName = getFieldName(first.fieldEntry);
+
+  return [
+    `Attempting to write malformed payload to the cache: node "${nodeKey}" occurs multiple times ` +
+      `in a single write with a different number of items in the "${fieldName}" list.`,
+    ``,
+    `  Operation:  ${operation.debugName}`,
+    `  Node:       ${nodeKey} (${typeName})`,
+    `  Field:      ${describeFieldEntry(first.fieldEntry)}`,
+    ``,
+    describeOccurrence(context, 1, first),
+    describeOccurrence(context, 2, second),
+    ``,
+    `All occurrences of the same node in one payload are aggregated into a single cache value, so ` +
+      `they must agree on the value of every field. Lists of different lengths cannot be aggregated: ` +
+      `items of the longer list are looked up by index in the shorter one, which corrupts internal ` +
+      `cache state and surfaces as "Cannot read properties of undefined (reading 'value')" on a ` +
+      `later write.`,
+    ``,
+    `Fix the payload so every occurrence of "${nodeKey}" carries the same "${fieldName}" value, or ` +
+      `stop selecting "${fieldName}" in all but one of the paths above.`,
+  ].join("\n");
+}
+
+function describeFieldEntry(fieldEntry: NormalizedFieldEntry): string {
+  if (typeof fieldEntry === "string") {
+    return fieldEntry;
+  }
+  const args = [...(fieldEntry.args?.entries() ?? [])]
+    .map(([name, value]) => `${name}: ${JSON.stringify(value)}`)
+    .join(", ");
+  return args ? `${fieldEntry.name}(${args})` : fieldEntry.name;
+}
+
+function describeOccurrence(
+  context: Context,
+  index: number,
+  occurrence: ListFieldOccurrence,
+): string {
+  const { list, chunk, field } = occurrence;
+  const itemCount = list.data.length;
+  return [
+    `  Occurrence ${index}: ${itemCount} ${
+      itemCount === 1 ? "item" : "items"
+    } at ${describePath(context, occurrence)}`,
+    `                 selected fields of ${chunk.key || "the node"}: ${
+      Object.keys(chunk.data).join(", ") || "(none)"
+    }`,
+    `                 field alias: ${field.dataKey}`,
+  ].join("\n");
+}
+
+function describePath(
+  context: Context,
+  occurrence: ListFieldOccurrence,
+): string {
+  // The tree is fully indexed at this point, but stay defensive: this runs while reporting an error.
+  try {
+    const path = getDataPathForDebugging(context, occurrence.list);
+    return path.length ? `data.${path.join(".")}` : "data";
+  } catch (e) {
+    return `<unknown path>.${occurrence.field.dataKey}`;
+  }
 }
 
 // Matches ObjectChunkReference structure with additional fields
