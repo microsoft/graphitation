@@ -67,6 +67,12 @@ export function write(
     rootNodeKey,
   );
   touchOperation(env, store, operationDescriptor);
+  if (!operationDescriptor.cache) {
+    // Results of this operation are never stored, so nothing will ever evict its descriptor.
+    // Remember it, so that the outermost transaction can release it on completion.
+    // (the set only exists when `env.cleanupNonCacheableOperations` is enabled)
+    activeTransaction.nonCacheableOperations?.add(operationDescriptor);
+  }
   const operationResult: OperationResult = { data: writeData };
 
   if (

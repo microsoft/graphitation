@@ -31,6 +31,7 @@ import {
   evictOldData,
   getEffectiveReadLayers,
   maybeEvictOldData,
+  releaseNonCacheableOperations,
   removeOptimisticLayers,
   resetStore,
 } from "./cache/store";
@@ -465,9 +466,17 @@ export class ForestRun<
   }
 
   public getStats() {
+    let operationCount = 0;
+    for (const variants of this.store.operations.values()) {
+      operationCount += variants.size;
+    }
     return {
       docCount: this.store.operations.size,
+      // Total number of memoized operation descriptors (one per document + variables combination)
+      operationCount,
       treeCount: this.store.dataForest.trees.size,
+      // Number of operations tracked for LRU eviction
+      atimeCount: this.store.atime.size,
     };
   }
 
@@ -535,6 +544,10 @@ export class ForestRun<
       watchesToNotify: null,
       forceOptimistic,
       changelog: [],
+      // Accumulate into the outermost transaction, which releases them all at once on completion
+      nonCacheableOperations:
+        parentTransaction?.nonCacheableOperations ??
+        (this.env.cleanupNonCacheableOperations ? new Set() : null),
     };
     this.transactionStack.push(activeTransaction);
     let error;
@@ -565,6 +578,13 @@ export class ForestRun<
       if (typeof optimistic === "string") {
         this.removeOptimistic(optimistic);
       }
+      if (!parentTransaction) {
+        releaseNonCacheableOperations(
+          this.env,
+          this.store,
+          activeTransaction.nonCacheableOperations,
+        );
+      }
       throw error;
     }
     if (typeof removeOptimistic === "string") {
@@ -587,6 +607,11 @@ export class ForestRun<
       );
       logUpdateStats(this.env, activeTransaction.changelog, watchesToNotify);
     }
+    releaseNonCacheableOperations(
+      this.env,
+      this.store,
+      activeTransaction.nonCacheableOperations,
+    );
     maybeEvictOldData(this.env, this.store);
 
     return result as T;
