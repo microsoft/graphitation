@@ -577,11 +577,10 @@ test("rejects a payload repeating a node id within a single list", () => {
     /^Invariant violation: Attempting to write malformed payload to the cache/,
   );
   // Both occurrences select identical fields, so the data paths (including the
-  // list index) are what tells them apart. The message must point at those
-  // rather than implying a selection mismatch.
+  // list index) are the only thing telling them apart - and the per-occurrence
+  // field list is dropped as noise.
   expect(error?.message).toContain("2 items at data.feed.messages.0.files");
   expect(error?.message).toContain("5 items at data.feed.messages.2.files");
-  expect(error?.message).not.toContain("select different fields");
   expect(error?.message).not.toContain("selecting:");
   // The message ships to telemetry, so it must not leak the entity id.
   expect(error?.message).not.toContain("Message:1");

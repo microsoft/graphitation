@@ -210,24 +210,6 @@ function malformedPayloadError(
     ``,
     describeOccurrence(context, 1, first, sameSelection ? null : firstFields),
     describeOccurrence(context, 2, second, sameSelection ? null : secondFields),
-    ``,
-    // Nothing to say when the selections match: the data paths already carry the list
-    //   index, which is what tells the two occurrences apart.
-    ...(sameSelection
-      ? []
-      : [
-          `The two occurrences select different fields, which is legal on its own: only the ` +
-            `disagreement about "${fieldName}" is a problem.`,
-          ``,
-        ]),
-    `All occurrences of the same node in one payload are aggregated into a single cache value, so ` +
-      `they must agree on the value of every field. Lists of different lengths cannot be aggregated: ` +
-      `items of the longer list are looked up by index in the shorter one, which corrupts internal ` +
-      `cache state and surfaces as "Cannot read properties of undefined (reading 'value')" on a ` +
-      `later write.`,
-    ``,
-    `Fix the payload so every occurrence of the node carries the same "${fieldName}" value, or ` +
-      `remove the duplicate occurrence.`,
   ].join("\n");
 }
 
