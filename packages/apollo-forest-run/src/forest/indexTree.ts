@@ -176,6 +176,11 @@ function assertConsistentListFields(context: Context) {
           continue;
         }
         if (first.list.data.length !== list.data.length) {
+          // Raised through `assert` rather than `throw` on purpose: it prefixes
+          //   "Invariant violation: ", and consumers gate on that prefix before
+          //   forwarding an error message to telemetry. A bare `throw` produces a
+          //   message that fails those checks and gets replaced wholesale, so
+          //   everything below is dropped before anyone reads it.
           assert(
             false,
             malformedPayloadError(context, first, {
