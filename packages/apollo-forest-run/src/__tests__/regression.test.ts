@@ -587,6 +587,47 @@ test("rejects a payload repeating a node id within a single list", () => {
   expect(error?.message).not.toContain("Message:1");
 });
 
+// A rejected write must not leave the cache wedged. The check runs inside
+// indexTree, which cache.write calls before merge policies and before anything
+// is committed to the store - so the expectation is that nothing was published
+// and the operation can still be written to afterwards. Worth asserting rather
+// than assuming: callers routinely swallow write errors, and a swallowed write
+// that poisons the operation's tree would be worse than the crash it replaces,
+// because it would never surface.
+test("a rejected write leaves the cache usable", () => {
+  const file = (id: string) => ({ __typename: "File", id });
+  const feedMessage = (id: string, fileIds: string[]) => ({
+    __typename: "Message",
+    id,
+    files: fileIds.map(file),
+  });
+  const feed = (messages: unknown[]) => ({
+    feed: { __typename: "Feed", id: "1", messages },
+  });
+
+  const cache = new ForestRun();
+  const good = feed([feedMessage("1", ["1", "2"])]);
+  cache.write({ query: messageFeedQuery, result: good });
+
+  expect(() =>
+    cache.write({
+      query: messageFeedQuery,
+      result: feed([
+        feedMessage("1", ["1", "2"]),
+        feedMessage("1", ["1", "2", "3", "4", "5"]),
+      ]),
+    }),
+  ).toThrow(/Attempting to write malformed payload/);
+
+  // (a) the pre-write state survives untouched
+  expect(cache.readQuery({ query: messageFeedQuery })).toEqual(good);
+
+  // (b) and the same operation still accepts a well formed write afterwards
+  const next = feed([feedMessage("1", ["1", "2", "3"])]);
+  cache.write({ query: messageFeedQuery, result: next });
+  expect(cache.readQuery({ query: messageFeedQuery })).toEqual(next);
+});
+
 // Regression coverage for `TypeError: Cannot read properties of undefined (reading 'value')`
 // thrown by reIndexList (src/forest/indexTree.ts). Everything below goes through
 // the public cache API only.
