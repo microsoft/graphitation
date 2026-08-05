@@ -211,13 +211,15 @@ function malformedPayloadError(
     describeOccurrence(context, 1, first, sameSelection ? null : firstFields),
     describeOccurrence(context, 2, second, sameSelection ? null : secondFields),
     ``,
-    sameSelection
-      ? `Both occurrences select the same fields (${firstFields}), so this is most likely the same ` +
-        `entity written twice with inconsistent data - check whether the payload was built by ` +
-        `appending to a list without de-duplicating against the entries already added.`
-      : `The two occurrences select different fields, which is legal on its own: only the ` +
-        `disagreement about "${fieldName}" is a problem.`,
-    ``,
+    // Nothing to say when the selections match: the data paths already carry the list
+    //   index, which is what tells the two occurrences apart.
+    ...(sameSelection
+      ? []
+      : [
+          `The two occurrences select different fields, which is legal on its own: only the ` +
+            `disagreement about "${fieldName}" is a problem.`,
+          ``,
+        ]),
     `All occurrences of the same node in one payload are aggregated into a single cache value, so ` +
       `they must agree on the value of every field. Lists of different lengths cannot be aggregated: ` +
       `items of the longer list are looked up by index in the shorter one, which corrupts internal ` +

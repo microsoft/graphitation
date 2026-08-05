@@ -581,8 +581,8 @@ test("rejects a payload repeating a node id within a single list", () => {
   // rather than implying a selection mismatch.
   expect(error?.message).toContain("2 items at data.feed.messages.0.files");
   expect(error?.message).toContain("5 items at data.feed.messages.2.files");
-  expect(error?.message).toContain("Both occurrences select the same fields");
   expect(error?.message).not.toContain("select different fields");
+  expect(error?.message).not.toContain("selecting:");
   // The message ships to telemetry, so it must not leak the entity id.
   expect(error?.message).not.toContain("Message:1");
 });
