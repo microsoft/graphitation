@@ -764,7 +764,11 @@ test("rejects a payload repeating a node with lists of different lengths", () =>
   expect(error?.message).toMatch(
     /^Invariant violation: Attempting to write malformed payload to the cache/,
   );
-  expect(error?.message).toContain('a "Thread" node occurs multiple times');
+  // Consumers match on this phrase to classify the failure in telemetry, so it is
+  // part of the contract: reword it and this breaks rather than their dashboards.
+  expect(error?.message).toContain(
+    'a "Thread" node occurs multiple times in a single write',
+  );
   expect(error?.message).toContain("data.conversation.thread.messages");
   expect(error?.message).toContain("data.pinned.thread.messages");
   // The message ships to telemetry, so it must not leak the entity id.
