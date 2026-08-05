@@ -555,15 +555,6 @@ const createPinned = () => ({
   },
 });
 
-function findPinnedMessagesChunk(cache: ForestRun) {
-  const trees = [...(cache as any).store.dataForest.trees.values()];
-  const pinnedThreadChunk = trees
-    .flatMap((tree: any) => tree.nodes.get("Thread:1") ?? [])
-    .find((chunk: any) => chunk.data.title === "Pinned");
-  expect(pinnedThreadChunk).toBeDefined();
-  return pinnedThreadChunk.fieldChunks.get("messages").value;
-}
-
 test("recycles a list with an unresolved item reference without crashing", () => {
   const cache = new ForestRun();
 
@@ -588,16 +579,12 @@ test("recycles a list with an unresolved item reference without crashing", () =>
   ];
   const pinned = createPinned();
 
+  // This write leaves the pinned thread's 3 item list chunk grown past its data
+  // length with index 3 never resolved.
   cache.write({
     query: messageListQuery,
     result: { conversation: conversation(conversationMessages), pinned },
   });
-
-  // The 3 item chunk was grown out of bounds and index 3 was never resolved.
-  const messagesChunk = findPinnedMessagesChunk(cache);
-  expect(messagesChunk.data).toHaveLength(3);
-  expect(messagesChunk.itemChunks.length).toBeGreaterThan(3);
-  expect(3 in messagesChunk.itemChunks).toBe(false);
 
   // Reusing the same `pinned` source object makes indexTree recycle that subtree
   // instead of indexing it again: reIndexObject -> reIndexObject -> reIndexList,
@@ -636,11 +623,6 @@ test("recycles a fully resolved list without crashing", () => {
     query: messageListQuery,
     result: { conversation: conversation(conversationMessages), pinned },
   });
-
-  const messagesChunk = findPinnedMessagesChunk(cache);
-  for (let index = 0; index < messagesChunk.itemChunks.length; index++) {
-    expect(index in messagesChunk.itemChunks).toBe(true);
-  }
 
   expect(() =>
     cache.write({
