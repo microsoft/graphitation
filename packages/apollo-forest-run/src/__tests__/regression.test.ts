@@ -519,6 +519,70 @@ test("rejects a single write repeating a node with lists of different lengths", 
   ).toThrow(/^Attempting to write malformed payload to the cache/);
 });
 
+// The same defect without two paths and without two selections: one node id
+// appears twice *in a single list*, carrying different data. This is what a
+// list built by appending without de-duplicating against the entries already
+// added produces. The aggregate path dedupes chunks sharing both selection and
+// operation, so these two chunks are invisible to it - but the raw node chunk
+// list is not deduped, and indexing sees both.
+const messageFeedQuery = gql`
+  query MessageFeed {
+    feed {
+      __typename
+      id
+      messages {
+        __typename
+        id
+        files {
+          __typename
+          id
+        }
+      }
+    }
+  }
+`;
+
+test("rejects a payload repeating a node id within a single list", () => {
+  const cache = new ForestRun();
+  const withFiles = (fileIds: string[]) => ({
+    __typename: "Message",
+    id: "1",
+    files: fileIds.map((id) => ({ __typename: "File", id })),
+  });
+
+  let error: Error | undefined;
+  try {
+    cache.write({
+      query: messageFeedQuery,
+      result: {
+        feed: {
+          __typename: "Feed",
+          id: "1",
+          messages: [
+            withFiles(["1", "2"]),
+            { __typename: "Message", id: "2", files: [] },
+            // Same id as the first entry, enriched with more files.
+            withFiles(["1", "2", "3", "4", "5"]),
+          ],
+        },
+      },
+    });
+  } catch (e) {
+    error = e as Error;
+  }
+
+  expect(error?.message).toMatch(
+    /^Attempting to write malformed payload to the cache/,
+  );
+  // Both occurrences select identical fields, so the data paths (including the
+  // list index) are what tells them apart. The message must point at those
+  // rather than implying a selection mismatch.
+  expect(error?.message).toContain("2 items at data.feed.messages.0.files");
+  expect(error?.message).toContain("5 items at data.feed.messages.2.files");
+  expect(error?.message).toContain("Both occurrences select the same fields");
+  expect(error?.message).not.toContain("select different fields");
+});
+
 // Regression coverage for `TypeError: Cannot read properties of undefined (reading 'value')`
 // thrown by reIndexList (src/forest/indexTree.ts). Everything below goes through
 // the public cache API only.

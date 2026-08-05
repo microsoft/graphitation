@@ -189,6 +189,9 @@ function malformedPayloadError(
   const nodeKey = first.chunk.key || "(unknown)";
   const typeName = first.chunk.type || "(unknown type)";
   const fieldName = getFieldName(first.fieldEntry);
+  const firstFields = selectedFields(first);
+  const secondFields = selectedFields(second);
+  const sameSelection = firstFields === secondFields;
 
   return [
     `Attempting to write malformed payload to the cache: node "${nodeKey}" occurs multiple times ` +
@@ -198,8 +201,15 @@ function malformedPayloadError(
     `  Node:       ${nodeKey} (${typeName})`,
     `  Field:      ${describeFieldEntry(first.fieldEntry)}`,
     ``,
-    describeOccurrence(context, 1, first),
-    describeOccurrence(context, 2, second),
+    describeOccurrence(context, 1, first, sameSelection ? null : firstFields),
+    describeOccurrence(context, 2, second, sameSelection ? null : secondFields),
+    ``,
+    sameSelection
+      ? `Both occurrences select the same fields of ${nodeKey} (${firstFields}), so this is most ` +
+        `likely the same entity written twice with inconsistent data - check whether the payload ` +
+        `was built by appending to a list without de-duplicating against the entries already added.`
+      : `The two occurrences select different fields of ${nodeKey}, which is legal on its own: only ` +
+        `the disagreement about "${fieldName}" is a problem.`,
     ``,
     `All occurrences of the same node in one payload are aggregated into a single cache value, so ` +
       `they must agree on the value of every field. Lists of different lengths cannot be aggregated: ` +
@@ -208,7 +218,7 @@ function malformedPayloadError(
       `later write.`,
     ``,
     `Fix the payload so every occurrence of "${nodeKey}" carries the same "${fieldName}" value, or ` +
-      `stop selecting "${fieldName}" in all but one of the paths above.`,
+      `remove the duplicate occurrence.`,
   ].join("\n");
 }
 
@@ -222,22 +232,28 @@ function describeFieldEntry(fieldEntry: NormalizedFieldEntry): string {
   return args ? `${fieldEntry.name}(${args})` : fieldEntry.name;
 }
 
+function selectedFields(occurrence: ListFieldOccurrence): string {
+  return Object.keys(occurrence.chunk.data).join(", ") || "(none)";
+}
+
 function describeOccurrence(
   context: Context,
   index: number,
   occurrence: ListFieldOccurrence,
+  // Only worth printing when the two occurrences disagree: identical lists of field names
+  //   on both occurrences read as noise and suggest a selection mismatch that isn't there.
+  fields: string | null,
 ): string {
-  const { list, chunk, field } = occurrence;
+  const { list } = occurrence;
   const itemCount = list.data.length;
-  return [
+  const header =
     `  Occurrence ${index}: ${itemCount} ${
       itemCount === 1 ? "item" : "items"
-    } at ${describePath(context, occurrence)}`,
-    `                 selected fields of ${chunk.key || "the node"}: ${
-      Object.keys(chunk.data).join(", ") || "(none)"
-    }`,
-    `                 field alias: ${field.dataKey}`,
-  ].join("\n");
+    }` + ` at ${describePath(context, occurrence)}`;
+
+  return fields === null
+    ? header
+    : `${header}\n                 selecting: ${fields}`;
 }
 
 function describePath(
