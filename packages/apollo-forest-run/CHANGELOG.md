@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Fri, 17 Jul 2026 12:07:00 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 05 Aug 2026 17:17:27 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.25.0
+
+Wed, 05 Aug 2026 17:17:27 GMT
+
+### Minor changes
+
+- Release descriptors of non-cacheable operations (opt-in via cleanupNonCacheableOperations) (vrazuvaev@microsoft.com)
 
 ## 0.24.5
 

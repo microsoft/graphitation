@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Release descriptors of non-cacheable operations (opt-in via cleanupNonCacheableOperations)",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "vrazuvaev@microsoft.com",
-  "dependentChangeType": "patch"
-}
