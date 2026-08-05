@@ -570,6 +570,16 @@ export class ForestRun<
     assert(activeTransaction === peek(this.transactionStack));
     this.transactionStack.pop();
 
+    if (!parentTransaction) {
+      // Descriptors still referenced by an optimistic layer are skipped here and released
+      // by removeOptimisticLayers instead (including the removeOptimistic calls below)
+      releaseNonCacheableOperations(
+        this.env,
+        this.store,
+        activeTransaction.nonCacheableOperations,
+      );
+    }
+
     if (error) {
       // Cleanup
       if (typeof removeOptimistic === "string") {
@@ -577,13 +587,6 @@ export class ForestRun<
       }
       if (typeof optimistic === "string") {
         this.removeOptimistic(optimistic);
-      }
-      if (!parentTransaction) {
-        releaseNonCacheableOperations(
-          this.env,
-          this.store,
-          activeTransaction.nonCacheableOperations,
-        );
       }
       throw error;
     }
@@ -607,11 +610,6 @@ export class ForestRun<
       );
       logUpdateStats(this.env, activeTransaction.changelog, watchesToNotify);
     }
-    releaseNonCacheableOperations(
-      this.env,
-      this.store,
-      activeTransaction.nonCacheableOperations,
-    );
     maybeEvictOldData(this.env, this.store);
 
     return result as T;
