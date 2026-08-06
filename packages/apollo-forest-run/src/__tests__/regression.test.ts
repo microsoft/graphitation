@@ -669,12 +669,13 @@ test("accepts a payload repeating a node with lists of equal length", () => {
 
 // The same defect one level deeper: the repeated node is a list *item* rather than
 // a field of the root, and the divergent list hangs off it. Both occurrences carry
-// a list index, which is the shape a duplicate-insertion bug produces upstream.
+// a list index, which is what this pins - the error has to address them by index.
 //
-// Note the two occurrences still need *different* selections. aggregateFieldChunks
-// dedupes adjacent chunks sharing selection and operation, and two items of one
-// list necessarily share both - so inserting the same node twice into a single
-// list is collapsed before any list is aggregated and cannot punch a hole.
+// The two occurrences use different selections because that is what the indexing
+// path needs: aggregateFieldChunks drops adjacent chunks sharing selection and
+// operation, so a node repeated under one selection is collapsed before its lists
+// are aggregated. Other routes into resolveListItemChunk do not go through that
+// dedupe, so this is a constraint on the test, not on the defect.
 const fileNode = (id: string) => ({ __typename: "File", id });
 const messageWithFiles = (id: string, files: unknown[]) => ({
   __typename: "Message",
