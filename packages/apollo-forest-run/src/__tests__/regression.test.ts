@@ -482,6 +482,12 @@ test("properly replaces objects containing nested composite lists", () => {
 //     the 3 item chunk with no bounds check. The array grows past its data
 //     length and index 3 is left unresolved.
 //
+// Only the *first* out of range index decides whether a hole is left: resolving in
+// ascending order grows the short chunk densely. Leading nulls are the cheapest way
+// to start above its length, not the only one - `layout` is a key lookup
+// (findKeyIndex), so a reordered keyed list visits base indices out of order too,
+// and descendToChunk/retrieveEmbeddedValue resolve a single index with no scan.
+//
 // Steps 1+2 are the actual defect in the payload, but nothing reads the hole it
 // leaves until a *later* write recycles that chunk - which is why the stack trace
 // blames a write that is entirely innocent. reIndexList now detects the hole
