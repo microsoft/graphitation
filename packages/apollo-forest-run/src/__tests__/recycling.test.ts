@@ -1,6 +1,9 @@
 import { gql } from "@apollo/client";
 import { ForestRun } from "../ForestRun";
 
+// `it.failing` is supported by jest-circus, but is missing from @types/jest@26
+const itFails: jest.It = (it as any).failing;
+
 describe("within the same operation", () => {
   it("uses first incoming result as an output", () => {
     const cache = new ForestRun();
@@ -314,6 +317,92 @@ describe("cross-operation recycling via @cache(covers)", () => {
     expect(preloader.result?.items[0]).toBe(itemsData[0]);
     expect(preloader.result?.items[1]).toBe(itemsData[1]);
     expect(preloader.result?.detail).toBe(detailData);
+  });
+
+  // Known gaps.
+  //
+  // The `covers` hint is only consulted by `createChunkMatcher`, and the only
+  // place that runs it for a brand new tree is `growDataTree` — i.e. the very
+  // first read of an operation that has never had a tree in the forest.
+  //
+  // Every other way of populating the covered operation's tree bypasses it:
+  //   - a network write goes through `indexTree`, which only recycles from the
+  //     operation's own previous tree state (`recycleTree`);
+  //   - an incremental update goes through `updateTree` -> `completeObject`,
+  //     which calls `hydrateDraft` without a chunk matcher at all.
+  //
+  // Both are the norm in a real application, so the covered operation ends up
+  // with its own copies of objects the covering operation already holds, and
+  // the preload buys no memory savings. These tests demonstrate that.
+  describe("known gaps", () => {
+    // A component subscribing to the covered query before the preloader
+    // response lands produces a cache miss. `growOutputTree` still stores the
+    // resulting incomplete tree in the forest, so once the preloader is
+    // written, the covered tree is filled in by `updateTree` instead of being
+    // grown — and `updateTree` never recycles across operations.
+    //
+    // Note that no network response for `ListQuery` is involved here at all:
+    // every byte it returns comes from the preloader, yet none of the objects
+    // are shared.
+    itFails(
+      "forward: recycles objects from covering op after an initial cache miss",
+      () => {
+        const cache = new ForestRun();
+
+        const miss = cache.diff({ query: ListQuery, optimistic: true });
+        expect(miss.complete).toBe(false);
+
+        cache.write({
+          query: PreloaderQuery,
+          result: { items: itemsData, detail: detailData },
+        });
+
+        const list = cache.diff<{ items: typeof itemsData }>({
+          query: ListQuery,
+          optimistic: true,
+        });
+
+        expect(list.complete).toBe(true);
+        expect(list.result?.items[0]).toBe(itemsData[0]);
+        expect(list.result?.items[1]).toBe(itemsData[1]);
+      },
+    );
+
+    // The covered query is also fetched from the network (cache-and-network, a
+    // refetch, or simply a cache miss on some other field of the same query).
+    // The incoming payload is deep-equal to what the preloader already wrote,
+    // but the write path does not consider covering operations, so the forest
+    // ends up holding two copies of every item.
+    itFails(
+      "forward: recycles objects from covering op when covered op is written",
+      () => {
+        const cache = new ForestRun();
+
+        cache.write({
+          query: PreloaderQuery,
+          result: { items: itemsData, detail: detailData },
+        });
+
+        cache.write({
+          query: ListQuery,
+          result: {
+            items: [
+              { __typename: "Item", id: "1", value: "a" },
+              { __typename: "Item", id: "2", value: "b" },
+            ],
+          },
+        });
+
+        const list = cache.diff<{ items: typeof itemsData }>({
+          query: ListQuery,
+          optimistic: true,
+        });
+
+        expect(list.complete).toBe(true);
+        expect(list.result?.items[0]).toBe(itemsData[0]);
+        expect(list.result?.items[1]).toBe(itemsData[1]);
+      },
+    );
   });
 });
 

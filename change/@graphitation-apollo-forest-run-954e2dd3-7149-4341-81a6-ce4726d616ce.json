@@ -1,0 +1,7 @@
+{
+  "type": "none",
+  "comment": "Test-only: document known gaps in @cache(covers) cross-operation recycling",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com",
+  "dependentChangeType": "none"
+}
