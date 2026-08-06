@@ -613,12 +613,16 @@ test("reports an unresolved list item instead of dereferencing it", () => {
     'a "Thread" node occurs multiple times in a single write with a different ' +
       'number of items in the "messages" list',
   );
-  // The write being recycled is the one that produced the malformed payload, so the
-  // error names it as the cause and the current write only as where it surfaced.
-  expect(error?.message).toContain("Operation:    query MessageList");
-  expect(error?.message).toContain("Detected in:  query MessageList");
-  expect(error?.message).toContain("Node type:    Thread");
-  expect(error?.message).toContain("Field:        messages");
+  // The write being recycled is the one that produced the malformed payload. Recycling is
+  // always same-operation, so there is no second operation to name.
+  expect(error?.message).toContain("Operation:  query MessageList");
+  expect(error?.message).toContain("Node type:  Thread");
+  // Both occurrences are the same entity - that is what makes the divergence a conflict -
+  // but the id itself must not leak, so the message states the fact without printing it.
+  expect(error?.message).toContain(
+    "Node id:    same in both occurrences (not shown)",
+  );
+  expect(error?.message).toContain("Field:      messages");
   // Both conflicting occurrences, reconstructed from the tree being recycled.
   expect(error?.message).toContain(
     "Occurrence 1: 14 items at data.conversation.thread.messages",

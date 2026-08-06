@@ -451,19 +451,27 @@ function malformedPayloadError(
     ? resolveNormalizedField(owner.parent.selection, owner.field)
     : null;
   const fieldName = fieldEntry ? getFieldName(fieldEntry) : "(unknown field)";
+  const occurrences = findOccurrences(
+    tree,
+    owner,
+    fieldEntry,
+    damaged,
+    findParent,
+  );
 
   return [
     `Attempting to write malformed payload to the cache: a "${typeName}" node occurs multiple ` +
       `times in a single write with a different number of items in the "${fieldName}" list.`,
     ``,
-    `  Operation:    ${damaged.operation.debugName}`,
-    `  Node type:    ${typeName}`,
-    `  Field:        ${
-      fieldEntry ? describeFieldEntry(fieldEntry) : fieldName
-    }`,
-    `  Detected in:  ${context.operation.debugName}`,
+    `  Operation:  ${damaged.operation.debugName}`,
+    `  Node type:  ${typeName}`,
+    // Occurrences are collected by node key, so they are the same entity by construction.
+    ...(occurrences.length > 1
+      ? [`  Node id:    same in both occurrences (not shown)`]
+      : []),
+    `  Field:      ${fieldEntry ? describeFieldEntry(fieldEntry) : fieldName}`,
     ``,
-    ...findOccurrences(tree, owner, fieldEntry, damaged, findParent).map(
+    ...occurrences.map(
       (occurrence, i) =>
         `  Occurrence ${i + 1}: ${occurrence.items} ` +
         `${occurrence.items === 1 ? "item" : "items"} at ${occurrence.path}`,
