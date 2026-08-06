@@ -482,11 +482,12 @@ test("properly replaces objects containing nested composite lists", () => {
 //     the 3 item chunk with no bounds check. The array grows past its data
 //     length and index 3 is left unresolved.
 //
-// Only the *first* out of range index decides whether a hole is left: resolving in
-// ascending order grows the short chunk densely. Leading nulls are the cheapest way
-// to start above its length, not the only one - `layout` is a key lookup
-// (findKeyIndex), so a reordered keyed list visits base indices out of order too,
-// and descendToChunk/retrieveEmbeddedValue resolve a single index with no scan.
+// The gap has to survive: an out of range index resolved early is backfilled by the
+// later ascending pass, and ascending resolution alone just grows the short chunk
+// densely. Nulls are what make it durable - they are skipped both when the layout is
+// built and again when items are diffed, so nothing fills them in. Measured:
+// insertions and re-sorts of a keyed list leave no hole. The routes with no scan in
+// front of them (descendToChunk, retrieveEmbeddedValue) are not covered here.
 //
 // Steps 1+2 are the actual defect in the payload, but nothing reads the hole it
 // leaves until a *later* write recycles that chunk - which is why the stack trace
