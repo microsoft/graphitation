@@ -56,6 +56,7 @@ export function createStore(_: CacheEnv): Store {
     atime: new Map(),
     partitions: new WeakMap(),
     pendingEviction: null,
+    pendingNonCacheableOperations: null,
   };
   return store;
 }
@@ -259,14 +260,25 @@ export function releaseOperationDescriptor(
   return true;
 }
 
-export function releaseNonCacheableOperations(
-  env: CacheEnv,
-  store: Store,
-  operations: Iterable<OperationDescriptor> | null | undefined,
-): number {
-  if (!env.cleanupNonCacheableOperations || !operations) {
+/**
+ * Releases the descriptors accumulated by writes since the outermost transaction started.
+ *
+ * The pending set is allocated lazily by `write`, so a cache that never writes a non-cacheable
+ * operation pays nothing for this beyond a null check per transaction.
+ */
+export function releasePendingNonCacheableOperations(store: Store): number {
+  const operations = store.pendingNonCacheableOperations;
+  if (!operations) {
     return 0;
   }
+  store.pendingNonCacheableOperations = null;
+  return releaseOperations(store, operations);
+}
+
+function releaseOperations(
+  store: Store,
+  operations: Iterable<OperationDescriptor>,
+): number {
   let released = 0;
   for (const operation of operations) {
     if (
@@ -369,15 +381,16 @@ export function removeOptimisticLayers<T>(
   // Optimistic layers do store results of non-cacheable operations (e.g. optimistic mutation
   // responses), which kept their descriptors alive. Now that the layers are gone, retry.
   if (env.cleanupNonCacheableOperations) {
-    const candidates: OperationDescriptor[] = [];
     for (const layer of deletedLayers) {
       for (const tree of layer.trees.values()) {
-        if (!tree.operation.cache) {
-          candidates.push(tree.operation);
+        if (
+          !tree.operation.cache &&
+          canReleaseOperationDescriptor(store, tree.operation)
+        ) {
+          releaseOperationDescriptor(store, tree.operation);
         }
       }
     }
-    releaseNonCacheableOperations(env, store, candidates);
   }
   return affectedOperationSet;
 }
@@ -500,6 +513,7 @@ export function resetStore(store: Store): void {
   operations.clear();
   optimisticReadResults.clear();
   optimisticLayers.length = 0;
+  store.pendingNonCacheableOperations = null;
 }
 
 const getRootNode = (result: IndexedTree): NodeChunk | undefined =>
