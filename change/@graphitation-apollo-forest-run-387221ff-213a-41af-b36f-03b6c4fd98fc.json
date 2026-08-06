@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "fix(apollo-forest-run): report a descriptive error instead of 'Cannot read properties of undefined (reading value)' when re-indexing a corrupted list. No behavior change - the malformed write is still accepted, it is only reported better when it is hit",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
