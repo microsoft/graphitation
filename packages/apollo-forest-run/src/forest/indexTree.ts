@@ -9,6 +9,7 @@ import type {
   NodeMap,
   ObjectChunk,
   ObjectDraft,
+  ObjectFieldReference,
   OperationResult,
   RootChunkReference,
   SourceCompositeList,
@@ -17,12 +18,18 @@ import type {
   ParentLocator,
 } from "../values/types";
 import type {
+  NormalizedFieldEntry,
   OperationDescriptor,
   PossibleSelections,
 } from "../descriptor/types";
 import type { ForestEnv, IndexedTree } from "./types";
 import { ValueKind } from "../values/types";
-import { resolveSelection } from "../descriptor/resolvedSelection";
+import {
+  fieldEntriesAreEqual,
+  getFieldName,
+  resolveNormalizedField,
+  resolveSelection,
+} from "../descriptor/resolvedSelection";
 import { accumulate } from "../jsutils/map";
 import { assert } from "../jsutils/assert";
 import { CircularBuffer } from "../jsutils/circularBuffer";
@@ -32,6 +39,9 @@ import {
   createCompositeUndefinedChunk,
   createObjectChunk,
   createParentLocator,
+  getDataPathForDebugging,
+  isParentListRef,
+  isParentObjectRef,
   isRootRef,
   isSourceCompositeValue,
   isSourceObject,
@@ -398,7 +408,13 @@ function reIndexList(
   const { dataMap } = context;
   dataMap.set(recyclable.data, parent);
 
-  for (const itemRef of recyclable.itemChunks.values()) {
+  const itemChunks = recyclable.itemChunks;
+  for (let index = 0; index < itemChunks.length; index++) {
+    const itemRef = itemChunks[index];
+    if (itemRef === undefined) {
+      // A hole means the write that *indexed* this list was malformed. Report that one.
+      assert(false, malformedPayloadError(context, recyclable, parent));
+    }
     const itemChunk = itemRef.value;
     if (
       itemChunk?.kind === ValueKind.Object ||
@@ -412,4 +428,145 @@ function reIndexList(
     }
   }
   return recyclable;
+}
+
+type ListFieldOccurrence = { items: number; path: string };
+
+/**
+ * Everything printed here ships to telemetry: schema level names, data paths and item counts
+ * only. Never the node key (it embeds the entity id) or argument values.
+ */
+function malformedPayloadError(
+  context: Context,
+  damaged: CompositeListChunk,
+  parent: GraphChunkReference,
+): string {
+  // The offending payload is still in the tree being recycled, so report that write, not this one.
+  const tree = findIndexingTree(context, damaged);
+  const findParent = createParentLocator(tree?.dataMap ?? context.dataMap);
+  const owner = findOwningField(findParent, parent);
+  const typeName = owner?.parent.type || "(unknown type)";
+  const fieldEntry = owner
+    ? resolveNormalizedField(owner.parent.selection, owner.field)
+    : null;
+  const fieldName = fieldEntry ? getFieldName(fieldEntry) : "(unknown field)";
+  const occurrences = findOccurrences(
+    tree,
+    owner,
+    fieldEntry,
+    damaged,
+    findParent,
+  );
+
+  return [
+    `Detected malformed payload written to the cache: a "${typeName}" node occurs multiple ` +
+      `times in a single write with a different number of items in the "${fieldName}" list.`,
+    ``,
+    `  Operation:  ${damaged.operation.debugName}`,
+    `  Node type:  ${typeName}`,
+    // Occurrences are collected by node key, so they are the same entity by construction.
+    ...(occurrences.length > 1
+      ? [`  Node id:    same in both occurrences (not shown)`]
+      : []),
+    `  Field:      ${fieldEntry ? describeFieldEntry(fieldEntry) : fieldName}`,
+    ``,
+    ...occurrences.map(
+      (occurrence, i) =>
+        `  Occurrence ${i + 1}: ${occurrence.items} ` +
+        `${occurrence.items === 1 ? "item" : "items"} at ${occurrence.path}`,
+    ),
+  ].join("\n");
+}
+
+// The tree that indexed the damaged chunk is the one carrying the malformed payload.
+function findIndexingTree(
+  context: Context,
+  chunk: CompositeListChunk,
+): IndexedTree | null {
+  for (let tree = context.recycleTree; tree; tree = tree.prev) {
+    if (tree.dataMap.has(chunk.data)) {
+      return tree;
+    }
+  }
+  return null;
+}
+
+// The conflicting occurrence is a sibling chunk of the same node with a different item count.
+function findOccurrences(
+  tree: IndexedTree | null,
+  owner: ObjectFieldReference | null,
+  fieldEntry: NormalizedFieldEntry | null,
+  damaged: CompositeListChunk,
+  findParent: ParentLocator,
+): ListFieldOccurrence[] {
+  const key = owner?.parent.key;
+  const found: CompositeListChunk[] = [];
+  if (tree && fieldEntry && typeof key === "string") {
+    for (const chunk of tree.nodes.get(key) ?? EMPTY_ARRAY) {
+      for (const ref of chunk.fieldChunks.values()) {
+        const list = ref.value;
+        if (
+          list.kind === ValueKind.CompositeList &&
+          fieldEntriesAreEqual(
+            resolveNormalizedField(chunk.selection, ref.field),
+            fieldEntry,
+          )
+        ) {
+          found.push(list);
+        }
+      }
+    }
+  }
+  const other = found.find((list) => list.data.length !== damaged.data.length);
+  const occurrences = !other
+    ? [damaged]
+    : found.indexOf(other) < found.indexOf(damaged)
+    ? [other, damaged]
+    : [damaged, other];
+
+  return occurrences.map((list) => ({
+    items: list.data.length,
+    path: describePath(findParent, list, owner),
+  }));
+}
+
+// A list of lists has no field of its own: walk up to the field the outermost list is assigned to.
+function findOwningField(
+  findParent: ParentLocator,
+  parent: GraphChunkReference,
+): ObjectFieldReference | null {
+  try {
+    let ref = parent;
+    while (isParentListRef(ref)) {
+      ref = findParent(ref.parent);
+    }
+    return isParentObjectRef(ref) ? ref : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function describeFieldEntry(fieldEntry: NormalizedFieldEntry): string {
+  if (typeof fieldEntry === "string") {
+    return fieldEntry;
+  }
+  // Argument *names* are schema, argument values are not: elide the values.
+  const args = [...(fieldEntry.args?.keys() ?? [])]
+    .map((name) => `${name}: ...`)
+    .join(", ");
+  return args ? `${fieldEntry.name}(${args})` : fieldEntry.name;
+}
+
+function describePath(
+  findParent: ParentLocator,
+  list: CompositeListChunk,
+  owner: ObjectFieldReference | null,
+): string {
+  // Stay defensive: this runs while reporting an error, on a tree that is known to be broken.
+  try {
+    const path = getDataPathForDebugging({ findParent }, list);
+    return path.length ? `data.${path.join(".")}` : "data";
+  } catch (e) {
+    return `<unknown path>.${owner?.field.dataKey ?? "<unknown field>"}`;
+  }
 }
