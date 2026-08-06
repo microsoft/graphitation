@@ -605,7 +605,7 @@ test("reports an unresolved list item instead of dereferencing it", () => {
   }
 
   expect(error?.message).toMatch(
-    /^Invariant violation: Attempting to write malformed payload to the cache/,
+    /^Invariant violation: Detected malformed payload written to the cache/,
   );
   // This phrase is the first thing a human reads in a telemetry dashboard, so keep it
   // stable across rewordings of the rest.
@@ -665,6 +665,126 @@ test("accepts a payload repeating a node with lists of equal length", () => {
       },
     }),
   ).not.toThrow();
+});
+
+// The same defect one level deeper: the repeated node is a list *item* rather than
+// a field of the root, and the divergent list hangs off it. Both occurrences carry
+// a list index, which is the shape a duplicate-insertion bug produces upstream.
+//
+// Note the two occurrences still need *different* selections. aggregateFieldChunks
+// dedupes adjacent chunks sharing selection and operation, and two items of one
+// list necessarily share both - so inserting the same node twice into a single
+// list is collapsed before any list is aggregated and cannot punch a hole.
+const fileNode = (id: string) => ({ __typename: "File", id });
+const messageWithFiles = (id: string, files: unknown[]) => ({
+  __typename: "Message",
+  id,
+  files,
+});
+
+const attachmentSeedQuery = gql`
+  query AttachmentSeed {
+    message {
+      __typename
+      id
+      files {
+        __typename
+        id
+      }
+    }
+  }
+`;
+
+const attachmentQuery = gql`
+  query Attachments {
+    inbox {
+      __typename
+      id
+      messages {
+        __typename
+        id
+        files {
+          __typename
+          id
+        }
+      }
+    }
+    starred {
+      __typename
+      id
+      messages {
+        __typename
+        id
+        subject
+        files {
+          __typename
+          id
+        }
+      }
+    }
+  }
+`;
+
+test("reports list indices when the repeated node is itself a list item", () => {
+  const cache = new ForestRun();
+  cache.write({
+    query: attachmentSeedQuery,
+    result: {
+      message: messageWithFiles("7", [fileNode("a"), fileNode("b")]),
+    },
+  });
+
+  // Message:7 is at index 2 of `inbox.messages` with 4 files and at index 1 of
+  // `starred.messages` with 1. Only the subtree holding the shorter list keeps
+  // its identity, so it is the one recycled by the second write.
+  const starred = {
+    __typename: "Starred",
+    id: "1",
+    messages: [
+      { ...messageWithFiles("3", []), subject: "s" },
+      { ...messageWithFiles("7", [fileNode("a")]), subject: "s" },
+    ],
+  };
+  const inbox = () => ({
+    __typename: "Inbox",
+    id: "1",
+    messages: [
+      messageWithFiles("1", []),
+      messageWithFiles("2", []),
+      messageWithFiles("7", [null, null, fileNode("a"), fileNode("b")]),
+    ],
+  });
+
+  cache.write({
+    query: attachmentQuery,
+    result: { inbox: inbox(), starred },
+  });
+
+  let error: Error | undefined;
+  try {
+    cache.write({
+      query: attachmentQuery,
+      result: { inbox: inbox(), starred },
+    });
+  } catch (e) {
+    error = e as Error;
+  }
+
+  expect(error?.message).toContain(
+    'a "Message" node occurs multiple times in a single write with a different ' +
+      'number of items in the "files" list',
+  );
+  expect(error?.message).toContain("Node type:  Message");
+  expect(error?.message).toContain("Field:      files");
+  // Each occurrence is addressed by its index in the enclosing list, and a single
+  // item reads as "1 item" rather than "1 items".
+  expect(error?.message).toContain(
+    "Occurrence 1: 4 items at data.inbox.messages.2.files",
+  );
+  expect(error?.message).toContain(
+    "Occurrence 2: 1 item at data.starred.messages.1.files",
+  );
+  expect(error?.message).not.toContain("Message:7");
 });
 
 // The same defect, benign symptom: when every out of bounds index is resolved in

@@ -460,7 +460,7 @@ function malformedPayloadError(
   );
 
   return [
-    `Attempting to write malformed payload to the cache: a "${typeName}" node occurs multiple ` +
+    `Detected malformed payload written to the cache: a "${typeName}" node occurs multiple ` +
       `times in a single write with a different number of items in the "${fieldName}" list.`,
     ``,
     `  Operation:  ${damaged.operation.debugName}`,
