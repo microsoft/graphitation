@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Wed, 05 Aug 2026 17:17:27 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 06 Aug 2026 11:08:15 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.25.1
+
+Thu, 06 Aug 2026 11:08:15 GMT
+
+### Patches
+
+- fix(apollo-forest-run): report a descriptive error instead of 'Cannot read properties of undefined (reading value)' when re-indexing a corrupted list. No behavior change - the malformed write is still accepted, it is only reported better when it is hit (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.25.0
 
