@@ -26,6 +26,8 @@ import type {
 import type { ForestEnv, IndexedTree } from "./types";
 import { ValueKind } from "../values/types";
 import {
+  fieldEntriesAreEqual,
+  getFieldName,
   resolveNormalizedField,
   resolveSelection,
 } from "../descriptor/resolvedSelection";
@@ -411,9 +413,8 @@ function reIndexList(
   for (let index = 0; index < itemChunks.length; index++) {
     const itemRef = itemChunks[index];
     if (itemRef === undefined) {
-      // Recycling is the first thing that walks every item reference of a list, so a hole left
-      //   behind by an earlier write surfaces here rather than where it was punched.
-      assert(false, corruptedListError(context, recyclable, index, parent));
+      // A hole means the write that *indexed* this list was malformed. Report that one.
+      assert(false, malformedPayloadError(context, recyclable, parent));
     }
     const itemChunk = itemRef.value;
     if (
@@ -430,52 +431,107 @@ function reIndexList(
   return recyclable;
 }
 
+type ListFieldOccurrence = { items: number; path: string };
+
 /**
- * Renders the violation. Everything printed here must be safe to ship to telemetry, so it is
- * limited to schema level information - type names, field names, response keys - plus positions
- * and item counts. In particular it must never include the node key (it embeds the entity id) or
- * argument values (they routinely carry ids, emails and free text).
+ * Everything printed here ships to telemetry: schema level names, data paths and item counts
+ * only. Never the node key (it embeds the entity id) or argument values.
  */
-function corruptedListError(
+function malformedPayloadError(
   context: Context,
-  list: CompositeListChunk,
-  missingIndex: number,
+  damaged: CompositeListChunk,
   parent: GraphChunkReference,
 ): string {
-  const owner = findOwningField(context, parent);
+  // The offending payload is still in the tree being recycled, so report that write, not this one.
+  const tree = findIndexingTree(context, damaged);
+  const findParent = createParentLocator(tree?.dataMap ?? context.dataMap);
+  const owner = findOwningField(findParent, parent);
   const typeName = owner?.parent.type || "(unknown type)";
   const fieldEntry = owner
     ? resolveNormalizedField(owner.parent.selection, owner.field)
     : null;
+  const fieldName = fieldEntry ? getFieldName(fieldEntry) : "(unknown field)";
 
   return [
-    `Attempting to write to a corrupted cache state: an indexed "${typeName}" list has no item ` +
-      `at index ${missingIndex}. This is left behind by an earlier payload where the same node ` +
-      `occurs multiple times in a single write with a different number of items in one list field.`,
+    `Attempting to write malformed payload to the cache: a "${typeName}" node occurs multiple ` +
+      `times in a single write with a different number of items in the "${fieldName}" list.`,
     ``,
-    `  Current operation:  ${context.operation.debugName}`,
-    `  Indexed by:         ${list.operation.debugName}`,
-    `  Node type:          ${typeName}`,
-    `  Field:              ${
-      fieldEntry ? describeFieldEntry(fieldEntry) : "(unknown field)"
+    `  Operation:    ${damaged.operation.debugName}`,
+    `  Node type:    ${typeName}`,
+    `  Field:        ${
+      fieldEntry ? describeFieldEntry(fieldEntry) : fieldName
     }`,
-    `  Items:              ${list.data.length} in the list, ${list.itemChunks.length} indexed`,
-    `  Path:               ${describePath(context, list, owner)}`,
+    `  Detected in:  ${context.operation.debugName}`,
+    ``,
+    ...findOccurrences(tree, owner, fieldEntry, damaged, findParent).map(
+      (occurrence, i) =>
+        `  Occurrence ${i + 1}: ${occurrence.items} ` +
+        `${occurrence.items === 1 ? "item" : "items"} at ${occurrence.path}`,
+    ),
   ].join("\n");
 }
 
-/**
- * Walks up through enclosing lists (a list of lists has no field of its own) to the field the
- * outermost list is assigned to.
- */
-function findOwningField(
+// The tree that indexed the damaged chunk is the one carrying the malformed payload.
+function findIndexingTree(
   context: Context,
+  chunk: CompositeListChunk,
+): IndexedTree | null {
+  for (let tree = context.recycleTree; tree; tree = tree.prev) {
+    if (tree.dataMap.has(chunk.data)) {
+      return tree;
+    }
+  }
+  return null;
+}
+
+// The conflicting occurrence is a sibling chunk of the same node with a different item count.
+function findOccurrences(
+  tree: IndexedTree | null,
+  owner: ObjectFieldReference | null,
+  fieldEntry: NormalizedFieldEntry | null,
+  damaged: CompositeListChunk,
+  findParent: ParentLocator,
+): ListFieldOccurrence[] {
+  const key = owner?.parent.key;
+  const found: CompositeListChunk[] = [];
+  if (tree && fieldEntry && typeof key === "string") {
+    for (const chunk of tree.nodes.get(key) ?? EMPTY_ARRAY) {
+      for (const ref of chunk.fieldChunks.values()) {
+        const list = ref.value;
+        if (
+          list.kind === ValueKind.CompositeList &&
+          fieldEntriesAreEqual(
+            resolveNormalizedField(chunk.selection, ref.field),
+            fieldEntry,
+          )
+        ) {
+          found.push(list);
+        }
+      }
+    }
+  }
+  const other = found.find((list) => list.data.length !== damaged.data.length);
+  const occurrences = !other
+    ? [damaged]
+    : found.indexOf(other) < found.indexOf(damaged)
+    ? [other, damaged]
+    : [damaged, other];
+
+  return occurrences.map((list) => ({
+    items: list.data.length,
+    path: describePath(findParent, list, owner),
+  }));
+}
+
+// A list of lists has no field of its own: walk up to the field the outermost list is assigned to.
+function findOwningField(
+  findParent: ParentLocator,
   parent: GraphChunkReference,
 ): ObjectFieldReference | null {
   try {
     let ref = parent;
     while (isParentListRef(ref)) {
-      ref = context.findParent(ref.parent);
+      ref = findParent(ref.parent);
     }
     return isParentObjectRef(ref) ? ref : null;
   } catch (e) {
@@ -495,13 +551,13 @@ function describeFieldEntry(fieldEntry: NormalizedFieldEntry): string {
 }
 
 function describePath(
-  context: Context,
+  findParent: ParentLocator,
   list: CompositeListChunk,
   owner: ObjectFieldReference | null,
 ): string {
   // Stay defensive: this runs while reporting an error, on a tree that is known to be broken.
   try {
-    const path = getDataPathForDebugging(context, list);
+    const path = getDataPathForDebugging({ findParent }, list);
     return path.length ? `data.${path.join(".")}` : "data";
   } catch (e) {
     return `<unknown path>.${owner?.field.dataKey ?? "<unknown field>"}`;

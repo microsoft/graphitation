@@ -605,27 +605,27 @@ test("reports an unresolved list item instead of dereferencing it", () => {
   }
 
   expect(error?.message).toMatch(
-    /^Invariant violation: Attempting to write to a corrupted cache state/,
+    /^Invariant violation: Attempting to write malformed payload to the cache/,
   );
   // This phrase is the first thing a human reads in a telemetry dashboard, so keep it
   // stable across rewordings of the rest.
   expect(error?.message).toContain(
-    "occurs multiple times in a single write with a different number of items",
+    'a "Thread" node occurs multiple times in a single write with a different ' +
+      'number of items in the "messages" list',
+  );
+  // The write being recycled is the one that produced the malformed payload, so the
+  // error names it as the cause and the current write only as where it surfaced.
+  expect(error?.message).toContain("Operation:    query MessageList");
+  expect(error?.message).toContain("Detected in:  query MessageList");
+  expect(error?.message).toContain("Node type:    Thread");
+  expect(error?.message).toContain("Field:        messages");
+  // Both conflicting occurrences, reconstructed from the tree being recycled.
+  expect(error?.message).toContain(
+    "Occurrence 1: 14 items at data.conversation.thread.messages",
   );
   expect(error?.message).toContain(
-    'an indexed "Thread" list has no item at index 3',
+    "Occurrence 2: 3 items at data.pinned.thread.messages",
   );
-  expect(error?.message).toContain("Field:              messages");
-  expect(error?.message).toContain(
-    "Items:              3 in the list, 14 indexed",
-  );
-  expect(error?.message).toContain(
-    "Path:               data.pinned.thread.messages",
-  );
-  // Both the write that indexed the damaged chunk and the one that tripped over it.
-  expect(error?.message).toContain("Current operation:  query MessageList");
-  expect(error?.message).toContain("Indexed by:         query MessageList");
-  // The message ships to telemetry, so it must not leak the entity id.
   expect(error?.message).not.toContain("Thread:1");
 });
 

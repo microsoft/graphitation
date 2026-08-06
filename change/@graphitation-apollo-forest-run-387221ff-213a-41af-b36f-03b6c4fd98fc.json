@@ -1,6 +1,6 @@
 {
   "type": "patch",
-  "comment": "fix(apollo-forest-run): report an unresolved list item reference instead of dereferencing it",
+  "comment": "fix(apollo-forest-run): report the malformed payload that corrupted a list instead of dereferencing a hole",
   "packageName": "@graphitation/apollo-forest-run",
   "email": "vrazuvaev@microsoft.com_msteamsmdb",
   "dependentChangeType": "patch"
