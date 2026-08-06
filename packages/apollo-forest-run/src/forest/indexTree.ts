@@ -9,6 +9,7 @@ import type {
   NodeMap,
   ObjectChunk,
   ObjectDraft,
+  ObjectFieldReference,
   OperationResult,
   RootChunkReference,
   SourceCompositeList,
@@ -25,8 +26,6 @@ import type {
 import type { ForestEnv, IndexedTree } from "./types";
 import { ValueKind } from "../values/types";
 import {
-  fieldEntriesAreEqual,
-  getFieldName,
   resolveNormalizedField,
   resolveSelection,
 } from "../descriptor/resolvedSelection";
@@ -40,6 +39,8 @@ import {
   createObjectChunk,
   createParentLocator,
   getDataPathForDebugging,
+  isParentListRef,
+  isParentObjectRef,
   isRootRef,
   isSourceCompositeValue,
   isSourceObject,
@@ -58,10 +59,6 @@ type Context = {
   incompleteChunks: Set<ObjectChunk>;
   recycleTree: IndexedTree | null;
   findParent: ParentLocator;
-  // Keys of nodes that were indexed more than once in this payload. Only those can hold
-  //   inconsistent field values, and they are rare, so collecting them while indexing keeps
-  //   the consistency check off the hot path for the overwhelmingly common single-chunk case.
-  repeatedNodes: Set<string> | null;
 };
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -101,7 +98,6 @@ export function indexTree(
     rootNodeKey,
     recycleTree: previousTreeState,
     findParent: createParentLocator(dataMap),
-    repeatedNodes: null,
   };
   const rootRef: RootChunkReference = {
     value: null,
@@ -114,7 +110,6 @@ export function indexTree(
     operation.possibleSelections,
     rootRef,
   );
-  assertConsistentListFields(context);
   return {
     operation,
     result,
@@ -127,174 +122,6 @@ export function indexTree(
     history:
       previousTreeState?.history ?? new CircularBuffer(operation.historySize),
   };
-}
-
-type ListFieldOccurrence = {
-  fieldEntry: NormalizedFieldEntry;
-  field: FieldInfo;
-  chunk: NodeChunk;
-  list: CompositeListChunk;
-};
-
-/**
- * A single write may contain the same node in several places (reached through different paths or
- * different selections). Indexing treats all those occurrences as one entity and aggregates their
- * field values, which is only sound when every occurrence agrees on the value of a given field.
- *
- * Lists are where a disagreement becomes destructive: resolving an item of an aggregated list
- * addresses chunks by index, so an index that is valid for the longest occurrence is applied to the
- * shorter ones too. The shorter chunk then grows its internal item index past its own data, leaving
- * holes behind. Those holes survive in cache state and blow up later, on an unrelated write that
- * recycles the affected chunk ("Cannot read properties of undefined (reading 'value')").
- *
- * There is no correct way to merge lists of different lengths for the same node, so reject the
- * payload here, where the offending data is still available to point at.
- *
- * Only nodes that were actually indexed more than once are examined (collected during indexing),
- * so payloads without repeated nodes - the overwhelmingly common case - pay nothing here.
- */
-function assertConsistentListFields(context: Context) {
-  if (!context.repeatedNodes) {
-    return;
-  }
-  for (const key of context.repeatedNodes) {
-    const chunks = context.nodes.get(key);
-    assert(chunks);
-    const seen: ListFieldOccurrence[] = [];
-    for (const chunk of chunks) {
-      for (const ref of chunk.fieldChunks.values()) {
-        if (ref.value.kind !== ValueKind.CompositeList) {
-          continue;
-        }
-        const list = ref.value;
-        const fieldEntry = resolveNormalizedField(chunk.selection, ref.field);
-        const first = seen.find((occurrence) =>
-          fieldEntriesAreEqual(occurrence.fieldEntry, fieldEntry),
-        );
-        if (!first) {
-          seen.push({ fieldEntry, field: ref.field, chunk, list });
-          continue;
-        }
-        if (first.list.data.length !== list.data.length) {
-          // Raised through `assert` rather than `throw` on purpose: it prefixes
-          //   "Invariant violation: ", and consumers gate on that prefix before
-          //   forwarding an error message to telemetry. A bare `throw` produces a
-          //   message that fails those checks and gets replaced wholesale, so
-          //   everything below is dropped before anyone reads it.
-          assert(
-            false,
-            malformedPayloadError(context, first, {
-              fieldEntry,
-              field: ref.field,
-              chunk,
-              list,
-            }),
-          );
-        }
-      }
-    }
-  }
-}
-
-/**
- * Adds a chunk to the node index, noting the key the first time it gets a second chunk: those
- * are the only nodes `assertConsistentListFields` has to look at.
- */
-function accumulateNodeChunk(
-  context: Context,
-  key: string,
-  chunk: ObjectChunk,
-) {
-  const { nodes } = context;
-  const group = nodes.get(key);
-  if (group === undefined) {
-    nodes.set(key, [chunk as NodeChunk]);
-    return;
-  }
-  group.push(chunk as NodeChunk);
-  if (group.length === 2) {
-    (context.repeatedNodes ??= new Set()).add(key);
-  }
-}
-
-/**
- * Renders the violation. Everything printed here must be safe to ship to telemetry, so it is
- * limited to schema level information - type names, field names, response keys - plus positions
- * and item counts. In particular it must never include the node key (it embeds the entity id) or
- * argument values (they routinely carry ids, emails and free text). The data paths carry list
- * indices, which is what tells two occurrences of the same node apart without naming it.
- */
-function malformedPayloadError(
-  context: Context,
-  first: ListFieldOccurrence,
-  second: ListFieldOccurrence,
-): string {
-  const { operation } = context;
-  const typeName = first.chunk.type || "(unknown type)";
-  const fieldName = getFieldName(first.fieldEntry);
-  const firstFields = selectedFields(first);
-  const secondFields = selectedFields(second);
-  const sameSelection = firstFields === secondFields;
-
-  return [
-    `Attempting to write malformed payload to the cache: a "${typeName}" node occurs multiple ` +
-      `times in a single write with a different number of items in the "${fieldName}" list.`,
-    ``,
-    `  Operation:  ${operation.debugName}`,
-    `  Node type:  ${typeName}`,
-    `  Field:      ${describeFieldEntry(first.fieldEntry)}`,
-    ``,
-    describeOccurrence(context, 1, first, sameSelection ? null : firstFields),
-    describeOccurrence(context, 2, second, sameSelection ? null : secondFields),
-  ].join("\n");
-}
-
-function describeFieldEntry(fieldEntry: NormalizedFieldEntry): string {
-  if (typeof fieldEntry === "string") {
-    return fieldEntry;
-  }
-  // Argument *names* are schema, argument values are not: elide the values.
-  const args = [...(fieldEntry.args?.keys() ?? [])]
-    .map((name) => `${name}: ...`)
-    .join(", ");
-  return args ? `${fieldEntry.name}(${args})` : fieldEntry.name;
-}
-
-function selectedFields(occurrence: ListFieldOccurrence): string {
-  return Object.keys(occurrence.chunk.data).join(", ") || "(none)";
-}
-
-function describeOccurrence(
-  context: Context,
-  index: number,
-  occurrence: ListFieldOccurrence,
-  // Only worth printing when the two occurrences disagree: identical lists of field names
-  //   on both occurrences read as noise and suggest a selection mismatch that isn't there.
-  fields: string | null,
-): string {
-  const { list } = occurrence;
-  const itemCount = list.data.length;
-  const header =
-    `  Occurrence ${index}: ${itemCount} ${
-      itemCount === 1 ? "item" : "items"
-    }` + ` at ${describePath(context, occurrence)}`;
-
-  return fields === null
-    ? header
-    : `${header}\n                 selecting: ${fields}`;
-}
-
-function describePath(
-  context: Context,
-  occurrence: ListFieldOccurrence,
-): string {
-  // The tree is fully indexed at this point, but stay defensive: this runs while reporting an error.
-  try {
-    const path = getDataPathForDebugging(context, occurrence.list);
-    return path.length ? `data.${path.join(".")}` : "data";
-  } catch (e) {
-    return `<unknown path>.${occurrence.field.dataKey}`;
-  }
 }
 
 // Matches ObjectChunkReference structure with additional fields
@@ -337,7 +164,6 @@ export function indexObject(
     rootNodeKey,
     recycleTree: null,
     findParent: createParentLocator(dataMap),
-    repeatedNodes: null,
   };
   const result = {
     value: null as unknown,
@@ -421,7 +247,7 @@ function indexSourceObject(
     context.incompleteChunks.add(chunk);
   }
   if (key !== false) {
-    accumulateNodeChunk(context, key, chunk);
+    accumulate(nodes, key, chunk);
   }
   if (typeName !== undefined) {
     accumulate(typeMap, typeName, chunk as NodeChunk);
@@ -554,7 +380,7 @@ function reIndexObject(
     accumulate(typeMap, recyclable.type, recyclable);
   }
   if (recyclable.key !== false) {
-    accumulateNodeChunk(context, recyclable.key, recyclable);
+    accumulate(nodes, recyclable.key, recyclable);
   }
 
   for (const fieldRef of recyclable.fieldChunks.values()) {
@@ -581,7 +407,14 @@ function reIndexList(
   const { dataMap } = context;
   dataMap.set(recyclable.data, parent);
 
-  for (const itemRef of recyclable.itemChunks.values()) {
+  const itemChunks = recyclable.itemChunks;
+  for (let index = 0; index < itemChunks.length; index++) {
+    const itemRef = itemChunks[index];
+    if (itemRef === undefined) {
+      // Recycling is the first thing that walks every item reference of a list, so a hole left
+      //   behind by an earlier write surfaces here rather than where it was punched.
+      assert(false, corruptedListError(context, recyclable, index, parent));
+    }
     const itemChunk = itemRef.value;
     if (
       itemChunk?.kind === ValueKind.Object ||
@@ -595,4 +428,82 @@ function reIndexList(
     }
   }
   return recyclable;
+}
+
+/**
+ * Renders the violation. Everything printed here must be safe to ship to telemetry, so it is
+ * limited to schema level information - type names, field names, response keys - plus positions
+ * and item counts. In particular it must never include the node key (it embeds the entity id) or
+ * argument values (they routinely carry ids, emails and free text).
+ */
+function corruptedListError(
+  context: Context,
+  list: CompositeListChunk,
+  missingIndex: number,
+  parent: GraphChunkReference,
+): string {
+  const owner = findOwningField(context, parent);
+  const typeName = owner?.parent.type || "(unknown type)";
+  const fieldEntry = owner
+    ? resolveNormalizedField(owner.parent.selection, owner.field)
+    : null;
+
+  return [
+    `Attempting to write to a corrupted cache state: an indexed "${typeName}" list has no item ` +
+      `at index ${missingIndex}. This is left behind by an earlier payload where the same node ` +
+      `occurs multiple times in a single write with a different number of items in one list field.`,
+    ``,
+    `  Current operation:  ${context.operation.debugName}`,
+    `  Indexed by:         ${list.operation.debugName}`,
+    `  Node type:          ${typeName}`,
+    `  Field:              ${
+      fieldEntry ? describeFieldEntry(fieldEntry) : "(unknown field)"
+    }`,
+    `  Items:              ${list.data.length} in the list, ${list.itemChunks.length} indexed`,
+    `  Path:               ${describePath(context, list, owner)}`,
+  ].join("\n");
+}
+
+/**
+ * Walks up through enclosing lists (a list of lists has no field of its own) to the field the
+ * outermost list is assigned to.
+ */
+function findOwningField(
+  context: Context,
+  parent: GraphChunkReference,
+): ObjectFieldReference | null {
+  try {
+    let ref = parent;
+    while (isParentListRef(ref)) {
+      ref = context.findParent(ref.parent);
+    }
+    return isParentObjectRef(ref) ? ref : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function describeFieldEntry(fieldEntry: NormalizedFieldEntry): string {
+  if (typeof fieldEntry === "string") {
+    return fieldEntry;
+  }
+  // Argument *names* are schema, argument values are not: elide the values.
+  const args = [...(fieldEntry.args?.keys() ?? [])]
+    .map((name) => `${name}: ...`)
+    .join(", ");
+  return args ? `${fieldEntry.name}(${args})` : fieldEntry.name;
+}
+
+function describePath(
+  context: Context,
+  list: CompositeListChunk,
+  owner: ObjectFieldReference | null,
+): string {
+  // Stay defensive: this runs while reporting an error, on a tree that is known to be broken.
+  try {
+    const path = getDataPathForDebugging(context, list);
+    return path.length ? `data.${path.join(".")}` : "data";
+  } catch (e) {
+    return `<unknown path>.${owner?.field.dataKey ?? "<unknown field>"}`;
+  }
 }

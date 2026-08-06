@@ -1,6 +1,6 @@
 {
   "type": "patch",
-  "comment": "fix(apollo-forest-run): reject malformed payloads repeating a node with divergent list lengths",
+  "comment": "fix(apollo-forest-run): report an unresolved list item reference instead of dereferencing it",
   "packageName": "@graphitation/apollo-forest-run",
   "email": "vrazuvaev@microsoft.com_msteamsmdb",
   "dependentChangeType": "patch"

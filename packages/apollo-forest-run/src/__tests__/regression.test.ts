@@ -464,169 +464,6 @@ test("properly replaces objects containing nested composite lists", () => {
   });
 });
 
-// The smallest form of the defect: one write, one query, one node reached through
-// two paths with a different number of items in the same list field. No seed
-// write, no nulls, no second pass and no field policies are needed to produce it.
-const twoPathsQuery = gql`
-  query TwoPaths {
-    left {
-      __typename
-      id
-      thread {
-        __typename
-        id
-        messages {
-          __typename
-          id
-        }
-      }
-    }
-    right {
-      __typename
-      id
-      thread {
-        __typename
-        id
-        messages {
-          __typename
-          id
-        }
-      }
-    }
-  }
-`;
-
-test("rejects a single write repeating a node with lists of different lengths", () => {
-  const cache = new ForestRun();
-  const thread = (ids: string[]) => ({
-    __typename: "Thread",
-    id: "1",
-    messages: ids.map((id) => ({ __typename: "Message", id })),
-  });
-
-  expect(() =>
-    cache.write({
-      query: twoPathsQuery,
-      result: {
-        left: { __typename: "Left", id: "1", thread: thread(["1", "2"]) },
-        right: {
-          __typename: "Right",
-          id: "1",
-          thread: thread(["1", "2", "3", "4", "5", "6"]),
-        },
-      },
-    }),
-  ).toThrow(
-    /^Invariant violation: Attempting to write malformed payload to the cache/,
-  );
-});
-
-// The same defect without two paths and without two selections: one node id
-// appears twice *in a single list*, carrying different data. This is what a
-// list built by appending without de-duplicating against the entries already
-// added produces. The aggregate path dedupes chunks sharing both selection and
-// operation, so these two chunks are invisible to it - but the raw node chunk
-// list is not deduped, and indexing sees both.
-const messageFeedQuery = gql`
-  query MessageFeed {
-    feed {
-      __typename
-      id
-      messages {
-        __typename
-        id
-        files {
-          __typename
-          id
-        }
-      }
-    }
-  }
-`;
-
-test("rejects a payload repeating a node id within a single list", () => {
-  const cache = new ForestRun();
-  const withFiles = (fileIds: string[]) => ({
-    __typename: "Message",
-    id: "1",
-    files: fileIds.map((id) => ({ __typename: "File", id })),
-  });
-
-  let error: Error | undefined;
-  try {
-    cache.write({
-      query: messageFeedQuery,
-      result: {
-        feed: {
-          __typename: "Feed",
-          id: "1",
-          messages: [
-            withFiles(["1", "2"]),
-            { __typename: "Message", id: "2", files: [] },
-            // Same id as the first entry, enriched with more files.
-            withFiles(["1", "2", "3", "4", "5"]),
-          ],
-        },
-      },
-    });
-  } catch (e) {
-    error = e as Error;
-  }
-
-  expect(error?.message).toMatch(
-    /^Invariant violation: Attempting to write malformed payload to the cache/,
-  );
-  // Both occurrences select identical fields, so the data paths (including the
-  // list index) are the only thing telling them apart - and the per-occurrence
-  // field list is dropped as noise.
-  expect(error?.message).toContain("2 items at data.feed.messages.0.files");
-  expect(error?.message).toContain("5 items at data.feed.messages.2.files");
-  expect(error?.message).not.toContain("selecting:");
-  // The message ships to telemetry, so it must not leak the entity id.
-  expect(error?.message).not.toContain("Message:1");
-});
-
-// A rejected write must not leave the cache wedged. The check runs inside
-// indexTree, which cache.write calls before merge policies and before anything
-// is committed to the store - so the expectation is that nothing was published
-// and the operation can still be written to afterwards. Worth asserting rather
-// than assuming: callers routinely swallow write errors, and a swallowed write
-// that poisons the operation's tree would be worse than the crash it replaces,
-// because it would never surface.
-test("a rejected write leaves the cache usable", () => {
-  const file = (id: string) => ({ __typename: "File", id });
-  const feedMessage = (id: string, fileIds: string[]) => ({
-    __typename: "Message",
-    id,
-    files: fileIds.map(file),
-  });
-  const feed = (messages: unknown[]) => ({
-    feed: { __typename: "Feed", id: "1", messages },
-  });
-
-  const cache = new ForestRun();
-  const good = feed([feedMessage("1", ["1", "2"])]);
-  cache.write({ query: messageFeedQuery, result: good });
-
-  expect(() =>
-    cache.write({
-      query: messageFeedQuery,
-      result: feed([
-        feedMessage("1", ["1", "2"]),
-        feedMessage("1", ["1", "2", "3", "4", "5"]),
-      ]),
-    }),
-  ).toThrow(/Attempting to write malformed payload/);
-
-  // (a) the pre-write state survives untouched
-  expect(cache.readQuery({ query: messageFeedQuery })).toEqual(good);
-
-  // (b) and the same operation still accepts a well formed write afterwards
-  const next = feed([feedMessage("1", ["1", "2", "3"])]);
-  cache.write({ query: messageFeedQuery, result: next });
-  expect(cache.readQuery({ query: messageFeedQuery })).toEqual(next);
-});
-
 // Regression coverage for `TypeError: Cannot read properties of undefined (reading 'value')`
 // thrown by reIndexList (src/forest/indexTree.ts). Everything below goes through
 // the public cache API only.
@@ -643,12 +480,12 @@ test("a rejected write leaves the cache usable", () => {
 //     resolved against the aggregate.
 //  4. aggregateListItemValue -> resolveListItemChunk assigns `itemChunks[4]` on
 //     the 3 item chunk with no bounds check. The array grows past its data
-//     length and index 3 is left unresolved. A later write recycles that chunk,
-//     reIndexList walks the hole and dereferences `undefined`.
+//     length and index 3 is left unresolved.
 //
-// Step 1+2 is the actual defect in the payload: two occurrences of one node
-// cannot be aggregated when they disagree on the length of a list field. That is
-// now rejected up front by indexTree, so steps 3 and 4 are unreachable.
+// Steps 1+2 are the actual defect in the payload, but nothing reads the hole it
+// leaves until a *later* write recycles that chunk - which is why the stack trace
+// blames a write that is entirely innocent. reIndexList now detects the hole
+// instead of dereferencing it, and reports what is known about the damaged list.
 const seedQuery = gql`
   query MessageListSeed {
     thread {
@@ -733,66 +570,63 @@ const seedThread = (cache: ForestRun) =>
     },
   });
 
-test("rejects a payload repeating a node with lists of different lengths", () => {
+// Without the leading nulls the same payload grows the 3 item chunk densely and
+// leaves no hole behind, so this exact shape is what the check can see.
+const conversationMessages = [
+  null,
+  null,
+  null,
+  null,
+  ...messageIds.map(message),
+];
+
+test("reports an unresolved list item instead of dereferencing it", () => {
   const cache = new ForestRun();
   seedThread(cache);
 
   // Thread:1 appears twice: 14 messages under `conversation`, 3 under `pinned`.
-  // Without the leading nulls the same payload grows the 3 item chunk densely,
-  // with them it leaves a hole at index 3 that crashes the *next* write.
-  const conversationMessages = [
-    null,
-    null,
-    null,
-    null,
-    ...messageIds.map(message),
-  ];
+  // This write punches the hole and is accepted - nothing reads it yet.
+  const pinned = createPinned();
+  cache.write({
+    query: messageListQuery,
+    result: { conversation: conversation(conversationMessages), pinned },
+  });
 
+  // Reusing the same source objects makes indexTree recycle the damaged subtree
+  // instead of indexing it again, and recycling walks every item reference.
   let error: Error | undefined;
   try {
     cache.write({
       query: messageListQuery,
-      result: {
-        conversation: conversation(conversationMessages),
-        pinned: createPinned(),
-      },
+      result: { conversation: conversation(conversationMessages), pinned },
     });
   } catch (e) {
     error = e as Error;
   }
 
   expect(error?.message).toMatch(
-    /^Invariant violation: Attempting to write malformed payload to the cache/,
+    /^Invariant violation: Attempting to write to a corrupted cache state/,
   );
   // This phrase is the first thing a human reads in a telemetry dashboard, so keep it
   // stable across rewordings of the rest.
   expect(error?.message).toContain(
-    'a "Thread" node occurs multiple times in a single write',
+    "occurs multiple times in a single write with a different number of items",
   );
-  expect(error?.message).toContain("data.conversation.thread.messages");
-  expect(error?.message).toContain("data.pinned.thread.messages");
+  expect(error?.message).toContain(
+    'an indexed "Thread" list has no item at index 3',
+  );
+  expect(error?.message).toContain("Field:              messages");
+  expect(error?.message).toContain(
+    "Items:              3 in the list, 14 indexed",
+  );
+  expect(error?.message).toContain(
+    "Path:               data.pinned.thread.messages",
+  );
+  // Both the write that indexed the damaged chunk and the one that tripped over it.
+  expect(error?.message).toContain("Current operation:  query MessageList");
+  expect(error?.message).toContain("Indexed by:         query MessageList");
   // The message ships to telemetry, so it must not leak the entity id.
   expect(error?.message).not.toContain("Thread:1");
-});
-
-test("rejects lists of different lengths even when no item reference is left unresolved", () => {
-  const cache = new ForestRun();
-  seedThread(cache);
-
-  // Same defect, benign symptom: every index is resolved in order, so the out of
-  // bounds growth densifies the chunk instead of leaving a hole. The payload is
-  // malformed either way and the cache state it produces is still wrong.
-  expect(() =>
-    cache.write({
-      query: messageListQuery,
-      result: {
-        conversation: conversation(messageIds.map(message)),
-        pinned: createPinned(),
-      },
-    }),
-  ).toThrow(
-    /^Invariant violation: Attempting to write malformed payload to the cache/,
-  );
 });
 
 test("accepts a payload repeating a node with lists of equal length", () => {
@@ -828,6 +662,13 @@ test("accepts a payload repeating a node with lists of equal length", () => {
     }),
   ).not.toThrow();
 });
+
+// The same defect, benign symptom: when every out of bounds index is resolved in
+// order the shorter chunk densifies instead of growing a hole, so there is
+// nothing for reIndexList to trip over even though the cache state is just as
+// wrong. Catching that needs the payload itself to be validated while it is
+// indexed, which is a follow up.
+test.todo("rejects repeated nodes with divergent list lengths at index time");
 
 test("properly reads plain objects from nested lists", () => {
   const query1 = gql`
