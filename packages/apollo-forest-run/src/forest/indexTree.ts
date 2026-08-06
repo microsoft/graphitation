@@ -18,7 +18,6 @@ import type {
   ParentLocator,
 } from "../values/types";
 import type {
-  FieldInfo,
   NormalizedFieldEntry,
   OperationDescriptor,
   PossibleSelections,
