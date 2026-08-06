@@ -325,25 +325,24 @@ describe("cross-operation recycling via @cache(covers)", () => {
   // place that runs it for a brand new tree is `growDataTree` — i.e. the very
   // first read of an operation that has never had a tree in the forest.
   //
-  // Every other way of populating the covered operation's tree bypasses it:
-  //   - a network write goes through `indexTree`, which only recycles from the
-  //     operation's own previous tree state (`recycleTree`);
-  //   - an incremental update goes through `updateTree` -> `completeObject`,
-  //     which calls `hydrateDraft` without a chunk matcher at all.
+  // Once a grow has established sharing it is sticky: later network writes go
+  // through `indexTree`, which recycles from the operation's own previous tree
+  // state, and that state already holds the covering operation's objects (see
+  // "preserves objects recycled from the covering op on subsequent writes").
   //
-  // Both are the norm in a real application, so the covered operation ends up
-  // with its own copies of objects the covering operation already holds, and
-  // the preload buys no memory savings. These tests demonstrate that.
+  // What breaks it is anything that gives the covered operation a tree without
+  // going through a covers-aware grow.
   describe("known gaps", () => {
-    // A component subscribing to the covered query before the preloader
-    // response lands produces a cache miss. `growOutputTree` still stores the
-    // resulting incomplete tree in the forest, so once the preloader is
-    // written, the covered tree is filled in by `updateTree` instead of being
-    // grown — and `updateTree` never recycles across operations.
+    // The common one: a component subscribes to the covered query before the
+    // preloader response lands. The read misses, but `growOutputTree` still
+    // stores the resulting incomplete tree in the forest. That consumes the one
+    // and only covers-aware grow. When the preloader finally arrives, the
+    // covered tree is filled in by `updateTree` -> `completeObject`, which
+    // calls `hydrateDraft` with no chunk matcher at all, so every object is
+    // rebuilt from scratch.
     //
-    // Note that no network response for `ListQuery` is involved here at all:
-    // every byte it returns comes from the preloader, yet none of the objects
-    // are shared.
+    // Note that no network response for `ListQuery` is involved here: every
+    // byte it returns comes from the preloader, yet nothing is shared.
     itFails(
       "forward: recycles objects from covering op after an initial cache miss",
       () => {
@@ -368,13 +367,13 @@ describe("cross-operation recycling via @cache(covers)", () => {
       },
     );
 
-    // The covered query is also fetched from the network (cache-and-network, a
-    // refetch, or simply a cache miss on some other field of the same query).
-    // The incoming payload is deep-equal to what the preloader already wrote,
-    // but the write path does not consider covering operations, so the forest
-    // ends up holding two copies of every item.
+    // The narrower one: the covered query is written before it has ever been
+    // read from the cache (e.g. `client.query` with no component subscribed).
+    // `indexTree` has no previous tree state to recycle from and does not
+    // consider covering operations, so the forest ends up with two copies of
+    // every item even though the payload is deep-equal to the preloader's.
     itFails(
-      "forward: recycles objects from covering op when covered op is written",
+      "forward: recycles objects from covering op when covered op is written before it is ever read",
       () => {
         const cache = new ForestRun();
 
@@ -403,6 +402,91 @@ describe("cross-operation recycling via @cache(covers)", () => {
         expect(list.result?.items[1]).toBe(itemsData[1]);
       },
     );
+
+    // The highest volume one: sharing decays over the lifetime of a session.
+    // Once a node that both trees share is updated, `updateAffectedTrees` calls
+    // `updateTree` once per affected tree and each call materialises its own
+    // draft, so both trees end up with a private copy of the new value. The
+    // copies are byte for byte identical, they are just not the same object,
+    // and nothing ever re-establishes the sharing.
+    //
+    // This is why frequently updated node types show far lower sharing than
+    // stable ones in a long running session.
+    itFails("keeps a node shared after it has been updated", () => {
+      const cache = new ForestRun();
+
+      cache.write({
+        query: PreloaderQuery,
+        result: { items: itemsData, detail: detailData },
+      });
+      cache.diff({ query: ListQuery, optimistic: true });
+
+      cache.write({
+        query: PreloaderQuery,
+        result: {
+          items: [
+            { __typename: "Item", id: "1", value: "a-changed" },
+            { __typename: "Item", id: "2", value: "b" },
+          ],
+          detail: detailData,
+        },
+      });
+
+      const list = cache.diff<{ items: typeof itemsData }>({
+        query: ListQuery,
+        optimistic: true,
+      });
+      const preloader = cache.diff<{ items: typeof itemsData }>({
+        query: PreloaderQuery,
+        optimistic: true,
+      });
+
+      // Both trees hold an identical copy of the updated item...
+      expect(list.result?.items[0]).toEqual(preloader.result?.items[0]);
+      // ...but not the same object.
+      expect(list.result?.items[0]).toBe(preloader.result?.items[0]);
+    });
+  });
+
+  it("preserves objects recycled from the covering op on subsequent writes", () => {
+    const cache = new ForestRun();
+
+    cache.write({
+      query: PreloaderQuery,
+      result: { items: itemsData, detail: detailData },
+    });
+
+    // Grow ListQuery from the cache — this is what establishes the sharing
+    const grown = cache.diff<{ items: typeof itemsData }>({
+      query: ListQuery,
+      optimistic: true,
+    });
+    expect(grown.result?.items[0]).toBe(itemsData[0]);
+
+    // A later network response for ListQuery must not undo it: indexTree
+    // recycles from the previous tree state, which holds Preloader's objects.
+    cache.write({
+      query: ListQuery,
+      result: {
+        items: [
+          { __typename: "Item", id: "1", value: "a-changed" },
+          { __typename: "Item", id: "2", value: "b" },
+        ],
+      },
+    });
+
+    const list = cache.diff<{ items: typeof itemsData }>({
+      query: ListQuery,
+      optimistic: true,
+    });
+    const preloader = cache.diff<{ items: typeof itemsData }>({
+      query: PreloaderQuery,
+      optimistic: true,
+    });
+
+    // Item 2 did not change, so it is still the very object the preloader wrote
+    expect(list.result?.items[1]).toBe(itemsData[1]);
+    expect(preloader.result?.items[1]).toBe(itemsData[1]);
   });
 });
 
