@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "chore: export incremental types",
-  "packageName": "@graphitation/supermassive",
-  "email": "dsamsonov@microsoft.com",
-  "dependentChangeType": "patch"
-}

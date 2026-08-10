@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Thu, 30 Jul 2026 12:02:56 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 10 Aug 2026 14:26:56 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 4.0.1
+
+Mon, 10 Aug 2026 14:26:56 GMT
+
+### Patches
+
+- chore: export incremental types (dsamsonov@microsoft.com)
 
 ## 4.0.0
 
