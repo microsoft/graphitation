@@ -445,7 +445,7 @@ function malformedPayloadError(
 ): string {
   // This runs while asserting, on a tree already known to be broken. A throw in here would
   // replace the invariant with an unrelated error and lose the payload description entirely,
-  // so every lookup below is best effort and the whole thing is guarded.
+  // so the whole description is guarded and degrades to what we can read off the chunk itself.
   try {
     return describeMalformedPayload(context, damaged, parent);
   } catch (e) {
@@ -478,7 +478,7 @@ function describeMalformedPayload(
   // The object owning the list may itself be embedded and keyless (a Relay connection is the
   // common case), and a keyless object cannot be repeated on its own: what occurs multiple
   // times is the closest keyed ancestor, so that is what the occurrence search is scoped to.
-  const node = owner && findClosestNodeSafe(owner.parent, findParent);
+  const node = owner && findClosestNode(owner.parent, findParent);
   const embedded = typeof owner?.parent.key !== "string";
   const objectType = owner?.parent.type || "(unknown type)";
   const nodeType = node?.type || "(unknown type)";
@@ -513,10 +513,7 @@ function describeMalformedPayload(
         ["Field", fieldEntry ? describeFieldEntry(fieldEntry) : fieldName],
         // Where the object sits under the node - the data paths below cross node boundaries
         // without marking them, so this is what ties the two together.
-        [
-          "Path in node",
-          describePath(findParent, damaged, node) || "(unknown)",
-        ],
+        ["Path in node", describePath(findParent, damaged, node)],
       ]
     : [
         ["Operation", damaged.operation.debugName],
@@ -572,7 +569,7 @@ function findOccurrences(
   const found: CompositeListChunk[] = [];
   if (tree && type && fieldEntry && node) {
     for (const chunk of tree.typeMap.get(type) ?? EMPTY_ARRAY) {
-      if (findClosestNodeSafe(chunk, findParent)?.key !== node.key) {
+      if (findClosestNode(chunk, findParent)?.key !== node.key) {
         continue;
       }
       // Matched by normalized entry, so aliases and arguments have to line up.
@@ -592,7 +589,7 @@ function findOccurrences(
   return occurrences.map((list) => ({
     items: list.data.length,
     slots: describeSlots(list),
-    path: describePath(findParent, list) ?? "(unknown path)",
+    path: describePath(findParent, list),
   }));
 }
 
@@ -617,33 +614,16 @@ function describeSlots(list: CompositeListChunk): string {
   })`;
 }
 
-// Runs while reporting an error, on a tree that is known to be broken, so the walk up to the
-// node can hit a missing parent.
-function findClosestNodeSafe(
-  chunk: ObjectChunk | CompositeListChunk,
-  findParent: ParentLocator,
-): NodeChunk | null {
-  try {
-    return findClosestNode(chunk, findParent);
-  } catch (e) {
-    return null;
-  }
-}
-
 // A list of lists has no field of its own: walk up to the field the outermost list is assigned to.
 function findOwningField(
   findParent: ParentLocator,
   parent: GraphChunkReference,
 ): ObjectFieldReference | null {
-  try {
-    let ref = parent;
-    while (isParentListRef(ref)) {
-      ref = findParent(ref.parent);
-    }
-    return isParentObjectRef(ref) ? ref : null;
-  } catch (e) {
-    return null;
+  let ref = parent;
+  while (isParentListRef(ref)) {
+    ref = findParent(ref.parent);
   }
+  return isParentObjectRef(ref) ? ref : null;
 }
 
 function describeFieldEntry(fieldEntry: NormalizedFieldEntry): string {
@@ -657,22 +637,12 @@ function describeFieldEntry(fieldEntry: NormalizedFieldEntry): string {
   return args ? `${fieldEntry.name}(${args})` : fieldEntry.name;
 }
 
-// Absolute when `from` is omitted, node relative otherwise. Returns null when the path cannot
-// be resolved: this runs while reporting an error, on a tree that is known to be broken, and
-// an unresolved path must not be reported as the root path.
+// Absolute when `from` is omitted, node relative otherwise.
 function describePath(
   findParent: ParentLocator,
   list: CompositeListChunk,
   from?: ObjectChunk | CompositeListChunk | null,
-): string | null {
-  try {
-    const path = getDataPathForDebugging(
-      { findParent },
-      list,
-      from ?? undefined,
-    );
-    return from ? path.join(".") : `data${path.map((s) => `.${s}`).join("")}`;
-  } catch (e) {
-    return null;
-  }
+): string {
+  const path = getDataPathForDebugging({ findParent }, list, from ?? undefined);
+  return from ? path.join(".") : `data${path.map((s) => `.${s}`).join("")}`;
 }

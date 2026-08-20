@@ -96,6 +96,9 @@ test("degrades instead of throwing when path resolution fails", () => {
     error = e as Error;
   }
 
+  // The invariant is still what surfaces, degraded to what can be read off the damaged chunk
+  // itself. The underlying failure is named rather than swallowed, so telemetry can tell a
+  // broken description apart from a payload that genuinely has nothing more to report.
   expect(error?.message).toContain("malformed payload");
-  expect(error?.message).not.toContain("parent lookup exploded");
+  expect(error?.message).toContain("reporting failed: parent lookup exploded");
 });
