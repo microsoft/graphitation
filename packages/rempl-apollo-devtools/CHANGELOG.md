@@ -1,8 +1,16 @@
 # Change Log - @graphitation/rempl-apollo-devtools
 
-<!-- This log was last generated on Thu, 06 Aug 2026 11:08:15 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 20 Aug 2026 13:52:47 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 2.2.8
+
+Thu, 20 Aug 2026 13:52:47 GMT
+
+### Patches
+
+- Bump @graphitation/apollo-forest-run to v0.25.2
 
 ## 2.2.7
 

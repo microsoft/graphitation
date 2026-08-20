@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "fix(apollo-forest-run): report every occurrence of a divergent list in the malformed payload error, not just the damaged one. Also reports the slot/hole shape of the corrupted list, and never throws from the reporting itself",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "vrazuvaev@microsoft.com_msteamsmdb",
-  "dependentChangeType": "patch"
-}

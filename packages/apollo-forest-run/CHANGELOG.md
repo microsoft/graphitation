@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Thu, 06 Aug 2026 11:08:15 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 20 Aug 2026 13:52:47 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.25.2
+
+Thu, 20 Aug 2026 13:52:47 GMT
+
+### Patches
+
+- fix(apollo-forest-run): report every occurrence of a divergent list in the malformed payload error, not just the damaged one. Also reports the slot/hole shape of the corrupted list, and never throws from the reporting itself (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.25.1
 
