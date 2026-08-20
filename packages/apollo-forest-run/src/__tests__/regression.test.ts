@@ -801,6 +801,357 @@ test("reports list indices when the repeated node is itself a list item", () => 
 // indexed, which is a follow up.
 test.todo("rejects repeated nodes with divergent list lengths at index time");
 
+// Both tests above have the divergent list hanging directly off the repeated *node*
+// (`Thread.messages`, `Message.files`). Production hit a shape neither covers: the list
+// belongs to an embedded, keyless object (a Relay connection) nested under the repeated
+// node - `Message.threadSummary.participants.edges`.
+//
+// `findOccurrences` used to key its search on the object owning the list field:
+//
+//     const key = owner?.parent.key;
+//     if (tree && fieldEntry && typeof key === "string") { ...search siblings... }
+//
+// A connection has no id, so its chunk key is `false`, the search was skipped, `found`
+// stayed empty and only the damaged chunk was reported - under a `Node type` naming the
+// connection, which is not a node and cannot be repeated:
+//
+//   ... a "ParticipantConnection" node occurs multiple times in a single write with a
+//   different number of items in the "edges" list.
+//     Operation:  query MessageFeed
+//     Node type:  ParticipantConnection
+//     Field:      edges
+//     Occurrence 1: 0 items at data.feed.messages.0.threadSummary.participants.edges
+//
+// The missing "Node id" line - printed only when two occurrences are found - is what
+// identified that as under-reporting rather than truncation in the telemetry pipeline.
+// The search now climbs to the enclosing `Message` and descends the embedded path, and
+// reporting has two branches: the list is a field of the node (`Node type`), or a field of
+// an object embedded under it (`Object type` + `Parent node type`).
+const participantEdge = (id: string) => ({
+  __typename: "ParticipantEdge",
+  cursor: id,
+  node: { __typename: "User", id },
+});
+
+const threadSummary = (edges: unknown[]) => ({
+  __typename: "ThreadSummary",
+  participants: {
+    __typename: "ParticipantConnection",
+    edges,
+  },
+});
+
+const summarizedMessage = (id: string, edges: unknown[]) => ({
+  __typename: "Message",
+  id,
+  threadSummary: threadSummary(edges),
+});
+
+const summarySeedQuery = gql`
+  query SummarySeed {
+    message {
+      __typename
+      id
+      threadSummary {
+        __typename
+        participants {
+          __typename
+          edges {
+            __typename
+            cursor
+            node {
+              __typename
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+// `lastMessage` is selected before `messages`, so its 4 item chunk is aggregated first and
+// the out of range indices are applied to the 0 item chunk at `messages.0`. Its extra
+// `subject` field is what makes the two selections differ: aggregateFieldChunks drops
+// adjacent chunks sharing a selection and operation, so without it the repeat is collapsed
+// before the lists are aggregated and nothing diverges.
+const messageFeedQuery = gql`
+  query MessageFeed {
+    feed {
+      __typename
+      id
+      lastMessage {
+        __typename
+        id
+        subject
+        threadSummary {
+          __typename
+          participants {
+            __typename
+            edges {
+              __typename
+              cursor
+              node {
+                __typename
+                id
+              }
+            }
+          }
+        }
+      }
+      messages {
+        __typename
+        id
+        threadSummary {
+          __typename
+          participants {
+            __typename
+            edges {
+              __typename
+              cursor
+              node {
+                __typename
+                id
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+function writeDivergentConnection(): Error | undefined {
+  // Keyed edges are required: with keyless items diffCompositeListLayout falls through to
+  // the item loop, which resolves every index in order and densifies the short chunk
+  // instead of leaving a hole.
+  const cache = new ForestRun({
+    typePolicies: {
+      ParticipantEdge: { keyFields: ["cursor"] },
+    },
+  });
+  cache.write({
+    query: summarySeedQuery,
+    result: {
+      message: summarizedMessage("7", [
+        participantEdge("a"),
+        participantEdge("b"),
+      ]),
+    },
+  });
+
+  // Message:7 twice in one payload: 4 edges under `lastMessage`, 0 under `messages.0`.
+  const feed = {
+    __typename: "Feed",
+    id: "1",
+    lastMessage: {
+      ...summarizedMessage("7", [
+        null,
+        null,
+        participantEdge("a"),
+        participantEdge("b"),
+      ]),
+      subject: "s",
+    },
+    messages: [summarizedMessage("7", [])],
+  };
+
+  try {
+    // First write punches the hole and is accepted; the second recycles the subtree.
+    cache.write({ query: messageFeedQuery, result: { feed } });
+    cache.write({ query: messageFeedQuery, result: { feed } });
+  } catch (e) {
+    return e as Error;
+  }
+  return undefined;
+}
+
+test("reports both occurrences when the divergent list belongs to an embedded object", () => {
+  const error = writeDivergentConnection();
+
+  // Occurrences are addressed in payload order, so the conflicting one comes first here.
+  // It is the half that explains the divergence, and the half that used to be missing:
+  // `findOccurrences` searched by the key of the *connection*, which is `false`.
+  expect(error?.message).toContain(
+    "Occurrence 1: 4 items at data.feed.lastMessage.threadSummary.participants.edges",
+  );
+  // The damaged (empty) occurrence - the one being recycled when the hole is hit.
+  expect(error?.message).toContain(
+    "Occurrence 2: 0 items at data.feed.messages.0.threadSummary.participants.edges" +
+      " (4 slots, holes at 0,1)",
+  );
+  // Printed only when two occurrences are found, so it tracks the assertions above.
+  expect(error?.message).toContain(
+    "Parent node id:    same in both occurrences (not shown)",
+  );
+  expect(error?.message).not.toContain("Message:7");
+});
+
+test("names the node behind a divergent list of an embedded object", () => {
+  const error = writeDivergentConnection();
+
+  // `edges` is declared by the connection, so that is the type named next to it - saying
+  // "Message" there would point at a type with no such field.
+  expect(error?.message).toContain("Object type:       ParticipantConnection");
+  expect(error?.message).toContain("Field:             edges");
+  // The connection has no id and cannot be repeated on its own: the node occurring twice
+  // is the enclosing Message, and the path says where the connection hangs off it.
+  expect(error?.message).toContain("Parent node type:  Message");
+  expect(error?.message).toContain(
+    "Path in node:      threadSummary.participants.edges",
+  );
+  expect(error?.message).toContain(
+    'a "ParticipantConnection" object embedded in a "Message" node occurs multiple ' +
+      'times in a single write with a different number of items in the "edges" list',
+  );
+});
+
+// Nothing above requires the repeat to be visible in the payload as a repeated *message*.
+// When the summary carries its own id, two different messages pointing at the same summary
+// repeat that node instead - so a query selecting one plain list of messages is enough, and
+// the two occurrences sit at two items of that single list.
+//
+// The two summary chunks survive `aggregateFieldChunks` because `replyTo.threadSummary` and
+// `threadSummary` are separate selection sets: chunks are only collapsed when adjacent and
+// sharing both selection and operation, which is what happens when every item of a list
+// reaches the same node through the same path.
+const keyedSummary = (id: string, edges: unknown[]) => ({
+  __typename: "ThreadSummary",
+  id,
+  participants: {
+    __typename: "ParticipantConnection",
+    edges,
+  },
+});
+
+const keyedSummarySeedQuery = gql`
+  query KeyedSummarySeed {
+    summary {
+      __typename
+      id
+      participants {
+        __typename
+        edges {
+          __typename
+          cursor
+          node {
+            __typename
+            id
+          }
+        }
+      }
+    }
+  }
+`;
+
+const messageThreadsQuery = gql`
+  query MessageThreads {
+    feed {
+      __typename
+      id
+      messages {
+        __typename
+        id
+        replyTo {
+          __typename
+          id
+          threadSummary {
+            __typename
+            id
+            participants {
+              __typename
+              edges {
+                __typename
+                cursor
+                node {
+                  __typename
+                  id
+                }
+              }
+            }
+          }
+        }
+        threadSummary {
+          __typename
+          id
+          participants {
+            __typename
+            edges {
+              __typename
+              cursor
+              node {
+                __typename
+                id
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+test("reports a node repeated across items of a single list", () => {
+  const cache = new ForestRun({
+    typePolicies: { ParticipantEdge: { keyFields: ["cursor"] } },
+  });
+  cache.write({
+    query: keyedSummarySeedQuery,
+    result: {
+      summary: keyedSummary("x", [participantEdge("a"), participantEdge("b")]),
+    },
+  });
+
+  // ThreadSummary:x twice, under two different messages of the same list: 4 participants
+  // below `messages.0.replyTo`, 0 below `messages.1`.
+  const feed = {
+    __typename: "Feed",
+    id: "1",
+    messages: [
+      {
+        __typename: "Message",
+        id: "1",
+        replyTo: {
+          __typename: "Message",
+          id: "9",
+          threadSummary: keyedSummary("x", [
+            null,
+            null,
+            participantEdge("a"),
+            participantEdge("b"),
+          ]),
+        },
+        threadSummary: keyedSummary("y", []),
+      },
+      {
+        __typename: "Message",
+        id: "2",
+        replyTo: null,
+        threadSummary: keyedSummary("x", []),
+      },
+    ],
+  };
+
+  let error: Error | undefined;
+  try {
+    cache.write({ query: messageThreadsQuery, result: { feed } });
+    cache.write({ query: messageThreadsQuery, result: { feed } });
+  } catch (e) {
+    error = e as Error;
+  }
+
+  // The messages differ, so the repeat is only visible once the summary is named.
+  expect(error?.message).toContain("Parent node type:  ThreadSummary");
+  expect(error?.message).toContain("Object type:       ParticipantConnection");
+  expect(error?.message).toContain(
+    "Occurrence 1: 4 items at data.feed.messages.0.replyTo.threadSummary.participants.edges",
+  );
+  expect(error?.message).toContain(
+    "Occurrence 2: 0 items at data.feed.messages.1.threadSummary.participants.edges",
+  );
+  expect(error?.message).not.toContain("ThreadSummary:x");
+});
+
 test("properly reads plain objects from nested lists", () => {
   const query1 = gql`
     {
