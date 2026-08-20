@@ -127,7 +127,9 @@ function diffPlainObjectValue(
     diff = diffObjectChunk(context, base, model, diff);
   }
   if (diff && (Difference.isDirty(diff) || !Difference.isComplete(diff))) {
-    diff.newValue = model;
+    if (context.env.reconcileDivergentChunks) {
+      diff.newValue = model;
+    }
     return diff;
   }
   return undefined;
@@ -493,7 +495,9 @@ function diffCompositeListValue(
     }
   }
   if (diff && (Difference.isDirty(diff) || !Difference.isComplete(diff))) {
-    diff.newValue = model;
+    if (context.env.reconcileDivergentChunks) {
+      diff.newValue = model;
+    }
     return diff;
   }
   return undefined;

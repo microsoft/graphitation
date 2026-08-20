@@ -197,6 +197,7 @@ export type ForestRunAdditionalConfig<
   logStaleOperations?: boolean;
   optimizeFragmentReads?: boolean;
   cleanupNonCacheableOperations?: boolean;
+  reconcileDivergentChunks?: boolean;
 
   historyConfig?: HistoryConfig<TPartitions>;
 };
@@ -280,6 +281,14 @@ export type CacheEnv<TPartitions extends HistoryPartitions = any> = {
    * `store.operations` for the lifetime of the cache.
    */
   cleanupNonCacheableOperations: boolean;
+  /**
+   * When enabled, object and list differences carry their model value, so updates can
+   * reconcile chunks of the same node that diverged into `null` or missing values
+   * (instead of failing update invariants and leaving stale chunks behind).
+   *
+   * Disabled by default: it adds work on the common diffing path.
+   */
+  reconcileDivergentChunks: boolean;
   historyConfig?: HistoryConfig<TPartitions>;
 };
 

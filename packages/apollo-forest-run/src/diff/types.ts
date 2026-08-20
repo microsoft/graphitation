@@ -18,6 +18,14 @@ import * as ChangeKind from "./itemChangeKind";
 export type DiffEnv = {
   allowMissingFields?: boolean;
 
+  /**
+   * When enabled, object and list differences carry their model value (`newValue`),
+   * allowing updates to reconcile chunks that diverged into `null` or missing values.
+   *
+   * Disabled by default: carrying the model value adds work on the common diffing path.
+   */
+  reconcileDivergentChunks?: boolean;
+
   listItemKey?: (
     item: SourceObject | SourceCompositeList,
     index: number,

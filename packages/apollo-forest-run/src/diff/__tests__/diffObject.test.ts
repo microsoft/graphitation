@@ -12,6 +12,7 @@ import {
   DiffEnv,
   FieldEntryDifference,
   CompositeListDifference,
+  ObjectDifference,
 } from "../types";
 import {
   completeObject,
@@ -1736,7 +1737,7 @@ describe("kitchen-sink", () => {
 
   test("detects list item changes when base chunks have different selections", () => {
     const forestEnv = { objectKey: (obj: any) => obj.id };
-    const diffEnv = {};
+    const diffEnv = { reconcileDivergentChunks: true };
 
     // Op1: narrow selection on list items (only foo)
     const doc1 = gql`
@@ -1832,6 +1833,49 @@ describe("kitchen-sink", () => {
     }
     // Item 1's bar change should also be dirty (missed due to enqueueListItem bug)
     expect(listDiff.dirtyItems?.has(1)).toBe(true);
+  });
+});
+
+describe("reconcileDivergentChunks", () => {
+  const base = () =>
+    completeObject({ plainObject: plainObjectFoo({ foo: "foo" }) });
+  const model = () =>
+    completeObject({ plainObject: plainObjectFoo({ foo: "updated" }) });
+
+  const getPlainObjectDiff = (difference: ObjectDifference) => {
+    const fieldDiff = difference.fieldState.get(
+      "plainObject",
+    ) as FieldEntryDifference;
+    assert(fieldDiff);
+    const state = fieldDiff.state;
+    assert(isObjectDifference(state));
+    return state;
+  };
+
+  test("does not carry model values when disabled (default)", () => {
+    const { result } = diff(base(), model());
+    const difference = result.difference;
+    assert(difference);
+
+    expect(difference.newValue).toBeUndefined();
+    expect(getPlainObjectDiff(difference).newValue).toBeUndefined();
+  });
+
+  test("carries model values when enabled", () => {
+    const { result, model: modelValue } = diff(
+      base(),
+      model(),
+      undefined,
+      undefined,
+      { reconcileDivergentChunks: true },
+    );
+    const difference = result.difference;
+    assert(difference);
+
+    expect(difference.newValue).toBe(modelValue);
+    expect(getPlainObjectDiff(difference).newValue?.data).toEqual(
+      plainObjectFoo({ foo: "updated" }),
+    );
   });
 });
 
