@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Enable cleanupNonCacheableOperations by default",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com",
+  "dependentChangeType": "patch"
+}
