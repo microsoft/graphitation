@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "fix(apollo-forest-run): gate divergent chunk reconciliation behind the reconcileDivergentChunks flag (disabled by default)",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}

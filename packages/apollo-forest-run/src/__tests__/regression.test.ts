@@ -2385,7 +2385,7 @@ test("merge policy on embedded object must not crash when a prior null operation
 });
 
 test("updates a node field that is null in one chunk and an object in another", () => {
-  const cache = new ForestRun();
+  const cache = new ForestRun({ reconcileDivergentChunks: true });
   const aliasedQuery = gql`
     query Aliased {
       x: foo {
@@ -2463,7 +2463,7 @@ test("updates a node field that is null in one chunk and an object in another", 
 });
 
 test("updates repeated node ids with divergent object and null fields", () => {
-  const cache = new ForestRun();
+  const cache = new ForestRun({ reconcileDivergentChunks: true });
   const listQuery = gql`
     query List {
       foos {
@@ -2536,7 +2536,7 @@ test("updates repeated node ids with divergent object and null fields", () => {
 });
 
 test("updates a list item that is null in one chunk and an object in another", () => {
-  const cache = new ForestRun();
+  const cache = new ForestRun({ reconcileDivergentChunks: true });
   const aliasedQuery = gql`
     query Aliased {
       x: foo {

@@ -86,10 +86,12 @@ function updateObjectValue(
       const value = Value.resolveFieldChunk(base, fieldInfo);
       const valueIsMissing = Value.isMissingValue(value);
       // A structural difference carrying its model value can recover this inconsistent state.
+      // `newValue` is probed first: it is absent on the common path (and always when the
+      // `reconcileDivergentChunks` flag is disabled), so the kind checks are usually skipped.
       const isRecoverableMissingValue =
+        fieldDiff.newValue !== undefined &&
         (Difference.isObjectDifference(fieldDiff) ||
-          Difference.isCompositeListDifference(fieldDiff)) &&
-        fieldDiff.newValue;
+          Difference.isCompositeListDifference(fieldDiff));
 
       if (
         valueIsMissing &&

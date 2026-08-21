@@ -1878,18 +1878,37 @@ describe("changed and affected nodes detection", () => {
 describe("inconsistent state", () => {
   // Note: this can happen if previous operation update failed and operation result is now stale.
   //   It is still possible to update _some_ "nodes", but others may be in a permanent stale state.
-  test("replaces null values from structural differences", () => {
-    const diffBase = completeObject({
+  const diffBase = () =>
+    completeObject({
       completeObject: completeObject({
         plainObject: plainObjectFoo({ foo: "foo" }),
       }),
     });
-    const model = completeObject({
+  const model = () =>
+    completeObject({
       completeObject: completeObject({
         plainObject: plainObjectFoo({ foo: "updated" }),
       }),
     });
-    const { difference } = diff(diffBase, model);
+
+  test("does not update missing values when reconcileDivergentChunks is disabled", () => {
+    // Assuming it will trigger re-fetching anyway, given it already has missing field
+    const { difference } = diff(diffBase(), model());
+
+    const updatedBase = completeObject({
+      completeObject: completeObject({
+        plainObject: undefined,
+      }),
+    });
+    const { data } = update(updatedBase, difference);
+
+    expect(data).toBe(updatedBase);
+  });
+
+  test("replaces null values from structural differences", () => {
+    const { difference } = diff(diffBase(), model(), {
+      reconcileDivergentChunks: true,
+    });
 
     const updatedBase = completeObject({
       completeObject: completeObject({
@@ -1904,17 +1923,9 @@ describe("inconsistent state", () => {
   });
 
   test("fills missing values from structural differences", () => {
-    const diffBase = completeObject({
-      completeObject: completeObject({
-        plainObject: plainObjectFoo({ foo: "foo" }),
-      }),
+    const { difference } = diff(diffBase(), model(), {
+      reconcileDivergentChunks: true,
     });
-    const model = completeObject({
-      completeObject: completeObject({
-        plainObject: plainObjectFoo({ foo: "updated" }),
-      }),
-    });
-    const { difference } = diff(diffBase, model);
 
     const updatedBase = completeObject({
       completeObject: completeObject({
