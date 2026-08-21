@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Thu, 20 Aug 2026 13:52:47 GMT and should not be manually modified. -->
+<!-- This log was last generated on Fri, 21 Aug 2026 08:18:48 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.25.3
+
+Fri, 21 Aug 2026 08:18:48 GMT
+
+### Patches
+
+- fix(apollo-forest-run): gate divergent chunk reconciliation behind the reconcileDivergentChunks flag (disabled by default) (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.25.2
 
