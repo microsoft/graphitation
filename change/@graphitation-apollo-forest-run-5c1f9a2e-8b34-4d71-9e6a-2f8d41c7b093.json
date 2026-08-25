@@ -1,0 +1,7 @@
+{
+  "type": "none",
+  "comment": "docs(apollo-forest-run): correct an inaccurate comment in the corrupted-list regression test. Test comment only, no product or test behavior change",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "none"
+}
