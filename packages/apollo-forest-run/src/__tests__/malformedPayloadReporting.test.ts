@@ -68,8 +68,10 @@ test("degrades instead of throwing when path resolution fails", () => {
     throw new Error("parent lookup exploded");
   });
 
+  const warn = jest.fn();
   const cache = new ForestRun({
     typePolicies: { ParticipantEdge: { keyFields: ["cursor"] } },
+    logger: { ...console, warn },
   });
   cache.write({
     query: seedQuery,
@@ -89,25 +91,71 @@ test("degrades instead of throwing when path resolution fails", () => {
   cache.write({ query: feedQuery, result: { feed } });
 
   // `resolveListItemChunk` no longer grows `itemChunks` past `data.length`, so a
-  // malformed payload cannot reach the invariant through the public API any more.
+  // malformed payload cannot reach this path through the public API any more.
   // The other writers of `itemChunks` (convert.ts, indexTree.ts, delete.ts) still
-  // can, so the hole is punched directly here to keep the reporting path covered:
-  // it is the only reason the invariant is still in place.
+  // can, so the hole is punched directly here to keep the reporting path covered.
   punchHole(cache);
 
-  let error: Error | undefined;
-  try {
-    // Recycling the damaged chunk is when the hole is finally dereferenced.
-    cache.write({ query: feedQuery, result: { feed } });
-  } catch (e) {
-    error = e as Error;
+  // Recycling the damaged chunk is when the hole is finally dereferenced. It must
+  // not throw: rejecting the write would reject every subsequent write for this
+  // operation too, because the hole is cached and each recycle finds it again.
+  expect(() =>
+    cache.write({ query: feedQuery, result: { feed } }),
+  ).not.toThrow();
+
+  // The report is still what surfaces, degraded to what can be read off the damaged
+  // chunk itself. The underlying failure is named rather than swallowed, so telemetry
+  // can tell a broken description apart from a payload that genuinely has nothing
+  // more to report.
+  const reported = warn.mock.calls.flat().join("\n");
+  expect(reported).toContain("malformed payload");
+  expect(reported).toContain("reporting failed: parent lookup exploded");
+});
+
+test("reports a malformed list without rejecting later writes", () => {
+  const warn = jest.fn();
+  const cache = new ForestRun({
+    typePolicies: { ParticipantEdge: { keyFields: ["cursor"] } },
+    logger: { ...console, warn },
+  });
+
+  const feedWith = (edges: unknown[]) => ({
+    __typename: "Feed",
+    id: "feed-1",
+    lastMessage: { ...message(edges), subject: "subject" },
+    messages: [message(edges)],
+  });
+
+  const feed = feedWith([edge("a")]);
+  cache.write({ query: feedQuery, result: { feed } });
+  punchHole(cache);
+
+  // Recycling the damaged chunk is when the hole is finally dereferenced. Throwing
+  // here rejected this write *and every later one*: the hole is cached, so each
+  // recycle found it again and the operation could never take another update.
+  expect(() =>
+    cache.write({ query: feedQuery, result: { feed } }),
+  ).not.toThrow();
+
+  // The payload is reported once per operation rather than on every recycle.
+  expect(warn.mock.calls.flat().join("\n")).toContain("malformed payload");
+
+  for (const cursors of [["a", "b"], ["a", "b", "c"], ["d"]]) {
+    expect(() =>
+      cache.write({
+        query: feedQuery,
+        result: { feed: feedWith(cursors.map(edge)) },
+      }),
+    ).not.toThrow();
   }
 
-  // The invariant is still what surfaces, degraded to what can be read off the damaged chunk
-  // itself. The underlying failure is named rather than swallowed, so telemetry can tell a
-  // broken description apart from a payload that genuinely has nothing more to report.
-  expect(error?.message).toContain("malformed payload");
-  expect(error?.message).toContain("reporting failed: parent lookup exploded");
+  // ...and the operation keeps serving the data it was last written with.
+  const diff = cache.diff({ query: feedQuery, optimistic: false });
+  expect(
+    (diff.result as any).feed.lastMessage.summary.participants.edges.map(
+      (e: any) => e.cursor,
+    ),
+  ).toEqual(["d"]);
 });
 
 /** Leaves an unresolved item reference on every list chunk of the feed tree. */

@@ -498,8 +498,9 @@ test("properly replaces objects containing nested composite lists", () => {
 // without caching it, so no hole is created and the payload is reconciled like any
 // other. The node ends up with a single value for the divergent field - the last
 // one written - which is all normalization can do with a payload that claims two.
-// The reIndexList invariant is kept as a tripwire for the other writers of
-// `itemChunks` (convert.ts, indexTree.ts, delete.ts).
+// The reIndexList invariant no longer throws: an in range hole is just a slot that
+// nothing has resolved yet, so it is resolved on the spot, while an out of range slot
+// has no backing data and is reported through the logger and skipped.
 //
 // The tests below pin that these payloads stay writable, and that the cache keeps
 // serving and updating the node afterwards.
