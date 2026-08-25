@@ -86,11 +86,18 @@ test("degrades instead of throwing when path resolution fails", () => {
     messages: [message([])],
   };
 
+  cache.write({ query: feedQuery, result: { feed } });
+
+  // `resolveListItemChunk` no longer grows `itemChunks` past `data.length`, so a
+  // malformed payload cannot reach the invariant through the public API any more.
+  // The other writers of `itemChunks` (convert.ts, indexTree.ts, delete.ts) still
+  // can, so the hole is punched directly here to keep the reporting path covered:
+  // it is the only reason the invariant is still in place.
+  punchHole(cache);
+
   let error: Error | undefined;
   try {
-    // The second write recycles the chunk corrupted by the first one, which is when the hole
-    // left behind by the divergent lengths is finally dereferenced.
-    cache.write({ query: feedQuery, result: { feed } });
+    // Recycling the damaged chunk is when the hole is finally dereferenced.
     cache.write({ query: feedQuery, result: { feed } });
   } catch (e) {
     error = e as Error;
@@ -102,3 +109,34 @@ test("degrades instead of throwing when path resolution fails", () => {
   expect(error?.message).toContain("malformed payload");
   expect(error?.message).toContain("reporting failed: parent lookup exploded");
 });
+
+/** Leaves an unresolved item reference on every list chunk of the feed tree. */
+function punchHole(cache: ForestRun) {
+  const trees = [...(cache as any).store.dataForest.trees.values()];
+  const tree: any = trees.find((t: any) => t.nodes.has("Feed:feed-1"));
+  const seen = new Set<unknown>();
+  const stack: any[] = [...tree.nodes.values()];
+  let damaged = 0;
+  while (stack.length) {
+    const candidate = stack.pop();
+    if (!candidate || typeof candidate !== "object" || seen.has(candidate)) {
+      continue;
+    }
+    seen.add(candidate);
+    const items = candidate.itemChunks;
+    if (Array.isArray(candidate.data) && Array.isArray(items) && items.length) {
+      // Index `items.length` is now a hole, index `items.length + 1` is not.
+      items[items.length + 1] = items[0];
+      damaged++;
+      continue;
+    }
+    const values =
+      candidate instanceof Map
+        ? candidate.values()
+        : Object.values(candidate as object);
+    for (const value of values) {
+      if (value && typeof value === "object") stack.push(value);
+    }
+  }
+  expect(damaged).toBeGreaterThan(0);
+}

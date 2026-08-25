@@ -352,10 +352,26 @@ export function resolveListItemChunk(
 ): CompositeValueChunk {
   let parentInfo = chunk.itemChunks[index];
   if (!parentInfo) {
-    // The following "assert" currently conflicts with "extract" which mixes data from multiple layers
-    //   (so the same logical array may contain chunks of different lengths, which is incorrect)
-    // TODO: rework the logic in `extract` and then enable this (and tests)
-    //   assert(0 <= index && index < chunk.data.length);
+    if (index < 0 || index >= chunk.data.length) {
+      // Out of range. This happens for malformed payloads: when the same node is
+      // repeated in a single write with a different number of items in the same
+      // list field, `aggregateListItemValue` iterates the longest chunk and
+      // applies its indices to the shorter ones.
+      //
+      // `createCompositeValueChunk` already resolves a missing item to an
+      // undefined chunk, so returning one here changes nothing for the caller.
+      // What matters is that the result is *not* cached: writing
+      // `itemChunks[index]` past `data.length` grows the array and leaves holes
+      // behind (resolving index 99 of a 3 item list leaves 96 of them). Nothing
+      // reads those holes until a later write recycles the chunk, at which point
+      // `reIndexList` walks every item reference and throws - blaming a write
+      // that is entirely innocent, and rejecting every subsequent write for that
+      // operation from then on.
+      return CreateValue.createCompositeUndefinedChunk(
+        chunk.operation,
+        chunk.possibleSelections,
+      );
+    }
     const chunkValue = CreateValue.createCompositeValueChunk(
       chunk.operation,
       chunk.possibleSelections,

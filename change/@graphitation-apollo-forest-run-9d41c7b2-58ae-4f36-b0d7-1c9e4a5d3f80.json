@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "fix(apollo-forest-run): resolve out-of-range list items to an undefined chunk instead of caching a hole",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}

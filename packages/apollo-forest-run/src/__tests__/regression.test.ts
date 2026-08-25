@@ -478,20 +478,31 @@ test("properly replaces objects containing nested composite lists", () => {
 //     into the layout for them and diffCompositeListValue skips those indices
 //     (`baseItemIndex` is not a number), so index 4 is the *first* index
 //     resolved against the aggregate.
-//  4. aggregateListItemValue -> resolveListItemChunk assigns `itemChunks[4]` on
-//     the 3 item chunk with no bounds check. The array grows past its data
-//     length and index 3 is left unresolved.
+//  4. aggregateListItemValue -> resolveListItemChunk assigned `itemChunks[4]` on
+//     the 3 item chunk with no bounds check. The array grew past its data
+//     length and index 3 was left unresolved.
 //
-// Only the *first* out of range index decides whether a hole is left: resolving in
+// Only the *first* out of range index decided whether a hole was left: resolving in
 // ascending order grows the short chunk densely. Leading nulls are the cheapest way
 // to start above its length, not the only one - `layout` is a key lookup
 // (findKeyIndex), so a reordered keyed list visits base indices out of order too,
 // and descendToChunk/retrieveEmbeddedValue resolve a single index with no scan.
 //
-// Steps 1+2 are the actual defect in the payload, but nothing reads the hole it
-// leaves until a *later* write recycles that chunk - which is why the stack trace
-// blames a write that is entirely innocent. reIndexList now detects the hole
-// instead of dereferencing it, and reports what is known about the damaged list.
+// Steps 1+2 are the actual defect in the payload, but nothing read the hole it
+// left until a *later* write recycled that chunk - which is why the stack trace
+// blamed a write that was entirely innocent, and why every subsequent write for
+// that operation was rejected too: the hole is cached, so each recycle found it
+// again and the operation could never take another update.
+//
+// resolveListItemChunk now returns an undefined chunk for out of range indices
+// without caching it, so no hole is created and the payload is reconciled like any
+// other. The node ends up with a single value for the divergent field - the last
+// one written - which is all normalization can do with a payload that claims two.
+// The reIndexList invariant is kept as a tripwire for the other writers of
+// `itemChunks` (convert.ts, indexTree.ts, delete.ts).
+//
+// The tests below pin that these payloads stay writable, and that the cache keeps
+// serving and updating the node afterwards.
 const seedQuery = gql`
   query MessageListSeed {
     thread {
@@ -586,57 +597,69 @@ const conversationMessages = [
   ...messageIds.map(message),
 ];
 
-test("reports an unresolved list item instead of dereferencing it", () => {
+// Thread:1 is one node, so both occurrences resolve to the same list.
+const readMessageTexts = (cache: ForestRun) => {
+  const result = cache.readQuery<any>({
+    query: seedQuery,
+    returnPartialData: true,
+  });
+  return result?.thread?.messages?.map((m: any) => m?.text ?? null);
+};
+
+test("keeps accepting writes for a payload repeating a node with divergent list lengths", () => {
   const cache = new ForestRun();
   seedThread(cache);
 
   // Thread:1 appears twice: 14 messages under `conversation`, 3 under `pinned`.
-  // This write punches the hole and is accepted - nothing reads it yet.
   const pinned = createPinned();
   cache.write({
     query: messageListQuery,
     result: { conversation: conversation(conversationMessages), pinned },
   });
 
-  // Reusing the same source objects makes indexTree recycle the damaged subtree
-  // instead of indexing it again, and recycling walks every item reference.
-  let error: Error | undefined;
-  try {
+  // Reusing the same source objects makes indexTree recycle that subtree instead
+  // of indexing it again, and recycling walks every item reference. This is the
+  // write that used to throw.
+  expect(() =>
     cache.write({
       query: messageListQuery,
       result: { conversation: conversation(conversationMessages), pinned },
-    });
-  } catch (e) {
-    error = e as Error;
-  }
+    }),
+  ).not.toThrow();
 
-  expect(error?.message).toMatch(
-    /^Invariant violation: Detected malformed payload written to the cache/,
-  );
-  // This phrase is the first thing a human reads in a telemetry dashboard, so keep it
-  // stable across rewordings of the rest.
-  expect(error?.message).toContain(
-    'a "Thread" node occurs multiple times in a single write with a different ' +
-      'number of items in the "messages" list',
-  );
-  // The write being recycled is the one that produced the malformed payload. Recycling is
-  // always same-operation, so there is no second operation to name.
-  expect(error?.message).toContain("Operation:  query MessageList");
-  expect(error?.message).toContain("Node type:  Thread");
-  // Both occurrences are the same entity - that is what makes the divergence a conflict -
-  // but the id itself must not leak, so the message states the fact without printing it.
-  expect(error?.message).toContain(
-    "Node id:    same in both occurrences (not shown)",
-  );
-  expect(error?.message).toContain("Field:      messages");
-  // Both conflicting occurrences, reconstructed from the tree being recycled.
-  expect(error?.message).toContain(
-    "Occurrence 1: 14 items at data.conversation.thread.messages",
-  );
-  expect(error?.message).toContain(
-    "Occurrence 2: 3 items at data.pinned.thread.messages",
-  );
-  expect(error?.message).not.toContain("Thread:1");
+  // Rejecting the write was never a one off: the hole is cached, so the same
+  // payload shape kept failing and the operation could never take another update.
+  // Fresh data now lands. The node keeps the longer of the two divergent lists -
+  // the last one written - which is all normalization can do with a payload that
+  // claims two different values for one field.
+  cache.write({
+    query: messageListQuery,
+    result: {
+      conversation: conversation(
+        conversationMessages.map((m) =>
+          m ? { ...m, text: `next-${m.id}` } : m,
+        ),
+      ),
+      pinned,
+    },
+  });
+  expect(readMessageTexts(cache)).toEqual([
+    null,
+    null,
+    null,
+    null,
+    ...messageIds.map((id) => `next-${id}`),
+  ]);
+
+  // A well formed payload still restores both occurrences.
+  cache.write({
+    query: messageListQuery,
+    result: {
+      conversation: conversation(messageIds.map(message)),
+      pinned: createPinned(messageIds),
+    },
+  });
+  expect(readMessageTexts(cache)).toEqual(messageIds);
 });
 
 test("accepts a payload repeating a node with lists of equal length", () => {
@@ -732,7 +755,7 @@ const attachmentQuery = gql`
   }
 `;
 
-test("reports list indices when the repeated node is itself a list item", () => {
+test("keeps accepting writes when the repeated node is itself a list item", () => {
   const cache = new ForestRun();
   cache.write({
     query: attachmentSeedQuery,
@@ -767,66 +790,43 @@ test("reports list indices when the repeated node is itself a list item", () => 
     result: { inbox: inbox(), starred },
   });
 
-  let error: Error | undefined;
-  try {
+  expect(() =>
     cache.write({
       query: attachmentQuery,
       result: { inbox: inbox(), starred },
-    });
-  } catch (e) {
-    error = e as Error;
-  }
+    }),
+  ).not.toThrow();
 
-  expect(error?.message).toContain(
-    'a "Message" node occurs multiple times in a single write with a different ' +
-      'number of items in the "files" list',
-  );
-  expect(error?.message).toContain("Node type:  Message");
-  expect(error?.message).toContain("Field:      files");
-  // Each occurrence is addressed by its index in the enclosing list, and a single
-  // item reads as "1 item" rather than "1 items".
-  expect(error?.message).toContain(
-    "Occurrence 1: 4 items at data.inbox.messages.2.files",
-  );
-  expect(error?.message).toContain(
-    "Occurrence 2: 1 item at data.starred.messages.1.files",
-  );
-  expect(error?.message).not.toContain("Message:7");
+  // Message:7 still reads back. The node keeps the longer of the two divergent
+  // lists - the last one written - which is all normalization can do with a
+  // payload that claims two different values for one field.
+  const result = cache.readQuery<any>({
+    query: attachmentSeedQuery,
+    returnPartialData: true,
+  });
+  expect(result?.message?.id).toBe("7");
+  expect(result?.message?.files?.map((f: any) => f?.id ?? null)).toEqual([
+    null,
+    null,
+    "a",
+    "b",
+  ]);
 });
 
 // The same defect, benign symptom: when every out of bounds index is resolved in
-// order the shorter chunk densifies instead of growing a hole, so there is
+// order the shorter chunk densifies instead of growing a hole, so there was
 // nothing for reIndexList to trip over even though the cache state is just as
-// wrong. Catching that needs the payload itself to be validated while it is
-// indexed, which is a follow up.
+// wrong. Both variants now resolve out of range indices to an undefined chunk, so
+// neither corrupts the list - but neither is *rejected* either. Telling the client
+// that its payload is malformed needs the payload itself to be validated while it
+// is indexed, which is a follow up.
 test.todo("rejects repeated nodes with divergent list lengths at index time");
 
 // Both tests above have the divergent list hanging directly off the repeated *node*
 // (`Thread.messages`, `Message.files`). Production hit a shape neither covers: the list
 // belongs to an embedded, keyless object (a Relay connection) nested under the repeated
-// node - `Message.threadSummary.participants.edges`.
-//
-// `findOccurrences` used to key its search on the object owning the list field:
-//
-//     const key = owner?.parent.key;
-//     if (tree && fieldEntry && typeof key === "string") { ...search siblings... }
-//
-// A connection has no id, so its chunk key is `false`, the search was skipped, `found`
-// stayed empty and only the damaged chunk was reported - under a `Node type` naming the
-// connection, which is not a node and cannot be repeated:
-//
-//   ... a "ParticipantConnection" node occurs multiple times in a single write with a
-//   different number of items in the "edges" list.
-//     Operation:  query MessageFeed
-//     Node type:  ParticipantConnection
-//     Field:      edges
-//     Occurrence 1: 0 items at data.feed.messages.0.threadSummary.participants.edges
-//
-// The missing "Node id" line - printed only when two occurrences are found - is what
-// identified that as under-reporting rather than truncation in the telemetry pipeline.
-// The search now climbs to the enclosing `Message` and descends the embedded path, and
-// reporting has two branches: the list is a field of the node (`Node type`), or a field of
-// an object embedded under it (`Object type` + `Parent node type`).
+// node - `Message.threadSummary.participants.edges`. It reaches resolveListItemChunk the
+// same way, so it is covered here to keep the embedded path from regressing.
 const participantEdge = (id: string) => ({
   __typename: "ParticipantEdge",
   cursor: id,
@@ -921,7 +921,7 @@ const messageFeedQuery = gql`
   }
 `;
 
-function writeDivergentConnection(): Error | undefined {
+function writeDivergentConnection(): ForestRun {
   // Keyed edges are required: with keyless items diffCompositeListLayout falls through to
   // the item loop, which resolves every index in order and densifies the short chunk
   // instead of leaving a hole.
@@ -956,54 +956,29 @@ function writeDivergentConnection(): Error | undefined {
     messages: [summarizedMessage("7", [])],
   };
 
-  try {
-    // First write punches the hole and is accepted; the second recycles the subtree.
-    cache.write({ query: messageFeedQuery, result: { feed } });
-    cache.write({ query: messageFeedQuery, result: { feed } });
-  } catch (e) {
-    return e as Error;
-  }
-  return undefined;
+  // The second write recycles the subtree left by the first, which is where the hole
+  // used to be dereferenced.
+  cache.write({ query: messageFeedQuery, result: { feed } });
+  cache.write({ query: messageFeedQuery, result: { feed } });
+  return cache;
 }
 
-test("reports both occurrences when the divergent list belongs to an embedded object", () => {
-  const error = writeDivergentConnection();
+test("accepts a divergent list belonging to an embedded object", () => {
+  expect(() => writeDivergentConnection()).not.toThrow();
 
-  // Occurrences are addressed in payload order, so the conflicting one comes first here.
-  // It is the half that explains the divergence, and the half that used to be missing:
-  // `findOccurrences` searched by the key of the *connection*, which is `false`.
-  expect(error?.message).toContain(
-    "Occurrence 1: 4 items at data.feed.lastMessage.threadSummary.participants.edges",
-  );
-  // The damaged (empty) occurrence - the one being recycled when the hole is hit.
-  expect(error?.message).toContain(
-    "Occurrence 2: 0 items at data.feed.messages.0.threadSummary.participants.edges" +
-      " (4 slots, holes at 0,1)",
-  );
-  // Printed only when two occurrences are found, so it tracks the assertions above.
-  expect(error?.message).toContain(
-    "Parent node id:    same in both occurrences (not shown)",
-  );
-  expect(error?.message).not.toContain("Message:7");
-});
-
-test("names the node behind a divergent list of an embedded object", () => {
-  const error = writeDivergentConnection();
-
-  // `edges` is declared by the connection, so that is the type named next to it - saying
-  // "Message" there would point at a type with no such field.
-  expect(error?.message).toContain("Object type:       ParticipantConnection");
-  expect(error?.message).toContain("Field:             edges");
-  // The connection has no id and cannot be repeated on its own: the node occurring twice
-  // is the enclosing Message, and the path says where the connection hangs off it.
-  expect(error?.message).toContain("Parent node type:  Message");
-  expect(error?.message).toContain(
-    "Path in node:      threadSummary.participants.edges",
-  );
-  expect(error?.message).toContain(
-    'a "ParticipantConnection" object embedded in a "Message" node occurs multiple ' +
-      'times in a single write with a different number of items in the "edges" list',
-  );
+  // `edges` is declared by the connection rather than by Message:7, so this covers
+  // resolving out of range indices through an embedded, keyless owner.
+  const cache = writeDivergentConnection();
+  const result = cache.readQuery<any>({
+    query: summarySeedQuery,
+    returnPartialData: true,
+  });
+  expect(result?.message?.id).toBe("7");
+  expect(
+    result?.message?.threadSummary?.participants?.edges?.map(
+      (e: any) => e?.cursor ?? null,
+    ),
+  ).toEqual([null, null, "a", "b"]);
 });
 
 // Nothing above requires the repeat to be visible in the payload as a repeated *message*.
@@ -1091,7 +1066,7 @@ const messageThreadsQuery = gql`
   }
 `;
 
-test("reports a node repeated across items of a single list", () => {
+test("keeps accepting writes when a node is repeated across items of a single list", () => {
   const cache = new ForestRun({
     typePolicies: { ParticipantEdge: { keyFields: ["cursor"] } },
   });
@@ -1132,24 +1107,19 @@ test("reports a node repeated across items of a single list", () => {
     ],
   };
 
-  let error: Error | undefined;
-  try {
-    cache.write({ query: messageThreadsQuery, result: { feed } });
-    cache.write({ query: messageThreadsQuery, result: { feed } });
-  } catch (e) {
-    error = e as Error;
-  }
+  cache.write({ query: messageThreadsQuery, result: { feed } });
+  expect(() =>
+    cache.write({ query: messageThreadsQuery, result: { feed } }),
+  ).not.toThrow();
 
-  // The messages differ, so the repeat is only visible once the summary is named.
-  expect(error?.message).toContain("Parent node type:  ThreadSummary");
-  expect(error?.message).toContain("Object type:       ParticipantConnection");
-  expect(error?.message).toContain(
-    "Occurrence 1: 4 items at data.feed.messages.0.replyTo.threadSummary.participants.edges",
-  );
-  expect(error?.message).toContain(
-    "Occurrence 2: 0 items at data.feed.messages.1.threadSummary.participants.edges",
-  );
-  expect(error?.message).not.toContain("ThreadSummary:x");
+  const result = cache.readQuery<any>({
+    query: keyedSummarySeedQuery,
+    returnPartialData: true,
+  });
+  expect(result?.summary?.id).toBe("x");
+  expect(
+    result?.summary?.participants?.edges?.map((e: any) => e?.cursor ?? null),
+  ).toEqual([null, null, "a", "b"]);
 });
 
 test("properly reads plain objects from nested lists", () => {
