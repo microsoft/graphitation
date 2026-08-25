@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Upgrade js-yaml and brace-expansion in compat lockfile to fix security vulnerabilities",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "celiac@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
