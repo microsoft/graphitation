@@ -26,7 +26,7 @@ import {
   TypeMap,
 } from "../values/types";
 import { TelemetryEvent } from "../telemetry/types";
-import { ExtendedLogger } from "../jsutils/logger";
+import { Logger } from "../jsutils/logger";
 import { UpdateTreeStats } from "../telemetry/updateStats/types";
 import { UpdateLogger } from "../telemetry/updateStats/updateLogger";
 import { CircularBuffer } from "../jsutils/circularBuffer";
@@ -220,7 +220,7 @@ export type ForestEnv = {
     operation?: OperationDescriptor,
   ) => ObjectKey | false | undefined;
 
-  logger?: ExtendedLogger;
+  logger?: Logger;
   notify?: (event: TelemetryEvent) => void;
 
   // ApolloCompat:

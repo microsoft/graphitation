@@ -465,45 +465,19 @@ test("properly replaces objects containing nested composite lists", () => {
 });
 
 // Regression coverage for `TypeError: Cannot read properties of undefined (reading 'value')`
-// thrown by reIndexList (src/forest/indexTree.ts). Everything below goes through
-// the public cache API only.
+// thrown by reIndexList (src/forest/indexTree.ts), through the public cache API only.
 //
 // The crash needed a four way conjunction:
-//  1. The same node (Thread:1) is selected twice in one operation with two
-//     *different* selections. aggregateFieldChunks only dedupes chunks sharing
-//     both selection and operation, so here the node value stays an aggregate.
-//  2. The two selections carry lists of different lengths (14 vs 3) and the
-//     aggregate iterates the longer one.
-//  3. The longer list starts with nulls. diffCompositeListLayout pushes `null`
-//     into the layout for them and diffCompositeListValue skips those indices
-//     (`baseItemIndex` is not a number), so index 4 is the *first* index
-//     resolved against the aggregate.
-//  4. aggregateListItemValue -> resolveListItemChunk assigned `itemChunks[4]` on
-//     the 3 item chunk with no bounds check. The array grew past its data
-//     length and index 3 was left unresolved.
+//  1. One node (Thread:1) selected twice in one operation under *different* selections.
+//  2. The two selections carry lists of different lengths (14 vs 3).
+//  3. The longer list starts with nulls, which the diff skips, so index 4 is resolved first.
+//  4. resolveListItemChunk assigned `itemChunks[4]` on the 3 item chunk unchecked.
 //
-// Only the *first* out of range index decided whether a hole was left: resolving in
-// ascending order grows the short chunk densely. Leading nulls are the cheapest way
-// to start above its length, not the only one - `layout` is a key lookup
-// (findKeyIndex), so a reordered keyed list visits base indices out of order too,
-// and descendToChunk/retrieveEmbeddedValue resolve a single index with no scan.
+// Nothing read the resulting hole until a *later* write recycled that chunk, which is why
+// the trace blamed an innocent write - and why every write after it was rejected too.
 //
-// Steps 1+2 are the actual defect in the payload, but nothing read the hole it
-// left until a *later* write recycled that chunk - which is why the stack trace
-// blamed a write that was entirely innocent, and why every subsequent write for
-// that operation was rejected too: the hole is cached, so each recycle found it
-// again and the operation could never take another update.
-//
-// resolveListItemChunk now returns an undefined chunk for out of range indices
-// without caching it, so no hole is created and the payload is reconciled like any
-// other. The node ends up with a single value for the divergent field - the last
-// one written - which is all normalization can do with a payload that claims two.
-// The reIndexList invariant no longer throws: an in range hole is just a slot that
-// nothing has resolved yet, so it is resolved on the spot, while an out of range slot
-// has no backing data and is reported through the logger and skipped.
-//
-// The tests below pin that these payloads stay writable, and that the cache keeps
-// serving and updating the node afterwards.
+// resolveListItemChunk now returns an uncached undefined chunk when out of range, so no hole
+// is created and the node keeps the last of the divergent values written.
 const seedQuery = gql`
   query MessageListSeed {
     thread {
@@ -618,9 +592,8 @@ test("keeps accepting writes for a payload repeating a node with divergent list 
     result: { conversation: conversation(conversationMessages), pinned },
   });
 
-  // Reusing the same source objects makes indexTree recycle that subtree instead
-  // of indexing it again, and recycling walks every item reference. This is the
-  // write that used to throw.
+  // Reusing the same source objects makes indexTree recycle that subtree, and recycling
+  // walks every item reference. This is the write that used to throw.
   expect(() =>
     cache.write({
       query: messageListQuery,
@@ -628,11 +601,8 @@ test("keeps accepting writes for a payload repeating a node with divergent list 
     }),
   ).not.toThrow();
 
-  // Rejecting the write was never a one off: the hole is cached, so the same
-  // payload shape kept failing and the operation could never take another update.
-  // Fresh data now lands. The node keeps the longer of the two divergent lists -
-  // the last one written - which is all normalization can do with a payload that
-  // claims two different values for one field.
+  // Rejection was never a one off - the cached hole failed every later write too. Fresh
+  // data now lands, and the node keeps the last of the two divergent lists written.
   cache.write({
     query: messageListQuery,
     result: {
@@ -680,10 +650,8 @@ test("accepts a payload repeating a node with lists of equal length", () => {
     },
   });
 
-  // Reusing the same `pinned` source object makes indexTree recycle that subtree
-  // instead of indexing it again: reIndexObject -> reIndexObject -> reIndexList,
-  // which walks every item reference of the list. Both lists keep the same
-  // length, only the message text changes.
+  // Reusing the same `pinned` source object makes indexTree recycle that subtree, which
+  // walks every item reference. Both lists keep the same length, only the text changes.
   expect(() =>
     cache.write({
       query: messageListQuery,
@@ -697,15 +665,10 @@ test("accepts a payload repeating a node with lists of equal length", () => {
   ).not.toThrow();
 });
 
-// The same defect one level deeper: the repeated node is a list *item* rather than
-// a field of the root, and the divergent list hangs off it. Both occurrences carry
-// a list index, which is what this pins - the error has to address them by index.
-//
-// The two occurrences use different selections because that is what the indexing
-// path needs: aggregateFieldChunks drops adjacent chunks sharing selection and
-// operation, so a node repeated under one selection is collapsed before its lists
-// are aggregated. Other routes into resolveListItemChunk do not go through that
-// dedupe, so this is a constraint on the test, not on the defect.
+// The same defect one level deeper: the repeated node is a list *item*, so both occurrences
+// carry a list index and the error has to address them by index. They use different
+// selections only because aggregateFieldChunks would otherwise collapse them before
+// their lists are aggregated - a constraint on the test, not on the defect.
 const fileNode = (id: string) => ({ __typename: "File", id });
 const messageWithFiles = (id: string, files: unknown[]) => ({
   __typename: "Message",
@@ -798,9 +761,7 @@ test("keeps accepting writes when the repeated node is itself a list item", () =
     }),
   ).not.toThrow();
 
-  // Message:7 still reads back. The node keeps the longer of the two divergent
-  // lists - the last one written - which is all normalization can do with a
-  // payload that claims two different values for one field.
+  // Message:7 still reads back, keeping the last of the two divergent lists written.
   const result = cache.readQuery<any>({
     query: attachmentSeedQuery,
     returnPartialData: true,
@@ -814,20 +775,15 @@ test("keeps accepting writes when the repeated node is itself a list item", () =
   ]);
 });
 
-// The same defect, benign symptom: when every out of bounds index is resolved in
-// order the shorter chunk densifies instead of growing a hole, so there was
-// nothing for reIndexList to trip over even though the cache state is just as
-// wrong. Both variants now resolve out of range indices to an undefined chunk, so
-// neither corrupts the list - but neither is *rejected* either. Telling the client
-// that its payload is malformed needs the payload itself to be validated while it
-// is indexed, which is a follow up.
+// The same defect, benign symptom: resolving every out of bounds index in order densifies
+// the shorter chunk instead of leaving a hole, so reIndexList never tripped even though the
+// cache state is just as wrong. Neither variant is *rejected*; validating the payload at
+// index time is a follow up.
 test.todo("rejects repeated nodes with divergent list lengths at index time");
 
-// Both tests above have the divergent list hanging directly off the repeated *node*
-// (`Thread.messages`, `Message.files`). Production hit a shape neither covers: the list
-// belongs to an embedded, keyless object (a Relay connection) nested under the repeated
-// node - `Message.threadSummary.participants.edges`. It reaches resolveListItemChunk the
-// same way, so it is covered here to keep the embedded path from regressing.
+// Both tests above hang the divergent list directly off the repeated *node*. Production hit
+// a shape neither covers: the list belongs to an embedded, keyless connection nested under
+// the repeated node, which reaches resolveListItemChunk the same way.
 const participantEdge = (id: string) => ({
   __typename: "ParticipantEdge",
   cursor: id,
@@ -873,9 +829,7 @@ const summarySeedQuery = gql`
 
 // `lastMessage` is selected before `messages`, so its 4 item chunk is aggregated first and
 // the out of range indices are applied to the 0 item chunk at `messages.0`. Its extra
-// `subject` field is what makes the two selections differ: aggregateFieldChunks drops
-// adjacent chunks sharing a selection and operation, so without it the repeat is collapsed
-// before the lists are aggregated and nothing diverges.
+// `subject` field is only there to keep the two selections from being collapsed.
 const messageFeedQuery = gql`
   query MessageFeed {
     feed {
@@ -982,15 +936,10 @@ test("accepts a divergent list belonging to an embedded object", () => {
   ).toEqual([null, null, "a", "b"]);
 });
 
-// Nothing above requires the repeat to be visible in the payload as a repeated *message*.
-// When the summary carries its own id, two different messages pointing at the same summary
-// repeat that node instead - so a query selecting one plain list of messages is enough, and
-// the two occurrences sit at two items of that single list.
-//
-// The two summary chunks survive `aggregateFieldChunks` because `replyTo.threadSummary` and
-// `threadSummary` are separate selection sets: chunks are only collapsed when adjacent and
-// sharing both selection and operation, which is what happens when every item of a list
-// reaches the same node through the same path.
+// The repeat need not be a repeated *message*: when the summary carries its own id, two
+// different messages pointing at it repeat that node, so one plain list of messages suffices.
+// The two chunks survive aggregateFieldChunks because `replyTo.threadSummary` and
+// `threadSummary` are separate selection sets.
 const keyedSummary = (id: string, edges: unknown[]) => ({
   __typename: "ThreadSummary",
   id,

@@ -1,11 +1,9 @@
 import { gql } from "@apollo/client";
 import { ForestRun } from "../ForestRun";
 
-// `incompleteChunks` is per-tree state, rebuilt every time a tree is indexed. Recycling
-// re-uses chunks of a previous tree wholesale, so a chunk that is still missing fields
-// has to re-register itself. When it did not, the incompleteness silently disappeared
-// the first time a write recycled the tree, and later reads served the placeholder
-// objects that indexing had substituted for holes as if they were real data.
+// `incompleteChunks` is per-tree state, so a recycled chunk that is still missing fields
+// has to re-register itself. When it did not, the incompleteness disappeared the first
+// time a write recycled the tree and later reads served placeholders as if they were real.
 
 const participantFields = `
   __typename
@@ -79,8 +77,7 @@ describe("incompleteness across recycling", () => {
     const cache = newCache();
 
     // A single malformed payload: the same node appears twice with different list
-    // lengths, so the shorter chunk ends up padded with placeholders when the longer
-    // one dictates the layout.
+    // lengths, so the shorter chunk gets padded with placeholders.
     cache.write({
       query: feedQuery,
       result: feed([edge("a"), edge("b"), edge("c"), edge("d")], []),
@@ -107,8 +104,8 @@ describe("incompleteness across recycling", () => {
 
     const diff = cache.diff({ query: feedQuery, optimistic: false });
 
-    // Before the fix this returned `[{}, {}, {}]` — three objects with no fields at
-    // all — while still reporting `complete: true`.
+    // Before the fix this returned `[{}, {}, {}]` - three objects with no fields -
+    // while still reporting `complete: true`.
     expect(cursorsOf(diff.result)).toEqual(["a", "b", "c"]);
   });
 });

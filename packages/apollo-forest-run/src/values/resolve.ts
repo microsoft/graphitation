@@ -353,20 +353,9 @@ export function resolveListItemChunk(
   let parentInfo = chunk.itemChunks[index];
   if (!parentInfo) {
     if (index < 0 || index >= chunk.data.length) {
-      // Out of range. This happens for malformed payloads: when the same node is
-      // repeated in a single write with a different number of items in the same
-      // list field, `aggregateListItemValue` iterates the longest chunk and
-      // applies its indices to the shorter ones.
-      //
-      // `createCompositeValueChunk` already resolves a missing item to an
-      // undefined chunk, so returning one here changes nothing for the caller.
-      // What matters is that the result is *not* cached: writing
-      // `itemChunks[index]` past `data.length` grows the array and leaves holes
-      // behind (resolving index 99 of a 3 item list leaves 96 of them). Nothing
-      // reads those holes until a later write recycles the chunk, at which point
-      // `reIndexList` walks every item reference and throws - blaming a write
-      // that is entirely innocent, and rejecting every subsequent write for that
-      // operation from then on.
+      // Out of range: a malformed payload repeated the same node with different list
+      // lengths, so a longer chunk's indices reached this shorter one. Returning an
+      // undefined chunk without caching it keeps `itemChunks` from growing holes.
       return CreateValue.createCompositeUndefinedChunk(
         chunk.operation,
         chunk.possibleSelections,

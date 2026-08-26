@@ -90,23 +90,19 @@ test("degrades instead of throwing when path resolution fails", () => {
 
   cache.write({ query: feedQuery, result: { feed } });
 
-  // `resolveListItemChunk` no longer grows `itemChunks` past `data.length`, so a
-  // malformed payload cannot reach this path through the public API any more.
-  // The other writers of `itemChunks` (convert.ts, indexTree.ts, delete.ts) still
-  // can, so the hole is punched directly here to keep the reporting path covered.
+  // `resolveListItemChunk` no longer grows `itemChunks` past `data.length`, so the hole
+  // is punched directly here: other writers (convert.ts, indexTree.ts, delete.ts) can
+  // still produce one, so the reporting path stays worth covering.
   punchHole(cache);
 
-  // Recycling the damaged chunk is when the hole is finally dereferenced. It must
-  // not throw: rejecting the write would reject every subsequent write for this
-  // operation too, because the hole is cached and each recycle finds it again.
+  // Recycling is when the hole is finally dereferenced. It must not throw: rejecting
+  // this write would reject every later one, since each recycle finds the hole again.
   expect(() =>
     cache.write({ query: feedQuery, result: { feed } }),
   ).not.toThrow();
 
-  // The report is still what surfaces, degraded to what can be read off the damaged
-  // chunk itself. The underlying failure is named rather than swallowed, so telemetry
-  // can tell a broken description apart from a payload that genuinely has nothing
-  // more to report.
+  // The report still surfaces, degraded to what can be read off the damaged chunk, and
+  // names the underlying failure rather than swallowing it.
   const reported = warn.mock.calls.flat().join("\n");
   expect(reported).toContain("malformed payload");
   expect(reported).toContain("reporting failed: parent lookup exploded");
@@ -131,13 +127,12 @@ test("reports a malformed list without rejecting later writes", () => {
   punchHole(cache);
 
   // Recycling the damaged chunk is when the hole is finally dereferenced. Throwing
-  // here rejected this write *and every later one*: the hole is cached, so each
-  // recycle found it again and the operation could never take another update.
+  // here rejected this write *and every later one*, since each recycle found it again.
   expect(() =>
     cache.write({ query: feedQuery, result: { feed } }),
   ).not.toThrow();
 
-  // The payload is reported once per operation rather than on every recycle.
+  // The payload is reported instead.
   expect(warn.mock.calls.flat().join("\n")).toContain("malformed payload");
 
   for (const cursors of [["a", "b"], ["a", "b", "c"], ["d"]]) {

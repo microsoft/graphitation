@@ -381,9 +381,8 @@ function reIndexObject(
   dataMap.set(recyclable.data, parent);
 
   // `incompleteChunks` is per-tree state, so a recycled chunk that is still missing
-  //   fields has to re-register itself: otherwise the incompleteness silently
-  //   disappears the first time the containing tree is recycled, and reads start
-  //   reporting `complete: true` over data the cache never actually received.
+  //   fields has to re-register itself - otherwise the incompleteness disappears the
+  //   first time the containing tree is recycled and reads report `complete: true`.
   if (recyclable.missingFields?.size) {
     markAsPartial(context, parent);
     context.incompleteChunks.add(recyclable);
@@ -426,25 +425,19 @@ function reIndexList(
     let itemRef = itemChunks[index];
     if (itemRef === undefined) {
       if (index >= recyclable.data.length) {
-        // A slot past the end of the data it indexes. The write that *indexed*
-        //   this list was malformed: the same node was repeated in one payload
-        //   carrying a different number of items in the same list field, so a
-        //   longer chunk's indices were applied to this shorter one.
-        //
-        //   There is no data behind this slot and nothing to invent, so report
-        //   the payload rather than throwing. A throw here rejects every
-        //   subsequent write for the operation - the hole is cached, so each
-        //   recycle finds it again and the operation can never take another
-        //   update.
+        // A slot past the end of the data it indexes: the write that *indexed* this
+        //   list was malformed. Report it rather than throwing - a throw would reject
+        //   every later write too, since the hole is cached and each recycle finds it.
         if (!reported) {
           reported = true;
-          reportMalformedList(context, recyclable, parent);
+          context.env.logger?.warn(
+            malformedPayloadError(context, recyclable, parent),
+          );
         }
         continue;
       }
-      // `itemChunks` is allocated sparse (`new Array(data.length)`) and filled
-      //   lazily, so an in-range hole only means "not resolved yet". Resolve it
-      //   so the item is registered in this tree like any other.
+      // `itemChunks` is allocated sparse and filled lazily, so an in-range hole only
+      //   means "not resolved yet".
       resolveListItemChunk(recyclable, index);
       itemRef = itemChunks[index];
       if (itemRef === undefined) {
@@ -464,23 +457,6 @@ function reIndexList(
     }
   }
   return recyclable;
-}
-
-/**
- * A slot past the end of the data it indexes has nothing behind it. There is no value
- * to index and none to invent, so the payload is reported and the slot skipped.
- */
-function reportMalformedList(
-  context: Context,
-  damaged: CompositeListChunk,
-  parent: GraphChunkReference,
-) {
-  // Recycling revisits the same damaged chunk on every write, so the description
-  //   (which walks the tree to build a data path) is produced once per operation.
-  context.env.logger?.warnOnce(
-    `forest-run:malformed-list:${damaged.operation?.debugName}`,
-    malformedPayloadError(context, damaged, parent),
-  );
 }
 
 type ListFieldOccurrence = { items: number; slots: string; path: string };
