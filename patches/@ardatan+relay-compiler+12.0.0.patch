@@ -1,0 +1,26 @@
+diff --git a/node_modules/@ardatan/relay-compiler/lib/codegen/CodegenRunner.js b/node_modules/@ardatan/relay-compiler/lib/codegen/CodegenRunner.js
+index 2433448..cae724d 100644
+--- a/node_modules/@ardatan/relay-compiler/lib/codegen/CodegenRunner.js
++++ b/node_modules/@ardatan/relay-compiler/lib/codegen/CodegenRunner.js
+@@ -280,7 +280,7 @@ var CodegenRunner = /*#__PURE__*/function () {
+         var documents = _this5.parsers[_parser2].documents();
+ 
+         var schema = Profiler.run('getSchema', function () {
+-          return createSchema(_this5.parserConfigs[_parser2].getSchemaSource(), baseDocuments.toArray(), _this5.parserConfigs[_parser2].schemaExtensions);
++          return createSchema(_this5.parserConfigs[_parser2].getSchemaSource(), baseDocuments.valueSeq().toArray(), _this5.parserConfigs[_parser2].schemaExtensions);
+         });
+         var outputDirectories = yield writeFiles({
+           onlyValidate: _this5.onlyValidate,
+diff --git a/node_modules/@ardatan/relay-compiler/lib/core/CompilerContext.js b/node_modules/@ardatan/relay-compiler/lib/core/CompilerContext.js
+index a066fda..09c6c26 100644
+--- a/node_modules/@ardatan/relay-compiler/lib/core/CompilerContext.js
++++ b/node_modules/@ardatan/relay-compiler/lib/core/CompilerContext.js
+@@ -41,7 +41,7 @@ var CompilerContext = /*#__PURE__*/function () {
+   var _proto = CompilerContext.prototype;
+ 
+   _proto.documents = function documents() {
+-    return this._documents.toArray();
++    return this._documents.valueSeq().toArray();
+   };
+ 
+   _proto.forEachDocument = function forEachDocument(fn) {
