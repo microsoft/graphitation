@@ -429,6 +429,9 @@ function diffCompositeListValue(
   model: CompositeListValue,
   diff?: CompositeListDifference,
 ): CompositeListDifference | undefined {
+  detectDivergentListLengths(context, base, false);
+  detectDivergentListLengths(context, model, true);
+
   if (model.data.length === 0 && base.data.length === 0) {
     return undefined;
   }
@@ -674,6 +677,51 @@ function shouldSkipChunkField(
   return matchingEntries?.every((field) =>
     base.selection.skippedFields?.has(field),
   );
+}
+
+/**
+ * Chunks of one aggregate describe the same list, so a length mismatch means the payload
+ * repeated the node with a different number of items. Reported once per aggregate; the
+ * short chunks are marked incomplete downstream so reads stop claiming the data is whole.
+ */
+function detectDivergentListLengths(
+  context: DiffContext,
+  list: CompositeListValue,
+  isModel: boolean,
+) {
+  if (!Value.isAggregate(list)) {
+    return;
+  }
+  const chunks = list.chunks;
+  let maxLength = chunks[0].data.length;
+  let diverged = false;
+  for (let i = 1; i < chunks.length; i++) {
+    const length = chunks[i].data.length;
+    if (length !== maxLength) {
+      diverged = true;
+      if (length > maxLength) {
+        maxLength = length;
+      }
+    }
+  }
+  if (!diverged) {
+    return;
+  }
+  context.errors ||= [];
+  const reported = context.errors.some(
+    (e) =>
+      e.kind === DiffErrorKind.DivergentListLengths &&
+      e.isModel === isModel &&
+      e.chunks[0] === chunks[0],
+  );
+  if (!reported) {
+    context.errors.push({
+      kind: DiffErrorKind.DivergentListLengths,
+      chunks,
+      maxLength,
+      isModel,
+    });
+  }
 }
 
 function addMissingChunkFieldError(

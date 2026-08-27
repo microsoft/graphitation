@@ -1,6 +1,10 @@
 import type { Cache } from "@apollo/client";
 import type { IndexedTree, UpdateTreeResult } from "../forest/types";
-import type { OperationResult } from "../values/types";
+import type {
+  CompositeListChunk,
+  OperationResult,
+  ParentLocator,
+} from "../values/types";
 import type {
   CacheEnv,
   DataForest,
@@ -27,12 +31,18 @@ import {
   touchOperation,
 } from "./store";
 import { diffTree, GraphDifference } from "../diff/diffTree";
+import type { DivergentListLengthsError } from "../diff/types";
 import {
   resolveAffectedOperations,
   updateAffectedTrees,
 } from "../forest/updateForest";
 import { indexTree } from "../forest/indexTree";
-import { createParentLocator, markAsPartial, TraverseEnv } from "../values";
+import {
+  createParentLocator,
+  markAsPartial,
+  reportMalformedList,
+  TraverseEnv,
+} from "../values";
 import { NodeDifferenceMap } from "../forest/updateTree";
 import { getNodeChunks } from "./draftHelpers";
 import { replaceTree } from "../forest/addTree";
@@ -149,7 +159,7 @@ export function write(
   const difference = diffTree(targetForest, modifiedIncomingResult, env);
 
   if (difference.errors.length) {
-    processDiffErrors(targetForest, modifiedIncomingResult, difference);
+    processDiffErrors(env, targetForest, modifiedIncomingResult, difference);
   }
 
   if (
@@ -241,6 +251,7 @@ function appendAffectedOperationsFromOtherLayers(
 }
 
 function processDiffErrors(
+  env: CacheEnv,
   forest: DataForest | OptimisticLayer,
   model: IndexedTree,
   difference: GraphDifference,
@@ -255,6 +266,13 @@ function processDiffErrors(
   };
 
   for (const diffError of difference.errors) {
+    if (diffError.kind === "DivergentLists") {
+      for (const error of diffError.lists) {
+        const tree = error.isModel ? model : undefined;
+        markDivergentListChunks(env, forest, tree, error);
+      }
+      continue;
+    }
     if (diffError.kind === "MissingFields") {
       for (const baseChunkError of diffError.base ?? EMPTY_ARRAY) {
         // Missing chunks
@@ -285,6 +303,76 @@ function processDiffErrors(
       }
     }
   }
+}
+
+/**
+ * The chunks disagree on length, so the short ones are missing the items the longest one has.
+ * Marking those indices makes reads of the affected operations report `complete: false`
+ * instead of silently serving a node whose list has two different lengths.
+ */
+function markDivergentListChunks(
+  env: CacheEnv,
+  forest: DataForest | OptimisticLayer,
+  model: IndexedTree | undefined,
+  error: DivergentListLengthsError,
+) {
+  // Model chunks all live in the incoming tree; base chunks belong to the tree of their own
+  // operation. Locators are per-tree, so they are built once and shared across chunks.
+  const locators = new Map<IndexedTree, ParentLocator>();
+  const treeOf = (chunk: CompositeListChunk) =>
+    model ?? forest.trees.get(chunk.operation.id);
+  const locatorOf = (tree: IndexedTree) => {
+    let locator = locators.get(tree);
+    if (!locator) {
+      locator = createParentLocator(tree.dataMap);
+      locators.set(tree, locator);
+    }
+    return locator;
+  };
+
+  // Neither marking nor reporting may be the thing that rejects the write: both walk a tree
+  // already known to be broken, and a throw here would replace a diagnosable warning with an
+  // unrelated stack trace on an operation that is otherwise writable.
+  try {
+    for (const chunk of error.chunks) {
+      const length = chunk.data.length;
+      const tree = treeOf(chunk);
+      if (length >= error.maxLength || !tree?.dataMap.has(chunk.data)) {
+        continue;
+      }
+      chunk.missingItems ??= new Set();
+      for (let index = length; index < error.maxLength; index++) {
+        chunk.missingItems.add(index);
+      }
+      tree.incompleteChunks.add(chunk);
+      markAsPartial(
+        { findParent: locatorOf(tree) },
+        tree.dataMap.get(chunk.data)!,
+      );
+    }
+  } catch (e) {
+    env.logger?.warn(
+      `Failed to mark a malformed list as incomplete: ${
+        e instanceof Error ? e.message : String(e)
+      }`,
+    );
+  }
+
+  const damaged =
+    error.chunks.find((chunk) => chunk.data.length < error.maxLength) ??
+    error.chunks[0];
+
+  // Every occurrence is already in hand here, so unlike the recycling path there is nothing
+  // to search for: the aggregate is exactly the set of chunks that disagree.
+  env.logger?.warn(
+    reportMalformedList(damaged, () =>
+      error.chunks.map((chunk) => {
+        const tree = treeOf(chunk);
+        assert(tree);
+        return { list: chunk, findParent: locatorOf(tree) };
+      }),
+    ),
+  );
 }
 
 function getExistingResult(

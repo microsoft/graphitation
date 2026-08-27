@@ -2,6 +2,7 @@ import {
   DiffEnv,
   DiffError,
   DiffErrorKind,
+  DivergentListLengthsError,
   MissingBaseFieldsError,
   MissingModelFieldsError,
   NodeDifferenceMap,
@@ -21,6 +22,11 @@ type MissingFieldsError = {
   base?: MissingBaseFieldsError[];
 };
 
+type DivergentListsError = {
+  kind: "DivergentLists";
+  lists: DivergentListLengthsError[];
+};
+
 type FirstDiffNodeException = {
   kind: "FirstDiffNodeException";
   nodeKey: string;
@@ -29,7 +35,10 @@ type FirstDiffNodeException = {
   error: Error;
 };
 
-export type GraphDiffError = MissingFieldsError | FirstDiffNodeException;
+export type GraphDiffError =
+  | MissingFieldsError
+  | DivergentListsError
+  | FirstDiffNodeException;
 
 export type GraphDifference = {
   nodeDifference: NodeDifferenceMap;
@@ -45,6 +54,7 @@ type Context = {
   firstError?: FirstDiffNodeException;
   missingModelFields?: MissingModelFieldsError[];
   missingBaseFields?: MissingBaseFieldsError[];
+  divergentLists?: DivergentListLengthsError[];
 };
 
 const EMPTY_SET = new Set();
@@ -221,6 +231,11 @@ function accumulateDiffErrors(
       context.missingBaseFields.push(error);
       continue;
     }
+    if (error.kind === DiffErrorKind.DivergentListLengths) {
+      context.divergentLists ??= [];
+      context.divergentLists.push(error);
+      continue;
+    }
     assert(error.kind !== DiffErrorKind.MissingModelValue); // This can only happen with custom value diffing
     assertNever(error);
   }
@@ -237,6 +252,9 @@ function getErrors(context: Context): GraphDiffError[] {
       base: context.missingBaseFields,
       model: context.missingModelFields,
     });
+  }
+  if (context.divergentLists) {
+    errors.push({ kind: "DivergentLists", lists: context.divergentLists });
   }
   return errors;
 }

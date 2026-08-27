@@ -479,7 +479,9 @@ test("properly replaces objects containing nested composite lists", () => {
 // the trace blamed an innocent write - and why every write after it was rejected too.
 //
 // resolveListItemChunk now returns an uncached undefined chunk when out of range, so no hole
-// is created and the node keeps the last of the divergent values written.
+// is created and the node keeps the last of the divergent values written. The write is no
+// longer rejected, but it is not silently accepted either: the diff sees both occurrences,
+// reports them, and marks the short ones incomplete so reads answer `complete: false`.
 describe("malformed payloads repeating a node with divergent list lengths", () => {
   const seedQuery = gql`
     query MessageListSeed {
@@ -1111,6 +1113,102 @@ describe("malformed payloads repeating a node with divergent list lengths", () =
     ).not.toThrow();
 
     expect(readCursors(cache)).toEqual(["a", "b", "c"]);
+  });
+
+  // The write is accepted, but silently keeping one of two contradictory lists would hand
+  // callers a node that reads as complete while holding data the server never sent. The
+  // divergence is only observable while diffing the two occurrences against each other,
+  // so that is where it is detected, reported and marked.
+  describe("reporting", () => {
+    const newCache = () => {
+      const warnings: string[] = [];
+      const cache = new ForestRun({
+        logger: {
+          debug: () => {},
+          log: () => {},
+          error: () => {},
+          warn: (message: string) => warnings.push(String(message)),
+        },
+      });
+      return { cache, warnings };
+    };
+
+    const writeDivergent = (cache: ForestRun) =>
+      cache.write({
+        query: messageListQuery,
+        result: {
+          conversation: conversation(conversationMessages),
+          pinned: createPinned(),
+        },
+      });
+
+    const writeConsistent = (cache: ForestRun) =>
+      cache.write({
+        query: messageListQuery,
+        result: {
+          conversation: conversation(messageIds.map(message)),
+          pinned: createPinned(messageIds),
+        },
+      });
+
+    const isComplete = (cache: ForestRun) =>
+      cache.diff({ query: messageListQuery, optimistic: false }).complete;
+
+    test("names every occurrence of the divergent list", () => {
+      const { cache, warnings } = newCache();
+      seedThread(cache);
+      writeDivergent(cache);
+
+      expect(warnings).toHaveLength(1);
+      // Both occurrences, so the report says which lists disagreed and by how much. The
+      // production report only ever showed one, because indexing sees a single chunk.
+      expect(warnings[0]).toBe(
+        [
+          `Detected malformed payload written to the cache: a "Thread" node occurs multiple times in a single write with a different number of items in the "messages" list.`,
+          ``,
+          `  Operation:  query MessageList`,
+          `  Node type:  Thread`,
+          `  Node id:    same in all occurrences (not shown)`,
+          `  Field:      messages`,
+          ``,
+          `  Occurrence 1: 14 items at data.conversation.thread.messages`,
+          `  Occurrence 2: 3 items at data.pinned.thread.messages`,
+        ].join("\n"),
+      );
+    });
+
+    test("reads the affected operation as incomplete", () => {
+      const { cache } = newCache();
+      seedThread(cache);
+      expect(isComplete(cache)).toBe(false); // not written yet
+
+      writeDivergent(cache);
+      expect(isComplete(cache)).toBe(false);
+
+      // Repeating the payload keeps reporting: the contradiction is still in the data.
+      writeDivergent(cache);
+      expect(isComplete(cache)).toBe(false);
+    });
+
+    test("stops reporting once a well formed payload arrives", () => {
+      const { cache, warnings } = newCache();
+      seedThread(cache);
+      writeDivergent(cache);
+      expect(warnings).toHaveLength(1);
+
+      writeConsistent(cache);
+      expect(warnings).toHaveLength(1);
+      expect(readMessageTexts(cache)).toEqual(messageIds);
+    });
+
+    test("stays silent when the repeated node agrees with itself", () => {
+      const { cache, warnings } = newCache();
+      seedThread(cache);
+      writeConsistent(cache);
+
+      expect(warnings).toEqual([]);
+      expect(isComplete(cache)).toBe(true);
+    });
   });
 });
 

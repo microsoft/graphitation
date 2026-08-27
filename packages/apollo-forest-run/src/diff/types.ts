@@ -1,6 +1,7 @@
 import {
   GraphValue,
   ObjectChunk,
+  CompositeListChunk,
   FieldName,
   CompositeListValue,
   ObjectValue,
@@ -73,10 +74,23 @@ export type MissingBaseFieldsError = {
 
 export type DiffFieldError = MissingModelFieldsError | MissingBaseFieldsError;
 
+/**
+ * The same node was written twice in one payload with a different number of items in the
+ * same list field, so its chunks disagree on length. Carries every chunk of the aggregate
+ * so the report can name all occurrences, and the short ones can be marked incomplete.
+ */
+export type DivergentListLengthsError = {
+  kind: typeof DiffErrorKind.DivergentListLengths;
+  chunks: CompositeListChunk[];
+  maxLength: number;
+  isModel: boolean;
+};
+
 export type DiffError =
   | MissingModelError
   | MissingModelFieldsError
-  | MissingBaseFieldsError;
+  | MissingBaseFieldsError
+  | DivergentListLengthsError;
 
 /**
  * Contains current diffing state.

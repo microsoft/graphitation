@@ -85,7 +85,11 @@ export function updateTree(
   // Preserve existing information about any missing fields.
   // (updated objects will get their own entry in the map, so there won't be collisions)
   for (const incompleteChunk of base.incompleteChunks) {
-    assert(isObjectValue(incompleteChunk));
+    // List chunks track `missingItems` instead, which is not carried across updates: an
+    // update replaces the list, and a still divergent payload is re-detected on the next diff.
+    if (!isObjectValue(incompleteChunk)) {
+      continue;
+    }
     if (incompleteChunk.missingFields) {
       missingFields.set(
         incompleteChunk.data,

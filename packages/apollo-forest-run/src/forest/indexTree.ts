@@ -9,7 +9,6 @@ import type {
   NodeMap,
   ObjectChunk,
   ObjectDraft,
-  ObjectFieldReference,
   OperationResult,
   RootChunkReference,
   SourceCompositeList,
@@ -18,14 +17,12 @@ import type {
   ParentLocator,
 } from "../values/types";
 import type {
-  NormalizedFieldEntry,
   OperationDescriptor,
   PossibleSelections,
 } from "../descriptor/types";
 import type { ForestEnv, IndexedTree } from "./types";
 import { ValueKind } from "../values/types";
 import {
-  getFieldName,
   resolveNormalizedField,
   resolveSelection,
 } from "../descriptor/resolvedSelection";
@@ -39,17 +36,17 @@ import {
   createObjectChunk,
   createParentLocator,
   findClosestNode,
-  getDataPathForDebugging,
+  findOwningField,
   isCompositeListValue,
-  isParentListRef,
-  isParentObjectRef,
   isRootRef,
   isSourceCompositeValue,
   isSourceObject,
   markAsPartial,
+  reportMalformedList,
   resolveFieldValue,
   resolveListItemChunk,
 } from "../values";
+import type { MalformedListOccurrence } from "../values";
 
 type Context = {
   env: ForestEnv;
@@ -431,7 +428,9 @@ function reIndexList(
         if (!reported) {
           reported = true;
           context.env.logger?.warn(
-            malformedPayloadError(context, recyclable, parent),
+            reportMalformedList(recyclable, () =>
+              findOccurrences(context, recyclable, parent),
+            ),
           );
         }
         continue;
@@ -459,115 +458,6 @@ function reIndexList(
   return recyclable;
 }
 
-type ListFieldOccurrence = { items: number; slots: string; path: string };
-
-/**
- * Everything printed here ships to telemetry: schema level names, data paths and item counts
- * only. Never the node key (it embeds the entity id) or argument values.
- */
-function malformedPayloadError(
-  context: Context,
-  damaged: CompositeListChunk,
-  parent: GraphChunkReference,
-): string {
-  // This runs while asserting, on a tree already known to be broken. A throw in here would
-  // replace the invariant with an unrelated error and lose the payload description entirely,
-  // so the whole description is guarded and degrades to what we can read off the chunk itself.
-  try {
-    return describeMalformedPayload(context, damaged, parent);
-  } catch (e) {
-    const reason = e instanceof Error ? e.message : String(e);
-    return (
-      `Detected malformed payload written to the cache: a list holds fewer items than the ` +
-      `chunks referencing it.\n\n` +
-      `  Operation:  ${
-        damaged.operation?.debugName ?? "(unknown operation)"
-      }\n` +
-      `  Items:      ${damaged.data?.length ?? "(unknown)"}\n\n` +
-      `  (reporting failed: ${reason})`
-    );
-  }
-}
-
-function describeMalformedPayload(
-  context: Context,
-  damaged: CompositeListChunk,
-  parent: GraphChunkReference,
-): string {
-  // The offending payload is still in the tree being recycled, so report that write, not this one.
-  const tree = findIndexingTree(context, damaged);
-  const findParent = createParentLocator(tree?.dataMap ?? context.dataMap);
-  const owner = findOwningField(findParent, parent);
-  const fieldEntry = owner
-    ? resolveNormalizedField(owner.parent.selection, owner.field)
-    : null;
-  const fieldName = fieldEntry ? getFieldName(fieldEntry) : "(unknown field)";
-  // The object owning the list may itself be embedded and keyless (a Relay connection is the
-  // common case), and a keyless object cannot be repeated on its own: what occurs multiple
-  // times is the closest keyed ancestor, so that is what the occurrence search is scoped to.
-  const node = owner && findClosestNode(owner.parent, findParent);
-  const embedded = typeof owner?.parent.key !== "string";
-  const objectType = owner?.parent.type || "(unknown type)";
-  const nodeType = node?.type || "(unknown type)";
-  const occurrences = findOccurrences(
-    tree,
-    owner?.parent.type,
-    fieldEntry,
-    node,
-    damaged,
-    findParent,
-  );
-
-  // The list belongs to the node itself, or to an object embedded under it. Both report the
-  // type actually declaring the field, so the embedded case has to name the node separately -
-  // it is the one repeated, and the one to look for in the payload.
-  const nodeIdRow: [string, string][] =
-    // Occurrences are collected by node key, so they are the same entity by construction.
-    occurrences.length > 1
-      ? [
-          [
-            embedded ? "Parent node id" : "Node id",
-            "same in both occurrences (not shown)",
-          ],
-        ]
-      : [];
-  const rows: [string, string][] = embedded
-    ? [
-        ["Operation", damaged.operation.debugName],
-        ["Object type", objectType],
-        ["Parent node type", nodeType],
-        ...nodeIdRow,
-        ["Field", fieldEntry ? describeFieldEntry(fieldEntry) : fieldName],
-        // Where the object sits under the node - the data paths below cross node boundaries
-        // without marking them, so this is what ties the two together.
-        ["Path in node", describePath(findParent, damaged, node)],
-      ]
-    : [
-        ["Operation", damaged.operation.debugName],
-        ["Node type", nodeType],
-        ...nodeIdRow,
-        ["Field", fieldEntry ? describeFieldEntry(fieldEntry) : fieldName],
-      ];
-  // Two spaces after the longest label, matching the layout the single node branch has always used.
-  const labelWidth = Math.max(...rows.map(([label]) => label.length)) + 3;
-
-  return [
-    `Detected malformed payload written to the cache: a "${objectType}" ` +
-      (embedded ? `object embedded in a "${nodeType}" node ` : `node `) +
-      `occurs multiple times in a single write with a different number of items ` +
-      `in the "${fieldName}" list.`,
-    ``,
-    ...rows.map(([label, value]) => `  ${`${label}:`.padEnd(labelWidth)}${value}`), // prettier-ignore
-    ``,
-    ...occurrences.map(
-      (occurrence, i) =>
-        `  Occurrence ${i + 1}: ${occurrence.items} ` +
-        `${occurrence.items === 1 ? "item" : "items"} at ${occurrence.path}` +
-        occurrence.slots,
-    ),
-  ].join("\n");
-}
-
 // The tree that indexed the damaged chunk is the one carrying the malformed payload.
 function findIndexingTree(
   context: Context,
@@ -581,18 +471,26 @@ function findIndexingTree(
   return null;
 }
 
-// Occurrences of the same node holding the same list field. The object owning the list is
-// often keyless (a Relay connection), so it cannot be looked up in `tree.nodes` directly:
-// `typeMap` indexes every chunk by type, keyed or not, and the closest node scopes the hits
-// down to the one entity that is actually repeated.
+// Only one chunk is known here, so the other occurrences have to be searched for. The object
+// owning the list is often keyless (a Relay connection) and cannot be looked up in `tree.nodes`
+// directly: `typeMap` indexes every chunk by type, keyed or not, and the closest node scopes
+// the hits down to the one entity that is actually repeated.
 function findOccurrences(
-  tree: IndexedTree | null,
-  type: ObjectChunk["type"] | undefined,
-  fieldEntry: NormalizedFieldEntry | null,
-  node: NodeChunk | null,
+  context: Context,
   damaged: CompositeListChunk,
-  findParent: ParentLocator,
-): ListFieldOccurrence[] {
+  parent: GraphChunkReference,
+): MalformedListOccurrence[] {
+  const tree = findIndexingTree(context, damaged);
+  const findParent = createParentLocator(tree?.dataMap ?? context.dataMap);
+  const self = { list: damaged, findParent };
+
+  const owner = findOwningField(findParent, parent);
+  const fieldEntry = owner
+    ? resolveNormalizedField(owner.parent.selection, owner.field)
+    : null;
+  const node = owner && findClosestNode(owner.parent, findParent);
+  const type = owner?.parent.type;
+
   const found: CompositeListChunk[] = [];
   if (tree && type && fieldEntry && node) {
     for (const chunk of tree.typeMap.get(type) ?? EMPTY_ARRAY) {
@@ -607,69 +505,11 @@ function findOccurrences(
     }
   }
   const other = found.find((list) => list.data.length !== damaged.data.length);
-  const occurrences = !other
-    ? [damaged]
-    : found.indexOf(other) < found.indexOf(damaged)
-    ? [other, damaged]
-    : [damaged, other];
-
-  return occurrences.map((list) => ({
-    items: list.data.length,
-    slots: describeSlots(list),
-    path: describePath(findParent, list),
-  }));
-}
-
-/**
- * The corruption inflates `itemChunks` past the payload length, so the surplus slots tell us how
- * long the *other* occurrence was even when the search cannot find it. Contiguous holes from zero
- * point at an aggregate overrun, sparse or offset ones at a stale layout.
- */
-function describeSlots(list: CompositeListChunk): string {
-  const slots = list.itemChunks.length;
-  if (slots === list.data.length) {
-    return "";
+  if (!other) {
+    return [self];
   }
-  const holes: number[] = [];
-  for (let i = 0; i < slots; i++) {
-    if (list.itemChunks[i] === undefined) {
-      holes.push(i);
-    }
-  }
-  return ` (${slots} slots, holes at ${
-    holes.length ? holes.join(",") : "none"
-  })`;
-}
-
-// A list of lists has no field of its own: walk up to the field the outermost list is assigned to.
-function findOwningField(
-  findParent: ParentLocator,
-  parent: GraphChunkReference,
-): ObjectFieldReference | null {
-  let ref = parent;
-  while (isParentListRef(ref)) {
-    ref = findParent(ref.parent);
-  }
-  return isParentObjectRef(ref) ? ref : null;
-}
-
-function describeFieldEntry(fieldEntry: NormalizedFieldEntry): string {
-  if (typeof fieldEntry === "string") {
-    return fieldEntry;
-  }
-  // Argument *names* are schema, argument values are not: elide the values.
-  const args = [...(fieldEntry.args?.keys() ?? [])]
-    .map((name) => `${name}: ...`)
-    .join(", ");
-  return args ? `${fieldEntry.name}(${args})` : fieldEntry.name;
-}
-
-// Absolute when `from` is omitted, node relative otherwise.
-function describePath(
-  findParent: ParentLocator,
-  list: CompositeListChunk,
-  from?: ObjectChunk | CompositeListChunk | null,
-): string {
-  const path = getDataPathForDebugging({ findParent }, list, from ?? undefined);
-  return from ? path.join(".") : `data${path.map((s) => `.${s}`).join("")}`;
+  const otherOccurrence = { list: other, findParent };
+  return found.indexOf(other) < found.indexOf(damaged)
+    ? [otherOccurrence, self]
+    : [self, otherOccurrence];
 }
