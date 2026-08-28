@@ -2676,3 +2676,304 @@ test("updates a list item that is null in one chunk and an object in another", (
   });
   expect(single.complete).toBe(true);
 });
+
+describe("@cache(covers) recycling a divergent node field", () => {
+  const detailQuery = gql`
+    query DetailQuery {
+      foo {
+        __typename
+        id
+        details {
+          __typename
+          value
+        }
+      }
+    }
+  `;
+  const listQuery = gql`
+    query ListQuery {
+      foo {
+        __typename
+        id
+        details {
+          __typename
+          value
+        }
+      }
+    }
+  `;
+  const preloaderWithEmptyCovers = gql`
+    query PreloaderQuery @cache(covers: []) {
+      first: foo {
+        __typename
+        id
+        extra
+        details {
+          __typename
+          value
+        }
+      }
+      second: foo {
+        __typename
+        id
+        details {
+          __typename
+          value
+        }
+      }
+    }
+  `;
+  const preloaderWithCovers = gql`
+    query PreloaderQuery
+    @cache(covers: ["ListQuery", "DetailQuery", "DraftQuery"]) {
+      first: foo {
+        __typename
+        id
+        extra
+        details {
+          __typename
+          value
+        }
+      }
+      second: foo {
+        __typename
+        id
+        details {
+          __typename
+          value
+        }
+      }
+    }
+  `;
+
+  test.each([
+    ["empty", false, preloaderWithEmptyCovers],
+    ["set", false, preloaderWithCovers],
+    ["empty", true, preloaderWithEmptyCovers],
+    ["set", true, preloaderWithCovers],
+  ])(
+    "updates details when covers is %s and reconciliation is %s",
+    (covers, reconcileDivergentChunks, preloaderQuery) => {
+      const cache = new ForestRun({
+        maxOperationCount: 2,
+        reconcileDivergentChunks,
+      });
+
+      cache.write({
+        query: detailQuery,
+        result: {
+          foo: {
+            __typename: "Foo",
+            id: "1",
+            details: {
+              __typename: "Detail",
+              value: "old",
+            },
+          },
+        },
+      });
+      cache.write({
+        query: preloaderQuery,
+        result: {
+          first: {
+            __typename: "Foo",
+            id: "1",
+            extra: true,
+            details: {
+              __typename: "Detail",
+              value: "old",
+            },
+          },
+          second: {
+            __typename: "Foo",
+            id: "1",
+            details: null,
+          },
+        },
+      });
+
+      // Ordinary hydration takes the first, broader object-valued chunk. Covers
+      // skips it because its selection is not exact and recycles the later null.
+      const list = cache.diff({
+        query: listQuery,
+        optimistic: true,
+      });
+      expect(list.result).toEqual({
+        foo: {
+          __typename: "Foo",
+          id: "1",
+          details:
+            covers === "set"
+              ? null
+              : {
+                  __typename: "Detail",
+                  value: "old",
+                },
+        },
+      });
+
+      // Preserve the covered query's recycled value, but remove the malformed
+      // preloader so the next object-to-object write produces an ObjectDifference.
+      cache.diff({ query: detailQuery, optimistic: true });
+      expect(cache.getStats().treeCount).toBe(3);
+      expect(cache.gc()).toHaveLength(1);
+      expect(cache.getStats().treeCount).toBe(2);
+      expect(cache.diff({ query: listQuery, optimistic: true }).result).toEqual(
+        list.result,
+      );
+
+      expect(() =>
+        cache.write({
+          query: detailQuery,
+          result: {
+            foo: {
+              __typename: "Foo",
+              id: "1",
+              details: {
+                __typename: "Detail",
+                value: "new",
+              },
+            },
+          },
+        }),
+      ).not.toThrow();
+      expect(cache.diff({ query: listQuery, optimistic: true }).result).toEqual({
+        foo: {
+          __typename: "Foo",
+          id: "1",
+          details: {
+            __typename: "Detail",
+            value: "new",
+          },
+        },
+      });
+    },
+  );
+});
+
+describe("@cache(covers) recycling a divergent node field under a read policy", () => {
+  // A read policy on the embedded type forces the read result through `transformTree`,
+  // which synthesizes the intermediate field differences itself (never through `diffObject`).
+  // Those differences therefore never carry `newValue`, no matter how
+  // `reconcileDivergentChunks` is configured.
+  const typePolicies = {
+    Detail: {
+      fields: {
+        value: {
+          read(existing: unknown) {
+            return typeof existing === "string"
+              ? existing.toUpperCase()
+              : existing;
+          },
+        },
+      },
+    },
+  };
+
+  // Two distinct root fields resolving to the same node: `foo` selects an extra
+  // field, `bar` does not, so only `bar` can recycle the preloader's null chunk.
+  const coveredQuery = gql`
+    query CoveredQuery {
+      foo {
+        __typename
+        id
+        extra
+        details {
+          __typename
+          value
+        }
+      }
+      bar {
+        __typename
+        id
+        details {
+          __typename
+          value
+        }
+      }
+    }
+  `;
+  const preloaderWithEmptyCovers = gql`
+    query PreloaderQuery @cache(covers: []) {
+      foo {
+        __typename
+        id
+        extra
+        details {
+          __typename
+          value
+        }
+      }
+      bar {
+        __typename
+        id
+        details {
+          __typename
+          value
+        }
+      }
+    }
+  `;
+  const preloaderWithCovers = gql`
+    query PreloaderQuery @cache(covers: ["CoveredQuery"]) {
+      foo {
+        __typename
+        id
+        extra
+        details {
+          __typename
+          value
+        }
+      }
+      bar {
+        __typename
+        id
+        details {
+          __typename
+          value
+        }
+      }
+    }
+  `;
+
+  test.each([
+    ["forward", "empty", preloaderWithEmptyCovers, coveredQuery],
+    ["forward", "set", preloaderWithCovers, coveredQuery],
+    ["reverse", "empty", coveredQuery, preloaderWithEmptyCovers],
+    ["reverse", "set", coveredQuery, preloaderWithCovers],
+  ])(
+    "updates the %s operation when covers is %s",
+    (_direction, _covers, sourceQuery, targetQuery) => {
+      const cache = new ForestRun({
+        reconcileDivergentChunks: true,
+        typePolicies,
+      });
+      // Evaluate the target while notifying this watch, so the invariant surfaces
+      // from the source write just as it does in the write telemetry.
+      cache.watch({
+        query: targetQuery,
+        optimistic: true,
+        callback() {},
+      });
+
+      expect(() =>
+        cache.write({
+          query: sourceQuery,
+          result: {
+            foo: {
+              __typename: "Foo",
+              id: "1",
+              extra: true,
+              details: { __typename: "Detail", value: "old" },
+            },
+            bar: {
+              __typename: "Foo",
+              id: "1",
+              details: null,
+            },
+          },
+        }),
+      ).not.toThrow();
+    },
+  );
+});
