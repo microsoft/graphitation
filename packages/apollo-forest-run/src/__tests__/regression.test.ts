@@ -2822,7 +2822,7 @@ describe("@cache(covers) recycling a divergent node field", () => {
         list.result,
       );
 
-      expect(() =>
+      const write = () =>
         cache.write({
           query: detailQuery,
           result: {
@@ -2835,18 +2835,26 @@ describe("@cache(covers) recycling a divergent node field", () => {
               },
             },
           },
-        }),
-      ).not.toThrow();
-      expect(cache.diff({ query: listQuery, optimistic: true }).result).toEqual({
-        foo: {
-          __typename: "Foo",
-          id: "1",
-          details: {
-            __typename: "Detail",
-            value: "new",
+        });
+      if (covers === "set" && !reconcileDivergentChunks) {
+        expect(write).toThrow(
+          'Invariant violation: Failed to update "query ListQuery" at path details: expected CompositeNull, got ObjectDifference',
+        );
+        return;
+      }
+      expect(write).not.toThrow();
+      expect(cache.diff({ query: listQuery, optimistic: true }).result).toEqual(
+        {
+          foo: {
+            __typename: "Foo",
+            id: "1",
+            details: {
+              __typename: "Detail",
+              value: "new",
+            },
           },
         },
-      });
+      );
     },
   );
 });
@@ -2943,20 +2951,23 @@ describe("@cache(covers) recycling a divergent node field under a read policy", 
     ["reverse", "set", coveredQuery, preloaderWithCovers],
   ])(
     "updates the %s operation when covers is %s",
-    (_direction, _covers, sourceQuery, targetQuery) => {
+    (_direction, covers, sourceQuery, targetQuery) => {
       const cache = new ForestRun({
         reconcileDivergentChunks: true,
         typePolicies,
       });
+      const notifications: unknown[] = [];
       // Evaluate the target while notifying this watch, so the invariant surfaces
       // from the source write just as it does in the write telemetry.
       cache.watch({
         query: targetQuery,
         optimistic: true,
-        callback() {},
+        callback(diff) {
+          notifications.push(diff.result);
+        },
       });
 
-      expect(() =>
+      const write = () =>
         cache.write({
           query: sourceQuery,
           result: {
@@ -2972,8 +2983,26 @@ describe("@cache(covers) recycling a divergent node field under a read policy", 
               details: null,
             },
           },
-        }),
-      ).not.toThrow();
+        });
+      expect(write).not.toThrow();
+      const expected = {
+        foo: {
+          __typename: "Foo",
+          id: "1",
+          extra: true,
+          details: { __typename: "Detail", value: "OLD" },
+        },
+        bar: {
+          __typename: "Foo",
+          id: "1",
+          details:
+            covers === "set" ? null : { __typename: "Detail", value: "OLD" },
+        },
+      };
+      expect(notifications).toEqual([expected]);
+      expect(
+        cache.diff({ query: targetQuery, optimistic: true }).result,
+      ).toEqual(expected);
     },
   );
 });
