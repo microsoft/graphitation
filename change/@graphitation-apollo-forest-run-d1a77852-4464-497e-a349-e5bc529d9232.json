@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Upgrade brace-expansion to 1.1.18 in compat lockfile to fix DoS vulnerabilities",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "celiac@microsoft.com_msteamsmdb",
-  "dependentChangeType": "patch"
-}
