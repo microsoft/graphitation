@@ -278,6 +278,10 @@ export type SchemaFragment = {
   operationTypes?: OperationTypes;
 };
 
+export type SchemaFragmentForInputVariablesRequest = {
+  kind: "InputVariables";
+  typeNames: string[];
+};
 export type SchemaFragmentForReturnTypeRequest = {
   kind: "ReturnType";
   parentTypeName: TypeName;
@@ -290,6 +294,7 @@ export type SchemaFragmentForRuntimeTypeRequest = {
 };
 
 export type SchemaFragmentRequest =
+  | SchemaFragmentForInputVariablesRequest
   | SchemaFragmentForReturnTypeRequest
   | SchemaFragmentForRuntimeTypeRequest;
 

@@ -20,6 +20,8 @@ import {
   isDefined,
   isInputType,
   getDirectiveDefinitionArgs,
+  getInputObjectType,
+  getInputObjectFields,
 } from "./schema/definition";
 import { valueFromAST } from "./utilities/valueFromAST";
 import { coerceInputValue } from "./utilities/coerceInputValue";
@@ -27,6 +29,7 @@ import {
   inspectTypeReference,
   isNonNullType,
   typeReferenceFromNode,
+  typeNameFromReference,
 } from "./schema/reference";
 import type { SchemaFragment } from "./types";
 
@@ -79,6 +82,47 @@ export function getVariableValues(
   return { errors: errors };
 }
 
+export function getMissingVariableTypes(
+  varDefNodes: ReadonlyArray<VariableDefinitionNode>,
+  schemaFragment: SchemaFragment,
+) {
+  const missingTypeReferences = [];
+  const typeReferencesToValidate = varDefNodes.map((varDefNode) =>
+    typeReferenceFromNode(varDefNode.type),
+  );
+  const queuedForValidation = new Set(typeReferencesToValidate);
+
+  let index = 0;
+  while (index < typeReferencesToValidate.length) {
+    const varTypeReference = typeReferencesToValidate[index++];
+    if (!isInputType(schemaFragment.definitions, varTypeReference)) {
+      missingTypeReferences.push(typeNameFromReference(varTypeReference));
+      continue;
+    }
+
+    const inputObjectDef = getInputObjectType(
+      schemaFragment.definitions,
+      varTypeReference,
+    );
+    if (inputObjectDef) {
+      for (const maybeTypeReference of Object.values(
+        getInputObjectFields(inputObjectDef),
+      )) {
+        const typeReference = Array.isArray(maybeTypeReference)
+          ? maybeTypeReference[0]
+          : maybeTypeReference;
+
+        if (!queuedForValidation.has(typeReference)) {
+          queuedForValidation.add(typeReference);
+          typeReferencesToValidate.push(typeReference);
+        }
+      }
+    }
+  }
+
+  return missingTypeReferences;
+}
+
 function coerceVariableValues(
   schemaFragment: SchemaFragment,
   varDefNodes: ReadonlyArray<VariableDefinitionNode>,
@@ -93,13 +137,18 @@ function coerceVariableValues(
     if (!isInputType(schemaFragment.definitions, varTypeReference)) {
       // Must use input types for variables. This should be caught during
       // validation, however is checked again here for safety.
-      const varTypeStr = inspectTypeReference(varTypeReference);
-      onError(
-        locatedError(
-          `Variable "$${varName}" expected value of type "${varTypeStr}" which cannot be used as an input type.`,
-          [varDefNode.type],
-        ),
-      );
+      const errorMessage = !isDefined(
+        schemaFragment.definitions,
+        varTypeReference,
+      )
+        ? `Missing definition for input type "${typeNameFromReference(
+            varTypeReference,
+          )}"`
+        : `Variable "$${varName}" expected value of type "${inspectTypeReference(
+            varTypeReference,
+          )}" which cannot be used as an input type.`;
+
+      onError(locatedError(errorMessage, [varDefNode.type]));
       continue;
     }
 

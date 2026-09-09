@@ -48,6 +48,7 @@ import {
   getArgumentValues,
   getVariableValues,
   getDirectiveValues,
+  getMissingVariableTypes,
 } from "./values";
 import type { ExecutionHooks } from "./hooks/types";
 import { arraysAreEqual } from "./utilities/array";
@@ -115,7 +116,7 @@ export interface ExecutionContext {
   contextValue: unknown;
   buildContextValue?: (contextValue?: unknown) => unknown;
   operation: OperationDefinitionNode;
-  variableValues: { [variable: string]: unknown };
+  variableValues: VariableValues;
   fieldResolver: FunctionFieldResolver<unknown, unknown>;
   typeResolver: TypeResolver<unknown, unknown>;
   subscribeFieldResolver: FunctionFieldResolver<unknown, unknown>;
@@ -125,6 +126,8 @@ export interface ExecutionContext {
   enablePerEventContext: boolean;
   enableEarlyExecution: boolean;
 }
+
+type VariableValues = { [variable: string]: unknown };
 
 /**
  * Implements the "Executing requests" section of the GraphQL specification.
@@ -139,16 +142,31 @@ export interface ExecutionContext {
 export function executeWithoutSchema(
   args: ExecutionWithoutSchemaArgs,
 ): PromiseOrValue<ExecutionResult> {
-  // If a valid execution context cannot be created due to incorrect arguments,
-  // a "Response" with only errors is returned.
-  const exeContext = buildExecutionContext(args);
+  const { document, variableValues } = args;
+  assertValidExecutionArguments(document, variableValues);
 
-  // Return early errors if execution context failed.
-  if (!("schemaFragment" in exeContext)) {
+  const exeContext = buildExecutionContext(args);
+  if (Array.isArray(exeContext)) {
     return { errors: exeContext };
-  } else {
-    return executeOperationWithBeforeHook(exeContext);
   }
+
+  const coersionResult = populateVariableValuesInContext(
+    exeContext,
+    variableValues,
+  );
+
+  const handleCoersionResult = (coersionErrors: Array<GraphQLError> | void) => {
+    if (Array.isArray(coersionErrors)) {
+      return { errors: coersionErrors };
+    }
+    return executeOperationWithBeforeHook(exeContext);
+  };
+
+  if (isPromise(coersionResult)) {
+    return coersionResult.then(handleCoersionResult);
+  }
+
+  return handleCoersionResult(coersionResult);
 }
 
 /**
@@ -157,9 +175,9 @@ export function executeWithoutSchema(
  *
  * @internal
  */
-export function assertValidExecutionArguments(
+function assertValidExecutionArguments(
   document: DocumentNode,
-  rawVariableValues: Maybe<{ [variable: string]: unknown }>,
+  rawVariableValues: Maybe<VariableValues>,
 ): void {
   devAssert(document, "Must provide document.");
 
@@ -170,17 +188,58 @@ export function assertValidExecutionArguments(
   );
 }
 
+function populateVariableValuesInContext(
+  exeContext: ExecutionContext,
+  rawVariableValues: Maybe<VariableValues>,
+): PromiseOrValue<Array<GraphQLError> | void> {
+  // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
+  const { operation, schemaFragment } = exeContext;
+  const variableDefinitions = operation.variableDefinitions ?? [];
+  const missingTypes = getMissingVariableTypes(
+    variableDefinitions,
+    schemaFragment,
+  );
+
+  const coerce = () => {
+    const coercedVariableValues = getVariableValues(
+      schemaFragment,
+      variableDefinitions,
+      rawVariableValues ?? {},
+      { maxErrors: 50 },
+    );
+
+    if (coercedVariableValues.errors) {
+      return coercedVariableValues.errors;
+    }
+
+    exeContext.variableValues = coercedVariableValues.coerced;
+  };
+
+  if (missingTypes.length) {
+    const pendingSchemaLoad = requestSchemaFragment(exeContext, {
+      kind: "InputVariables",
+      typeNames: missingTypes,
+    });
+
+    if (isPromise(pendingSchemaLoad)) {
+      return pendingSchemaLoad.then(coerce);
+    }
+  }
+
+  return coerce();
+}
+
 /**
  * Constructs a ExecutionContext object from the arguments passed to
  * execute, which we will pass throughout the other execution methods.
  *
- * Throws a GraphQLError if a valid execution context cannot be created.
+ * returns GraphQLError if a valid execution context cannot be created.
  *
  * @internal
  */
 function buildExecutionContext(
   args: ExecutionWithoutSchemaArgs,
-): Array<GraphQLError> | ExecutionContext {
+): ExecutionContext | GraphQLError[] {
   const {
     schemaFragment,
     schemaFragmentLoader,
@@ -188,7 +247,6 @@ function buildExecutionContext(
     rootValue,
     contextValue,
     buildContextValue,
-    variableValues,
     operationName,
     fieldResolver,
     typeResolver,
@@ -197,8 +255,6 @@ function buildExecutionContext(
     enablePerEventContext,
     enableEarlyExecution,
   } = args;
-
-  assertValidExecutionArguments(document, variableValues);
 
   let operation: OperationDefinitionNode | undefined;
   const fragments: ObjMap<FragmentDefinitionNode> = Object.create(null);
@@ -233,20 +289,6 @@ function buildExecutionContext(
     return [locatedError("Must provide an operation.", [])];
   }
 
-  // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
-  const variableDefinitions = operation.variableDefinitions ?? [];
-
-  const coercedVariableValues = getVariableValues(
-    schemaFragment,
-    variableDefinitions,
-    variableValues ?? {},
-    { maxErrors: 50 },
-  );
-
-  if (coercedVariableValues.errors) {
-    return coercedVariableValues.errors;
-  }
-
   return {
     schemaFragment,
     schemaFragmentLoader,
@@ -257,7 +299,7 @@ function buildExecutionContext(
       : contextValue,
     buildContextValue,
     operation,
-    variableValues: coercedVariableValues.coerced,
+    variableValues: {},
     fieldResolver: fieldResolver ?? defaultFieldResolver,
     typeResolver: typeResolver ?? defaultTypeResolver,
     subscribeFieldResolver: subscribeFieldResolver ?? defaultFieldResolver,
@@ -665,8 +707,14 @@ function executeField(
   });
 }
 
-function requestSchemaFragment(
-  exeContext: ExecutionContext,
+export interface SchemaFragmentLoaderContext {
+  contextValue: unknown;
+  schemaFragment: SchemaFragment;
+  schemaFragmentLoader?: SchemaFragmentLoader;
+}
+
+export function requestSchemaFragment(
+  exeContext: SchemaFragmentLoaderContext,
   request: SchemaFragmentRequest,
 ): PromiseOrValue<void> {
   if (!exeContext.schemaFragmentLoader) {
