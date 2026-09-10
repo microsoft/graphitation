@@ -1,0 +1,7 @@
+mutation SendMessage($id: ID!, $text: String!) {
+  sendMessage(id: $id, text: $text) {
+    __typename
+    id
+    text
+  }
+}
