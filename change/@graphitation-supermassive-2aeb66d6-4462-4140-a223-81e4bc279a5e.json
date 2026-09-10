@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "feat(supermassive): isFragmentOf utility",
+  "packageName": "@graphitation/supermassive",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
