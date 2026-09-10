@@ -1,5 +1,5 @@
 import ts, { factory } from "typescript";
-import { BUILT_IN_SCALARS, TsCodegenContext } from "./context";
+import { BUILT_IN_SCALARS, TsCodegenContext, Type } from "./context";
 
 const ROOT_OPERATIONS = ["Query", "Mutation", "Subscription"];
 const LEGACY_TYPES = [
@@ -12,7 +12,16 @@ const LEGACY_TYPES = [
   "ENUM",
 ];
 
-export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
+export function generateLegacyTypes(
+  context: TsCodegenContext,
+  {
+    generateUnionPossibleTypes = true,
+    generateTypeMap = true,
+  }: {
+    generateUnionPossibleTypes?: boolean;
+    generateTypeMap?: boolean;
+  } = {},
+): ts.SourceFile {
   const statements: ts.Statement[] = [];
   const allTypes = context
     .getAllTypes()
@@ -111,6 +120,35 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
     ),
   );
 
+  if (generateTypeMap) {
+    statements.push(
+      factory.createTypeAliasDeclaration(
+        [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+        factory.createIdentifier("TypeMap"),
+        undefined,
+        factory.createTypeLiteralNode(
+          allTypes.map((type) =>
+            factory.createPropertySignature(
+              undefined,
+              factory.createStringLiteral(type.name),
+              undefined,
+              factory.createTypeReferenceNode(
+                factory.createQualifiedName(
+                  factory.createIdentifier("Models"),
+                  type.name,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  if (generateUnionPossibleTypes) {
+    statements.push(...createUnionPossibleTypesStatements(allTypes));
+  }
+
   const source = factory.createSourceFile(
     statements,
     factory.createToken(ts.SyntaxKind.EndOfFileToken),
@@ -118,4 +156,80 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
   );
   source.fileName = "legacy-types.interface.ts";
   return source;
+}
+
+function createUnionPossibleTypesStatements(allTypes: Type[]): ts.Statement[] {
+  return [
+    factory.createInterfaceDeclaration(
+      [factory.createToken(ts.SyntaxKind.ExportKeyword)],
+      factory.createIdentifier("PossibleTypesResultData"),
+      undefined,
+      undefined,
+      [
+        factory.createPropertySignature(
+          undefined,
+          factory.createIdentifier("possibleTypes"),
+          undefined,
+          factory.createTypeLiteralNode([
+            factory.createIndexSignature(
+              undefined,
+              [
+                factory.createParameterDeclaration(
+                  undefined,
+                  undefined,
+                  factory.createIdentifier("key"),
+                  undefined,
+                  factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
+                  undefined,
+                ),
+              ],
+              factory.createArrayTypeNode(
+                factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
+              ),
+            ),
+          ]),
+        ),
+      ],
+    ),
+    factory.createVariableStatement(
+      undefined,
+      factory.createVariableDeclarationList(
+        [
+          factory.createVariableDeclaration(
+            factory.createIdentifier("result"),
+            undefined,
+            factory.createTypeReferenceNode(
+              factory.createIdentifier("PossibleTypesResultData"),
+              undefined,
+            ),
+            factory.createObjectLiteralExpression(
+              [
+                factory.createPropertyAssignment(
+                  factory.createStringLiteral("possibleTypes"),
+                  factory.createObjectLiteralExpression(
+                    allTypes
+                      .filter((type) => type.kind === "UNION")
+                      .map((union) =>
+                        factory.createPropertyAssignment(
+                          factory.createStringLiteral(union.name),
+                          factory.createArrayLiteralExpression(
+                            union.types.map((type) => {
+                              return factory.createStringLiteral(type);
+                            }),
+                            true,
+                          ),
+                        ),
+                      ),
+                    true,
+                  ),
+                ),
+              ],
+              true,
+            ),
+          ),
+        ],
+        ts.NodeFlags.Const,
+      ),
+    ),
+  ];
 }
