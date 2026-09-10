@@ -4946,7 +4946,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"baseline-browser-mapping@npm:2.11.20":
+"baseline-browser-mapping@npm:^2.10.44":
   version: 2.11.20
   resolution: "baseline-browser-mapping@npm:2.11.20"
   bin:
@@ -6749,7 +6749,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron-to-chromium@npm:1.5.420":
+"electron-to-chromium@npm:^1.5.393":
   version: 1.5.420
   resolution: "electron-to-chromium@npm:1.5.420"
   checksum: 10c0/0c4a4932991cefc9aa655cbb00b3b693680709df9e4eb2fc1a51cab851b735a2be9510c345b5ed6cad571e58e6d27867731607741df82de9535a7eb041fceda2
