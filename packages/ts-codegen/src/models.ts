@@ -1,4 +1,4 @@
-import ts, { factory } from "typescript";
+import { emit } from "./emit";
 import { isRootOperationType } from "./context/utilities";
 import {
   ScalarType,
@@ -10,46 +10,47 @@ import {
   UnionType,
   TypeLocation,
 } from "./context";
+import { GeneratedFile } from "./types";
 
-export function generateModels(context: TsCodegenContext): ts.SourceFile {
+export function generateModels(context: TsCodegenContext): GeneratedFile {
   const statements = context
     .getAllTypes()
     .map((type) => createModelForType(context, type))
-    .filter((t) => t != null) as ts.Statement[];
+    .filter((t) => t != null) as string[];
 
-  const imports = context.getAllModelImportDeclarations() as ts.Statement[];
+  const imports = context.getAllModelImportDeclarations() as string[];
 
-  const enumsStatements: ts.Statement[] = [];
+  const enumsStatements: string[] = [];
 
   if (context.hasEnums) {
     if (context.hasUsedEnumsInModels) {
       enumsStatements.push(
-        factory.createImportDeclaration(
+        emit.createImportDeclaration(
           undefined,
-          factory.createImportClause(
+          emit.createImportClause(
             false,
             undefined,
-            factory.createNamespaceImport(factory.createIdentifier("Enums")),
+            emit.createNamespaceImport(emit.createIdentifier("Enums")),
           ),
-          factory.createStringLiteral("./enums.interface"),
+          emit.createStringLiteral("./enums.interface"),
         ),
       );
     }
 
     enumsStatements.push(
-      factory.createExportDeclaration(
+      emit.createExportDeclaration(
         undefined,
         false,
         undefined,
-        factory.createStringLiteral("./enums.interface"),
+        emit.createStringLiteral("./enums.interface"),
       ),
     );
   }
 
-  const source = factory.createSourceFile(
+  const source = emit.createSourceFile(
     imports.concat(enumsStatements, context.getDefaultTypes(), statements),
-    factory.createToken(ts.SyntaxKind.EndOfFileToken),
-    ts.NodeFlags.None,
+    emit.createToken("EndOfFileToken"),
+    undefined,
   );
 
   source.fileName = "models.interface.ts";
@@ -59,7 +60,7 @@ export function generateModels(context: TsCodegenContext): ts.SourceFile {
 function createModelForType(
   context: TsCodegenContext,
   type: Type,
-): ts.Statement | null {
+): string | null {
   switch (type.kind) {
     case "OBJECT": {
       return createObjectTypeModel(context, type);
@@ -85,7 +86,7 @@ function createModelForType(
 function createObjectTypeModel(
   context: TsCodegenContext,
   type: ObjectType,
-): ts.InterfaceDeclaration | null {
+): string | null {
   if (isRootOperationType(type.name) || type.isExtension) {
     return null;
   }
@@ -102,34 +103,34 @@ function createObjectTypeModel(
     extendTypes.push(model);
   }
 
-  let fields: ts.PropertySignature[] = [];
+  let fields: string[] = [];
   if (!model) {
     fields = type.fields.map(({ name, type: fieldType }) =>
-      factory.createPropertySignature(
-        [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
-        factory.createIdentifier(name),
+      emit.createPropertySignature(
+        [emit.createModifier("ReadonlyKeyword")],
+        name,
         fieldType.kind !== "NonNullType"
-          ? factory.createToken(ts.SyntaxKind.QuestionToken)
+          ? emit.createToken("QuestionToken")
           : undefined,
         context.getTypeReferenceFromTypeNode(fieldType, "MODELS"),
       ),
     );
   }
 
-  return factory.createInterfaceDeclaration(
-    [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-    factory.createIdentifier(type.name),
+  return emit.createInterfaceDeclaration(
+    [emit.createModifier("ExportKeyword")],
+    type.name,
     undefined,
     [
-      factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
+      emit.createHeritageClause("ExtendsKeyword", [
         ...extendTypes.map((type) =>
-          factory.createExpressionWithTypeArguments(
+          emit.createExpressionWithTypeArguments(
             type.toExpression(),
             undefined,
           ),
         ),
         ...interfaces.map((interfaceExpression) =>
-          factory.createExpressionWithTypeArguments(
+          emit.createExpressionWithTypeArguments(
             interfaceExpression,
             undefined,
           ),
@@ -137,11 +138,11 @@ function createObjectTypeModel(
       ]),
     ],
     [
-      factory.createPropertySignature(
-        [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
+      emit.createPropertySignature(
+        [emit.createModifier("ReadonlyKeyword")],
         "__typename",
-        factory.createToken(ts.SyntaxKind.QuestionToken),
-        factory.createLiteralTypeNode(factory.createStringLiteral(type.name)),
+        emit.createToken("QuestionToken"),
+        emit.createLiteralTypeNode(emit.createStringLiteral(type.name)),
       ),
       ...fields,
     ],
@@ -151,12 +152,12 @@ function createObjectTypeModel(
 function createUnionTypeModel(
   context: TsCodegenContext,
   type: UnionType,
-): ts.TypeAliasDeclaration | null {
-  return factory.createTypeAliasDeclaration(
-    [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-    factory.createIdentifier(type.name),
+): string | null {
+  return emit.createTypeAliasDeclaration(
+    [emit.createModifier("ExportKeyword")],
+    type.name,
     undefined,
-    factory.createUnionTypeNode(
+    emit.createUnionTypeNode(
       type.types?.map((type) => {
         return context.getModelType(type, "MODELS").toTypeReference();
       }) || [],
@@ -167,7 +168,7 @@ function createUnionTypeModel(
 function createInterfaceTypeModel(
   context: TsCodegenContext,
   type: InterfaceType,
-): ts.InterfaceDeclaration | null {
+): string | null {
   const extendTypes = [context.getBaseModelType()];
   const interfaces = type.interfaces.map((name) => {
     return context.getModelType(name, "MODELS").toExpression();
@@ -176,30 +177,30 @@ function createInterfaceTypeModel(
 
   if (isLegacy) {
     const fields = type.fields.map(({ name, type: fieldType }) =>
-      factory.createPropertySignature(
-        [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
-        factory.createIdentifier(name),
+      emit.createPropertySignature(
+        [emit.createModifier("ReadonlyKeyword")],
+        name,
         fieldType.kind !== "NonNullType"
-          ? factory.createToken(ts.SyntaxKind.QuestionToken)
+          ? emit.createToken("QuestionToken")
           : undefined,
         context.getTypeReferenceFromTypeNode(fieldType, "MODELS"),
       ),
     );
 
-    return factory.createInterfaceDeclaration(
-      [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-      factory.createIdentifier(type.name),
+    return emit.createInterfaceDeclaration(
+      [emit.createModifier("ExportKeyword")],
+      type.name,
       undefined,
       [
-        factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
+        emit.createHeritageClause("ExtendsKeyword", [
           ...extendTypes.map((type) =>
-            factory.createExpressionWithTypeArguments(
+            emit.createExpressionWithTypeArguments(
               type.toExpression(),
               undefined,
             ),
           ),
           ...interfaces.map((interfaceExpression) =>
-            factory.createExpressionWithTypeArguments(
+            emit.createExpressionWithTypeArguments(
               interfaceExpression,
               undefined,
             ),
@@ -207,30 +208,30 @@ function createInterfaceTypeModel(
         ]),
       ],
       [
-        factory.createPropertySignature(
-          [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
+        emit.createPropertySignature(
+          [emit.createModifier("ReadonlyKeyword")],
           "__typename",
-          factory.createToken(ts.SyntaxKind.QuestionToken),
-          factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
+          emit.createToken("QuestionToken"),
+          emit.createKeywordTypeNode("StringKeyword"),
         ),
         ...fields,
       ],
     );
   } else {
-    return factory.createInterfaceDeclaration(
-      [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-      factory.createIdentifier(type.name),
+    return emit.createInterfaceDeclaration(
+      [emit.createModifier("ExportKeyword")],
+      type.name,
       undefined,
       [
-        factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
+        emit.createHeritageClause("ExtendsKeyword", [
           ...extendTypes.map((type) =>
-            factory.createExpressionWithTypeArguments(
+            emit.createExpressionWithTypeArguments(
               type.toExpression(),
               undefined,
             ),
           ),
           ...interfaces.map((interfaceExpression) =>
-            factory.createExpressionWithTypeArguments(
+            emit.createExpressionWithTypeArguments(
               interfaceExpression,
               undefined,
             ),
@@ -238,11 +239,11 @@ function createInterfaceTypeModel(
         ]),
       ],
       [
-        factory.createPropertySignature(
-          [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
+        emit.createPropertySignature(
+          [emit.createModifier("ReadonlyKeyword")],
           "__typename",
-          factory.createToken(ts.SyntaxKind.QuestionToken),
-          factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
+          emit.createToken("QuestionToken"),
+          emit.createKeywordTypeNode("StringKeyword"),
         ),
       ],
     );
@@ -252,25 +253,25 @@ function createInterfaceTypeModel(
 function createScalarModel(
   context: TsCodegenContext,
   type: ScalarType,
-): ts.TypeAliasDeclaration | null {
+): string | null {
   return context.getScalarDefinition(type.name) || null;
 }
 
 function createInputObjectType(
   context: TsCodegenContext,
   type: InputObjectType,
-): ts.TypeAliasDeclaration {
-  return factory.createTypeAliasDeclaration(
-    [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+): string {
+  return emit.createTypeAliasDeclaration(
+    [emit.createModifier("ExportKeyword")],
     type.name,
     undefined,
-    factory.createTypeLiteralNode(
+    emit.createTypeLiteralNode(
       type.fields.map(({ name, type }) =>
-        factory.createPropertySignature(
-          [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
-          factory.createIdentifier(name),
+        emit.createPropertySignature(
+          [emit.createModifier("ReadonlyKeyword")],
+          name,
           type.kind !== "NonNullType"
-            ? factory.createToken(ts.SyntaxKind.QuestionToken)
+            ? emit.createToken("QuestionToken")
             : undefined,
           context.getTypeReferenceForInputTypeFromTypeNode(type, "MODELS"),
         ),

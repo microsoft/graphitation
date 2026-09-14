@@ -17,11 +17,7 @@ import {
   Kind,
   TypeNode,
 } from "graphql";
-import ts, {
-  factory,
-  addSyntheticLeadingComment,
-  SyntaxKind,
-} from "typescript";
+import { emit } from "../emit";
 import { DefinitionImport, DefinitionModel } from "../types";
 import {
   createImportDeclaration,
@@ -217,10 +213,7 @@ export class TsCodegenContext {
     }
 
     if (baseContextTypeName) {
-      return factory.createTypeReferenceNode(
-        factory.createIdentifier(baseContextTypeName),
-        undefined,
-      );
+      return emit.createTypeReferenceNode(baseContextTypeName, undefined);
     }
   }
 
@@ -244,28 +237,25 @@ export class TsCodegenContext {
         contextTypeItem.values,
       );
 
-      return factory.createIntersectionTypeNode(
+      return emit.createIntersectionTypeNode(
         [
           baseContextTypeNode,
-          factory.createTypeLiteralNode(
+          emit.createTypeLiteralNode(
             Object.entries(typeNameWithNamespace).map(
               ([namespace, subTypes]) => {
-                return factory.createPropertySignature(
+                return emit.createPropertySignature(
                   undefined,
-                  factory.createIdentifier(namespace),
+                  emit.createIdentifier(namespace),
                   undefined,
-                  factory.createTypeLiteralNode(
+                  emit.createTypeLiteralNode(
                     subTypes.map(({ subType, name, optional }) => {
-                      return factory.createPropertySignature(
+                      return emit.createPropertySignature(
                         undefined,
-                        factory.createIdentifier(`"${name}"`),
+                        emit.createIdentifier(`"${name}"`),
                         optional
-                          ? factory.createToken(ts.SyntaxKind.QuestionToken)
+                          ? emit.createToken("QuestionToken")
                           : undefined,
-                        factory.createTypeReferenceNode(
-                          factory.createIdentifier(subType),
-                          undefined,
-                        ),
+                        emit.createTypeReferenceNode(subType, undefined),
                       );
                     }),
                   ),
@@ -273,7 +263,7 @@ export class TsCodegenContext {
               },
             ),
           ),
-        ].filter(Boolean) as ts.TypeNode[],
+        ].filter(Boolean) as string[],
       );
     }
   }
@@ -496,7 +486,7 @@ export class TsCodegenContext {
   getTypeReferenceFromTypeNode(
     node: TypeNode,
     markUsage?: "MODELS" | "RESOLVERS",
-  ): ts.TypeNode {
+  ): string {
     if (node.kind === Kind.NON_NULL_TYPE) {
       return createNonNullableType(
         this.getTypeReferenceFromTypeNode(node.type, markUsage),
@@ -514,9 +504,7 @@ export class TsCodegenContext {
     }
   }
 
-  getTypeReferenceForFieldResolverResultFromTypeNode(
-    node: TypeNode,
-  ): ts.TypeNode {
+  getTypeReferenceForFieldResolverResultFromTypeNode(node: TypeNode): string {
     if (node.kind === Kind.NON_NULL_TYPE) {
       return createNonNullableType(
         this.getTypeReferenceForFieldResolverResultFromTypeNode(node.type),
@@ -555,7 +543,7 @@ export class TsCodegenContext {
   getTypeReferenceForInputTypeFromTypeNode(
     node: TypeNode,
     markUsage?: "MODELS" | "RESOLVERS",
-  ): ts.TypeNode {
+  ): string {
     if (node.kind === Kind.NON_NULL_TYPE) {
       return createNonNullableType(
         this.getTypeReferenceForInputTypeFromTypeNode(node.type, markUsage),
@@ -620,9 +608,7 @@ export class TsCodegenContext {
     return this.usedEntitiesInModels.has(typeName);
   }
 
-  getAllImportDeclarations(
-    filterFor: "MODELS" | "RESOLVERS",
-  ): ts.ImportDeclaration[] {
+  getAllImportDeclarations(filterFor: "MODELS" | "RESOLVERS"): string[] {
     let filter: (typeName: string) => boolean;
     if (filterFor === "MODELS") {
       filter = (typeName: string) => this.usedEntitiesInModels.has(typeName);
@@ -631,7 +617,7 @@ export class TsCodegenContext {
     }
     return Array.from(this.imports)
       .sort()
-      .reduce<ts.ImportDeclaration[]>((acc, { defs, from, importName }) => {
+      .reduce<string[]>((acc, { defs, from, importName }) => {
         const filteredDefs = defs.filter(({ typeName }) => filter(typeName));
 
         if (filteredDefs.length) {
@@ -642,7 +628,7 @@ export class TsCodegenContext {
       .sort();
   }
 
-  getAllModelImportDeclarations(): ts.ImportDeclaration[] {
+  getAllModelImportDeclarations(): string[] {
     const imports = this.getAllImportDeclarations("MODELS");
     const models = Array.from(this.typeNameToModels.values())
       .sort()
@@ -664,12 +650,12 @@ export class TsCodegenContext {
           model.tsType !== model.modelName ? model.tsType : undefined,
         );
       })
-      .filter(Boolean) as ts.ImportDeclaration[];
+      .filter(Boolean) as string[];
 
     return imports.concat(models);
   }
 
-  getBasicImports(): ts.ImportDeclaration[] {
+  getBasicImports(): string[] {
     const imports = [];
     const supermassiveTypes = ["PromiseOrValue"];
     if (this.iterableTypeUsed) {
@@ -718,14 +704,11 @@ export class TsCodegenContext {
       model = DEFAULT_SCALAR_TYPE;
     }
 
-    return factory.createTypeAliasDeclaration(
-      [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-      factory.createIdentifier(scalarName),
+    return emit.createTypeAliasDeclaration(
+      [emit.createModifier("ExportKeyword")],
+      scalarName,
       undefined,
-      factory.createTypeReferenceNode(
-        factory.createIdentifier(model),
-        undefined,
-      ),
+      emit.createTypeReferenceNode(model, undefined),
     );
   }
 
@@ -755,25 +738,20 @@ export class TsCodegenContext {
 
   getDefaultTypes() {
     return [
-      addSyntheticLeadingComment(
-        factory.createInterfaceDeclaration(
-          [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-          factory.createIdentifier("BaseModel"),
-          undefined,
-          undefined,
-          [
-            factory.createPropertySignature(
-              [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
-              factory.createIdentifier("__typename"),
-              factory.createToken(ts.SyntaxKind.QuestionToken),
-              factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
-            ),
-          ],
-        ),
-        SyntaxKind.SingleLineCommentTrivia,
-        " Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)",
-        true,
-      ),
+      `// Base type for all models. Enables automatic resolution of abstract GraphQL types (interfaces, unions)\n${emit.createInterfaceDeclaration(
+        [emit.createModifier("ExportKeyword")],
+        "BaseModel",
+        undefined,
+        undefined,
+        [
+          emit.createPropertySignature(
+            [emit.createModifier("ReadonlyKeyword")],
+            emit.createIdentifier("__typename"),
+            emit.createToken("QuestionToken"),
+            emit.createKeywordTypeNode("StringKeyword"),
+          ),
+        ],
+      )}`,
     ];
   }
 
@@ -1028,27 +1006,24 @@ export function extractContext(
 export class TypeLocation {
   constructor(private from: string | null, private name: string) {}
 
-  toTypeReference(): ts.TypeReferenceNode {
+  toTypeReference(): string {
     if (this.from != null) {
-      return factory.createTypeReferenceNode(
-        factory.createQualifiedName(
-          factory.createIdentifier(this.from),
-          factory.createIdentifier(this.name),
-        ),
+      return emit.createTypeReferenceNode(
+        emit.createQualifiedName(emit.createIdentifier(this.from), this.name),
       );
     } else {
-      return factory.createTypeReferenceNode(this.name);
+      return emit.createTypeReferenceNode(this.name);
     }
   }
 
-  toExpression(): ts.Expression {
+  toExpression(): string {
     if (this.from != null) {
-      return factory.createPropertyAccessExpression(
-        factory.createIdentifier(this.from),
-        factory.createIdentifier(this.name),
+      return emit.createPropertyAccessExpression(
+        emit.createIdentifier(this.from),
+        this.name,
       );
     } else {
-      return factory.createIdentifier(this.name);
+      return emit.createIdentifier(this.name);
     }
   }
 }

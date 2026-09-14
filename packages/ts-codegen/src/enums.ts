@@ -1,9 +1,10 @@
-import ts, { factory } from "typescript";
+import { emit } from "./emit";
 import { TsCodegenContext, EnumType } from "./context";
+import { GeneratedFile } from "./types";
 
-export function generateEnums(context: TsCodegenContext): ts.SourceFile {
+export function generateEnums(context: TsCodegenContext): GeneratedFile {
   const enumsImport = context.getEnumsImport();
-  const enumsStatements: ts.Statement[] = [];
+  const enumsStatements: string[] = [];
   if (enumsImport) {
     enumsStatements.push(
       ...(context
@@ -14,37 +15,31 @@ export function generateEnums(context: TsCodegenContext): ts.SourceFile {
               context.isUseStringUnionsInsteadOfEnumsEnabled() &&
               context.shouldMigrateEnum(type.name);
 
-            return factory.createExportDeclaration(
+            return emit.createExportDeclaration(
               undefined,
               isStringUnion,
-              factory.createNamedExports([
-                factory.createExportSpecifier(
-                  false,
-                  undefined,
-                  factory.createIdentifier(type.name),
-                ),
+              emit.createNamedExports([
+                emit.createExportSpecifier(false, undefined, type.name),
               ]),
-              factory.createStringLiteral(enumsImport),
+              emit.createStringLiteral(enumsImport),
             );
           }
         })
-        .filter(Boolean) as ts.Statement[]),
+        .filter(Boolean) as string[]),
     );
   } else {
     enumsStatements.push(
-      ...(context
+      ...context
         .getAllTypes()
         .filter((type) => type.kind === "ENUM")
-        .map((type) =>
-          createEnumTypeModel(context, type as EnumType),
-        ) as ts.Statement[]),
+        .map((type) => createEnumTypeModel(context, type as EnumType)),
     );
   }
 
-  const source = factory.createSourceFile(
+  const source = emit.createSourceFile(
     enumsStatements,
-    factory.createToken(ts.SyntaxKind.EndOfFileToken),
-    ts.NodeFlags.None,
+    emit.createToken("EndOfFileToken"),
+    undefined,
   );
   source.fileName = "enums.interface.ts";
   return source;
@@ -53,27 +48,27 @@ export function generateEnums(context: TsCodegenContext): ts.SourceFile {
 function createEnumTypeModel(
   context: TsCodegenContext,
   type: EnumType,
-): ts.EnumDeclaration | ts.TypeAliasDeclaration {
+): string {
   if (
     context.isUseStringUnionsInsteadOfEnumsEnabled() &&
     context.shouldMigrateEnum(type.name)
   ) {
-    return factory.createTypeAliasDeclaration(
-      [factory.createToken(ts.SyntaxKind.ExportKeyword)],
-      factory.createIdentifier(type.name),
+    return emit.createTypeAliasDeclaration(
+      [emit.createToken("ExportKeyword")],
+      type.name,
       undefined,
-      factory.createUnionTypeNode(
+      emit.createUnionTypeNode(
         type.values.map((name) =>
-          factory.createLiteralTypeNode(factory.createStringLiteral(name)),
+          emit.createLiteralTypeNode(emit.createStringLiteral(name)),
         ),
       ),
     );
   }
-  return factory.createEnumDeclaration(
-    [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+  return emit.createEnumDeclaration(
+    [emit.createModifier("ExportKeyword")],
     type.name,
     type.values.map((name) =>
-      factory.createEnumMember(name, factory.createStringLiteral(name)),
+      emit.createEnumMember(name, emit.createStringLiteral(name)),
     ),
   );
 }
