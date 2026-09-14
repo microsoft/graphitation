@@ -3061,7 +3061,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/apollo-forest-run@npm:*, @graphitation/apollo-forest-run@npm:0.25.6, @graphitation/apollo-forest-run@npm:^0.25.6, @graphitation/apollo-forest-run@workspace:packages/apollo-forest-run":
+"@graphitation/apollo-forest-run@npm:*, @graphitation/apollo-forest-run@npm:0.25.7, @graphitation/apollo-forest-run@npm:^0.25.7, @graphitation/apollo-forest-run@workspace:packages/apollo-forest-run":
   version: 0.0.0-use.local
   resolution: "@graphitation/apollo-forest-run@workspace:packages/apollo-forest-run"
   dependencies:
@@ -3100,7 +3100,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/apollo-react-relay-duct-tape-compiler@npm:^1.9.12, @graphitation/apollo-react-relay-duct-tape-compiler@workspace:packages/apollo-react-relay-duct-tape-compiler":
+"@graphitation/apollo-react-relay-duct-tape-compiler@npm:^1.9.13, @graphitation/apollo-react-relay-duct-tape-compiler@workspace:packages/apollo-react-relay-duct-tape-compiler":
   version: 0.0.0-use.local
   resolution: "@graphitation/apollo-react-relay-duct-tape-compiler@workspace:packages/apollo-react-relay-duct-tape-compiler"
   dependencies:
@@ -3121,7 +3121,7 @@ __metadata:
     typescript: "npm:^5.5.3"
     yargs: "npm:^16.2.0"
   peerDependencies:
-    "@graphitation/supermassive": ^4.1.0
+    "@graphitation/supermassive": ^4.2.0
     graphql: ^15.0.0
     typescript: ^5.5.3
   bin:
@@ -3129,13 +3129,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/apollo-react-relay-duct-tape@npm:^1.4.43, @graphitation/apollo-react-relay-duct-tape@workspace:packages/apollo-react-relay-duct-tape":
+"@graphitation/apollo-react-relay-duct-tape@npm:^1.4.44, @graphitation/apollo-react-relay-duct-tape@workspace:packages/apollo-react-relay-duct-tape":
   version: 0.0.0-use.local
   resolution: "@graphitation/apollo-react-relay-duct-tape@workspace:packages/apollo-react-relay-duct-tape"
   dependencies:
     "@apollo/client": "npm:>= 3.3.0 < 3.7.0"
     "@graphitation/apollo-mock-client": "npm:^0.13.1"
-    "@graphitation/apollo-react-relay-duct-tape-compiler": "npm:^1.9.12"
+    "@graphitation/apollo-react-relay-duct-tape-compiler": "npm:^1.9.13"
     "@graphitation/graphql-js-operation-payload-generator": "npm:^0.13.2"
     "@graphitation/graphql-js-tag": "npm:^0.11.1"
     "@types/jest": "npm:^26.0.22"
@@ -3228,7 +3228,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphitation/graphql-codegen-supermassive-schema-extraction-plugin@workspace:packages/graphql-codegen-supermassive-schema-extraction-plugin"
   dependencies:
-    "@graphitation/supermassive": "npm:^4.1.0"
+    "@graphitation/supermassive": "npm:^4.2.0"
     "@graphql-codegen/plugin-helpers": "npm:^1.18.2"
     "@types/jest": "npm:^26.0.22"
     graphql: "npm:^15.0.0"
@@ -3250,7 +3250,7 @@ __metadata:
     graphql-tag: "npm:^2.11.0"
     monorepo-scripts: "npm:*"
   peerDependencies:
-    "@graphitation/supermassive": ^4.1.0
+    "@graphitation/supermassive": ^4.2.0
     "@graphql-codegen/plugin-helpers": ">= 1.18.0 < 2"
     "@graphql-codegen/visitor-plugin-common": ">= 1.17.0 < 2"
     "@graphql-tools/optimize": ^1.0.1
@@ -3353,7 +3353,7 @@ __metadata:
     "@fluentui/react-data-grid-react-window": "npm:^9.0.0-beta.21"
     "@fluentui/react-icons": "npm:2.0.166-rc.3"
     "@fluentui/react-virtualizer": "npm:9.0.0-alpha.47"
-    "@graphitation/apollo-forest-run": "npm:^0.25.6"
+    "@graphitation/apollo-forest-run": "npm:^0.25.7"
     "@graphql-tools/schema": "npm:^7.1.5"
     "@types/lodash.debounce": "npm:^4.0.6"
     "@types/lodash.isequal": "npm:^4.5.5"
@@ -3407,7 +3407,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/supermassive@npm:^4.1.0, @graphitation/supermassive@workspace:packages/supermassive":
+"@graphitation/supermassive@npm:^4.2.0, @graphitation/supermassive@workspace:packages/supermassive":
   version: 0.0.0-use.local
   resolution: "@graphitation/supermassive@workspace:packages/supermassive"
   dependencies:
@@ -3457,7 +3457,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/webpack-loader@npm:^1.1.31, @graphitation/webpack-loader@workspace:packages/webpack-loader":
+"@graphitation/webpack-loader@npm:^1.1.32, @graphitation/webpack-loader@workspace:packages/webpack-loader":
   version: 0.0.0-use.local
   resolution: "@graphitation/webpack-loader@workspace:packages/webpack-loader"
   dependencies:
@@ -3467,7 +3467,7 @@ __metadata:
     monorepo-scripts: "npm:*"
     tslib: "npm:^2.4.0"
   peerDependencies:
-    "@graphitation/supermassive": ^4.1.0
+    "@graphitation/supermassive": ^4.2.0
     graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
   languageName: unknown
   linkType: soft
@@ -7357,11 +7357,11 @@ __metadata:
   resolution: "apollo-watch-fragments@workspace:examples/apollo-watch-fragments"
   dependencies:
     "@apollo/client": "npm:~3.6.0"
-    "@graphitation/apollo-react-relay-duct-tape": "npm:^1.4.43"
-    "@graphitation/apollo-react-relay-duct-tape-compiler": "npm:^1.9.12"
+    "@graphitation/apollo-react-relay-duct-tape": "npm:^1.4.44"
+    "@graphitation/apollo-react-relay-duct-tape-compiler": "npm:^1.9.13"
     "@graphitation/embedded-document-artefact-loader": "npm:^0.10.2"
     "@graphitation/graphql-js-tag": "npm:^0.11.1"
-    "@graphitation/supermassive": "npm:^4.1.0"
+    "@graphitation/supermassive": "npm:^4.2.0"
     "@graphql-codegen/cli": "npm:2.2.0"
     "@graphql-codegen/typescript": "npm:2.2.2"
     "@graphql-codegen/typescript-resolvers": "npm:^2.2.1"
@@ -11260,7 +11260,7 @@ __metadata:
   dependencies:
     "@apollo/client": "npm:~3.6.0"
     "@fluentui/react-components": "npm:^9.18.9"
-    "@graphitation/apollo-forest-run": "npm:0.25.6"
+    "@graphitation/apollo-forest-run": "npm:0.25.7"
     "@graphql-tools/schema": "npm:^7.1.5"
     "@types/node": "npm:^12.0.0"
     "@types/react": "npm:^18.2.29"
@@ -16782,12 +16782,12 @@ __metadata:
   dependencies:
     "@apollo/client": "npm:~3.6.0"
     "@babel/runtime": "npm:^7.12.0"
-    "@graphitation/apollo-react-relay-duct-tape": "npm:^1.4.43"
-    "@graphitation/apollo-react-relay-duct-tape-compiler": "npm:^1.9.12"
+    "@graphitation/apollo-react-relay-duct-tape": "npm:^1.4.44"
+    "@graphitation/apollo-react-relay-duct-tape-compiler": "npm:^1.9.13"
     "@graphitation/graphql-js-tag": "npm:^0.11.1"
-    "@graphitation/supermassive": "npm:^4.1.0"
+    "@graphitation/supermassive": "npm:^4.2.0"
     "@graphitation/ts-transform-graphql-js-tag": "npm:^1.7.1"
-    "@graphitation/webpack-loader": "npm:^1.1.31"
+    "@graphitation/webpack-loader": "npm:^1.1.32"
     "@graphql-codegen/cli": "npm:^2.2.2"
     "@graphql-codegen/import-types-preset": "npm:^2.1.7"
     "@graphql-codegen/typescript": "npm:^2.3.0"

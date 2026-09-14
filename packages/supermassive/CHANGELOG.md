@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Tue, 01 Sep 2026 11:12:33 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 14 Sep 2026 08:31:26 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 4.2.0
+
+Mon, 14 Sep 2026 08:31:26 GMT
+
+### Minor changes
+
+- feat: add schemaFragmentLoader support for input variable types (dsamsonov@microsoft.com)
 
 ## 4.1.0
 

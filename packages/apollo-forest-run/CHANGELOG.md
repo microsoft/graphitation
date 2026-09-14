@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Tue, 08 Sep 2026 09:04:10 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 14 Sep 2026 08:31:26 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.25.7
+
+Mon, 14 Sep 2026 08:31:26 GMT
+
+### Patches
+
+- Upgrade browserslist to 4.28.7 to fix DoS vulnerabilities (CVE-2026-73088, CVE-2026-73089) (celiac@microsoft.com_msteamsmdb)
 
 ## 0.25.6
 

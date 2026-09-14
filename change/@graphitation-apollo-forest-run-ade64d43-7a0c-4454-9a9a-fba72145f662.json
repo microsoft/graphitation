@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Upgrade browserslist to 4.28.7 to fix DoS vulnerabilities (CVE-2026-73088, CVE-2026-73089)",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "celiac@microsoft.com_msteamsmdb",
-  "dependentChangeType": "patch"
-}
