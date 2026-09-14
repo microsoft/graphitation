@@ -1,0 +1,7 @@
+{
+  "type": "none",
+  "comment": "chore: use availale versions for transitive dependencies",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "dsamsonov@microsoft.com",
+  "dependentChangeType": "none"
+}
