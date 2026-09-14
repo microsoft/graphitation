@@ -13,7 +13,7 @@ results, as well as increased overall complexity of GraphQL client cache
 
 Forest Run explores an alternative to "normalization" that doesn't require central normalized
 store to keep data up to date. It aims to be a drop-in-replacement for Apollo InMemoryCache
-(with some restrictions)
+(with some restrictions)x
 
 Expected benefits over InMemoryCache:
 
