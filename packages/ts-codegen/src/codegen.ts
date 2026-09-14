@@ -1,4 +1,3 @@
-import ts from "typescript";
 import { DocumentNode } from "graphql";
 import { extractContext } from "./context/index";
 import { generateResolvers } from "./resolvers";
@@ -9,6 +8,7 @@ import { generateEnums } from "./enums";
 import { OutputMetadata } from "./context/utilities";
 import { getContextPath } from "./utilities";
 import { ContextTypeExtension } from "./types";
+import { GeneratedFile } from "./types";
 
 export interface GenerateTSOptions {
   outputPath: string;
@@ -83,7 +83,7 @@ export function generateTS(
     mandatoryResolverTypes = false,
   }: GenerateTSOptions,
 ): {
-  files: ts.SourceFile[];
+  files: GeneratedFile[];
   contextMappingOutput: OutputMetadata | null;
 } {
   try {
@@ -117,7 +117,7 @@ export function generateTS(
       outputPath,
       documentPath,
     );
-    const result: ts.SourceFile[] = [];
+    const result: GeneratedFile[] = [];
 
     if (context.hasEnums) {
       result.push(generateEnums(context));

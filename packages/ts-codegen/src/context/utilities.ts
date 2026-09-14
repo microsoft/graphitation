@@ -1,4 +1,4 @@
-import { factory } from "typescript";
+import { emit } from "../emit";
 import path from "path";
 import { ContextMap } from ".";
 import { ArgumentNode, DirectiveNode } from "graphql";
@@ -9,22 +9,18 @@ export function createImportDeclaration(
   from: string,
   importAlias?: string,
 ) {
-  return factory.createImportDeclaration(
+  return emit.createImportDeclaration(
     undefined,
-    factory.createImportClause(
+    emit.createImportClause(
       true,
       undefined,
-      factory.createNamedImports(
+      emit.createNamedImports(
         importNames.map((importName) =>
-          factory.createImportSpecifier(
-            false,
-            importAlias ? factory.createIdentifier(importAlias) : undefined,
-            factory.createIdentifier(importName),
-          ),
+          emit.createImportSpecifier(false, importAlias, importName),
         ),
       ),
     ),
-    factory.createStringLiteral(from),
+    emit.createStringLiteral(from),
   );
 }
 

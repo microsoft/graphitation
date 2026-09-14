@@ -1,5 +1,6 @@
-import ts, { factory } from "typescript";
+import { emit } from "./emit";
 import { BUILT_IN_SCALARS, TsCodegenContext } from "./context";
+import { GeneratedFile } from "./types";
 
 const ROOT_OPERATIONS = ["Query", "Mutation", "Subscription"];
 const LEGACY_TYPES = [
@@ -12,8 +13,8 @@ const LEGACY_TYPES = [
   "ENUM",
 ];
 
-export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
-  const statements: ts.Statement[] = [];
+export function generateLegacyTypes(context: TsCodegenContext): GeneratedFile {
+  const statements: string[] = [];
   const allTypes = context
     .getAllTypes()
     .filter(
@@ -23,63 +24,63 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
     );
 
   statements.push(
-    factory.createImportDeclaration(
+    emit.createImportDeclaration(
       undefined,
-      factory.createImportClause(
+      emit.createImportClause(
         false,
         undefined,
-        factory.createNamespaceImport(factory.createIdentifier("Models")),
+        emit.createNamespaceImport(emit.createIdentifier("Models")),
       ),
-      factory.createStringLiteral("./models.interface"),
+      emit.createStringLiteral("./models.interface"),
     ),
   );
 
   statements.push(
-    factory.createExportDeclaration(
+    emit.createExportDeclaration(
       undefined,
       false,
       undefined,
-      factory.createStringLiteral("./models.interface"),
+      emit.createStringLiteral("./models.interface"),
     ),
   );
 
   if (context.hasEnums) {
     statements.push(
-      factory.createExportDeclaration(
+      emit.createExportDeclaration(
         undefined,
         false,
         undefined,
-        factory.createStringLiteral("./enums.interface"),
+        emit.createStringLiteral("./enums.interface"),
       ),
     );
   }
 
   statements.push(
-    factory.createInterfaceDeclaration(
-      [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-      factory.createIdentifier("Scalars"),
+    emit.createInterfaceDeclaration(
+      [emit.createModifier("ExportKeyword")],
+      "Scalars",
       undefined,
       undefined,
       Object.keys(BUILT_IN_SCALARS)
         .map((name: keyof typeof BUILT_IN_SCALARS) =>
-          factory.createPropertySignature(
-            [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
+          emit.createPropertySignature(
+            [emit.createModifier("ReadonlyKeyword")],
             name,
             undefined,
-            factory.createTypeReferenceNode(BUILT_IN_SCALARS[name]),
+            emit.createTypeReferenceNode(BUILT_IN_SCALARS[name]),
           ),
         )
         .concat(
           allTypes
             .filter((type) => type.kind === "SCALAR")
             .map((type) =>
-              factory.createPropertySignature(
-                [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
+              emit.createPropertySignature(
+                [emit.createModifier("ReadonlyKeyword")],
                 type.name,
                 undefined,
-                factory.createTypeReferenceNode(
-                  factory.createQualifiedName(
-                    factory.createIdentifier("Models"),
+                emit.createTypeReferenceNode(
+                  emit.createQualifiedName(
+                    emit.createIdentifier("Models"),
                     type.name,
                   ),
                 ),
@@ -90,19 +91,19 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
   );
 
   statements.push(
-    factory.createInterfaceDeclaration(
-      [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-      factory.createIdentifier("Types"),
+    emit.createInterfaceDeclaration(
+      [emit.createModifier("ExportKeyword")],
+      "Types",
       undefined,
       undefined,
       allTypes.map((type) =>
-        factory.createPropertySignature(
-          [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
+        emit.createPropertySignature(
+          [emit.createModifier("ReadonlyKeyword")],
           type.name,
           undefined,
-          factory.createTypeReferenceNode(
-            factory.createQualifiedName(
-              factory.createIdentifier("Models"),
+          emit.createTypeReferenceNode(
+            emit.createQualifiedName(
+              emit.createIdentifier("Models"),
               type.name,
             ),
           ),
@@ -111,10 +112,10 @@ export function generateLegacyTypes(context: TsCodegenContext): ts.SourceFile {
     ),
   );
 
-  const source = factory.createSourceFile(
+  const source = emit.createSourceFile(
     statements,
-    factory.createToken(ts.SyntaxKind.EndOfFileToken),
-    ts.NodeFlags.None,
+    emit.createToken("EndOfFileToken"),
+    undefined,
   );
   source.fileName = "legacy-types.interface.ts";
   return source;

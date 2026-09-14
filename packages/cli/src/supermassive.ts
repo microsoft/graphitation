@@ -1,7 +1,6 @@
 import path from "path";
 import fs from "fs/promises";
 import fsSync from "fs";
-import ts from "typescript";
 import { program, Command } from "commander";
 import { extractImplicitTypesToTypescript } from "@graphitation/supermassive-extractors";
 import { parse } from "graphql";
@@ -228,12 +227,10 @@ async function generateInterfaces(
 
     await fs.mkdir(outputPath, { recursive: true });
 
-    const printer = ts.createPrinter();
     const outputs = result.files.map((file) =>
       fs.writeFile(
         path.join(outputPath, file.fileName),
-        PREPEND_TO_INTERFACES +
-          printer.printNode(ts.EmitHint.SourceFile, file, file),
+        PREPEND_TO_INTERFACES + file.content,
         { encoding: "utf-8" },
       ),
     );
