@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="100" src="./website/static/img/graphitation-logo.png">
+  <img width="100" src="https://microsoft.github.io/graphitation/img/graphitation-logo.png">
 </p>
 
 # Graphitation
