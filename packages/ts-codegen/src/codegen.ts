@@ -61,6 +61,8 @@ export interface GenerateTSOptions {
    * }
    */
   mandatoryResolverTypes?: boolean;
+  generateUnionPossibleTypes?: boolean;
+  generateTypeMap?: boolean;
 }
 
 export function generateTS(
@@ -81,6 +83,8 @@ export function generateTS(
     contextTypeExtensions,
     generateResolverMap = false,
     mandatoryResolverTypes = false,
+    generateUnionPossibleTypes = false,
+    generateTypeMap = false,
   }: GenerateTSOptions,
 ): {
   files: ts.SourceFile[];
@@ -137,7 +141,12 @@ export function generateTS(
       }
 
       if (legacyCompat) {
-        result.push(generateLegacyTypes(context));
+        result.push(
+          generateLegacyTypes(context, {
+            generateUnionPossibleTypes,
+            generateTypeMap,
+          }),
+        );
         result.push(generateLegacyResolvers(context));
       }
     }
