@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Upgrade js-yaml to fix CPU-DoS vulnerability (CVE-2026-84375)",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "celiac@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
