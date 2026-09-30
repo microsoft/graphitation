@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Mon, 14 Sep 2026 08:31:26 GMT and should not be manually modified. -->
+<!-- This log was last generated on Wed, 30 Sep 2026 12:54:52 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.25.8
+
+Wed, 30 Sep 2026 12:54:52 GMT
+
+### Patches
+
+- Upgrade js-yaml to fix CPU-DoS vulnerability (CVE-2026-84375) (celiac@microsoft.com_msteamsmdb)
 
 ## 0.25.7
 
