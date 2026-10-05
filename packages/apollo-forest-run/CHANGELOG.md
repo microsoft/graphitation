@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Wed, 30 Sep 2026 12:54:52 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 05 Oct 2026 12:42:05 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.25.9
+
+Mon, 05 Oct 2026 12:42:05 GMT
+
+### Patches
+
+- Upgrade brace-expansion to 1.1.19 to fix stack-exhaustion DoS (CVE-2026-102276) (celiac@microsoft.com_msteamsmdb)
 
 ## 0.25.8
 
