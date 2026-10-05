@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Upgrade brace-expansion to 1.1.19 to fix stack-exhaustion DoS (CVE-2026-102276)",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "celiac@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
