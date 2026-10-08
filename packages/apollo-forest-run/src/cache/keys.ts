@@ -28,7 +28,7 @@ export function identify(
 }
 
 export function objectKey(
-  { keyMap, dataIdFromObject, typePolicies }: CacheEnv,
+  { keyMap, dataIdFromObject, typePolicies, honorKeyFieldsFalse }: CacheEnv,
   object: SourceObject,
   selection?: PossibleSelection,
   operation?: OperationDescriptor,
@@ -49,6 +49,10 @@ export function objectKey(
     return typeof key === "number" ? String(key) : key;
   }
   const typePolicy = typePolicies[typeName];
+
+  if (honorKeyFieldsFalse && typePolicy?.keyFields === false) {
+    return false;
+  }
 
   if (typePolicy?.keyFields) {
     // TODO: Move typePolicy validation to creation time (for perf)

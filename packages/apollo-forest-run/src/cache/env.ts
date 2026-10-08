@@ -51,6 +51,7 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
     cleanupNonCacheableOperations:
       config?.cleanupNonCacheableOperations ?? false,
     reconcileDivergentChunks: config?.reconcileDivergentChunks ?? false,
+    honorKeyFieldsFalse: config?.honorKeyFieldsFalse ?? false,
     nonEvictableQueries: config?.nonEvictableQueries ?? new Set(),
     partitionConfig: resolvePartitionConfig(
       {

@@ -198,6 +198,11 @@ export type ForestRunAdditionalConfig<
   optimizeFragmentReads?: boolean;
   cleanupNonCacheableOperations?: boolean;
   reconcileDivergentChunks?: boolean;
+  /**
+   * Honor literal `keyFields: false` instead of falling back to ID generation.
+   * Disabled by default to preserve existing entity identities.
+   */
+  honorKeyFieldsFalse?: boolean;
 
   historyConfig?: HistoryConfig<TPartitions>;
 };
@@ -289,6 +294,7 @@ export type CacheEnv<TPartitions extends HistoryPartitions = any> = {
    * Disabled by default: it adds work on the common diffing path.
    */
   reconcileDivergentChunks: boolean;
+  honorKeyFieldsFalse: boolean;
   historyConfig?: HistoryConfig<TPartitions>;
 };
 
