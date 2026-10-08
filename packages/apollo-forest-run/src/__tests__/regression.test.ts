@@ -3,6 +3,175 @@ import { gql } from "../__tests__/helpers/descriptor";
 import { gql as gqlWithInterpolation } from "@apollo/client";
 import { ForestRun } from "../ForestRun";
 
+test.each([undefined, false, true])(
+  "controls parent scoping for keyFields: false (honorKeyFieldsFalse=%s)",
+  (honorKeyFieldsFalse) => {
+    const cache = new ForestRun({
+      honorKeyFieldsFalse,
+      typePolicies: {
+        Child: { keyFields: false },
+      },
+    });
+    const query = gql`
+      query ParentQuery($id: ID!) {
+        parent(id: $id) {
+          id
+          children {
+            id
+            metadata {
+              value
+            }
+          }
+        }
+      }
+    `;
+    const firstChild = {
+      __typename: "Child",
+      id: "0",
+      metadata: null,
+    };
+    const first = {
+      parent: {
+        __typename: "Parent",
+        id: "parent-1",
+        children: [firstChild],
+      },
+    };
+    const second = {
+      parent: {
+        __typename: "Parent",
+        id: "parent-2",
+        children: [
+          {
+            ...firstChild,
+            metadata: {
+              __typename: "Metadata",
+              value: "value-2",
+            },
+          },
+        ],
+      },
+    };
+
+    cache.writeQuery({ query, variables: { id: "parent-1" }, data: first });
+    cache.writeQuery({ query, variables: { id: "parent-2" }, data: second });
+
+    // Only the opt-in changes the legacy cross-parent update behavior.
+    expect(cache.readQuery({ query, variables: { id: "parent-1" } })).toEqual(
+      honorKeyFieldsFalse
+        ? first
+        : {
+            parent: { ...first.parent, children: second.parent.children },
+          },
+    );
+    expect(cache.readQuery({ query, variables: { id: "parent-2" } })).toEqual(
+      second,
+    );
+    expect(cache.identify(firstChild)).toBe(
+      honorKeyFieldsFalse ? undefined : "Child:0",
+    );
+  },
+);
+
+describe.each([undefined, false, true])(
+  "honorKeyFieldsFalse=%s",
+  (honorKeyFieldsFalse) => {
+    test.each(["id", "_id"])(
+      "controls the %s fallback for literal keyFields: false",
+      (idField) => {
+        const cache = new ForestRun({
+          honorKeyFieldsFalse,
+          typePolicies: { Child: { keyFields: false } },
+        });
+        const child = { __typename: "Child", [idField]: "1" };
+        expect(cache.identify(child)).toBe(
+          honorKeyFieldsFalse ? undefined : "Child:1",
+        );
+      },
+    );
+
+    test("only bypasses custom ID generation for opted-out types when enabled", () => {
+      const dataIdFromObject = jest.fn(() => "custom:1");
+      const cache = new ForestRun({
+        honorKeyFieldsFalse,
+        dataIdFromObject,
+        typePolicies: { Child: { keyFields: false } },
+      });
+      expect(cache.identify({ __typename: "Child", id: "1" })).toBe(
+        honorKeyFieldsFalse ? undefined : "custom:1",
+      );
+      expect(dataIdFromObject).toHaveBeenCalledTimes(
+        honorKeyFieldsFalse ? 0 : 1,
+      );
+      expect(cache.identify({ __typename: "Other", id: "1" })).toBe("custom:1");
+      expect(dataIdFromObject).toHaveBeenCalledTimes(
+        honorKeyFieldsFalse ? 1 : 2,
+      );
+    });
+
+    test("preserves array and function key policies and unconfigured types", () => {
+      const cache = new ForestRun({
+        honorKeyFieldsFalse,
+        typePolicies: {
+          Keyed: { keyFields: ["code"] },
+          Singleton: { keyFields: [] },
+          Embedded: { keyFields: () => false },
+          Computed: { keyFields: () => ["code"] },
+        },
+      });
+      expect(
+        cache.identify({ __typename: "Keyed", id: "1", code: "key" }),
+      ).toBe('Keyed:{"code":"key"}');
+      expect(cache.identify({ __typename: "Singleton", id: "1" })).toBe(
+        "Singleton:{}",
+      );
+      expect(
+        cache.identify({ __typename: "Embedded", id: "1" }),
+      ).toBeUndefined();
+      expect(
+        cache.identify({ __typename: "Computed", id: "1", code: "key" }),
+      ).toBe('Computed:{"code":"key"}');
+      expect(cache.identify({ __typename: "Other", id: "1" })).toBe("Other:1");
+    });
+
+    test("honors inherited policies and concrete overrides", () => {
+      const cache = new ForestRun({
+        honorKeyFieldsFalse,
+        possibleTypes: { Node: ["Child", "Keyed"] },
+        typePolicies: {
+          Node: { keyFields: false },
+          Keyed: { keyFields: ["id"] },
+        },
+      });
+      expect(cache.identify({ __typename: "Child", id: "1" })).toBe(
+        honorKeyFieldsFalse ? undefined : "Child:1",
+      );
+      expect(cache.identify({ __typename: "Keyed", id: "1" })).toBe(
+        'Keyed:{"id":"1"}',
+      );
+    });
+
+    test("preserves explicitly supplied fragment identities", () => {
+      const cache = new ForestRun({
+        honorKeyFieldsFalse,
+        typePolicies: { Child: { keyFields: false } },
+      });
+      const fragment = gql`
+        fragment ChildValue on Child {
+          id
+          value
+        }
+      `;
+      const data = { __typename: "Child", id: "1", value: "initial" };
+      cache.writeFragment({ id: "explicit-child", fragment, data });
+      expect(cache.identify(data)).toBe("explicit-child");
+      expect(cache.readFragment({ id: "explicit-child", fragment })).toEqual(
+        data,
+      );
+    });
+  },
+);
+
 test("properly invalidates nodes added via cache redirects", () => {
   const partialFooQuery = gql`
     {

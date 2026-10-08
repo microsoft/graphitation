@@ -32,6 +32,7 @@ import {
 import { accumulate } from "../jsutils/map";
 import { assert } from "../jsutils/assert";
 import { CircularBuffer } from "../jsutils/circularBuffer";
+import { cloneSharedReferences } from "./cloneSharedReferences";
 import {
   createCompositeListChunk,
   createCompositeNullChunk,
@@ -58,6 +59,7 @@ type Context = {
   nodes: NodeMap;
   typeMap: TypeMap;
   dataMap: DataMap;
+  indexedSources: number;
   rootNodeKey: string;
   knownMissingFields: MissingFieldsMap | undefined;
   incompleteChunks: Set<ObjectChunk>;
@@ -98,6 +100,7 @@ export function indexTree(
     nodes: new Map(),
     typeMap: new Map(),
     dataMap,
+    indexedSources: 0,
     incompleteChunks: new Set(),
     rootNodeKey,
     recycleTree: previousTreeState,
@@ -114,7 +117,7 @@ export function indexTree(
     operation.possibleSelections,
     rootRef,
   );
-  return {
+  const tree: IndexedTree = {
     operation,
     result,
     rootNodeKey,
@@ -126,6 +129,12 @@ export function indexTree(
     history:
       previousTreeState?.history ?? new CircularBuffer(operation.historySize),
   };
+  // Every composite occurrence is counted, but dataMap keeps only unique sources.
+  // This detects sharing without an additional map lookup or allocation per chunk.
+  if (context.indexedSources === dataMap.size) {
+    return tree;
+  }
+  return reindexSharedTree(env, tree, rootRef.value);
 }
 
 // Matches ObjectChunkReference structure with additional fields
@@ -145,6 +154,7 @@ export function indexObject(
   knownMissingFields?: MissingFieldsMap,
   dataMap: DataMap = new Map(),
 ): IndexedObject {
+  const initialDataMapSize = dataMap.size;
   const isRoot = operation.possibleSelections === selection;
   const rootNodeKey =
     env.objectKey(
@@ -164,6 +174,7 @@ export function indexObject(
     nodes: new Map(),
     typeMap: new Map(),
     dataMap,
+    indexedSources: initialDataMapSize,
     incompleteChunks: new Set(),
     rootNodeKey,
     recycleTree: null,
@@ -176,13 +187,56 @@ export function indexObject(
     nodes: context.nodes,
     dataMap: context.dataMap,
   };
-  result.value = indexSourceObject(
+  const rootChunk = indexSourceObject(
     context,
     source,
     selection,
     result as RootChunkReference,
   );
+  result.value = rootChunk;
+  if (context.indexedSources !== dataMap.size) {
+    const repaired = cloneSharedReferences(env, rootChunk);
+    // A supplied dataMap may also contain sources from separately indexed objects.
+    if (repaired.data !== source) {
+      const repairedObject = indexObject(
+        env,
+        operation,
+        repaired.data,
+        selection,
+        repaired.missingFields,
+      );
+      if (initialDataMapSize === 0) {
+        dataMap.clear();
+      }
+      for (const [data, ref] of repairedObject.dataMap) {
+        dataMap.set(data, ref);
+      }
+      repairedObject.dataMap = dataMap;
+      return repairedObject;
+    }
+  }
   return result as IndexedObject;
+}
+
+function reindexSharedTree(
+  env: ForestEnv,
+  tree: IndexedTree,
+  root: ObjectChunk,
+): IndexedTree {
+  const repaired = cloneSharedReferences(env, root);
+  // Malformed, out-of-range list chunks may overcount without sharing actual data.
+  if (repaired.data === tree.result.data) {
+    return tree;
+  }
+  const repairedTree = indexTree(
+    env,
+    tree.operation,
+    { ...tree.result, data: repaired.data },
+    repaired.missingFields,
+  );
+  repairedTree.prev = tree.prev;
+  repairedTree.history = tree.history;
+  return repairedTree;
 }
 
 export function indexDraft(
@@ -244,6 +298,7 @@ function indexSourceObject(
 
   if (parent) {
     dataMap.set(source, parent);
+    context.indexedSources++;
   }
 
   if (missingFields?.size) {
@@ -269,8 +324,11 @@ function indexSourceObject(
     }
     return chunk;
   }
-  for (const fieldName of selection.fieldsWithSelections) {
+  for (let index = 0; index < selection.fieldsWithSelections.length; ) {
+    const fieldName = selection.fieldsWithSelections[index];
     const aliases = selection.fields.get(fieldName) ?? EMPTY_ARRAY;
+    // Field names are grouped by aliases. Index each group once, not once per alias.
+    index += aliases.length || 1;
 
     for (const fieldInfo of aliases) {
       const value = source[fieldInfo.dataKey];
@@ -339,6 +397,7 @@ function indexSourceList(
 
   const { operation, dataMap } = context;
   dataMap.set(list, parent);
+  context.indexedSources++;
 
   const chunk = createCompositeListChunk(operation, selection, list);
   for (const [index, value] of list.entries()) {
@@ -379,6 +438,7 @@ function reIndexObject(
 ) {
   const { dataMap, nodes, typeMap } = context;
   dataMap.set(recyclable.data, parent);
+  context.indexedSources++;
 
   // `incompleteChunks` is per-tree state, so a recycled chunk that is still missing
   //   fields has to re-register itself - otherwise the incompleteness disappears the
@@ -418,6 +478,7 @@ function reIndexList(
 ) {
   const { dataMap } = context;
   dataMap.set(recyclable.data, parent);
+  context.indexedSources++;
 
   const itemChunks = recyclable.itemChunks;
   let reported = false;

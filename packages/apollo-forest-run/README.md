@@ -160,6 +160,14 @@ In addition to operation index, another compact index is created: `Map<NODE_ID, 
 all operations, containing a "chunk" of some node. Those two structures help us quickly locate all node "chunks" from
 different operations.
 
+Each composite object or list has a single parent location within an indexed result.
+Manual writes and cross-operation recycling can introduce shared JavaScript references.
+When indexing detects such sharing, a separate repair step copies repeated composite
+occurrences and their affected ancestor paths, then reindexes the result. Caller-owned
+data is not mutated, and unaffected branches retain their references. Results without
+sharing do not require copying or a second indexing pass. This does not prohibit
+separate objects with the same entity ID or reference sharing between different results.
+
 ### 2. Diffing individual entities
 
 After indexing, we walk through all found ids and look for other "local live queries" that have this node in their
