@@ -15,7 +15,7 @@
     "just": "monorepo-scripts"
   },
   "dependencies": {
-    "source-map-js": "^1.2.1"
+    "source-map-js": "^1.2.2"
   },
   "peerDependencies": {
     "graphql": "*",
