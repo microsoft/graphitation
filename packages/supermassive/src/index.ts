@@ -80,6 +80,7 @@ export type {
   ExecutionResult,
   FunctionFieldResolver,
   IncrementalExecutionResult,
+  IncrementalDeliveryInfo,
   IncrementalResult,
   IncrementalDeferResult,
   IncrementalStreamResult,
@@ -153,6 +154,8 @@ export type {
 } from "graphql";
 
 export type {
+  AfterBuildResponseHook,
+  AfterBuildResponseHookArgs,
   AfterFieldCompleteHook,
   AfterFieldCompleteHookArgs,
   AfterFieldResolveHook,
