@@ -1835,6 +1835,7 @@ describe.each([
                 ),
           afterFieldResolverReturnsPromise: hook,
           afterFieldResolve: jest.fn(() => {
+            expect(then).toHaveBeenCalled();
             hookCalls.push("resolve");
             return afterHookContext;
           }),
