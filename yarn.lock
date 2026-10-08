@@ -8018,12 +8018,12 @@ __metadata:
   linkType: hard
 
 "brace-expansion@npm:^1.1.7":
-  version: 1.1.19
-  resolution: "brace-expansion@npm:1.1.19"
+  version: 1.1.20
+  resolution: "brace-expansion@npm:1.1.20"
   dependencies:
     balanced-match: "npm:^1.0.0"
     concat-map: "npm:0.0.1"
-  checksum: 10c0/581d4b6d511cc615f120167c12a27b14ce4137aa6515430909b6133bd7ed1f0723adaabfee46f97a3b4b05c0eadea6ea98180a416a594b7277ebbd04736e6fa2
+  checksum: 10c0/f344d9e3c00233f24f0595f606afc5f410565fe84a1a0a57e126e1b3166a724aea4ad68d705879a602d29d3deff15dd2ea6e0675959062888c2ba6b3d2cda0ee
   languageName: node
   linkType: hard
 

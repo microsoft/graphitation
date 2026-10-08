@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Upgrade brace-expansion to 1.1.20 to fix recursion DoS (CVE-2026-102278)",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "celiac@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
