@@ -80,6 +80,20 @@ export interface AfterFieldResolveHook<
     | Error;
 }
 
+export type AfterFieldResolverReturnsPromiseHookArgs<
+  ResolveContext,
+  HookContext,
+> = PostExecuteFieldHookArgs<ResolveContext, HookContext>;
+
+export interface AfterFieldResolverReturnsPromiseHook<
+  ResolveContext = unknown,
+  HookContext = unknown,
+> {
+  (
+    args: AfterFieldResolverReturnsPromiseHookArgs<ResolveContext, HookContext>,
+  ): void;
+}
+
 export interface AfterFieldSubscribe<
   ResolveContext = unknown,
   BeforeHookContext = unknown,
@@ -169,6 +183,16 @@ export interface ExecutionHooks<
     ResolveContext,
     BeforeHookContext,
     AfterHookContext
+  >;
+
+  /**
+   * Called after a field resolver returns a Promise and before settlement handlers are attached.
+   *
+   * @hook
+   */
+  afterFieldResolverReturnsPromise?: AfterFieldResolverReturnsPromiseHook<
+    ResolveContext,
+    BeforeHookContext
   >;
 
   /**

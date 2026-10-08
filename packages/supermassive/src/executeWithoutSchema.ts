@@ -1242,6 +1242,22 @@ function resolveAndCompleteField(
       hookContext = invokeBeforeFieldResolveHook(info, exeContext);
     }
 
+    const resolveField = () => {
+      const resolverResult = resolveFn(source, args, contextValue, info);
+      if (
+        !isDefaultResolverUsed &&
+        isPromise(resolverResult) &&
+        hooks?.afterFieldResolverReturnsPromise
+      ) {
+        hooks.afterFieldResolverReturnsPromise({
+          resolveInfo: info,
+          context: contextValue,
+          hookContext,
+        });
+      }
+      return resolverResult;
+    };
+
     let result: unknown;
 
     if (hookContext instanceof GraphQLError) {
@@ -1254,10 +1270,10 @@ function resolveAndCompleteField(
           return null;
         }
 
-        return resolveFn(source, args, contextValue, info);
+        return resolveField();
       });
     } else {
-      result = resolveFn(source, args, contextValue, info);
+      result = resolveField();
     }
 
     let completed;

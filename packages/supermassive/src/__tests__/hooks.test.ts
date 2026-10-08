@@ -23,6 +23,10 @@ import type {
   BeforeSubscriptionEventEmitHookArgs,
   ExecutionHooks,
 } from "../hooks/types";
+import type {
+  AfterFieldResolverReturnsPromiseHook,
+  AfterFieldResolverReturnsPromiseHookArgs,
+} from "../index";
 import { pathToArray } from "../jsutils/Path";
 import type { Maybe } from "../jsutils/Maybe";
 import { createExecutionUtils } from "../__testUtils__/execute";
@@ -1792,6 +1796,185 @@ describe.each([
         expect(errors).toBeDefined();
         expect(errors).toHaveLength(1);
         expect(errors?.[0].message).toBe(expectedErrorMessage);
+      },
+    );
+  });
+
+  describe("afterFieldResolverReturnsPromise", () => {
+    it.each(["absent", "sync", "async"])(
+      "runs before settlement handlers with a %s before hook",
+      async (beforeHook) => {
+        const beforeHookContext = { foo: "foo" };
+        const afterHookContext = { bar: "bar" };
+        const promise = Promise.resolve({ title: "A New Hope" });
+        const then = jest.spyOn(promise, "then");
+        const hookCalls: string[] = [];
+        const hook: AfterFieldResolverReturnsPromiseHook = jest.fn(
+          ({
+            resolveInfo,
+            context,
+            hookContext,
+          }: AfterFieldResolverReturnsPromiseHookArgs<unknown, unknown>) => {
+            expect(then).not.toHaveBeenCalled();
+            expect(resolveInfo.fieldName).toBe("film");
+            expect(context).toEqual({ models });
+            expect(hookContext).toBe(
+              beforeHook === "absent" ? undefined : beforeHookContext,
+            );
+            hookCalls.push("promise");
+          },
+        );
+        const hooks: ExecutionHooks = {
+          beforeFieldResolve:
+            beforeHook === "absent"
+              ? undefined
+              : jest.fn(() =>
+                  beforeHook === "async"
+                    ? Promise.resolve(beforeHookContext)
+                    : beforeHookContext,
+                ),
+          afterFieldResolverReturnsPromise: hook,
+          afterFieldResolve: jest.fn(() => {
+            expect(then).toHaveBeenCalled();
+            hookCalls.push("resolve");
+            return afterHookContext;
+          }),
+          afterFieldComplete: jest.fn(),
+        };
+
+        const result = await execute(
+          parse("{ film(id: 1) { title } }"),
+          { Query: { film: () => promise } },
+          hooks,
+        );
+
+        expect(result).toEqual({ data: { film: { title: "A New Hope" } } });
+        expect(hook).toHaveBeenCalledTimes(1);
+        expect(hookCalls).toEqual(["promise", "resolve"]);
+        expect(hooks.afterFieldComplete).toHaveBeenCalledWith(
+          expect.objectContaining({ hookContext: afterHookContext }),
+        );
+      },
+    );
+
+    it("recognizes thenables", async () => {
+      const hook = jest.fn();
+      const promise = Promise.resolve({ title: "A New Hope" });
+      const thenable = { then: jest.fn(promise.then.bind(promise)) };
+      const result = await execute(
+        parse("{ film(id: 1) { title } }"),
+        { Query: { film: () => thenable } },
+        {
+          afterFieldResolverReturnsPromise: () => {
+            expect(thenable.then).not.toHaveBeenCalled();
+            hook();
+          },
+        },
+      );
+
+      expect(result).toEqual({ data: { film: { title: "A New Hope" } } });
+      expect(hook).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([false, true])(
+      "ignores synchronous results and default resolvers (async before hook: %s)",
+      async (asyncBeforeHook) => {
+        const hook = jest.fn();
+        const result = await execute(
+          parse("{ __typename film(id: 1) { title } }"),
+          {
+            Query: {
+              film: () => ({ title: Promise.resolve("A New Hope") }),
+            },
+          },
+          {
+            beforeFieldResolve: () =>
+              asyncBeforeHook ? Promise.resolve({}) : {},
+            afterFieldResolverReturnsPromise: hook,
+          },
+        );
+
+        expect(result).toEqual({
+          data: { __typename: "Query", film: { title: "A New Hope" } },
+        });
+        expect(hook).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each([false, true])(
+      "does not run when the before hook blocks resolution (async: %s)",
+      async (asyncBeforeHook) => {
+        const hook = jest.fn();
+        const resolver = jest.fn(() => Promise.resolve({ title: "unused" }));
+        const result = await execute(
+          parse("{ film(id: 1) { title } }"),
+          { Query: { film: resolver } },
+          {
+            beforeFieldResolve: () => {
+              const error = new Error("Before hook error");
+              if (asyncBeforeHook) {
+                return Promise.reject(error);
+              }
+              throw error;
+            },
+            afterFieldResolverReturnsPromise: hook,
+          },
+        );
+
+        if (!isTotalExecutionResult(result)) {
+          throw new Error("Expected a total execution result");
+        }
+        expect(result.data).toEqual({ film: null });
+        expect(result.errors).toHaveLength(1);
+        expect(resolver).not.toHaveBeenCalled();
+        expect(hook).not.toHaveBeenCalled();
+      },
+    );
+
+    it("runs for a rejected resolver promise", async () => {
+      const error = new Error("Resolver error");
+      const hook = jest.fn();
+      const afterFieldResolve = jest.fn();
+      const result = await execute(
+        parse("{ film(id: 1) { title } }"),
+        { Query: { film: () => Promise.reject(error) } },
+        { afterFieldResolverReturnsPromise: hook, afterFieldResolve },
+      );
+
+      expect(hook).toHaveBeenCalledTimes(1);
+      expect(afterFieldResolve).toHaveBeenCalledWith(
+        expect.objectContaining({ error }),
+      );
+      if (!isTotalExecutionResult(result)) {
+        throw new Error("Expected a total execution result");
+      }
+      expect(result.data).toEqual({ film: null });
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors?.[0].message).toBe("Resolver error");
+    });
+
+    it.each([false, true])(
+      "reports errors thrown by the promise hook (async before hook: %s)",
+      async (asyncBeforeHook) => {
+        const result = await execute(
+          parse("{ film(id: 1) { title } }"),
+          { Query: { film: () => Promise.resolve({ title: "unused" }) } },
+          {
+            beforeFieldResolve: () =>
+              asyncBeforeHook ? Promise.resolve({}) : {},
+            afterFieldResolverReturnsPromise: () => {
+              throw new Error("Promise hook error");
+            },
+          },
+        );
+
+        if (!isTotalExecutionResult(result)) {
+          throw new Error("Expected a total execution result");
+        }
+        expect(result.data).toEqual({ film: null });
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors?.[0].message).toBe("Promise hook error");
+        expect(result.errors?.[0].path).toEqual(["film"]);
       },
     );
   });

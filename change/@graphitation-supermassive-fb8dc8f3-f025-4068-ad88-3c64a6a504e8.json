@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "feat(supermassive): backport resolver promise hook",
+  "packageName": "@graphitation/supermassive",
+  "email": "pavelglac@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
