@@ -1,8 +1,16 @@
 # Change Log - @graphitation/supermassive
 
-<!-- This log was last generated on Mon, 14 Sep 2026 08:31:26 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 08 Oct 2026 11:14:43 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 4.3.0
+
+Thu, 08 Oct 2026 11:14:43 GMT
+
+### Minor changes
+
+- feat(supermassive): backport resolver promise hook (pavelglac@microsoft.com_msteamsmdb)
 
 ## 4.2.0
 

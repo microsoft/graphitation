@@ -37,6 +37,17 @@ Called after every field resolution.
 - **Thrown Error**: The field is set to `null` and the error is registered.
 - **Returned Error**: The error is registered and execution continues.
 
+#### `afterFieldResolverReturnsPromise`
+
+Called synchronously after a non-default field resolver returns a Promise or
+thenable, before settlement handlers are attached. Receives `resolveInfo`,
+`context`, and the resolved `hookContext` from `beforeFieldResolve`, if present.
+It is not called for synchronous resolver results, default resolvers, or
+`__typename`. An asynchronous `beforeFieldResolve` alone does not trigger it.
+
+- **Thrown Error**: The field is set to `null` and the error is registered.
+- **Return Value**: Ignored; this hook returns `void` and is not awaited.
+
 #### `afterFieldComplete`
 
 Called when field value is completed

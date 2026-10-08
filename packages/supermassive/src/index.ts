@@ -160,6 +160,8 @@ export type {
   AfterFieldCompleteHookArgs,
   AfterFieldResolveHook,
   AfterFieldResolveHookArgs,
+  AfterFieldResolverReturnsPromiseHook,
+  AfterFieldResolverReturnsPromiseHookArgs,
   BeforeFieldResolveHook,
   BaseExecuteFieldHookArgs,
   ExecutionHooks,
