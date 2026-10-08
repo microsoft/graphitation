@@ -779,14 +779,25 @@ describe("update lists of entities", () => {
       expect(data).not.toBe(model);
       expect(data).not.toBe(base);
 
+      const reusedIndexes = new Set<number>();
       for (const [dataIndex, baseIndexOrNull] of expectedLayout.entries()) {
         const value = data.entityList[dataIndex];
         if (typeof baseIndexOrNull === "number") {
-          expect(value).toBe(base.entityList[baseIndexOrNull]);
+          expect(value).toEqual(base.entityList[baseIndexOrNull]);
+          if (reusedIndexes.has(baseIndexOrNull)) {
+            expect(value).not.toBe(base.entityList[baseIndexOrNull]);
+          } else {
+            expect(value).toBe(base.entityList[baseIndexOrNull]);
+            reusedIndexes.add(baseIndexOrNull);
+          }
         } else {
           expect(value).toEqual(null);
         }
       }
+      const objects = data.entityList.filter(
+        (value: unknown) => value !== null,
+      );
+      expect(new Set(objects).size).toBe(objects.length);
     });
   });
 });

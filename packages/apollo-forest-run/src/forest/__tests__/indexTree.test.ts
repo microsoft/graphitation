@@ -90,6 +90,165 @@ describe(indexTree, () => {
     verifyTypeChunks("User", typeUserChunks, [user?.[0]]);
   });
 
+  it("indexes each alias and its descendants once without copying distinct sources", () => {
+    const operation = createTestOperation(`
+      {
+        first: child(id: "child1") {
+          id
+          detail { id }
+        }
+        unrelated { id }
+        second: child(id: "child2") {
+          id
+          detail { id }
+        }
+      }
+    `);
+    const data = {
+      first: {
+        __typename: "Child",
+        id: "child1",
+        detail: { __typename: "Detail", id: "detail1" },
+      },
+      second: {
+        __typename: "Child",
+        id: "child2",
+        detail: { __typename: "Detail", id: "detail2" },
+      },
+      unrelated: { __typename: "Other", id: "other1" },
+    };
+    const result = { data: createSourceObject(data) };
+    const objectKey = jest.fn(defaultEnv.objectKey);
+    const tree = indexTree({ ...defaultEnv, objectKey }, operation, result);
+
+    expect(tree.result).toBe(result);
+    expect(tree.result.data).toBe(data);
+    expect(objectKey).toHaveBeenCalledTimes(6);
+    expect(tree.dataMap.size).toBe(6);
+    expect(tree.nodes.size).toBe(6);
+    expect(tree.incompleteChunks.size).toBe(0);
+
+    const expectedNodes = [
+      ["ROOT_QUERY", data],
+      ["child1", data.first],
+      ["detail1", data.first.detail],
+      ["child2", data.second],
+      ["detail2", data.second.detail],
+      ["other1", data.unrelated],
+    ] as const;
+    for (const [key, source] of expectedNodes) {
+      verifyObjectChunk(tree.nodes.get(key), key, source);
+    }
+    expect(tree.typeMap.get("Child")).toHaveLength(2);
+    expect(tree.typeMap.get("Detail")).toHaveLength(2);
+    expect(tree.typeMap.get("Other")).toHaveLength(1);
+
+    const root = tree.nodes.get("ROOT_QUERY");
+    for (const [alias, key] of [
+      ["first", "child1"],
+      ["second", "child2"],
+      ["unrelated", "other1"],
+    ]) {
+      const ref = getObjectFieldRef(root, alias);
+      const child = tree.nodes.get(key)?.[0];
+      assert(child);
+      expect(ref.value).toBe(child);
+      expect(tree.dataMap.get(child.data)).toBe(ref);
+    }
+  });
+
+  it("clones a repeated object and its ancestor path without copying unrelated branches", () => {
+    const operation = createTestOperation(`
+      {
+        parents {
+          id
+          child {
+            id
+            details { value }
+            items { id value }
+          }
+        }
+        unrelated { id value }
+      }
+    `);
+    const shared = Object.freeze({
+      __typename: "Child",
+      id: "child1",
+      details: Object.freeze({ __typename: "Details", value: "details" }),
+      items: Object.freeze([
+        Object.freeze({ __typename: "Item", id: "item1", value: "item" }),
+      ]),
+    });
+    const data = Object.freeze({
+      parents: Object.freeze([
+        Object.freeze({ __typename: "Parent", id: "parent1", child: shared }),
+        Object.freeze({ __typename: "Parent", id: "parent2", child: shared }),
+      ]),
+      unrelated: Object.freeze({
+        __typename: "Other",
+        id: "other1",
+        value: "unchanged",
+      }),
+    });
+    const result = { data: createSourceObject(data) };
+    const tree = indexTree(defaultEnv, operation, result);
+
+    expect(tree.result).not.toBe(result);
+    expect(tree.result.data).not.toBe(data);
+    expect(tree.result.data).toEqual(data);
+    expect(tree.incompleteChunks.size).toBe(0);
+
+    const root = tree.nodes.get("ROOT_QUERY");
+    const parents = getEmbeddedListChunk(root, "parents");
+    const firstParent = tree.nodes.get("parent1");
+    const secondParent = tree.nodes.get("parent2");
+    const firstChild = getEmbeddedObjectChunk(firstParent, "child");
+    const secondChild = getEmbeddedObjectChunk(secondParent, "child");
+
+    expect(parents.data).not.toBe(data.parents);
+    expect(firstParent?.[0].data).toBe(data.parents[0]);
+    expect(secondParent?.[0].data).not.toBe(data.parents[1]);
+    expect(tree.nodes.get("other1")?.[0].data).toBe(data.unrelated);
+    expect(firstChild.data).toBe(shared);
+    expect(secondChild.data).not.toBe(shared);
+    expect(secondChild.data).toEqual(shared);
+    expect(tree.nodes.get("child1")).toHaveLength(2);
+
+    const firstDetails = getEmbeddedObjectChunk(firstChild, "details");
+    const secondDetails = getEmbeddedObjectChunk(secondChild, "details");
+    const firstItems = getEmbeddedListChunk(firstChild, "items");
+    const secondItems = getEmbeddedListChunk(secondChild, "items");
+    expect(firstDetails.data).toBe(shared.details);
+    expect(secondDetails.data).not.toBe(shared.details);
+    expect(firstItems.data).toBe(shared.items);
+    expect(secondItems.data).not.toBe(shared.items);
+    expect(firstItems.data[0]).toBe(shared.items[0]);
+    expect(secondItems.data[0]).not.toBe(shared.items[0]);
+    expect(tree.nodes.get("item1")).toHaveLength(2);
+
+    for (const parent of [firstParent, secondParent]) {
+      const child = getEmbeddedObjectChunk(parent, "child");
+      const details = getEmbeddedObjectChunk(child, "details");
+      const items = getEmbeddedListChunk(child, "items");
+      expect(tree.dataMap.get(child.data)).toBe(
+        getObjectFieldRef(parent, "child"),
+      );
+      expect(tree.dataMap.get(details.data)).toBe(
+        getObjectFieldRef(child, "details"),
+      );
+      expect(tree.dataMap.get(items.data)).toBe(
+        getObjectFieldRef(child, "items"),
+      );
+      const itemRef = items.itemChunks[0];
+      assert(isObjectValue(itemRef.value));
+      expect(tree.dataMap.get(itemRef.value.data)).toBe(itemRef);
+    }
+
+    expect(result.data).toBe(data);
+    expect(data.parents[0].child).toBe(shared);
+    expect(data.parents[1].child).toBe(shared);
+  });
+
   it("indexes lists of objects", () => {
     const operation = createTestOperation(`
       {
