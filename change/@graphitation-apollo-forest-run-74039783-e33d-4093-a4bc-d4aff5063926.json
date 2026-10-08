@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Repair shared composite references before indexing results and add the default-off honorKeyFieldsFalse flag to honor literal keyFields: false without changing legacy identity behavior by default.",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "vrazuvaev@microsoft.com_msteamsmdb",
-  "dependentChangeType": "patch"
-}

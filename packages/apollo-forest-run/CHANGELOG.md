@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Thu, 08 Oct 2026 08:53:21 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 08 Oct 2026 13:41:06 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.25.11
+
+Thu, 08 Oct 2026 13:41:06 GMT
+
+### Patches
+
+- Repair shared composite references before indexing results and add the default-off honorKeyFieldsFalse flag to honor literal keyFields: false without changing legacy identity behavior by default. (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.25.10
 
