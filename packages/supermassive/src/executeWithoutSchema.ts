@@ -51,7 +51,10 @@ import {
   getDirectiveValues,
   getMissingVariableTypes,
 } from "./values";
-import type { AfterBuildResponseHookArgs, ExecutionHooks } from "./hooks/types";
+import type {
+  AfterBuildResponseHookResult,
+  ExecutionHooks,
+} from "./hooks/types";
 import { arraysAreEqual } from "./utilities/array";
 import { isAsyncIterable } from "./jsutils/isAsyncIterable";
 import { mapAsyncIterator } from "./utilities/mapAsyncIterator";
@@ -2464,7 +2467,7 @@ function invokeBeforeSubscriptionEventEmitHook(
 
 function invokeAfterBuildResponseHook(
   exeContext: ExecutionContext,
-  result: AfterBuildResponseHookArgs<unknown>["result"],
+  result: AfterBuildResponseHookResult,
 ) {
   const hook = exeContext.fieldExecutionHooks?.afterBuildResponse;
   if (!hook) {

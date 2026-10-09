@@ -44,13 +44,15 @@ export interface BaseExecuteOperationHookArgs<ResolveContext>
   operation: OperationDefinitionNode;
 }
 
+export type AfterBuildResponseHookResult =
+  | TotalExecutionResult
+  | InitialIncrementalExecutionResult
+  | SubsequentIncrementalExecutionResult;
+
 export interface AfterBuildResponseHookArgs<ResolveContext>
   extends BaseExecuteOperationHookArgs<ResolveContext> {
   /** The current response payload, without merging initial and subsequent data. */
-  result:
-    | TotalExecutionResult
-    | InitialIncrementalExecutionResult
-    | SubsequentIncrementalExecutionResult;
+  result: AfterBuildResponseHookResult;
   /** True for a non-incremental response or a terminal incremental payload. */
   isComplete?: boolean;
 }
