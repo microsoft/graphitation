@@ -1,5 +1,10 @@
 import type { OperationDefinitionNode } from "graphql";
-import type { ResolveInfo, TotalExecutionResult } from "../types";
+import type {
+  InitialIncrementalExecutionResult,
+  ResolveInfo,
+  SubsequentIncrementalExecutionResult,
+  TotalExecutionResult,
+} from "../types";
 import { PromiseOrValue } from "../jsutils/PromiseOrValue";
 
 interface BaseExecuteHookArgs<ResolveContext> {
@@ -39,9 +44,17 @@ export interface BaseExecuteOperationHookArgs<ResolveContext>
   operation: OperationDefinitionNode;
 }
 
+export type AfterBuildResponseHookResult =
+  | TotalExecutionResult
+  | InitialIncrementalExecutionResult
+  | SubsequentIncrementalExecutionResult;
+
 export interface AfterBuildResponseHookArgs<ResolveContext>
   extends BaseExecuteOperationHookArgs<ResolveContext> {
-  result: TotalExecutionResult;
+  /** The current response payload, without merging initial and subsequent data. */
+  result: AfterBuildResponseHookResult;
+  /** True for a non-incremental response or a terminal incremental payload. */
+  isComplete?: boolean;
 }
 
 export interface BeforeSubscriptionEventEmitHookArgs<ResolveContext>
@@ -216,10 +229,11 @@ export interface ExecutionHooks<
    */
   afterFieldComplete?: AfterFieldCompleteHook<ResolveContext, AfterHookContext>;
   /**
-   * Called after the response is built.
+   * Called after each response payload is built, including the initial and
+   * subsequent incremental payloads. Not called for iterator cancellation.
    *
    * @hook
-   * @throws {Error} Returns no data property, only errors.
+   * @throws {Error} Non-incremental responses contain only errors; incremental payloads are preserved.
    * @returns {Error} The error is registered and execution continues.
    */
   afterBuildResponse?: AfterBuildResponseHook<ResolveContext>;

@@ -40,6 +40,7 @@ import type {
   IncrementalResult,
   IncrementalStreamResult,
   IncrementalExecutionResult,
+  InitialIncrementalExecutionResult,
   SchemaFragment,
   SchemaFragmentLoader,
   SchemaFragmentRequest,
@@ -50,7 +51,10 @@ import {
   getDirectiveValues,
   getMissingVariableTypes,
 } from "./values";
-import type { ExecutionHooks } from "./hooks/types";
+import type {
+  AfterBuildResponseHookResult,
+  ExecutionHooks,
+} from "./hooks/types";
 import { arraysAreEqual } from "./utilities/array";
 import { isAsyncIterable } from "./jsutils/isAsyncIterable";
 import { mapAsyncIterator } from "./utilities/mapAsyncIterator";
@@ -453,12 +457,13 @@ function buildResponse(
         ? { data }
         : { errors: exeContext.errors, data };
     if (exeContext.subsequentPayloads.size > 0) {
-      // TODO: define how to call hooks for incremental results
+      const incrementalResult: InitialIncrementalExecutionResult = {
+        ...initialResult,
+        hasNext: true,
+      };
+      invokeAfterBuildResponseHook(exeContext, incrementalResult);
       return {
-        initialResult: {
-          ...initialResult,
-          hasNext: true,
-        },
+        initialResult: incrementalResult,
         subsequentResults: yieldSubsequentPayloads(exeContext),
       };
     } else {
@@ -1105,6 +1110,7 @@ export function buildResolveInfo(
   parentTypeName: string,
   returnTypeName: string,
   path: Path,
+  incrementalDataRecord?: IncrementalDataRecord,
 ): ResolveInfo {
   // The resolve function's optional fourth argument is a collection of
   // information about the current execution state.
@@ -1118,6 +1124,12 @@ export function buildResolveInfo(
     rootValue: exeContext.rootValue,
     operation: exeContext.operation,
     variableValues: exeContext.variableValues,
+    ...(incrementalDataRecord && {
+      incrementalDeliveryInfo: {
+        type: incrementalDataRecord.type,
+        label: incrementalDataRecord.label,
+      },
+    }),
   };
 }
 
@@ -1201,6 +1213,7 @@ function resolveAndCompleteField(
     parentTypeName,
     typeNameFromReference(returnTypeRef),
     path,
+    incrementalDataRecord,
   );
 
   const isDefaultResolverUsed =
@@ -2454,11 +2467,19 @@ function invokeBeforeSubscriptionEventEmitHook(
 
 function invokeAfterBuildResponseHook(
   exeContext: ExecutionContext,
-  result: TotalExecutionResult,
+  result: AfterBuildResponseHookResult,
 ) {
   const hook = exeContext.fieldExecutionHooks?.afterBuildResponse;
   if (!hook) {
     return;
+  }
+  if (
+    "hasNext" in result &&
+    "errors" in result &&
+    result.errors === exeContext.errors
+  ) {
+    // Detach the initial payload's aliased error array before invoking the hook.
+    exeContext.errors = [...exeContext.errors];
   }
   return executeSafe(
     () =>
@@ -2466,6 +2487,7 @@ function invokeAfterBuildResponseHook(
         context: exeContext.contextValue,
         operation: exeContext.operation,
         result,
+        isComplete: "hasNext" in result ? !result.hasNext : true,
       }),
     (result, rawError) => {
       const operationName = exeContext.operation.name?.value ?? "unknown";
@@ -2958,8 +2980,12 @@ function yieldSubsequentPayloads(
       isDone = true;
     }
 
+    const result: SubsequentIncrementalExecutionResult = incremental.length
+      ? { incremental, hasNext }
+      : { hasNext };
+    invokeAfterBuildResponseHook(exeContext, result);
     return {
-      value: incremental.length ? { incremental, hasNext } : { hasNext },
+      value: result,
       done: false,
     };
   }
