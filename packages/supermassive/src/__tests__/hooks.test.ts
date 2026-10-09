@@ -1095,6 +1095,84 @@ describe.each([
         false,
       );
     });
+
+    it("invokes afterBuildResponse for initial and subsequent incremental payloads", async () => {
+      const afterBuildResponse = jest.fn();
+      const document = parse(`query GetPersonWithDeferredField
+      {
+        person(id: 1) {
+          name
+          ... on Person @defer {
+            birth_year
+          }
+        }
+      }`);
+
+      const result = await execute(document, resolvers as UserResolvers, {
+        afterBuildResponse,
+      });
+      await drainExecution(result);
+
+      expect(afterBuildResponse).toHaveBeenCalledTimes(2);
+      expect(afterBuildResponse.mock.calls[0][0]).toMatchObject({
+        isComplete: false,
+      });
+      expect(afterBuildResponse.mock.calls[0][0].result).toMatchObject({
+        hasNext: true,
+      });
+      expect(afterBuildResponse.mock.calls[1][0]).toMatchObject({
+        isComplete: true,
+      });
+      expect(afterBuildResponse.mock.calls[1][0].result).toMatchObject({
+        hasNext: false,
+      });
+    });
+
+    it("exposes incrementalDeliveryInfo to distinguish blocking from deferred fields", async () => {
+      const afterFieldResolve = jest.fn();
+      const document = parse(`query GetPersonWithDeferredField
+      {
+        person(id: 1) {
+          name
+          ... on Person @defer {
+            birth_year
+          }
+        }
+      }`);
+      const customResolvers = {
+        ...resolvers,
+        Person: {
+          ...resolvers.Person,
+          name: () => "Luke Skywalker",
+          birth_year: () => "19BBY",
+        },
+      } as UserResolvers;
+
+      await drainExecution(
+        await execute(document, customResolvers, {
+          afterFieldResolve: ({ resolveInfo }) => {
+            afterFieldResolve({
+              fieldName: resolveInfo.fieldName,
+              incrementalDeliveryInfo: resolveInfo.incrementalDeliveryInfo,
+            });
+          },
+        }),
+      );
+
+      const blockingField = afterFieldResolve.mock.calls.find(
+        ([entry]) => entry.fieldName === "name",
+      )?.[0];
+      expect(blockingField).toBeDefined();
+      expect(blockingField?.incrementalDeliveryInfo).toBeUndefined();
+
+      const deferredField = afterFieldResolve.mock.calls.find(
+        ([entry]) => entry.fieldName === "birth_year",
+      )?.[0];
+      expect(deferredField).toBeDefined();
+      expect(deferredField?.incrementalDeliveryInfo).toMatchObject({
+        type: "defer",
+      });
+    });
   });
 
   describe("error in beforeSubscriptionEventEmit", () => {
