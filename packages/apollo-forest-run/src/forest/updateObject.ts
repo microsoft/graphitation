@@ -196,6 +196,11 @@ function updateValue(
           );
           return replaceValue(context, base, difference.newValue);
         }
+        if (
+          shouldSkipIncompatibleDifference(context, base, difference, location)
+        ) {
+          return getSourceValue(base);
+        }
         assert(
           false,
           incompatibleDifferenceMessage(context, base, difference, location),
@@ -222,6 +227,11 @@ function updateValue(
           );
           return replaceValue(context, base, difference.newValue);
         }
+        if (
+          shouldSkipIncompatibleDifference(context, base, difference, location)
+        ) {
+          return getSourceValue(base);
+        }
         assert(
           false,
           incompatibleDifferenceMessage(context, base, difference, location),
@@ -241,6 +251,26 @@ function updateValue(
     default:
       assertNever(difference);
   }
+}
+
+function shouldSkipIncompatibleDifference(
+  context: UpdateTreeContext,
+  base: GraphChunk,
+  difference: ObjectDifference | CompositeListDifference,
+  location: UpdateValueLocation,
+): boolean {
+  if (
+    !difference.skipIfIncompatible ||
+    (!Value.isCompositeNullValue(base) &&
+      !Value.isCompositeUndefinedValue(base))
+  ) {
+    return false;
+  }
+  context.env.logger?.debug(
+    "Warning: Skipping conditional difference: " +
+      incompatibleDifferenceMessage(context, base, difference, location),
+  );
+  return true;
 }
 
 function incompatibleDifferenceMessage(

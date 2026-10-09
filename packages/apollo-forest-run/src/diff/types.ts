@@ -92,6 +92,8 @@ export type DiffError =
 export type ObjectDifference = {
   readonly kind: typeof DifferenceKind.ObjectDifference;
   newValue?: ObjectValue;
+  // Path differences synthesized by tree transforms only apply where their structure exists.
+  skipIfIncompatible?: boolean;
   // readonly allFields: Iterable<FieldName>;
 
   fieldQueue: Set<FieldName>;
@@ -146,6 +148,8 @@ export type CompositeListLayoutChange =
 export type CompositeListDifference = {
   readonly kind: typeof DifferenceKind.CompositeListDifference;
   newValue?: CompositeListValue;
+  // Path differences synthesized by tree transforms only apply where their structure exists.
+  skipIfIncompatible?: boolean;
   itemQueue: Set<number>;
   itemState: Map<number, ValueDifference>;
   dirtyItems?: Set<number>;
