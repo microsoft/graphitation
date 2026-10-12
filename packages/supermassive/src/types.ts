@@ -90,16 +90,9 @@ export type UserResolvers<TSource = unknown, TContext = unknown> = Record<
   UserResolver<TSource, TContext>
 >;
 
-/**
- * Incremental attribution available to resolvers and hooks.
- */
-export interface IncrementalDeliveryInfo {
-  readonly type: "defer" | "stream";
-  readonly label?: string;
-}
-
 export interface ResolveInfo {
-  incrementalDeliveryInfo?: IncrementalDeliveryInfo;
+  /** Execution under a defer/stream record, not transport delivery classification. */
+  isNonBlocking?: boolean;
   fieldName: string;
   fieldNodes: FieldGroup;
   returnTypeName: string;

@@ -53,8 +53,8 @@ export interface AfterBuildResponseHookArgs<ResolveContext>
   extends BaseExecuteOperationHookArgs<ResolveContext> {
   /** The current response payload, without merging initial and subsequent data. */
   result: AfterBuildResponseHookResult;
-  /** True for a non-incremental response or a terminal incremental payload. */
-  isComplete?: boolean;
+  /** Whether more incremental payloads follow; false for non-incremental responses. */
+  hasNext: boolean;
 }
 
 export interface BeforeSubscriptionEventEmitHookArgs<ResolveContext>

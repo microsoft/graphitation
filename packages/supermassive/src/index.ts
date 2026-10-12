@@ -80,7 +80,6 @@ export type {
   ExecutionResult,
   FunctionFieldResolver,
   IncrementalExecutionResult,
-  IncrementalDeliveryInfo,
   IncrementalResult,
   IncrementalDeferResult,
   IncrementalStreamResult,

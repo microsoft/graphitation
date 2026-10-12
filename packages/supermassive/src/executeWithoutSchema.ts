@@ -452,34 +452,31 @@ function buildResponse(
 
   const hooks = exeContext.fieldExecutionHooks;
   try {
-    const initialResult =
+    const baseResult =
       exeContext.errors.length === 0
         ? { data }
         : { errors: exeContext.errors, data };
     if (exeContext.subsequentPayloads.size > 0) {
-      const incrementalResult: InitialIncrementalExecutionResult = {
-        ...initialResult,
+      const initialResult: InitialIncrementalExecutionResult = {
+        ...baseResult,
         hasNext: true,
       };
-      invokeAfterBuildResponseHook(exeContext, incrementalResult);
+      invokeAfterBuildResponseHook(exeContext, initialResult);
       return {
-        initialResult: incrementalResult,
+        initialResult,
         subsequentResults: yieldSubsequentPayloads(exeContext),
       };
     } else {
       if (hooks?.afterBuildResponse) {
-        const hookResult = invokeAfterBuildResponseHook(
-          exeContext,
-          initialResult,
-        );
-        if (exeContext.errors.length > (initialResult.errors?.length ?? 0)) {
-          initialResult.errors = exeContext.errors;
+        const hookResult = invokeAfterBuildResponseHook(exeContext, baseResult);
+        if (exeContext.errors.length > (baseResult.errors?.length ?? 0)) {
+          baseResult.errors = exeContext.errors;
         }
         if (hookResult instanceof GraphQLError) {
-          return { errors: initialResult.errors };
+          return { errors: baseResult.errors };
         }
       }
-      return initialResult;
+      return baseResult;
     }
   } catch (error) {
     exeContext.errors.push(error as GraphQLError);
@@ -1124,12 +1121,7 @@ export function buildResolveInfo(
     rootValue: exeContext.rootValue,
     operation: exeContext.operation,
     variableValues: exeContext.variableValues,
-    ...(incrementalDataRecord && {
-      incrementalDeliveryInfo: {
-        type: incrementalDataRecord.type,
-        label: incrementalDataRecord.label,
-      },
-    }),
+    isNonBlocking: incrementalDataRecord != null,
   };
 }
 
@@ -2487,7 +2479,7 @@ function invokeAfterBuildResponseHook(
         context: exeContext.contextValue,
         operation: exeContext.operation,
         result,
-        isComplete: "hasNext" in result ? !result.hasNext : true,
+        hasNext: "hasNext" in result ? result.hasNext : false,
       }),
     (result, rawError) => {
       const operationName = exeContext.operation.name?.value ?? "unknown";
