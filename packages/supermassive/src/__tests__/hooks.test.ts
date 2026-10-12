@@ -6,6 +6,7 @@ import {
 } from "graphql";
 import {
   executeWithoutSchema,
+  isIncrementalExecutionResult,
   isTotalExecutionResult,
 } from "../executeWithoutSchema";
 import { executeWithSchema } from "../executeWithSchema";
@@ -1126,6 +1127,43 @@ describe.each([
       expect(afterBuildResponse.mock.calls[1][0].result).toMatchObject({
         hasNext: false,
       });
+    });
+
+    it("preserves initial incremental errors when the response hook throws", async () => {
+      const afterBuildResponse = () => {
+        throw new Error("Hook error");
+      };
+      const customResolvers: UserResolvers = {
+        ...resolvers,
+        Person: {
+          ...resolvers.Person,
+          name: () => {
+            throw new Error("Initial resolver error");
+          },
+          birth_year: () => Promise.resolve("19BBY"),
+        },
+      };
+      const result = await execute(
+        parse(`query GetPersonWithInitialError
+          {
+            person(id: 1) {
+              name
+              ... on Person @defer {
+                birth_year
+              }
+            }
+          }`),
+        customResolvers,
+        { afterBuildResponse },
+      );
+      if (!isIncrementalExecutionResult(result)) {
+        throw new Error("Expected incremental execution");
+      }
+
+      await drainExecution(result);
+      expect(
+        result.initialResult.errors?.map((error) => error.message),
+      ).toEqual(["Initial resolver error"]);
     });
 
     it("exposes incrementalDeliveryInfo to distinguish blocking from deferred fields", async () => {
