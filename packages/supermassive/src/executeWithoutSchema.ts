@@ -2470,7 +2470,8 @@ function invokeAfterBuildResponseHook(
     "errors" in result &&
     result.errors === exeContext.errors
   ) {
-    // Detach the initial payload's aliased error array before invoking the hook.
+    // Clean up the context by removing errors from previous hook executions (the hook runs for each initial and incremental payload).
+    // We do not want errors from previous hook executions to carry over to the current one.
     exeContext.errors = [...exeContext.errors];
   }
   return executeSafe(
