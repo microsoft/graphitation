@@ -83,6 +83,12 @@ extends:
                   packLayersPath="$(Build.StagingDirectory)/beachball-packed-layers"
                   releaseBranch="origin/${BUILD_SOURCEBRANCH#refs/heads/}"
 
+                  # Pre-create the pack output dir: when beachball has no change files to
+                  # bump it prints "Nothing to bump - skipping publish!" and never creates
+                  # this directory, which would make the find below fail the build. Creating
+                  # it up front makes an empty (nothing-to-publish) run a graceful no-op.
+                  mkdir -p "$packLayersPath"
+
                   yarn beachball publish -b "$releaseBranch" -t latest -y --access public --no-push --keep-change-files --pack-to-path "$packLayersPath"
 
                   find "$packLayersPath" -type f -name "*.tgz" -exec cp {} "$(packagesArtifactPath)" \;
