@@ -1,7 +1,0 @@
-{
-  "type": "major",
-  "comment": "Run response hooks for incremental responses",
-  "packageName": "@graphitation/supermassive",
-  "email": "pavelglac@microsoft.com_msteamsmdb",
-  "dependentChangeType": "patch"
-}
