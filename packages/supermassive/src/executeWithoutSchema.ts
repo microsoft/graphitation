@@ -40,6 +40,7 @@ import type {
   IncrementalResult,
   IncrementalStreamResult,
   IncrementalExecutionResult,
+  InitialIncrementalExecutionResult,
   SchemaFragment,
   SchemaFragmentLoader,
   SchemaFragmentRequest,
@@ -50,7 +51,10 @@ import {
   getDirectiveValues,
   getMissingVariableTypes,
 } from "./values";
-import type { ExecutionHooks } from "./hooks/types";
+import type {
+  AfterBuildResponseHookResult,
+  ExecutionHooks,
+} from "./hooks/types";
 import { arraysAreEqual } from "./utilities/array";
 import { isAsyncIterable } from "./jsutils/isAsyncIterable";
 import { mapAsyncIterator } from "./utilities/mapAsyncIterator";
@@ -448,33 +452,31 @@ function buildResponse(
 
   const hooks = exeContext.fieldExecutionHooks;
   try {
-    const initialResult =
+    const baseResult =
       exeContext.errors.length === 0
         ? { data }
         : { errors: exeContext.errors, data };
     if (exeContext.subsequentPayloads.size > 0) {
-      // TODO: define how to call hooks for incremental results
+      const initialResult: InitialIncrementalExecutionResult = {
+        ...baseResult,
+        hasNext: true,
+      };
+      invokeAfterBuildResponseHook(exeContext, initialResult);
       return {
-        initialResult: {
-          ...initialResult,
-          hasNext: true,
-        },
+        initialResult,
         subsequentResults: yieldSubsequentPayloads(exeContext),
       };
     } else {
       if (hooks?.afterBuildResponse) {
-        const hookResult = invokeAfterBuildResponseHook(
-          exeContext,
-          initialResult,
-        );
-        if (exeContext.errors.length > (initialResult.errors?.length ?? 0)) {
-          initialResult.errors = exeContext.errors;
+        const hookResult = invokeAfterBuildResponseHook(exeContext, baseResult);
+        if (exeContext.errors.length > (baseResult.errors?.length ?? 0)) {
+          baseResult.errors = exeContext.errors;
         }
         if (hookResult instanceof GraphQLError) {
-          return { errors: initialResult.errors };
+          return { errors: baseResult.errors };
         }
       }
-      return initialResult;
+      return baseResult;
     }
   } catch (error) {
     exeContext.errors.push(error as GraphQLError);
@@ -1105,6 +1107,7 @@ export function buildResolveInfo(
   parentTypeName: string,
   returnTypeName: string,
   path: Path,
+  incrementalDataRecord?: IncrementalDataRecord,
 ): ResolveInfo {
   // The resolve function's optional fourth argument is a collection of
   // information about the current execution state.
@@ -1118,6 +1121,7 @@ export function buildResolveInfo(
     rootValue: exeContext.rootValue,
     operation: exeContext.operation,
     variableValues: exeContext.variableValues,
+    isInIncrementalExecution: incrementalDataRecord != null,
   };
 }
 
@@ -1201,6 +1205,7 @@ function resolveAndCompleteField(
     parentTypeName,
     typeNameFromReference(returnTypeRef),
     path,
+    incrementalDataRecord,
   );
 
   const isDefaultResolverUsed =
@@ -2454,11 +2459,20 @@ function invokeBeforeSubscriptionEventEmitHook(
 
 function invokeAfterBuildResponseHook(
   exeContext: ExecutionContext,
-  result: TotalExecutionResult,
+  result: AfterBuildResponseHookResult,
 ) {
   const hook = exeContext.fieldExecutionHooks?.afterBuildResponse;
   if (!hook) {
     return;
+  }
+  if (
+    "hasNext" in result &&
+    "errors" in result &&
+    result.errors === exeContext.errors
+  ) {
+    // Clean up the context by removing errors from previous hook executions (the hook runs for each initial and incremental payload).
+    // We do not want errors from previous hook executions to carry over to the current one.
+    exeContext.errors = [...exeContext.errors];
   }
   return executeSafe(
     () =>
@@ -2466,6 +2480,7 @@ function invokeAfterBuildResponseHook(
         context: exeContext.contextValue,
         operation: exeContext.operation,
         result,
+        hasNext: "hasNext" in result ? result.hasNext : false,
       }),
     (result, rawError) => {
       const operationName = exeContext.operation.name?.value ?? "unknown";
@@ -2958,8 +2973,12 @@ function yieldSubsequentPayloads(
       isDone = true;
     }
 
+    const result: SubsequentIncrementalExecutionResult = incremental.length
+      ? { incremental, hasNext }
+      : { hasNext };
+    invokeAfterBuildResponseHook(exeContext, result);
     return {
-      value: incremental.length ? { incremental, hasNext } : { hasNext },
+      value: result,
       done: false,
     };
   }

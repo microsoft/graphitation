@@ -153,6 +153,8 @@ export type {
 } from "graphql";
 
 export type {
+  AfterBuildResponseHook,
+  AfterBuildResponseHookArgs,
   AfterFieldCompleteHook,
   AfterFieldCompleteHookArgs,
   AfterFieldResolveHook,

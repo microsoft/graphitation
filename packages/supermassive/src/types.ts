@@ -91,6 +91,8 @@ export type UserResolvers<TSource = unknown, TContext = unknown> = Record<
 >;
 
 export interface ResolveInfo {
+  /** Executes within a deferred fragment or streamed item, including descendants. */
+  isInIncrementalExecution?: boolean;
   fieldName: string;
   fieldNodes: FieldGroup;
   returnTypeName: string;

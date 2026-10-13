@@ -27,6 +27,13 @@ Called before every operation
 
 Called before every field resolution
 
+`resolveInfo.isInIncrementalExecution` is `true` for field execution within a
+deferred fragment or streamed item, including descendants. It is `false` for
+ordinary fields, disabled defer, and initial stream items unless enclosed in
+another incremental execution. It does not guarantee that an incremental result
+will be emitted or delivered. No descriptor or internal execution record is
+exposed; response labels are unchanged.
+
 - **Thrown Error**: The field is not executed and is handled as if it has returned `null`.
 - **Returned Error**: The error is registered and execution continues.
 
@@ -56,6 +63,12 @@ Called when field value is completed
 - **Returned Error**: The error is registered and execution continues.
 
 #### `afterBuildResponse`
+
+Called synchronously for each built response payload, including the initial
+incremental response and each subsequent response. Receives `result` and
+`hasNext`, which matches the incremental payload's flag and is `false` for
+non-incremental responses and terminal payloads, including completion-only
+responses. Iterator cancellation does not generate a response or invoke this hook.
 
 - **Thrown Error**: Returns no data property, only errors.
 - **Returned Error**: The error is registered and execution continues.

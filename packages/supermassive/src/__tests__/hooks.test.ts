@@ -6,6 +6,7 @@ import {
 } from "graphql";
 import {
   executeWithoutSchema,
+  isIncrementalExecutionResult,
   isTotalExecutionResult,
 } from "../executeWithoutSchema";
 import { executeWithSchema } from "../executeWithSchema";
@@ -13,7 +14,11 @@ import schema, { typeDefs } from "../benchmarks/swapi-schema";
 import models from "../benchmarks/swapi-schema/models";
 import resolvers from "../benchmarks/swapi-schema/resolvers";
 import { extractMinimalViableSchemaForRequestDocument } from "../utilities/extractMinimalViableSchemaForRequestDocument";
-import type { UserResolvers, TotalExecutionResult } from "../types";
+import type {
+  ResolveInfo,
+  UserResolvers,
+  TotalExecutionResult,
+} from "../types";
 import type {
   AfterFieldCompleteHookArgs,
   AfterFieldResolveHookArgs,
@@ -1094,6 +1099,179 @@ describe.each([
       expect(((result as TotalExecutionResult).errors?.length ?? 0) > 0).toBe(
         false,
       );
+    });
+
+    it("invokes afterBuildResponse for initial and subsequent incremental payloads", async () => {
+      const afterBuildResponse = jest.fn();
+      const document = parse(`query GetPersonWithDeferredField
+      {
+        person(id: 1) {
+          name
+          ... on Person @defer {
+            birth_year
+          }
+        }
+      }`);
+
+      const result = await execute(document, resolvers as UserResolvers, {
+        afterBuildResponse,
+      });
+      await drainExecution(result);
+
+      expect(afterBuildResponse).toHaveBeenCalledTimes(2);
+      expect(afterBuildResponse.mock.calls[0][0]).toMatchObject({
+        hasNext: true,
+      });
+      expect(afterBuildResponse.mock.calls[0][0].result).toMatchObject({
+        hasNext: true,
+      });
+      expect(afterBuildResponse.mock.calls[1][0]).toMatchObject({
+        hasNext: false,
+      });
+      expect(afterBuildResponse.mock.calls[1][0].result).toMatchObject({
+        hasNext: false,
+      });
+    });
+
+    it("passes hasNext false to afterBuildResponse for non-incremental responses", async () => {
+      const afterBuildResponse = jest.fn();
+      await execute(
+        parse(`{ person(id: 1) { name } }`),
+        resolvers as UserResolvers,
+        { afterBuildResponse },
+      );
+      expect(afterBuildResponse).toHaveBeenCalledWith(
+        expect.objectContaining({ hasNext: false }),
+      );
+    });
+
+    it("preserves initial incremental errors when the response hook throws", async () => {
+      const afterBuildResponse = () => {
+        throw new Error("Hook error");
+      };
+      const customResolvers: UserResolvers = {
+        ...resolvers,
+        Person: {
+          ...resolvers.Person,
+          name: () => {
+            throw new Error("Initial resolver error");
+          },
+          birth_year: () => Promise.resolve("19BBY"),
+        },
+      };
+      const result = await execute(
+        parse(`query GetPersonWithInitialError
+          {
+            person(id: 1) {
+              name
+              ... on Person @defer {
+                birth_year
+              }
+            }
+          }`),
+        customResolvers,
+        { afterBuildResponse },
+      );
+      if (!isIncrementalExecutionResult(result)) {
+        throw new Error("Expected incremental execution");
+      }
+
+      await drainExecution(result);
+      expect(
+        result.initialResult.errors?.map((error) => error.message),
+      ).toEqual(["Initial resolver error"]);
+    });
+
+    it.each(["defer", "stream", "disabled-defer", "inherited-defer"] as const)(
+      "classifies blocking and %s work in default-resolved fields",
+      async (type) => {
+        const flags: Array<boolean | undefined> = [];
+        const readField = (
+          _args: unknown,
+          _context: unknown,
+          info: ResolveInfo,
+        ) => {
+          flags.push(info.isInIncrementalExecution);
+          return "field";
+        };
+        const film = { title: readField, director: readField };
+        const person = {
+          id: readField,
+          name: readField,
+          birth_year: readField,
+          films: [film, film],
+        };
+        const customResolvers: UserResolvers = {
+          ...resolvers,
+          Query: {
+            ...resolvers.Query,
+            person: () => person,
+            allPeople: () => [person, person],
+          },
+          Person: {},
+          Film: {},
+        };
+        const documents = {
+          defer: `{ person(id: 1) { id ... on Person @defer(label: "details") { name birth_year } } }`,
+          stream: `{ allPeople @stream(initialCount: 1, label: "details") { name birth_year } }`,
+          "disabled-defer": `{ person(id: 1) { id ... on Person @defer(if: false) { name birth_year } } }`,
+          "inherited-defer": `{ person(id: 1) { id ... on Person @defer { films @stream(initialCount: 1) { title director } } } }`,
+        };
+        const expectedFlags = {
+          defer: [false, true, true],
+          stream: [false, false, true, true],
+          "disabled-defer": [false, false, false],
+          "inherited-defer": [false, true, true, true, true],
+        };
+        await drainExecution(
+          await execute(parse(documents[type]), customResolvers, {}),
+        );
+        expect(flags).toEqual(expectedFlags[type]);
+      },
+    );
+
+    it("exposes isInIncrementalExecution to distinguish ordinary from deferred fields", async () => {
+      const afterFieldResolve = jest.fn();
+      const document = parse(`query GetPersonWithDeferredField
+      {
+        person(id: 1) {
+          name
+          ... on Person @defer {
+            birth_year
+          }
+        }
+      }`);
+      const customResolvers = {
+        ...resolvers,
+        Person: {
+          ...resolvers.Person,
+          name: () => "Luke Skywalker",
+          birth_year: () => "19BBY",
+        },
+      } as UserResolvers;
+
+      await drainExecution(
+        await execute(document, customResolvers, {
+          afterFieldResolve: ({ resolveInfo }) => {
+            afterFieldResolve({
+              fieldName: resolveInfo.fieldName,
+              isInIncrementalExecution: resolveInfo.isInIncrementalExecution,
+            });
+          },
+        }),
+      );
+
+      const blockingField = afterFieldResolve.mock.calls.find(
+        ([entry]) => entry.fieldName === "name",
+      )?.[0];
+      expect(blockingField).toBeDefined();
+      expect(blockingField?.isInIncrementalExecution).toBe(false);
+
+      const deferredField = afterFieldResolve.mock.calls.find(
+        ([entry]) => entry.fieldName === "birth_year",
+      )?.[0];
+      expect(deferredField).toBeDefined();
+      expect(deferredField?.isInIncrementalExecution).toBe(true);
     });
   });
 
