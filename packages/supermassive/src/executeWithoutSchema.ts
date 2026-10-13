@@ -891,19 +891,22 @@ function runSubscriptionResolver(
     ) ?? exeContext.subscribeFieldResolver;
 
   const path = addPath(undefined, responseName, rootTypeName);
-  const returnTypeName = typeNameFromReference(returnTypeRef);
   const isBuiltInDefaultResolver = resolveFn === defaultFieldResolver;
   const isDefaultResolverUsed = resolveFn === exeContext.subscribeFieldResolver;
-  const info = isBuiltInDefaultResolver && isDefaultResolverUsed
-    ? undefined
-    : buildResolveInfo(
+  const returnTypeName =
+    isBuiltInDefaultResolver && isDefaultResolverUsed
+      ? undefined
+      : typeNameFromReference(returnTypeRef);
+  const info = returnTypeName
+    ? buildResolveInfo(
         exeContext,
         fieldName,
         fieldGroup,
         rootTypeName,
         returnTypeName,
         path,
-      );
+      )
+    : undefined;
 
   const hooks = exeContext.fieldExecutionHooks;
   let hookContext: unknown = undefined;
@@ -915,7 +918,10 @@ function runSubscriptionResolver(
     let result: unknown;
 
     if (!isDefaultResolverUsed && hooks?.beforeFieldSubscribe) {
-      hookContext = invokeBeforeFieldSubscribeHook(info, exeContext);
+      hookContext = invokeBeforeFieldSubscribeHook(
+        info as ResolveInfo,
+        exeContext,
+      );
     }
 
     // Build a JS object of arguments from the field.arguments AST, using the
@@ -942,11 +948,11 @@ function runSubscriptionResolver(
                 exeContext,
                 fieldGroup,
                 rootTypeName,
-                returnTypeName,
+                returnTypeRef,
                 path,
                 undefined,
               )
-            : resolveFn(rootValue, args, contextValue, info!);
+            : resolveFn(rootValue, args, contextValue, info as ResolveInfo);
         });
       }
     }
@@ -964,11 +970,11 @@ function runSubscriptionResolver(
             exeContext,
             fieldGroup,
             rootTypeName,
-            returnTypeName,
+            returnTypeRef,
             path,
             undefined,
           )
-        : resolveFn(rootValue, args, contextValue, info!);
+        : resolveFn(rootValue, args, contextValue, info as ResolveInfo);
     }
 
     if (isPromise(result)) {
@@ -978,7 +984,7 @@ function runSubscriptionResolver(
             undefined,
             isDefaultResolverUsed,
             exeContext,
-            info,
+            info as ResolveInfo,
             hookContext,
             !!hooks?.afterFieldSubscribe,
             error,
@@ -990,7 +996,7 @@ function runSubscriptionResolver(
             resolved,
             isDefaultResolverUsed,
             exeContext,
-            info,
+            info as ResolveInfo,
             hookContext,
             !!hooks?.afterFieldSubscribe,
           );
@@ -1004,7 +1010,7 @@ function runSubscriptionResolver(
       stream,
       isDefaultResolverUsed,
       exeContext,
-      info,
+      info as ResolveInfo,
       hookContext,
       !!hooks?.afterFieldSubscribe,
     );
@@ -1012,7 +1018,7 @@ function runSubscriptionResolver(
   } catch (error) {
     if (!isDefaultResolverUsed && hooks?.afterFieldSubscribe) {
       invokeAfterFieldSubscribeHook(
-        info,
+        info as ResolveInfo,
         exeContext,
         hookContext,
         undefined,
@@ -1166,7 +1172,7 @@ function resolveDefaultField(
   exeContext: ExecutionContext,
   fieldGroup: FieldGroup,
   parentTypeName: string,
-  returnTypeName: string,
+  returnTypeRef: TypeReference,
   path: Path,
   incrementalDataRecord: IncrementalDataRecord | undefined,
 ): unknown {
@@ -1177,21 +1183,18 @@ function resolveDefaultField(
   if (isObjectLike(source) || typeof source === "function") {
     const property = (source as Record<string, unknown>)[fieldName];
     if (typeof property === "function") {
-      return (
-        source as Record<string, (...args: unknown[]) => unknown>
-      )[fieldName](
-        args,
-        contextValue,
-        buildResolveInfo(
-          exeContext,
-          fieldName,
-          fieldGroup,
-          parentTypeName,
-          returnTypeName,
-          path,
-          incrementalDataRecord,
-        ),
+      const resolveInfo = buildResolveInfo(
+        exeContext,
+        fieldName,
+        fieldGroup,
+        parentTypeName,
+        typeNameFromReference(returnTypeRef),
+        path,
+        incrementalDataRecord,
       );
+      return (source as Record<string, (...args: unknown[]) => unknown>)[
+        fieldName
+      ](args, contextValue, resolveInfo);
     }
     return property;
   }
@@ -1270,13 +1273,37 @@ function resolveAndCompleteField(
       fieldName,
     ) ?? exeContext.fieldResolver;
 
-  const returnTypeName = typeNameFromReference(returnTypeRef);
-  const isBuiltInDefaultResolver = resolveFn === defaultFieldResolver;
+  const isBuiltInDefaultResolver =
+    resolveFn === defaultFieldResolver || fieldName === "__typename";
   const isDefaultResolverUsed =
     resolveFn === exeContext.fieldResolver || fieldName === "__typename";
-  const info = isBuiltInDefaultResolver && isDefaultResolverUsed
-    ? undefined
-    : buildResolveInfo(
+  let returnTypeName: string | undefined;
+  let info: ResolveInfo | undefined;
+  if (!isBuiltInDefaultResolver || !isDefaultResolverUsed) {
+    returnTypeName = typeNameFromReference(returnTypeRef);
+    info = buildResolveInfo(
+      exeContext,
+      fieldName,
+      fieldGroup,
+      parentTypeName,
+      returnTypeName,
+      path,
+      incrementalDataRecord,
+    );
+  } else if (
+    Definitions.isAbstractType(
+      exeContext.schemaFragment.definitions,
+      returnTypeRef,
+    )
+  ) {
+    returnTypeName = typeNameFromReference(returnTypeRef);
+    const typeResolver =
+      Resolvers.getAbstractTypeResolver(
+        exeContext.schemaFragment,
+        returnTypeName,
+      ) ?? exeContext.typeResolver;
+    if (typeResolver !== defaultTypeResolver) {
+      info = buildResolveInfo(
         exeContext,
         fieldName,
         fieldGroup,
@@ -1285,6 +1312,8 @@ function resolveAndCompleteField(
         path,
         incrementalDataRecord,
       );
+    }
+  }
 
   if (resolveFn === exeContext.fieldResolver && typeof source === "undefined") {
     /**
@@ -1319,32 +1348,38 @@ function resolveAndCompleteField(
     const contextValue = exeContext.contextValue;
 
     if (!isDefaultResolverUsed && hooks?.beforeFieldResolve) {
-      hookContext = invokeBeforeFieldResolveHook(info, exeContext);
+      hookContext = invokeBeforeFieldResolveHook(
+        info as ResolveInfo,
+        exeContext,
+      );
     }
 
     const resolveField = () => {
-      const resolverResult = isBuiltInDefaultResolver
-        ? resolveDefaultField(
-            source,
-            args,
-            contextValue,
-            fieldName,
-            info,
-            exeContext,
-            fieldGroup,
-            parentTypeName,
-            returnTypeName,
-            path,
-            incrementalDataRecord,
-          )
-        : resolveFn(source, args, contextValue, info!);
+      const resolverResult =
+        fieldName === "__typename"
+          ? parentTypeName
+          : isBuiltInDefaultResolver
+          ? resolveDefaultField(
+              source,
+              args,
+              contextValue,
+              fieldName,
+              info,
+              exeContext,
+              fieldGroup,
+              parentTypeName,
+              returnTypeRef,
+              path,
+              incrementalDataRecord,
+            )
+          : resolveFn(source, args, contextValue, info as ResolveInfo);
       if (
         !isDefaultResolverUsed &&
         isPromise(resolverResult) &&
         hooks?.afterFieldResolverReturnsPromise
       ) {
         hooks.afterFieldResolverReturnsPromise({
-          resolveInfo: info,
+          resolveInfo: info as ResolveInfo,
           context: contextValue,
           hookContext,
         });
@@ -1377,7 +1412,7 @@ function resolveAndCompleteField(
         .then((resolved) => {
           if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
             hookContext = invokeAfterFieldResolveHook(
-              info,
+              info as ResolveInfo,
               exeContext,
               hookContext,
               resolved,
@@ -1405,7 +1440,7 @@ function resolveAndCompleteField(
             // in the case of async resolver promise rejection.
             if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
               hookContext = invokeAfterFieldResolveHook(
-                info,
+                info as ResolveInfo,
                 exeContext,
                 hookContext,
                 undefined,
@@ -1419,7 +1454,7 @@ function resolveAndCompleteField(
     } else {
       if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
         hookContext = invokeAfterFieldResolveHook(
-          info,
+          info as ResolveInfo,
           exeContext,
           hookContext,
           result,
@@ -1446,7 +1481,7 @@ function resolveAndCompleteField(
         (resolved) => {
           if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
             hookContext = invokeAfterFieldCompleteHook(
-              info,
+              info as ResolveInfo,
               exeContext,
               hookContext,
               resolved,
@@ -1461,7 +1496,7 @@ function resolveAndCompleteField(
 
           if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
             hookContext = invokeAfterFieldCompleteHook(
-              info,
+              info as ResolveInfo,
               exeContext,
               hookContext,
               undefined,
@@ -1484,7 +1519,7 @@ function resolveAndCompleteField(
 
     if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
       hookContext = invokeAfterFieldCompleteHook(
-        info,
+        info as ResolveInfo,
         exeContext,
         hookContext,
         completed,
@@ -1507,7 +1542,7 @@ function resolveAndCompleteField(
       arraysAreEqual(pathArray, error.path)
     ) {
       hookContext = invokeAfterFieldResolveHook(
-        info,
+        info as ResolveInfo,
         exeContext,
         hookContext,
         undefined,
@@ -1516,7 +1551,7 @@ function resolveAndCompleteField(
     }
     if (!isDefaultResolverUsed && hooks?.afterFieldComplete) {
       invokeAfterFieldCompleteHook(
-        info,
+        info as ResolveInfo,
         exeContext,
         hookContext,
         undefined,
@@ -2046,7 +2081,7 @@ function completeAbstractValue(
   const resolveInfo =
     resolveTypeFn === defaultTypeResolver
       ? info
-      : (info ??
+      : info ??
         buildResolveInfo(
           exeContext,
           fieldName,
@@ -2055,8 +2090,12 @@ function completeAbstractValue(
           returnTypeName,
           path,
           incrementalDataRecord,
-        ));
-  const runtimeTypeName = resolveTypeFn(result, contextValue, resolveInfo!);
+        );
+  const runtimeTypeName = resolveTypeFn(
+    result,
+    contextValue,
+    resolveInfo as ResolveInfo,
+  );
 
   const validatedRuntimeTypeName = isPromise(runtimeTypeName)
     ? runtimeTypeName.then((resolvedRuntimeTypeName) =>

@@ -491,6 +491,60 @@ describe("executeWithoutSchema - regression tests", () => {
     expect(infoAtCallTime?.fieldNodes[1].name.value).toEqual("foo");
   });
 
+  test("Default field resolver provides ResolveInfo to function-valued properties", async () => {
+    let infoAtCallTime: ResolveInfo | undefined;
+    const definitions = encodeASTSchema(parse("type Query { foo: String }"))[0];
+    const result = await executeWithoutSchema({
+      document: parse("{ foo }"),
+      schemaFragment: { schemaId: "test", definitions, resolvers: {} },
+      rootValue: {
+        foo(_args: unknown, _context: unknown, info: ResolveInfo) {
+          infoAtCallTime = info;
+          return info.fieldName;
+        },
+      },
+    });
+
+    expect(result).toMatchObject({ data: { foo: "foo" } });
+    expect(infoAtCallTime?.fieldName).toBe("foo");
+    expect(infoAtCallTime?.parentTypeName).toBe("Query");
+  });
+
+  test("Default field resolver builds ResolveInfo for custom abstract type resolvers", async () => {
+    let infoAtCallTime: ResolveInfo | undefined;
+    const definitions = encodeASTSchema(
+      parse(`
+        interface Node { id: ID! }
+        type Person implements Node { id: ID! }
+        type Query { node: Node }
+      `),
+    )[0];
+    const result = await executeWithoutSchema({
+      document: parse("{ node { id } }"),
+      schemaFragment: {
+        schemaId: "test",
+        definitions,
+        resolvers: {
+          Node: {
+            __resolveType(
+              _value: unknown,
+              _context: unknown,
+              info: ResolveInfo,
+            ) {
+              infoAtCallTime = info;
+              return "Person";
+            },
+          },
+        },
+      },
+      rootValue: { node: { id: "1" } },
+    });
+
+    expect(result).toMatchObject({ data: { node: { id: "1" } } });
+    expect(infoAtCallTime?.fieldName).toBe("node");
+    expect(infoAtCallTime?.parentTypeName).toBe("Query");
+  });
+
   test("Executing mutation without type definitions return error", async () => {
     const schemaFragment = {
       schemaId: "test",
