@@ -897,13 +897,13 @@ function runSubscriptionResolver(
     isBuiltInDefaultResolver && isDefaultResolverUsed
       ? undefined
       : buildResolveInfo(
-        exeContext,
-        fieldName,
-        fieldGroup,
-        rootTypeName,
-        typeNameFromReference(returnTypeRef),
-        path,
-      );
+          exeContext,
+          fieldName,
+          fieldGroup,
+          rootTypeName,
+          typeNameFromReference(returnTypeRef),
+          path,
+        );
 
   const hooks = exeContext.fieldExecutionHooks;
   let hookContext: unknown = undefined;
