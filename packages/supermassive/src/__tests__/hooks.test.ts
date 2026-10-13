@@ -1191,7 +1191,7 @@ describe.each([
           _context: unknown,
           info: ResolveInfo,
         ) => {
-          flags.push(info.isNonBlocking);
+          flags.push(info.isInIncrementalExecution);
           return "field";
         };
         const film = { title: readField, director: readField };
@@ -1230,7 +1230,7 @@ describe.each([
       },
     );
 
-    it("exposes isNonBlocking to distinguish blocking from deferred fields", async () => {
+    it("exposes isInIncrementalExecution to distinguish ordinary from deferred fields", async () => {
       const afterFieldResolve = jest.fn();
       const document = parse(`query GetPersonWithDeferredField
       {
@@ -1255,7 +1255,7 @@ describe.each([
           afterFieldResolve: ({ resolveInfo }) => {
             afterFieldResolve({
               fieldName: resolveInfo.fieldName,
-              isNonBlocking: resolveInfo.isNonBlocking,
+              isInIncrementalExecution: resolveInfo.isInIncrementalExecution,
             });
           },
         }),
@@ -1265,13 +1265,13 @@ describe.each([
         ([entry]) => entry.fieldName === "name",
       )?.[0];
       expect(blockingField).toBeDefined();
-      expect(blockingField?.isNonBlocking).toBe(false);
+      expect(blockingField?.isInIncrementalExecution).toBe(false);
 
       const deferredField = afterFieldResolve.mock.calls.find(
         ([entry]) => entry.fieldName === "birth_year",
       )?.[0];
       expect(deferredField).toBeDefined();
-      expect(deferredField?.isNonBlocking).toBe(true);
+      expect(deferredField?.isInIncrementalExecution).toBe(true);
     });
   });
 

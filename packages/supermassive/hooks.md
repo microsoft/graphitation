@@ -27,11 +27,12 @@ Called before every operation
 
 Called before every field resolution
 
-`resolveInfo.isNonBlocking` is `true` for execution under a defer or stream record,
-including descendants. It is `false` for blocking work, disabled defer, and initial
-stream items unless they belong to an enclosing incremental record. This is
-execution attribution, not transport delivery classification. No descriptor or
-internal execution record is exposed; response labels are unchanged.
+`resolveInfo.isInIncrementalExecution` is `true` for field execution within a
+deferred fragment or streamed item, including descendants. It is `false` for
+ordinary fields, disabled defer, and initial stream items unless enclosed in
+another incremental execution. It does not guarantee that an incremental result
+will be emitted or delivered. No descriptor or internal execution record is
+exposed; response labels are unchanged.
 
 - **Thrown Error**: The field is not executed and is handled as if it has returned `null`.
 - **Returned Error**: The error is registered and execution continues.

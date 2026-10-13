@@ -91,8 +91,8 @@ export type UserResolvers<TSource = unknown, TContext = unknown> = Record<
 >;
 
 export interface ResolveInfo {
-  /** Execution under a defer/stream record, not transport delivery classification. */
-  isNonBlocking?: boolean;
+  /** Executes within a deferred fragment or streamed item, including descendants. */
+  isInIncrementalExecution?: boolean;
   fieldName: string;
   fieldNodes: FieldGroup;
   returnTypeName: string;

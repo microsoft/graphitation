@@ -1121,7 +1121,7 @@ export function buildResolveInfo(
     rootValue: exeContext.rootValue,
     operation: exeContext.operation,
     variableValues: exeContext.variableValues,
-    isNonBlocking: incrementalDataRecord != null,
+    isInIncrementalExecution: incrementalDataRecord != null,
   };
 }
 
