@@ -1019,8 +1019,9 @@ export function extractContext(
     },
   });
 
-  // model file also re-exports enums, so we need to emit it if either is present
-  context.hasModels = context.hasModels || context.hasEnums;
+  // Models re-export enums and are always referenced by the legacy type map.
+  context.hasModels =
+    context.hasModels || context.hasEnums || context.isLegacyCompatMode();
 
   return context;
 }

@@ -3434,6 +3434,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphitation/ts-codegen@workspace:packages/ts-codegen"
   dependencies:
+    "@graphitation/graphql-js-operation-payload-generator": "npm:^0.13.2"
     "@types/jest": "npm:^26.0.22"
     graphql: "npm:^15.6.1"
     monorepo-scripts: "npm:*"
