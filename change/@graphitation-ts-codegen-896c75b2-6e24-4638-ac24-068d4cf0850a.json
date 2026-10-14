@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Generate a schema TypeMap in legacy interfaces with scalar mappings and typed operation root models.",
+  "packageName": "@graphitation/ts-codegen",
+  "email": "jakubvejr@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
