@@ -25,6 +25,15 @@ Similarly, the GraphQL operations themselves, described using e.g. [GraphQL SDL]
 
 ## Implementation details and plans
 
+### Default field resolution
+
+Built-in default resolution uses the field name instead of allocating `ResolveInfo` for plain
+source properties. Resolution and completion still use the normal execution flow, including
+argument coercion and validation. Function-valued source properties create full info on demand;
+custom resolvers, abstract return types, and `__typename` retain full info. Subscription setup
+keeps its original execution path; fields in each subscription event use this optimization.
+The `ResolveInfo | string` union is internal; public resolver signatures are unchanged.
+
 ### Execution with schema fragments
 
 Starting with version 3.0, supermassive expects a compact _fragment_ of the schema alongside executable documents.

@@ -1198,18 +1198,34 @@ function resolveAndCompleteField(
       fieldName,
     ) ?? exeContext.fieldResolver;
 
-  const info = buildResolveInfo(
-    exeContext,
-    fieldName,
-    fieldGroup,
-    parentTypeName,
-    typeNameFromReference(returnTypeRef),
-    path,
-    incrementalDataRecord,
-  );
+  const createInfo = (forceFullInfo = false): ResolveInfo | string => {
+    if (
+      !forceFullInfo &&
+      resolveFn === defaultFieldResolver &&
+      resolveFn === exeContext.fieldResolver &&
+      !Definitions.isAbstractType(
+        exeContext.schemaFragment.definitions,
+        returnTypeRef,
+      )
+    ) {
+      return fieldName;
+    }
+    return buildResolveInfo(
+      exeContext,
+      fieldName,
+      fieldGroup,
+      parentTypeName,
+      typeNameFromReference(returnTypeRef),
+      path,
+      incrementalDataRecord,
+    );
+  };
+  const info = createInfo();
 
   const isDefaultResolverUsed =
-    resolveFn === exeContext.fieldResolver || fieldName === "__typename";
+    typeof info === "string" ||
+    resolveFn === exeContext.fieldResolver ||
+    fieldName === "__typename";
 
   if (resolveFn === exeContext.fieldResolver && typeof source === "undefined") {
     /**
@@ -1248,7 +1264,10 @@ function resolveAndCompleteField(
     }
 
     const resolveField = () => {
-      const resolverResult = resolveFn(source, args, contextValue, info);
+      const resolverResult =
+        typeof info === "string"
+          ? resolveDefaultField(source, args, contextValue, info, createInfo)
+          : resolveFn(source, args, contextValue, info);
       if (
         !isDefaultResolverUsed &&
         isPromise(resolverResult) &&
@@ -1445,6 +1464,13 @@ function resolveAndCompleteField(
   }
 }
 
+function getFieldNameForError(fieldGroup: FieldGroup, path: Path): string {
+  while (typeof path.key === "number" && path.prev) {
+    path = path.prev;
+  }
+  return `${path.typename}.${fieldGroup[0].name.value}`;
+}
+
 /**
  * Implements the instructions for completeValue as defined in the
  * "Field entries" section of the spec.
@@ -1470,7 +1496,7 @@ function completeValue(
   exeContext: ExecutionContext,
   returnTypeRef: TypeReference,
   fieldGroup: FieldGroup,
-  info: ResolveInfo,
+  info: ResolveInfo | string,
   path: Path,
   result: unknown,
   incrementalDataRecord: IncrementalDataRecord | undefined,
@@ -1494,7 +1520,10 @@ function completeValue(
     );
     if (completed === null) {
       throw new Error(
-        `Cannot return null for non-nullable field ${info.parentTypeName}.${info.fieldName}.`,
+        `Cannot return null for non-nullable field ${getFieldNameForError(
+          fieldGroup,
+          path,
+        )}.`,
       );
     }
     return completed;
@@ -1531,6 +1560,10 @@ function completeValue(
   // If field type is an abstract type, Interface or Union, determine the
   // runtime Object type and complete for that type.
   if (Definitions.isAbstractType(schemaFragment.definitions, returnTypeRef)) {
+    invariant(
+      typeof info !== "string",
+      "Abstract type resolution requires resolve info.",
+    );
     return completeAbstractValue(
       exeContext,
       returnTypeName,
@@ -1567,7 +1600,7 @@ async function completePromisedValue(
   exeContext: ExecutionContext,
   returnTypeRef: TypeReference,
   fieldGroup: FieldGroup,
-  info: ResolveInfo,
+  info: ResolveInfo | string,
   path: Path,
   result: Promise<unknown>,
   incrementalDataRecord: IncrementalDataRecord | undefined,
@@ -1609,7 +1642,7 @@ function completeListValue(
   exeContext: ExecutionContext,
   returnTypeRef: TypeReference, // assuming list type
   fieldGroup: FieldGroup,
-  info: ResolveInfo,
+  info: ResolveInfo | string,
   path: Path,
   result: unknown,
   incrementalDataRecord: IncrementalDataRecord | undefined,
@@ -1631,7 +1664,10 @@ function completeListValue(
 
   if (!isIterableObject(result)) {
     throw locatedError(
-      `Expected Iterable, but did not find one for field "${info.parentTypeName}.${info.fieldName}".`,
+      `Expected Iterable, but did not find one for field "${getFieldNameForError(
+        fieldGroup,
+        path,
+      )}".`,
       [],
     );
   }
@@ -1701,7 +1737,7 @@ function completeListItemValue(
   exeContext: ExecutionContext,
   itemTypeRef: TypeReference,
   fieldGroup: FieldGroup,
-  info: ResolveInfo,
+  info: ResolveInfo | string,
   itemPath: Path,
   incrementalDataRecord: IncrementalDataRecord | undefined,
 ): boolean {
@@ -1835,7 +1871,7 @@ async function completeAsyncIteratorValue(
   exeContext: ExecutionContext,
   itemTypeRef: TypeReference,
   fieldGroup: FieldGroup,
-  info: ResolveInfo,
+  info: ResolveInfo | string,
   path: Path,
   asyncIterator: AsyncIterator<unknown>,
   incrementalDataRecord: IncrementalDataRecord | undefined,
@@ -2569,17 +2605,31 @@ export const defaultTypeResolver: TypeResolver<unknown, unknown> = function (
  * of calling that function while passing along args and context value.
  */
 export const defaultFieldResolver: FunctionFieldResolver<unknown, unknown> =
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function (source: any, args, contextValue, info) {
-    // ensure source is a value for which property access is acceptable.
-    if (isObjectLike(source) || typeof source === "function") {
-      const property = source[info.fieldName];
-      if (typeof property === "function") {
-        return source[info.fieldName](args, contextValue, info);
-      }
-      return property;
-    }
-  };
+  resolveDefaultField;
+
+function resolveDefaultField(
+  source: unknown,
+  args: Record<string, unknown>,
+  contextValue: unknown,
+  info: ResolveInfo | string,
+  createInfo?: (forceFullInfo: true) => ResolveInfo | string,
+): unknown {
+  if (!isObjectLike(source) && typeof source !== "function") {
+    return undefined;
+  }
+  const fieldName = typeof info === "string" ? info : info.fieldName;
+  const property = (source as ObjMap<unknown>)[fieldName];
+  if (typeof property !== "function") {
+    return property;
+  }
+
+  const resolveInfo = typeof info === "string" ? createInfo?.(true) : info;
+  invariant(
+    resolveInfo && typeof resolveInfo !== "string",
+    "Function properties require resolve info.",
+  );
+  return Reflect.apply(property, source, [args, contextValue, resolveInfo]);
+}
 
 export function getOperationRootTypeName(
   operation: OperationDefinitionNode | OperationTypeDefinitionNode,
@@ -2644,7 +2694,7 @@ function executeStreamField(
   item: PromiseOrValue<unknown>,
   exeContext: ExecutionContext,
   fieldGroup: FieldGroup,
-  info: ResolveInfo,
+  info: ResolveInfo | string,
   itemTypeRef: TypeReference,
   label?: string,
   parentContext?: IncrementalDataRecord,
@@ -2743,7 +2793,7 @@ async function executeStreamAsyncIteratorItem(
   asyncIterator: AsyncIterator<unknown>,
   exeContext: ExecutionContext,
   fieldGroup: FieldGroup,
-  info: ResolveInfo,
+  info: ResolveInfo | string,
   itemTypeRef: TypeReference,
   incrementalDataRecord: StreamItemsRecord,
   path: Path,
@@ -2806,7 +2856,7 @@ async function executeStreamAsyncIterator(
   asyncIterator: AsyncIterator<unknown>,
   exeContext: ExecutionContext,
   fieldGroup: FieldGroup,
-  info: ResolveInfo,
+  info: ResolveInfo | string,
   itemTypeRef: TypeReference,
   path: Path,
   label?: string,
