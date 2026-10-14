@@ -16,6 +16,7 @@
     "just": "monorepo-scripts"
   },
   "devDependencies": {
+    "@graphitation/graphql-js-operation-payload-generator": "^0.13.2",
     "@types/jest": "^26.0.22",
     "monorepo-scripts": "*"
   },

@@ -15,13 +15,13 @@ const LEGACY_TYPES = [
 
 export function generateLegacyTypes(context: TsCodegenContext): GeneratedFile {
   const statements: string[] = [];
-  const allTypes = context
-    .getAllTypes()
-    .filter(
-      (type) =>
-        LEGACY_TYPES.includes(type.kind) &&
-        !ROOT_OPERATIONS.includes(type.name),
-    );
+  const schemaTypes = Array.from(
+    new Map(context.getAllTypes().map((type) => [type.name, type])).values(),
+  );
+  const allTypes = schemaTypes.filter(
+    (type) =>
+      LEGACY_TYPES.includes(type.kind) && !ROOT_OPERATIONS.includes(type.name),
+  );
 
   statements.push(
     emit.createImportDeclaration(
@@ -72,21 +72,56 @@ export function generateLegacyTypes(context: TsCodegenContext): GeneratedFile {
         )
         .concat(
           allTypes
-            .filter((type) => type.kind === "SCALAR")
+            .filter(
+              (type) =>
+                type.kind === "SCALAR" &&
+                !Object.prototype.hasOwnProperty.call(
+                  BUILT_IN_SCALARS,
+                  type.name,
+                ),
+            )
             .map((type) =>
               emit.createPropertySignature(
                 [emit.createModifier("ReadonlyKeyword")],
                 type.name,
                 undefined,
-                emit.createTypeReferenceNode(
-                  emit.createQualifiedName(
-                    emit.createIdentifier("Models"),
-                    type.name,
-                  ),
-                ),
+                createModelReference(type.name),
               ),
             ),
         ),
+    ),
+  );
+
+  const scalarNames = new Set([
+    ...Object.keys(BUILT_IN_SCALARS),
+    ...schemaTypes
+      .filter((type) => type.kind === "SCALAR")
+      .map((type) => type.name),
+  ]);
+  const typeNames = new Set([
+    ...scalarNames,
+    ...schemaTypes.map((type) => type.name),
+  ]);
+  statements.push(
+    emit.createTypeAliasDeclaration(
+      [emit.createModifier("ExportKeyword")],
+      "TypeMap",
+      undefined,
+      emit.createTypeLiteralNode(
+        Array.from(typeNames)
+          .filter((name) => !name.startsWith("__"))
+          .sort()
+          .map((name) =>
+            emit.createPropertySignature(
+              undefined,
+              emit.createStringLiteral(name),
+              undefined,
+              scalarNames.has(name)
+                ? createScalarReference(name)
+                : createModelReference(name),
+            ),
+          ),
+      ),
     ),
   );
 
@@ -101,12 +136,9 @@ export function generateLegacyTypes(context: TsCodegenContext): GeneratedFile {
           [emit.createModifier("ReadonlyKeyword")],
           type.name,
           undefined,
-          emit.createTypeReferenceNode(
-            emit.createQualifiedName(
-              emit.createIdentifier("Models"),
-              type.name,
-            ),
-          ),
+          Object.prototype.hasOwnProperty.call(BUILT_IN_SCALARS, type.name)
+            ? createScalarReference(type.name)
+            : createModelReference(type.name),
         ),
       ),
     ),
@@ -119,4 +151,14 @@ export function generateLegacyTypes(context: TsCodegenContext): GeneratedFile {
   );
   source.fileName = "legacy-types.interface.ts";
   return source;
+}
+
+function createScalarReference(name: string): string {
+  return `Scalars[${emit.createStringLiteral(name)}]`;
+}
+
+function createModelReference(name: string): string {
+  return emit.createTypeReferenceNode(
+    emit.createQualifiedName(emit.createIdentifier("Models"), name),
+  );
 }

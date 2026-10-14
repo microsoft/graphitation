@@ -1621,6 +1621,10 @@ describe(generateTS, () => {
           readonly id: string;
       }
       export type Users = Admin | User;
+      export interface Query extends BaseModel {
+          readonly __typename?: "Query";
+          readonly node: Node;
+      }
       "
     `);
     expect(resolvers).toMatchInlineSnapshot(`
@@ -1672,6 +1676,19 @@ describe(generateTS, () => {
           readonly String: string;
           readonly Boolean: boolean;
       }
+      export type TypeMap = {
+          "Admin": Models.Admin;
+          "Boolean": Scalars["Boolean"];
+          "Float": Scalars["Float"];
+          "ID": Scalars["ID"];
+          "Int": Scalars["Int"];
+          "Node": Models.Node;
+          "Query": Models.Query;
+          "String": Scalars["String"];
+          "Type": Models.Type;
+          "User": Models.User;
+          "Users": Models.Users;
+      };
       export interface Types {
           readonly Node: Models.Node;
           readonly Type: Models.Type;
@@ -2294,6 +2311,16 @@ describe(generateTS, () => {
         readonly String: string;
         readonly Boolean: boolean;
     }
+    export type TypeMap = {
+        "Boolean": Scalars["Boolean"];
+        "Float": Scalars["Float"];
+        "ID": Scalars["ID"];
+        "Int": Scalars["Int"];
+        "Query": Models.Query;
+        "String": Scalars["String"];
+        "User": Models.User;
+        "UserInput": Models.UserInput;
+    };
     export interface Types {
         readonly User: Models.User;
         readonly UserInput: Models.UserInput;
