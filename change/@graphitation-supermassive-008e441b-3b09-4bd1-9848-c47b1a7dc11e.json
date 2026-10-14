@@ -1,0 +1,7 @@
+{
+  "type": "major",
+  "comment": "do not call field hooks for the default resolver.",
+  "packageName": "@graphitation/supermassive",
+  "email": "pavelglac@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
