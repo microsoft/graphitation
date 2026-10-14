@@ -47,6 +47,26 @@ const MESSAGE = gql`
   }
 `;
 
+const SELECTED_MESSAGE = gql`
+  query SelectedMessage {
+    selectedMessage {
+      __typename
+      id
+      text
+    }
+  }
+`;
+
+const OPTIMISTIC_MESSAGE = gql`
+  mutation SetOptimisticMessage {
+    setMessage {
+      __typename
+      id
+      text
+    }
+  }
+`;
+
 function writePage(cache: ForestRun, id: string, itemId = id): IPageData {
   const data: IPageData = {
     page: {
@@ -70,6 +90,44 @@ function expectNoObsoleteEntries(cache: TestForestRun): void {
       expect(trees.has(operationId)).toBe(true);
     }
   }
+}
+
+function createPolicyCache(
+  autoEvict: boolean,
+  messageId: string,
+  maxOperationCount: number,
+) {
+  const scheduled: (() => void)[] = [];
+  const cache = new TestForestRun({
+    autoEvict,
+    maxOperationCount,
+    typePolicies: {
+      Query: {
+        fields: {
+          selectedMessage: {
+            read: (_, { toReference }) => toReference(`Message:${messageId}`),
+          },
+        },
+      },
+    },
+    scheduleAutoEviction: (run) => {
+      scheduled.push(run);
+      return { cancel: () => scheduled.splice(0) };
+    },
+  });
+
+  return {
+    cache,
+    evict: () => {
+      if (autoEvict) {
+        expect(scheduled).toHaveLength(1);
+        const [run] = scheduled.splice(0);
+        run();
+      } else {
+        cache.gc();
+      }
+    },
+  };
 }
 
 describe("reverse-index cleanup", () => {
@@ -292,18 +350,9 @@ describe("reverse-index cleanup", () => {
       },
     });
     writePage(cache, "source");
-    const selectedQuery = gql`
-      query SelectedMessage {
-        selectedMessage {
-          __typename
-          id
-          text
-        }
-      }
-    `;
     const callback = jest.fn();
     const stopWatching = cache.watch({
-      query: selectedQuery,
+      query: SELECTED_MESSAGE,
       optimistic: true,
       immediate: true,
       callback,
@@ -326,7 +375,7 @@ describe("reverse-index cleanup", () => {
     });
 
     expect(callback).toHaveBeenCalled();
-    expect(cache.readQuery({ query: selectedQuery })).toEqual({
+    expect(cache.readQuery({ query: SELECTED_MESSAGE })).toEqual({
       selectedMessage: {
         __typename: "Message",
         id: "shared",
@@ -335,6 +384,161 @@ describe("reverse-index cleanup", () => {
     });
     stopWatching();
   });
+
+  describe.each([false, true])(
+    "overlapping optimistic mutations (optimistic-only entity=%s)",
+    (optimisticOnly) => {
+      it.each([false, true])(
+        "preserves policy reads, layer indexes, and rollback (autoEvict=%s)",
+        (autoEvict) => {
+          const messageId = optimisticOnly ? "optimistic-only" : "shared";
+          const { cache, evict } = createPolicyCache(autoEvict, messageId, 2);
+          writePage(cache, "source");
+          const stopWatchingSource = cache.watch({
+            query: QUERY,
+            variables: { id: "source" },
+            optimistic: true,
+            immediate: true,
+            callback: jest.fn(),
+          });
+          for (let id = 0; id < 12; id++) {
+            writePage(cache, `noise-${id}`);
+          }
+          const resultFor = (text: string) => ({
+            selectedMessage: { __typename: "Message", id: messageId, text },
+          });
+          const addLayer = (tag: string, text: string) =>
+            cache.batch({
+              optimistic: tag,
+              update: (optimisticCache) =>
+                optimisticCache.write({
+                  query: OPTIMISTIC_MESSAGE,
+                  result: { setMessage: resultFor(text).selectedMessage },
+                }),
+            });
+          const readSelected = () =>
+            cache.readQuery({ query: SELECTED_MESSAGE, optimistic: true });
+
+          addLayer("lower", "lower-value");
+          const callback = jest.fn();
+          const stopWatchingSelected = cache.watch({
+            query: SELECTED_MESSAGE,
+            optimistic: true,
+            immediate: true,
+            callback,
+          });
+          expect(readSelected()).toEqual(resultFor("lower-value"));
+          addLayer("upper", "upper-value");
+
+          const selectedTree = [...cache.dataForest.trees.values()].find(
+            (tree) => tree.operation.name === "SelectedMessage",
+          );
+          expect(selectedTree).toBeDefined();
+          expect(selectedTree?.nodes.has(`Message:${messageId}`)).toBe(false);
+          expect(
+            cache.dataForest.operationsByNodes.get(`Message:${messageId}`),
+          ).toContain(selectedTree?.operation.id);
+          if (optimisticOnly) {
+            expect(
+              [...cache.dataForest.trees.values()].some((tree) =>
+                tree.nodes.has(`Message:${messageId}`),
+              ),
+            ).toBe(false);
+          }
+          const layersBefore = cache.optimisticLayers.map((layer) => {
+            const mutation = [...layer.trees.values()].find(
+              (tree) => tree.operation.name === "SetOptimisticMessage",
+            );
+            expect(mutation).toBeDefined();
+            expect([...cache.dataForest.trees.keys()]).not.toContain(
+              mutation?.operation.id,
+            );
+            return {
+              layer,
+              index: new Map(
+                [...layer.operationsByNodes].map(([key, ids]) => [
+                  key,
+                  new Set(ids),
+                ]),
+              ),
+            };
+          });
+          expect(layersBefore).toHaveLength(2);
+          // Preserve the pre-GC result without encoding the existing optimistic-only stale-read bug.
+          const resultBefore = readSelected();
+          const treeCountBefore = cache.dataForest.trees.size;
+          callback.mockClear();
+
+          evict();
+
+          expect(cache.dataForest.trees.size).toBeLessThan(treeCountBefore);
+          expect(readSelected()).toBe(resultBefore);
+          expect(callback).not.toHaveBeenCalled();
+          for (const [index, before] of layersBefore.entries()) {
+            expect(cache.optimisticLayers[index]).toBe(before.layer);
+            expect(before.layer.operationsByNodes).toEqual(before.index);
+          }
+          cache.removeOptimistic("lower");
+          expect(cache.optimisticLayers).toHaveLength(1);
+          expect(readSelected()).toEqual(resultFor("upper-value"));
+          callback.mockClear();
+          cache.removeOptimistic("upper");
+
+          expect(cache.optimisticLayers).toHaveLength(0);
+          expect(readSelected()).toEqual(
+            optimisticOnly ? null : resultFor("shared"),
+          );
+          expect(callback).toHaveBeenLastCalledWith(
+            expect.objectContaining({
+              complete: !optimisticOnly,
+              result: optimisticOnly ? {} : resultFor("shared"),
+            }),
+            expect.objectContaining({
+              complete: true,
+              result: resultFor("upper-value"),
+            }),
+          );
+          expect(
+            cache.dataForest.operationsByNodes.get(`Message:${messageId}`),
+          ).toContain(selectedTree?.operation.id);
+          expectNoObsoleteEntries(cache);
+          stopWatchingSelected();
+          stopWatchingSource();
+        },
+      );
+    },
+  );
+
+  it.each([false, true])(
+    "refreshes a dangling policy read when an evicted node returns (autoEvict=%s)",
+    (autoEvict) => {
+      const { cache, evict } = createPolicyCache(autoEvict, "revived", 1);
+      writePage(cache, "old", "revived");
+      const oldTree = [...cache.dataForest.trees.values()][0];
+      writePage(cache, "newer");
+      writePage(cache, "newest");
+      evict();
+      expect(cache.dataForest.trees.has(oldTree.operation.id)).toBe(false);
+
+      expect(cache.readQuery({ query: SELECTED_MESSAGE })).toBeNull();
+      const message: IMessage = {
+        __typename: "Message",
+        id: "revived",
+        text: "returned",
+      };
+
+      cache.writeFragment({
+        id: "Message:revived",
+        fragment: MESSAGE,
+        data: message,
+      });
+
+      expect(cache.readQuery({ query: SELECTED_MESSAGE })).toEqual({
+        selectedMessage: message,
+      });
+      expectNoObsoleteEntries(cache);
+    },
+  );
 
   it("cleans existing obsolete and empty entries even below the budget", () => {
     const cache = new TestForestRun({
