@@ -313,9 +313,9 @@ describe("reverse-index cleanup", () => {
     );
     expect(selectedTree).toBeDefined();
     expect(selectedTree?.nodes.has("Message:shared")).toBe(false);
-    expect(
-      cache.dataForest.operationsByNodes.get("Message:shared"),
-    ).toContain(selectedTree?.operation.id);
+    expect(cache.dataForest.operationsByNodes.get("Message:shared")).toContain(
+      selectedTree?.operation.id,
+    );
 
     cache.gc();
     callback.mockClear();
@@ -349,9 +349,9 @@ describe("reverse-index cleanup", () => {
     expect(cache.gc()).toEqual([]);
 
     expect(cache.dataForest.operationsByNodes.size).toBe(4);
-    expect(cache.readQuery({ query: QUERY, variables: { id: "live" } })).toEqual(
-      data,
-    );
+    expect(
+      cache.readQuery({ query: QUERY, variables: { id: "live" } }),
+    ).toEqual(data);
     expectNoObsoleteEntries(cache);
   });
 
