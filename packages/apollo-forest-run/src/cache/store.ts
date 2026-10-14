@@ -116,6 +116,7 @@ export function evictOldData(
   const { dataForest, atime } = store;
 
   const evictedIds: OperationId[] = [];
+  let didEvict = false;
   const partitions = env.partitionConfig?.partitions ?? {};
 
   // Process each partition
@@ -160,9 +161,25 @@ export function evictOldData(
         continue; // Skip non-evictable operations entirely
       }
       removeDataTree(store, tree, partition);
+      didEvict = true;
     }
 
     evictedIds.push(...evictableOperationIds);
+  }
+
+  if (didEvict || !isAutoEvict) {
+    // Read results and older tree versions can also contribute node memberships.
+    // Prune by live operation IDs once per pass, not by the evicted tree's nodes.
+    for (const [nodeKey, operationIds] of dataForest.operationsByNodes) {
+      for (const operationId of operationIds) {
+        if (!dataForest.trees.has(operationId)) {
+          operationIds.delete(operationId);
+        }
+      }
+      if (!operationIds.size) {
+        dataForest.operationsByNodes.delete(nodeKey);
+      }
+    }
   }
 
   return evictedIds;
@@ -482,8 +499,7 @@ function removeDataTree(
   atime.delete(operation.id);
   // Notes:
   // - Not deleting from optimistic layers because they are meant to be short-lived anyway
-  // - Not removing operation from operationsByNodes because it is expensive to do during LRU eviction.
-  //   TODO: separate step to cleanup stale values from operationsByNodes
+  // - Reverse-index cleanup is batched by evictOldData, not repeated for each removed tree.
 }
 
 export function resetStore(store: Store): void {
