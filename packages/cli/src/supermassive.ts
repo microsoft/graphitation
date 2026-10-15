@@ -1,6 +1,7 @@
 import path from "path";
 import fs from "fs/promises";
 import fsSync from "fs";
+import ts from "typescript";
 import { program, Command } from "commander";
 import { extractImplicitTypesToTypescript } from "@graphitation/supermassive-extractors";
 import { parse } from "graphql";
