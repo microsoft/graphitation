@@ -1,5 +1,10 @@
 import { DirectiveNode } from "graphql";
 
+export type GeneratedFile = {
+  fileName: string;
+  content: string;
+};
+
 export type DefinitionImport = {
   from: string;
   defs: { typeName: string }[];

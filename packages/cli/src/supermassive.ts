@@ -228,12 +228,10 @@ async function generateInterfaces(
 
     await fs.mkdir(outputPath, { recursive: true });
 
-    const printer = ts.createPrinter();
     const outputs = result.files.map((file) =>
       fs.writeFile(
         path.join(outputPath, file.fileName),
-        PREPEND_TO_INTERFACES +
-          printer.printNode(ts.EmitHint.SourceFile, file, file),
+        PREPEND_TO_INTERFACES + file.content,
         { encoding: "utf-8" },
       ),
     );
