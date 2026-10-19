@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Replace TypeScript AST factories with direct string emission and return generated files as fileName/content objects.",
-  "packageName": "@graphitation/ts-codegen",
-  "email": "jakubvejr@microsoft.com_msteamsmdb",
-  "dependentChangeType": "patch"
-}

@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-<!-- This log was last generated on Tue, 14 Jul 2026 09:11:43 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 19 Oct 2026 16:34:37 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.4.0
+
+Mon, 19 Oct 2026 16:34:37 GMT
+
+### Minor changes
+
+- Update interface generation to consume generated TypeScript file contents directly. (jakubvejr@microsoft.com_msteamsmdb)
+- Bump @graphitation/ts-codegen to v5.6.0
 
 ## 3.3.5
 

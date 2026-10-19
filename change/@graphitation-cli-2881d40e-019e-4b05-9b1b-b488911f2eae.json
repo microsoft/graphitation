@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Update interface generation to consume generated TypeScript file contents directly.",
-  "packageName": "@graphitation/cli",
-  "email": "jakubvejr@microsoft.com_msteamsmdb",
-  "dependentChangeType": "patch"
-}

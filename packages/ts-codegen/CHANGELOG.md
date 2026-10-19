@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-<!-- This log was last generated on Tue, 14 Jul 2026 09:11:43 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 19 Oct 2026 16:34:37 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 5.6.0
+
+Mon, 19 Oct 2026 16:34:37 GMT
+
+### Minor changes
+
+- Replace TypeScript AST factories with direct string emission and return generated files as fileName/content objects. (jakubvejr@microsoft.com_msteamsmdb)
 
 ## 5.5.2
 
