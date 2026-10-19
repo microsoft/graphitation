@@ -62,6 +62,7 @@ extends:
                   targetPath: $(packagesArtifactPath)
             steps:
               - checkout: self
+                fetchDepth: 0
                 persistCredentials: true # fix for beachball: https://github.com/microsoft/beachball/issues/674
 
               - template: /.azure-devops/steps/npm-auth-steps.yml@self
@@ -73,6 +74,13 @@ extends:
                   YARN_NPM_AUTH_TOKEN: $(NPM_TOKEN)
                   NPM_CONFIG_USERCONFIG: $(Agent.TempDirectory)/npm-mirror.npmrc
               - script: |
+                  set -e
+                  git fetch origin +refs/heads/main:refs/remotes/origin/main
+                  if [ "$BUILD_SOURCEBRANCH" = "refs/heads/main" ]; then
+                    export CI_BASE_REF=HEAD^
+                  else
+                    export CI_BASE_REF=origin/main
+                  fi
                   yarn ci
                 displayName: build and test [test]
                 env:
