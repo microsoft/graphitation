@@ -1,33 +1,34 @@
-import ts, { factory } from "typescript";
+import { emit } from "./emit";
 import { TsCodegenContext, Field } from "./context";
 import { camelCase } from "./utilities";
+import { GeneratedFile } from "./types";
 
 export function generateLegacyResolvers(
   context: TsCodegenContext,
-): ts.SourceFile {
-  const imports: ts.Statement[] = []; //context.getBasicImports();
+): GeneratedFile {
+  const imports: string[] = []; //context.getBasicImports();
   imports.push(
-    factory.createImportDeclaration(
+    emit.createImportDeclaration(
       undefined,
-      factory.createImportClause(
+      emit.createImportClause(
         false,
         undefined,
-        factory.createNamespaceImport(factory.createIdentifier("Resolvers")),
+        emit.createNamespaceImport(emit.createIdentifier("Resolvers")),
       ),
-      factory.createStringLiteral("./resolvers.interface"),
+      emit.createStringLiteral("./resolvers.interface"),
     ),
   );
 
   if (context.hasModels) {
     imports.push(
-      factory.createImportDeclaration(
+      emit.createImportDeclaration(
         undefined,
-        factory.createImportClause(
+        emit.createImportClause(
           false,
           undefined,
-          factory.createNamespaceImport(factory.createIdentifier("Models")),
+          emit.createNamespaceImport(emit.createIdentifier("Models")),
         ),
-        factory.createStringLiteral("./models.interface"),
+        emit.createStringLiteral("./models.interface"),
       ),
     );
   }
@@ -38,17 +39,17 @@ export function generateLegacyResolvers(
 
   extra.push(...createLegacyResolverNamespace(context));
 
-  const source = factory.createSourceFile(
+  const source = emit.createSourceFile(
     imports.concat(...extra),
-    factory.createToken(ts.SyntaxKind.EndOfFileToken),
-    ts.NodeFlags.None,
+    emit.createToken("EndOfFileToken"),
+    undefined,
   );
   source.fileName = "legacy-resolvers.interface.ts";
   return source;
 }
 
 function createLegacyArgsNamespace(context: TsCodegenContext) {
-  const args: ts.Statement[] = [];
+  const args: string[] = [];
   context.getAllTypes().forEach((type) => {
     if (type.kind === "OBJECT") {
       args.push(
@@ -65,60 +66,58 @@ function createLegacyArgsNamespace(context: TsCodegenContext) {
     }
   });
 
-  return factory.createModuleDeclaration(
+  return emit.createModuleDeclaration(
     [
-      factory.createModifier(ts.SyntaxKind.ExportKeyword),
-      factory.createModifier(ts.SyntaxKind.DeclareKeyword),
+      emit.createModifier("ExportKeyword"),
+      emit.createModifier("DeclareKeyword"),
     ],
-    factory.createIdentifier("Args"),
-    factory.createModuleBlock(args),
-    ts.NodeFlags.Namespace,
+    "Args",
+    emit.createModuleBlock(args),
+    undefined,
   );
 }
 
-function createLegacyResolverNamespace(
-  context: TsCodegenContext,
-): ts.Statement[] {
-  const typeObjects: ts.Statement[] = [];
+function createLegacyResolverNamespace(context: TsCodegenContext): string[] {
+  const typeObjects: string[] = [];
 
   context.getAllTypes().forEach((type) => {
     if (type.kind === "OBJECT") {
       typeObjects.push(
-        factory.createModuleDeclaration(
-          [factory.createToken(ts.SyntaxKind.ExportKeyword)],
-          factory.createIdentifier(`${type.name}Resolvers`),
-          factory.createModuleBlock([
-            factory.createTypeAliasDeclaration(
-              [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-              factory.createIdentifier("Resolvers"),
+        emit.createModuleDeclaration(
+          [emit.createToken("ExportKeyword")],
+          `${type.name}Resolvers`,
+          emit.createModuleBlock([
+            emit.createTypeAliasDeclaration(
+              [emit.createModifier("ExportKeyword")],
+              "Resolvers",
               undefined,
-              factory.createTypeReferenceNode(
-                factory.createQualifiedName(
-                  factory.createQualifiedName(
-                    factory.createIdentifier("Resolvers"),
-                    factory.createIdentifier(type.name),
+              emit.createTypeReferenceNode(
+                emit.createQualifiedName(
+                  emit.createQualifiedName(
+                    emit.createIdentifier("Resolvers"),
+                    type.name,
                   ),
-                  factory.createIdentifier("Resolvers"),
+                  "Resolvers",
                 ),
               ),
             ),
           ]),
-          ts.NodeFlags.Namespace,
+          undefined,
         ),
       );
     } else if (type.kind === "UNION" || type.kind === "INTERFACE") {
       typeObjects.push(
-        factory.createTypeAliasDeclaration(
-          [factory.createToken(ts.SyntaxKind.ExportKeyword)],
-          factory.createIdentifier(`${type.name}TypeResolvers`),
+        emit.createTypeAliasDeclaration(
+          [emit.createToken("ExportKeyword")],
+          `${type.name}TypeResolvers`,
           undefined,
-          factory.createTypeReferenceNode(
-            factory.createQualifiedName(
-              factory.createQualifiedName(
-                factory.createIdentifier("Resolvers"),
-                factory.createIdentifier(type.name),
+          emit.createTypeReferenceNode(
+            emit.createQualifiedName(
+              emit.createQualifiedName(
+                emit.createIdentifier("Resolvers"),
+                type.name,
               ),
-              factory.createIdentifier("Resolvers"),
+              "Resolvers",
             ),
             undefined,
           ),
@@ -134,22 +133,22 @@ function createFieldArgs(
   context: TsCodegenContext,
   typeName: string,
   field: Field,
-): ts.TypeAliasDeclaration {
+): string {
   const resolverParametersDefinitions = field.arguments.map(({ name, type }) =>
-    factory.createPropertySignature(
-      [factory.createModifier(ts.SyntaxKind.ReadonlyKeyword)],
-      factory.createIdentifier(name),
+    emit.createPropertySignature(
+      [emit.createModifier("ReadonlyKeyword")],
+      emit.createIdentifier(name),
       type.kind !== "NonNullType"
-        ? factory.createToken(ts.SyntaxKind.QuestionToken)
+        ? emit.createToken("QuestionToken")
         : undefined,
       context.getTypeReferenceForInputTypeFromTypeNode(type, "RESOLVERS"),
     ),
   );
 
-  return factory.createTypeAliasDeclaration(
-    [factory.createToken(ts.SyntaxKind.ExportKeyword)],
-    factory.createIdentifier(typeName),
+  return emit.createTypeAliasDeclaration(
+    [emit.createToken("ExportKeyword")],
+    typeName,
     undefined,
-    factory.createTypeLiteralNode(resolverParametersDefinitions),
+    emit.createTypeLiteralNode(resolverParametersDefinitions),
   );
 }

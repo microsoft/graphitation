@@ -1,4 +1,3 @@
-import ts from "typescript";
 import { parse } from "graphql";
 import { blankGraphQLTag as graphql } from "../utilities";
 import { generateTS } from "..";
@@ -1561,23 +1560,21 @@ function runGenerateTest(
   }
 
   const { models, resolvers, enums, inputs, legacyTypes, legacyResolvers } = {
-    models: getFileByFileName("models.interface.ts") as ts.SourceFile,
+    models: getFileByFileName("models.interface.ts"),
     inputs: getFileByFileName("inputs.interface.ts"),
     enums: getFileByFileName("enums.interface.ts"),
-    resolvers: getFileByFileName("resolvers.interface.ts") as ts.SourceFile,
+    resolvers: getFileByFileName("resolvers.interface.ts"),
     legacyTypes: getFileByFileName("legacy-types.interface.ts"),
     legacyResolvers: getFileByFileName("legacy-resolvers.interface.ts"),
   };
 
-  const printer = ts.createPrinter();
-
   return {
-    enums: enums && printer.printFile(enums),
-    inputs: inputs && printer.printFile(inputs),
-    models: printer.printFile(models),
-    resolvers: printer.printFile(resolvers),
-    legacyTypes: legacyTypes && printer.printFile(legacyTypes),
-    legacyResolvers: legacyResolvers && printer.printFile(legacyResolvers),
+    enums: enums?.content,
+    inputs: inputs?.content,
+    models: models!.content,
+    resolvers: resolvers!.content,
+    legacyTypes: legacyTypes?.content,
+    legacyResolvers: legacyResolvers?.content,
     contextMappingOutput,
   };
 }

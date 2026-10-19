@@ -1,4 +1,4 @@
-import ts, { factory } from "typescript";
+import { emit } from "./emit";
 import path from "path";
 import { TsCodegenContext, UnionType } from "./context";
 
@@ -8,27 +8,25 @@ export function blankGraphQLTag(strings: TemplateStringsArray): string {
   return strings[0];
 }
 
-type ResolverParameterDefinition<T> = { name: string; type: T };
+type ResolverParameterDefinition = { name: string; type: string };
 type ResolverParametersDefinitions = {
-  parent: ResolverParameterDefinition<ts.TypeReferenceNode>;
-  args?: ResolverParameterDefinition<readonly ts.TypeElement[]>;
-  context: ResolverParameterDefinition<
-    ts.TypeReferenceNode | ts.IntersectionTypeNode
-  >;
-  resolveInfo: ResolverParameterDefinition<ts.TypeReferenceNode>;
+  parent: ResolverParameterDefinition;
+  args?: { name: string; type: string[] };
+  context: ResolverParameterDefinition;
+  resolveInfo: ResolverParameterDefinition;
 };
 
 export function createUnionResolveType(
   context: TsCodegenContext,
   type: UnionType,
-  contextType: ts.TypeReferenceNode | ts.IntersectionTypeNode,
-): ts.FunctionTypeNode {
-  return factory.createFunctionTypeNode(
+  contextType: string,
+): string {
+  return emit.createFunctionTypeNode(
     undefined,
     getResolverParameters({
       parent: {
         name: "parent",
-        type: factory.createUnionTypeNode(
+        type: emit.createUnionTypeNode(
           type.types.map((name) =>
             context.getModelType(name, "RESOLVERS").toTypeReference(),
           ),
@@ -43,31 +41,28 @@ export function createUnionResolveType(
         type: context.getResolveInfoType().toTypeReference(),
       },
     }),
-    factory.createTypeReferenceNode(
-      factory.createIdentifier("PromiseOrValue"),
-      [
-        factory.createUnionTypeNode(
-          type.types
-            .map((value) =>
-              factory.createLiteralTypeNode(factory.createStringLiteral(value)),
-            )
-            .concat(factory.createLiteralTypeNode(factory.createNull())),
-        ),
-      ],
-    ),
+    emit.createTypeReferenceNode("PromiseOrValue", [
+      emit.createUnionTypeNode(
+        type.types
+          .map((value) =>
+            emit.createLiteralTypeNode(emit.createStringLiteral(value)),
+          )
+          .concat(emit.createLiteralTypeNode(emit.createNull())),
+      ),
+    ]),
   );
 }
 
 export function createInterfaceResolveType(
   context: TsCodegenContext,
-  contextType: ts.TypeReferenceNode | ts.IntersectionTypeNode,
-): ts.FunctionTypeNode {
-  return factory.createFunctionTypeNode(
+  contextType: string,
+): string {
+  return emit.createFunctionTypeNode(
     undefined,
     getResolverParameters({
       parent: {
         name: "parent",
-        type: factory.createTypeReferenceNode("unknown"),
+        type: emit.createTypeReferenceNode("unknown"),
       },
       context: {
         name: "context",
@@ -78,15 +73,12 @@ export function createInterfaceResolveType(
         type: context.getResolveInfoType().toTypeReference(),
       },
     }),
-    factory.createTypeReferenceNode(
-      factory.createIdentifier("PromiseOrValue"),
-      [
-        factory.createUnionTypeNode([
-          factory.createTypeReferenceNode("string"),
-          factory.createLiteralTypeNode(factory.createNull()),
-        ]),
-      ],
-    ),
+    emit.createTypeReferenceNode("PromiseOrValue", [
+      emit.createUnionTypeNode([
+        emit.createTypeReferenceNode("string"),
+        emit.createLiteralTypeNode(emit.createNull()),
+      ]),
+    ]),
   );
 }
 
@@ -97,129 +89,111 @@ export function getResolverParameters({
   resolveInfo,
 }: ResolverParametersDefinitions) {
   return [
-    factory.createParameterDeclaration(
+    emit.createParameterDeclaration(
       undefined,
       undefined,
-      factory.createIdentifier(parent.name),
+      parent.name,
       undefined,
       parent.type,
     ),
     args &&
-      factory.createParameterDeclaration(
+      emit.createParameterDeclaration(
         undefined,
         undefined,
-        factory.createIdentifier(args.name),
+        args.name,
         undefined,
-        factory.createTypeLiteralNode(args.type),
+        emit.createTypeLiteralNode(args.type),
       ),
-    factory.createParameterDeclaration(
+    emit.createParameterDeclaration(
       undefined,
       undefined,
-      factory.createIdentifier(context.name),
+      context.name,
       undefined,
       context.type,
     ),
-    factory.createParameterDeclaration(
+    emit.createParameterDeclaration(
       undefined,
       undefined,
-      factory.createIdentifier(resolveInfo.name),
+      resolveInfo.name,
       undefined,
       resolveInfo.type,
     ),
-  ].filter(Boolean) as ts.ParameterDeclaration[];
+  ].filter(Boolean) as string[];
 }
 
 export function getSubscriptionResolver(
-  typeNode: ts.TypeNode,
+  typeNode: string,
   resolverParametersDefinitions: ResolverParametersDefinitions,
   fieldName: string,
-): ts.TypeAliasDeclaration {
+): string {
   const resolverParams = getResolverParameters(resolverParametersDefinitions);
-  return factory.createTypeAliasDeclaration(
-    [factory.createToken(ts.SyntaxKind.ExportKeyword)],
-    factory.createIdentifier(fieldName),
+  return emit.createTypeAliasDeclaration(
+    [emit.createToken("ExportKeyword")],
+    fieldName,
     [
-      factory.createTypeParameterDeclaration(
+      emit.createTypeParameterDeclaration(
         undefined,
-        factory.createIdentifier("SubscribeResult"),
+        "SubscribeResult",
         undefined,
-        factory.createKeywordTypeNode(ts.SyntaxKind.NeverKeyword),
+        emit.createKeywordTypeNode("NeverKeyword"),
       ),
     ],
-    factory.createUnionTypeNode([
-      factory.createTypeLiteralNode([
-        factory.createPropertySignature(
+    emit.createUnionTypeNode([
+      emit.createTypeLiteralNode([
+        emit.createPropertySignature(
           undefined,
-          factory.createIdentifier("subscribe"),
+          "subscribe",
           undefined,
-          factory.createFunctionTypeNode(
+          emit.createFunctionTypeNode(
             undefined,
             resolverParams,
-            factory.createTypeReferenceNode(
-              factory.createIdentifier("PromiseOrValue"),
-              [
-                factory.createTypeReferenceNode(
-                  factory.createIdentifier("AsyncIterable"),
-                  [
-                    factory.createTypeLiteralNode([
-                      factory.createPropertySignature(
-                        undefined,
-                        factory.createIdentifier(fieldName),
-                        undefined,
-                        typeNode,
-                      ),
-                    ]),
-                  ],
-                ),
-              ],
-            ),
+            emit.createTypeReferenceNode("PromiseOrValue", [
+              emit.createTypeReferenceNode("AsyncIterable", [
+                emit.createTypeLiteralNode([
+                  emit.createPropertySignature(
+                    undefined,
+                    fieldName,
+                    undefined,
+                    typeNode,
+                  ),
+                ]),
+              ]),
+            ]),
           ),
         ),
       ]),
-      factory.createTypeLiteralNode([
-        factory.createPropertySignature(
+      emit.createTypeLiteralNode([
+        emit.createPropertySignature(
           undefined,
-          factory.createIdentifier("subscribe"),
+          "subscribe",
           undefined,
-          factory.createFunctionTypeNode(
+          emit.createFunctionTypeNode(
             undefined,
             resolverParams,
-            factory.createTypeReferenceNode(
-              factory.createIdentifier("PromiseOrValue"),
-              [
-                factory.createTypeReferenceNode(
-                  factory.createIdentifier("AsyncIterable"),
-                  [
-                    factory.createTypeReferenceNode(
-                      factory.createIdentifier("SubscribeResult"),
-                      undefined,
-                    ),
-                  ],
-                ),
-              ],
-            ),
+            emit.createTypeReferenceNode("PromiseOrValue", [
+              emit.createTypeReferenceNode("AsyncIterable", [
+                emit.createTypeReferenceNode("SubscribeResult", undefined),
+              ]),
+            ]),
           ),
         ),
-        factory.createPropertySignature(
+        emit.createPropertySignature(
           undefined,
-          factory.createIdentifier("resolve"),
+          "resolve",
           undefined,
-          factory.createFunctionTypeNode(
+          emit.createFunctionTypeNode(
             undefined,
             getResolverParameters({
               ...resolverParametersDefinitions,
               parent: {
                 name: "subcribeResult",
-                type: factory.createTypeReferenceNode(
-                  factory.createIdentifier("SubscribeResult"),
+                type: emit.createTypeReferenceNode(
+                  "SubscribeResult",
                   undefined,
                 ),
               },
             }),
-            factory.createTypeReferenceNode(
-              factory.createIdentifier("PromiseOrValue"),
-              [typeNode],
-            ),
+            emit.createTypeReferenceNode("PromiseOrValue", [typeNode]),
           ),
         ),
       ]),
@@ -228,62 +202,55 @@ export function getSubscriptionResolver(
 }
 
 export function getResolverReturnType(
-  typeNode: ts.TypeNode,
+  typeNode: string,
   resolverParametersDefinitions: ResolverParametersDefinitions,
 ) {
   const resolverParams = getResolverParameters(resolverParametersDefinitions);
 
-  return factory.createFunctionTypeNode(
+  return emit.createFunctionTypeNode(
     undefined,
     resolverParams,
-    factory.createTypeReferenceNode(
-      factory.createIdentifier("PromiseOrValue"),
-      [typeNode],
-    ),
+    emit.createTypeReferenceNode("PromiseOrValue", [typeNode]),
   );
 }
 
-export function getResolverReturnListType(node: ts.TypeNode) {
+export function getResolverReturnListType(node: string) {
   return createNullableType(
-    factory.createTypeReferenceNode(
-      factory.createIdentifier("IterableOrAsyncIterable"),
-      [node],
-    ),
+    emit.createTypeReferenceNode("IterableOrAsyncIterable", [node]),
     true,
   );
 }
 
-export function createListType(
-  node: ts.TypeNode,
-  alsoUndefined?: boolean,
-): ts.TypeNode {
+export function createListType(node: string, alsoUndefined?: boolean): string {
   return createNullableType(
-    factory.createTypeReferenceNode(factory.createIdentifier("ReadonlyArray"), [
-      node,
-    ]),
+    emit.createTypeReferenceNode("ReadonlyArray", [node]),
     alsoUndefined,
   );
 }
 
 export function createNullableType(
-  node: ts.TypeNode,
+  node: string,
   alsoUndefined?: boolean,
-): ts.UnionTypeNode {
-  return factory.createUnionTypeNode(
-    [node, factory.createLiteralTypeNode(factory.createNull())].concat(
-      alsoUndefined
-        ? [factory.createKeywordTypeNode(ts.SyntaxKind.UndefinedKeyword)]
-        : [],
+): string {
+  return emit.createUnionTypeNode(
+    [node, emit.createLiteralTypeNode(emit.createNull())].concat(
+      alsoUndefined ? [emit.createKeywordTypeNode("UndefinedKeyword")] : [],
     ),
   );
 }
 
-export function createNonNullableType(node: ts.TypeNode): ts.TypeNode {
-  if (ts.isUnionTypeNode(node)) {
-    return node.types[0];
-  } else {
-    throw new Error(`Can't make type non nullable: ${node}.`);
+export function createNonNullableType(node: string): string {
+  let nonNullableNode = node;
+  while (
+    nonNullableNode.endsWith(" | null") ||
+    nonNullableNode.endsWith(" | undefined")
+  ) {
+    const suffix = nonNullableNode.endsWith(" | null")
+      ? " | null"
+      : " | undefined";
+    nonNullableNode = nonNullableNode.slice(0, -suffix.length);
   }
+  return nonNullableNode;
 }
 
 export function addModelSuffix(typeName: string) {
