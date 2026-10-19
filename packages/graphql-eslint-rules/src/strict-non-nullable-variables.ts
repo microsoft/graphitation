@@ -1,6 +1,6 @@
 import {
   GraphQLESLintRule,
-  requireGraphQLSchemaFromContext,
+  requireGraphQLSchema,
 } from "@graphql-eslint/eslint-plugin";
 import { isNonNullType } from "graphql";
 
@@ -19,7 +19,7 @@ const rule: GraphQLESLintRule<[], true> = {
   },
   create(context) {
     const nullableVariables = new Set();
-    requireGraphQLSchemaFromContext(RULE_ID, context);
+    requireGraphQLSchema(RULE_ID, context);
 
     return {
       Variable(node) {
