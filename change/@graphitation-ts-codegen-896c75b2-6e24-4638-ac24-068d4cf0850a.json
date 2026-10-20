@@ -1,6 +1,6 @@
 {
   "type": "minor",
-  "comment": "Generate a schema TypeMap in legacy interfaces with scalar mappings and typed operation root models.",
+  "comment": "Generate a schema TypeMap in legacy interfaces with scalar mappings and public GraphQL payload shapes, preserving interface fields and strict operation root mock typing independently of resolver models.",
   "packageName": "@graphitation/ts-codegen",
   "email": "jakubvejr@microsoft.com_msteamsmdb",
   "dependentChangeType": "patch"

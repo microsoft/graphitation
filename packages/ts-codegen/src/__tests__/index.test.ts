@@ -1677,17 +1677,29 @@ describe(generateTS, () => {
           readonly Boolean: boolean;
       }
       export type TypeMap = {
-          "Admin": Models.Admin;
+          "Admin": {
+              readonly __typename?: "Admin";
+              readonly id: TypeMap["ID"];
+          };
           "Boolean": Scalars["Boolean"];
           "Float": Scalars["Float"];
           "ID": Scalars["ID"];
           "Int": Scalars["Int"];
-          "Node": Models.Node;
-          "Query": Models.Query;
+          "Node": {
+              readonly __typename?: string;
+              readonly id: TypeMap["ID"];
+          };
+          "Query": {
+              readonly __typename?: "Query";
+              readonly node: TypeMap["Node"];
+          };
           "String": Scalars["String"];
           "Type": Models.Type;
-          "User": Models.User;
-          "Users": Models.Users;
+          "User": {
+              readonly __typename?: "User";
+              readonly id: TypeMap["ID"];
+          };
+          "Users": TypeMap["Admin"] | TypeMap["User"];
       };
       export interface Types {
           readonly Node: Models.Node;
@@ -2302,30 +2314,37 @@ describe(generateTS, () => {
     "
     `);
     expect(legacyTypes).toMatchInlineSnapshot(`
-    "import * as Models from "./models.interface";
-    export * from "./models.interface";
-    export interface Scalars {
-        readonly ID: string;
-        readonly Int: number;
-        readonly Float: number;
-        readonly String: string;
-        readonly Boolean: boolean;
-    }
-    export type TypeMap = {
-        "Boolean": Scalars["Boolean"];
-        "Float": Scalars["Float"];
-        "ID": Scalars["ID"];
-        "Int": Scalars["Int"];
-        "Query": Models.Query;
-        "String": Scalars["String"];
-        "User": Models.User;
-        "UserInput": Models.UserInput;
-    };
-    export interface Types {
-        readonly User: Models.User;
-        readonly UserInput: Models.UserInput;
-    }
-    "
+      "import * as Models from "./models.interface";
+      export * from "./models.interface";
+      export interface Scalars {
+          readonly ID: string;
+          readonly Int: number;
+          readonly Float: number;
+          readonly String: string;
+          readonly Boolean: boolean;
+      }
+      export type TypeMap = {
+          "Boolean": Scalars["Boolean"];
+          "Float": Scalars["Float"];
+          "ID": Scalars["ID"];
+          "Int": Scalars["Int"];
+          "Query": {
+              readonly __typename?: "Query";
+              readonly user?: TypeMap["User"] | null;
+          };
+          "String": Scalars["String"];
+          "User": {
+              readonly __typename?: "User";
+              readonly id: TypeMap["ID"];
+              readonly name?: TypeMap["String"] | null;
+          };
+          "UserInput": Models.UserInput;
+      };
+      export interface Types {
+          readonly User: Models.User;
+          readonly UserInput: Models.UserInput;
+      }
+      "
     `);
   });
 });

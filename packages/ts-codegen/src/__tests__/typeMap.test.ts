@@ -121,21 +121,29 @@ describe("legacy TypeMap generation", () => {
     (useStringUnionsInsteadOfEnums) => {
       const files = generate(schema, { useStringUnionsInsteadOfEnums });
       expect(typeMapEntries(files)).toEqual({
-        AESKey: "Models.AESKey",
+        AESKey: expect.stringContaining('readonly id: TypeMap["ID"];'),
         Boolean: 'Scalars["Boolean"]',
         Float: 'Scalars["Float"]',
         ID: 'Scalars["ID"]',
         Int: 'Scalars["Int"]',
         Key_Input: "Models.Key_Input",
         Key_State: "Models.Key_State",
-        Mutation: "Models.Mutation",
-        Node: "Models.Node",
-        OneGQL_OneOnOneChatConversation:
-          "Models.OneGQL_OneOnOneChatConversation",
-        Query: "Models.Query",
-        Search_Result: "Models.Search_Result",
+        Mutation: expect.stringContaining(
+          'readonly createKey: TypeMap["AESKey"];',
+        ),
+        Node: expect.stringContaining('readonly id: TypeMap["ID"];'),
+        OneGQL_OneOnOneChatConversation: expect.stringContaining(
+          'readonly id: TypeMap["ID"];',
+        ),
+        Query: expect.stringContaining(
+          'readonly key?: TypeMap["AESKey"] | null;',
+        ),
+        Search_Result:
+          'TypeMap["AESKey"] | TypeMap["OneGQL_OneOnOneChatConversation"]',
         String: 'Scalars["String"]',
-        Subscription: "Models.Subscription",
+        Subscription: expect.stringContaining(
+          'readonly keyChanged: TypeMap["AESKey"];',
+        ),
         Timestamp: 'Scalars["Timestamp"]',
         Unmapped: 'Scalars["Unmapped"]',
       });
@@ -151,11 +159,12 @@ describe("legacy TypeMap generation", () => {
           type Assert<T extends true> = T;
           type Keys = Assert<Equal<keyof TypeMap,
             keyof Types | keyof Scalars | "Query" | "Mutation" | "Subscription">>;
-          type ObjectModel = Assert<Equal<TypeMap["AESKey"], Models.AESKey>>;
+          type ObjectId = Assert<Equal<TypeMap["AESKey"]["id"], string>>;
           type InputModel = Assert<Equal<TypeMap["Key_Input"], Models.Key_Input>>;
           type EnumModel = Assert<Equal<TypeMap["Key_State"], Models.Key_State>>;
-          type InterfaceModel = Assert<Equal<TypeMap["Node"], Models.Node>>;
-          type UnionModel = Assert<Equal<TypeMap["Search_Result"], Models.Search_Result>>;
+          type InterfaceId = Assert<Equal<TypeMap["Node"]["id"], string>>;
+          type UnionPayload = Assert<Equal<TypeMap["Search_Result"],
+            TypeMap["AESKey"] | TypeMap["OneGQL_OneOnOneChatConversation"]>>;
           type Id = Assert<Equal<TypeMap["ID"], string>>;
           type Flag = Assert<Equal<TypeMap["Boolean"], boolean>>;
           type Int = Assert<Equal<TypeMap["Int"], number>>;
@@ -163,10 +172,10 @@ describe("legacy TypeMap generation", () => {
           type StringScalar = Assert<Equal<TypeMap["String"], string>>;
           type Custom = Assert<Equal<TypeMap["Timestamp"], string>>;
           type UnknownScalar = Assert<Equal<TypeMap["Unmapped"], unknown>>;
-          type QueryKey = Assert<Equal<TypeMap["Query"]["key"], Models.AESKey | null | undefined>>;
-          type QuerySearch = Assert<Equal<TypeMap["Query"]["search"], ReadonlyArray<Models.Search_Result>>>;
-          type MutationKey = Assert<Equal<TypeMap["Mutation"]["createKey"], Models.AESKey>>;
-          type SubscriptionKey = Assert<Equal<TypeMap["Subscription"]["keyChanged"], Models.AESKey>>;
+          type QueryKey = Assert<Equal<TypeMap["Query"]["key"], TypeMap["AESKey"] | null | undefined>>;
+          type QuerySearch = Assert<Equal<TypeMap["Query"]["search"], ReadonlyArray<TypeMap["Search_Result"]>>>;
+          type MutationKey = Assert<Equal<TypeMap["Mutation"]["createKey"], TypeMap["AESKey"]>>;
+          type SubscriptionKey = Assert<Equal<TypeMap["Subscription"]["keyChanged"], TypeMap["AESKey"]>>;
           // @ts-expect-error Unknown GraphQL names must not be accepted.
           type Missing = TypeMap["Missing"];
           const mocks: MockResolvers<TypeMap> = {
@@ -192,6 +201,123 @@ describe("legacy TypeMap generation", () => {
             // @ts-expect-error Model fields must keep their type.
             AESKey: () => ({ id: 123 }),
           };
+        `,
+      );
+    },
+  );
+
+  it.each([
+    [false, false],
+    [false, true],
+    [true, false],
+    [true, true],
+  ])(
+    "keeps public interface and root payloads strict (legacy object models: %s, string union enums: %s)",
+    (legacyNoModelsForObjects, useStringUnionsInsteadOfEnums) => {
+      const files = generate(
+        `
+          scalar Timestamp @model(tsType: "string", scope: "CLIENT_RESOLVERS")
+          interface Entity { id: ID! }
+          interface BaseConversation implements Entity {
+            id: ID!
+            title: String!
+            internalId: Int
+          }
+          enum State { ACTIVE INACTIVE }
+          type Conversation implements Entity & BaseConversation
+            @model(from: "./external-models", tsType: "ConversationModel", scope: "CLIENT_RESOLVERS") {
+            id: ID!
+            title: String!
+            internalId: Int
+            state: State!
+            at: Timestamp!
+            related: BaseConversation
+          }
+          type Query {
+            conversation: BaseConversation
+            concrete: Conversation!
+            conversations: [BaseConversation!]!
+            nullableConversations: [BaseConversation]
+            matrix: [[Int!]!]
+            enabled: Boolean!
+          }
+        `,
+        { legacyNoModelsForObjects, useStringUnionsInsteadOfEnums },
+      );
+      files.set(
+        "external-models.ts",
+        `export interface ConversationModel {
+          readonly id: number;
+          readonly title: number;
+        }`,
+      );
+      expect(files.get("models.interface.ts")).toContain(
+        "export interface BaseConversation extends BaseModel, Entity {\n    readonly __typename?: string;\n}",
+      );
+      expectCompiles(
+        files,
+        `
+          import type { TypeMap } from "./legacy-types.interface";
+          import type * as Models from "./models.interface";
+          import type { MockResolvers } from "@graphitation/graphql-js-operation-payload-generator";
+          type Equal<A, B> =
+            (<T>() => T extends A ? 1 : 2) extends
+            (<T>() => T extends B ? 1 : 2) ? true : false;
+          type Assert<T extends true> = T;
+          type Id = Assert<Equal<TypeMap["BaseConversation"]["id"], string>>;
+          type Title = Assert<Equal<TypeMap["BaseConversation"]["title"], string>>;
+          type Nullable = Assert<Equal<TypeMap["BaseConversation"]["internalId"], number | null | undefined>>;
+          type List = Assert<Equal<TypeMap["Query"]["conversations"], ReadonlyArray<TypeMap["BaseConversation"]>>>;
+          type NullableList = Assert<Equal<TypeMap["Query"]["nullableConversations"], ReadonlyArray<TypeMap["BaseConversation"] | null> | null | undefined>>;
+          type Matrix = Assert<Equal<TypeMap["Query"]["matrix"], ReadonlyArray<ReadonlyArray<number>> | null | undefined>>;
+          type Scalar = Assert<Equal<TypeMap["Conversation"]["at"], string>>;
+          type ModelId = Assert<Equal<Models.Conversation["id"], ${
+            legacyNoModelsForObjects ? "string" : "number"
+          }>>;
+          declare const state: TypeMap["State"];
+          const mocks: MockResolvers<TypeMap> = {
+            BaseConversation: () => ({ id: "channel-id", title: "Channel Name" }),
+            Conversation: () => ({ id: "channel-id", state }),
+            Query: () => ({
+              conversation: { title: "Channel Name" },
+              concrete: { id: "id", related: { title: "Related" } },
+              conversations: [{ id: "id" }],
+              matrix: [[1, 2]],
+              enabled: false,
+            }),
+          };
+          const partialMocks: MockResolvers<TypeMap> = {
+            BaseConversation: () => ({ title: "Channel Name" }),
+            Query: () => ({
+              conversation: null,
+              nullableConversations: [null, { id: "id" }],
+              matrix: null,
+            }),
+          };
+          const invalidId: MockResolvers<TypeMap> = {
+            // @ts-expect-error Interface fields must be checked within root payloads.
+            Query: () => ({ conversation: { id: 123 } }),
+          };
+          const invalidTitle: MockResolvers<TypeMap> = {
+            // @ts-expect-error Do not substitute the server model's number for String.
+            Query: () => ({ concrete: { title: 123 } }),
+          };
+          const invalidList: MockResolvers<TypeMap> = {
+            // @ts-expect-error Lists must retain their item types.
+            Query: () => ({ conversations: [{ title: 123 }] }),
+          };
+          const invalidBoolean: MockResolvers<TypeMap> = {
+            // @ts-expect-error Root scalar fields must retain their types.
+            Query: () => ({ enabled: "yes" }),
+          };
+          const invalidEnum: MockResolvers<TypeMap> = {
+            // @ts-expect-error Enum fields must reject unknown values.
+            Query: () => ({ concrete: { state: "INVALID" } }),
+          };
+          // @ts-expect-error Non-null list items must reject null.
+          const invalidNull: TypeMap["Query"]["conversations"] = [null];
+          // @ts-expect-error Nested non-null lists must reject null.
+          const invalidMatrix: TypeMap["Query"]["matrix"] = [null];
         `,
       );
     },
@@ -226,7 +352,9 @@ describe("legacy TypeMap generation", () => {
 
   it("generates a model for a root-only extension document", () => {
     const files = generate("extend type Query { enabled: Boolean! }");
-    expect(typeMapEntries(files).Query).toBe("Models.Query");
+    expect(typeMapEntries(files).Query).toContain(
+      'readonly enabled: TypeMap["Boolean"];',
+    );
     expectCompiles(
       files,
       `import type { TypeMap } from "./legacy-types.interface";
@@ -268,8 +396,30 @@ describe("legacy TypeMap generation", () => {
     );
   });
 
+  it("keeps references to types imported from another schema module", () => {
+    const files = generate(`
+      extend schema @import(from: "./external-schema", defs: ["Avatar"])
+      interface Node { id: ID! }
+      type User implements Node { id: ID!, avatar: Avatar }
+      type Query { user: User! }
+    `);
+    files.set(
+      "external-schema.ts",
+      `export namespace models {
+        export interface Avatar { readonly url: string; }
+      }`,
+    );
+    expectCompiles(
+      files,
+      `import type { TypeMap } from "./legacy-types.interface";
+       const user: TypeMap["User"] = { id: "id", avatar: { url: "url" } };
+       // @ts-expect-error Imported fields retain their declared types.
+       const invalid: TypeMap["User"] = { id: "id", avatar: { url: 123 } };`,
+    );
+  });
+
   it.each([false, true])(
-    "preserves imported model, scalar and enum mappings (legacy object models: %s)",
+    "preserves scalar and enum mappings without substituting object models (legacy object models: %s)",
     (legacyNoModelsForObjects) => {
       const files = generate(
         `
@@ -294,11 +444,13 @@ describe("legacy TypeMap generation", () => {
       expectCompiles(
         files,
         `import type { TypeMap } from "./legacy-types.interface";
+         import type * as Models from "./models.interface";
          import type { Key_State } from "./external-enums";
          type Assert<T extends true> = T;
          type CustomScalar = Assert<TypeMap["Timestamp"] extends Date ? true : false>;
          type EnumModel = Assert<TypeMap["Key_State"] extends Key_State ? true : false>;
-         const id: TypeMap["AESKey"]["id"] = ${
+         const id: TypeMap["AESKey"]["id"] = "id";
+         const modelId: Models.AESKey["id"] = ${
            legacyNoModelsForObjects ? '"id"' : "123"
          };`,
       );

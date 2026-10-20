@@ -1,0 +1,19 @@
+interface Entity {
+  id: ID!
+}
+
+interface BaseConversation implements Entity {
+  id: ID!
+  title: String!
+}
+
+type Conversation implements Entity & BaseConversation {
+  id: ID!
+  title: String!
+}
+
+type Query {
+  conversation: BaseConversation
+  conversations: [Conversation!]!
+  enabled: Boolean!
+}
