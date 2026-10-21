@@ -5,31 +5,16 @@
  */
 import type { AnyRef, PromiseOrValue, Ref, ViewInstanceId } from "../api.core";
 import type { ExecutionState, ViewInstance } from "../api.execution";
-import type { DriverContext, QueryDriver, QueryPayload } from "../api.queries";
+import type {
+  CreateSimpleDriverFn,
+  DriverContext,
+  QueryPayload,
+  SimpleDriverOutput,
+} from "../api.queries";
 import { isValueError } from "../errors";
 import { createRef } from "../views/ref";
 
-/**
- * A simple driver following the refs whose meta holds one of `tags`; the roots run
- * regardless. Without tags, it runs just the roots. It keeps no footprint.
- */
-export type CreateSimpleDriverFn = (
-  tags?: readonly string[],
-) => QueryDriver<SimpleDriverOutput, never, never>;
-
-export type SimpleDriverOutput = {
-  /**
-   * One per root, in order, or per stale instance for a restart: refs naming one instance get the
-   * same object.
-   */
-  readonly roots: readonly ViewInstance[];
-
-  /**
-   * Every instance the roots and the refs followed led to, the roots included, settled or
-   * stale. A ref in their data leads to the instance under its id, when it was followed.
-   */
-  readonly instances: ReadonlyMap<ViewInstanceId, ViewInstance>;
-};
+export type { CreateSimpleDriverFn, SimpleDriverOutput };
 
 /**
  * Runs the roots as the first wave of one execution, then, wave by wave, every tagged ref in

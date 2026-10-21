@@ -219,3 +219,28 @@ export type IncrementalQueryResults<
   /** Ends after the last part, or once `context.signal` aborts. */
   readonly subsequentResults: AsyncIterable<QueryPayload<Increment, Footprint>>;
 };
+
+// The simple driver
+
+/**
+ * Makes the simple driver: from its roots, it follows every ref whose meta holds one of
+ * `tags`, wave by wave, breadth first, and returns the instances it reached. The roots run
+ * regardless; without tags, it runs just the roots. It keeps no footprint.
+ */
+export type CreateSimpleDriverFn = (
+  tags?: readonly string[],
+) => QueryDriver<SimpleDriverOutput, never, never>;
+
+export type SimpleDriverOutput = {
+  /**
+   * One per root, in order, or per stale instance for a restart: refs naming one instance get the
+   * same object.
+   */
+  readonly roots: readonly ViewInstance[];
+
+  /**
+   * Every instance the roots and the refs followed led to, the roots included, settled or
+   * stale. A ref in their data leads to the instance under its id, when it was followed.
+   */
+  readonly instances: ReadonlyMap<ViewInstanceId, ViewInstance>;
+};

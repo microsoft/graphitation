@@ -10,12 +10,14 @@
  */
 import type * as Core from "./api.core";
 import type * as Env from "./api.env";
+import type * as Queries from "./api.queries";
 import type * as RuntimeApi from "./api.runtime";
 import type * as Stores from "./api.stores";
 import {
   createMainThreadEnvironment as createBuiltInMainThreadEnvironment,
   defaultEnvironment as builtInEnvironment,
 } from "./env/environment";
+import { createSimpleDriver as createBuiltInSimpleDriver } from "./queries/simpleDriver";
 import { createRuntime as createBuiltInRuntime } from "./runtime/runtime";
 import {
   pin as definePin,
@@ -28,6 +30,8 @@ export const view: Core.ViewFn = defineView;
 export const pin: Core.PinFn = definePin;
 export const storeView: Stores.StoreViewFn = defineStoreView;
 export const createRuntime: RuntimeApi.CreateRuntimeFn = createBuiltInRuntime;
+export const createSimpleDriver: Queries.CreateSimpleDriverFn =
+  createBuiltInSimpleDriver;
 export const defaultEnvironment: Env.Environment = builtInEnvironment;
 export const createMainThreadEnvironment: Env.CreateEnvironmentFn =
   createBuiltInMainThreadEnvironment;
@@ -158,6 +162,8 @@ export type {
   QueryResult,
   QueryPayload,
   IncrementalQueryResults,
+  CreateSimpleDriverFn,
+  SimpleDriverOutput,
 } from "./api.queries";
 export type {
   CreateRuntimeFn,
