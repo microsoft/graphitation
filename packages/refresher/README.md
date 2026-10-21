@@ -12,8 +12,7 @@ changed and why.
 > may change between releases.
 
 - **Familiar:** Views are like React components that return data. Arguments are
-  props, `read` inlines another view, and `ref` is like rendering a child
-  component: it draws an update boundary.
+  props.
 - **Bring your own data:** Refresher needs only two things from a data source:
   a way to read it, and a notification after it changes. In-memory state,
   IndexedDB, REST or GraphQL endpoints and server push channels can all feed the
