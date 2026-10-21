@@ -31,6 +31,7 @@ function generate(document: string, options: Partial<GenerateTSOptions> = {}) {
     outputPath: __dirname,
     documentPath: path.join(__dirname, "schema.graphql"),
     legacyCompat: true,
+    generateTypeMap: true,
     modelScope: "CLIENT_RESOLVERS",
     ...options,
   });
@@ -116,6 +117,59 @@ function expectCompiles(files: Map<string, string>, consumer: string) {
 }
 
 describe("legacy TypeMap generation", () => {
+  it.each([undefined, false])(
+    "omits TypeMap unless explicitly enabled (generateTypeMap: %s)",
+    (generateTypeMap) => {
+      const files = generate(schema, { generateTypeMap });
+      expect(files.get("legacy-types.interface.ts")).not.toContain(
+        "export type TypeMap",
+      );
+      expectCompiles(
+        files,
+        `
+          import type { Types, Scalars } from "./legacy-types.interface";
+          // @ts-expect-error TypeMap must be explicitly enabled.
+          import type { TypeMap } from "./legacy-types.interface";
+          const id: Scalars["ID"] = "id";
+          declare const state: Types["Key_State"];
+          const key: Types["AESKey"] = {
+            id: "id", key: "key", enabled: true, count: 1, ratio: 1,
+            at: "now", state,
+          };
+        `,
+      );
+    },
+  );
+
+  it("does not change other generated output when enabling TypeMap", () => {
+    const disabled = generate(schema, { generateTypeMap: false });
+    const enabled = generate(schema);
+    const legacyTypes = enabled.get("legacy-types.interface.ts");
+    if (legacyTypes === undefined) {
+      throw new Error("Missing legacy types output");
+    }
+    const source = ts.createSourceFile(
+      "legacy-types.interface.ts",
+      legacyTypes,
+      ts.ScriptTarget.Latest,
+      true,
+    );
+    const declaration = source.statements.find(
+      (statement) =>
+        ts.isTypeAliasDeclaration(statement) &&
+        statement.name.text === "TypeMap",
+    );
+    if (!declaration) {
+      throw new Error("Missing TypeMap declaration");
+    }
+    enabled.set(
+      "legacy-types.interface.ts",
+      legacyTypes.slice(0, declaration.getFullStart()) +
+        legacyTypes.slice(declaration.getEnd()),
+    );
+    expect(enabled).toEqual(disabled);
+  });
+
   it.each([false, true])(
     "maps exact schema names to emitted types (string union enums: %s)",
     (useStringUnionsInsteadOfEnums) => {

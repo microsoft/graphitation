@@ -4,8 +4,11 @@ This package generates Typescript definitions based on GraphQL Schema Definition
 
 ## Schema type map
 
-With `legacyCompat: true` (`supermassive generate-interfaces --legacy`), the
-generated `legacy-types.interface.ts` also exports a `TypeMap` type alias:
+With `legacyCompat: true` and `generateTypeMap: true`, the generated
+`legacy-types.interface.ts` also exports a `TypeMap` type alias. TypeMap
+generation is disabled by default. For the CLI, opt in with
+`supermassive generate-interfaces <schema.graphql> --legacy --generate-type-map`.
+The option has no effect without legacy mode or when generating only enums.
 
 ```typescript
 import type { TypeMap } from "./__generated__/legacy-types.interface";
@@ -57,6 +60,7 @@ export interface GenerateTSOptions {
   contextTypeName?: string;
   enumsImport?: string | null;
   legacyCompat?: boolean;
+  generateTypeMap?: boolean;
   useStringUnionsInsteadOfEnums?: boolean;
   legacyNoModelsForObjects?: boolean;
   modelScope?: string | null;

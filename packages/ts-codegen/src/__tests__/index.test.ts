@@ -1676,31 +1676,6 @@ describe(generateTS, () => {
           readonly String: string;
           readonly Boolean: boolean;
       }
-      export type TypeMap = {
-          "Admin": {
-              readonly __typename?: "Admin";
-              readonly id: TypeMap["ID"];
-          };
-          "Boolean": Scalars["Boolean"];
-          "Float": Scalars["Float"];
-          "ID": Scalars["ID"];
-          "Int": Scalars["Int"];
-          "Node": {
-              readonly __typename?: string;
-              readonly id: TypeMap["ID"];
-          };
-          "Query": {
-              readonly __typename?: "Query";
-              readonly node: TypeMap["Node"];
-          };
-          "String": Scalars["String"];
-          "Type": Models.Type;
-          "User": {
-              readonly __typename?: "User";
-              readonly id: TypeMap["ID"];
-          };
-          "Users": TypeMap["Admin"] | TypeMap["User"];
-      };
       export interface Types {
           readonly Node: Models.Node;
           readonly Type: Models.Type;
@@ -2323,23 +2298,6 @@ describe(generateTS, () => {
           readonly String: string;
           readonly Boolean: boolean;
       }
-      export type TypeMap = {
-          "Boolean": Scalars["Boolean"];
-          "Float": Scalars["Float"];
-          "ID": Scalars["ID"];
-          "Int": Scalars["Int"];
-          "Query": {
-              readonly __typename?: "Query";
-              readonly user?: TypeMap["User"] | null;
-          };
-          "String": Scalars["String"];
-          "User": {
-              readonly __typename?: "User";
-              readonly id: TypeMap["ID"];
-              readonly name?: TypeMap["String"] | null;
-          };
-          "UserInput": Models.UserInput;
-      };
       export interface Types {
           readonly User: Models.User;
           readonly UserInput: Models.UserInput;
