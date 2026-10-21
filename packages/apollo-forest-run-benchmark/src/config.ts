@@ -4,11 +4,18 @@ export const CONFIG = {
   cacheConfigurations: [
     {
       name: "Default",
-      description: "Default ForestRun configuration",
-      options: {},
+      description:
+        "cleanupNonCacheableOperations disabled (default, matches PR #705 baseline behavior)",
+      options: { cleanupNonCacheableOperations: false, autoEvict: false },
+    },
+    {
+      name: "cleanupNonCacheableOperations enabled",
+      description:
+        "cleanupNonCacheableOperations enabled (PR #705 feature under evaluation)",
+      options: { cleanupNonCacheableOperations: true, autoEvict: false },
     },
   ] as const satisfies CacheConfiguration[],
-  watcherCounts: [0, 50],
+  watcherCounts: [0],
   sampling: {
     minSamples: 200,
     minExecutionTime: 200, //ms

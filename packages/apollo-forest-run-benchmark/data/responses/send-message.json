@@ -1,0 +1,3 @@
+{
+  "sendMessage": { "__typename": "Message", "id": "0", "text": "text-0" }
+}
