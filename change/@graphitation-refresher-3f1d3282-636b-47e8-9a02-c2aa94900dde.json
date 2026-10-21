@@ -1,0 +1,7 @@
+{
+  "type": "prerelease",
+  "comment": "Add @graphitation/refresher: first alpha of the reactive view layer",
+  "packageName": "@graphitation/refresher",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}

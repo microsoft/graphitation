@@ -1,0 +1,11 @@
+{
+  "extends": ["../../.eslintrc.json"],
+  "root": true,
+  "rules": {
+    "@typescript-eslint/ban-types": [
+      "error",
+      { "extendDefaults": true, "types": { "{}": false } }
+    ],
+    "@typescript-eslint/no-empty-interface": "off"
+  }
+}

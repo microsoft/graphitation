@@ -1,0 +1,61 @@
+{
+  "name": "@graphitation/refresher",
+  "description": "A React-like reactive read runtime for externally owned object stores.",
+  "license": "MIT",
+  "version": "0.1.0-alpha",
+  "main": "./src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/graphitation.git",
+    "directory": "packages/refresher"
+  },
+  "scripts": {
+    "build": "monorepo-scripts build",
+    "lint": "monorepo-scripts lint",
+    "test": "node ./scripts/run-tests.mjs",
+    "test:watch": "node ./scripts/run-tests.mjs --watch",
+    "test:stress": "node ./scripts/run-tests.mjs",
+    "types": "monorepo-scripts types && yarn types:examples",
+    "types:examples": "tsc --noEmit -p scripts && tsc --noEmit -p examples/federated-chat",
+    "dev:federated-chat": "tsx scripts/federated-chat.mts dev",
+    "build:federated-chat": "tsx scripts/federated-chat.mts build",
+    "preview:federated-chat": "tsx scripts/federated-chat.mts preview",
+    "just": "monorepo-scripts"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.17",
+    "@types/react": "^18.2.29",
+    "@types/react-dom": "^18.2.0",
+    "esbuild": "^0.17.12",
+    "fast-check": "^4.9.0",
+    "monorepo-scripts": "*",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.5.3"
+  },
+  "sideEffects": false,
+  "access": "public",
+  "publishConfig": {
+    "main": "./lib/index",
+    "types": "./lib/index.d.ts",
+    "module": "./lib/index.mjs",
+    "exports": {
+      ".": {
+        "types": "./lib/index.d.ts",
+        "import": "./lib/index.mjs",
+        "require": "./lib/index.js"
+      },
+      "./stores": {
+        "types": "./lib/stores/index.d.ts",
+        "import": "./lib/stores/index.mjs",
+        "require": "./lib/stores/index.js"
+      }
+    }
+  },
+  "files": [
+    "lib/",
+    "README.md",
+    "CHANGELOG.md"
+  ]
+}

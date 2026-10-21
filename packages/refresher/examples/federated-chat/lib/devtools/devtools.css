@@ -1,0 +1,509 @@
+.devtools {
+  position: relative;
+  height: calc(100vh - 48px);
+  min-width: 0;
+}
+.devtools-root {
+  height: 100%;
+}
+/* In the gap beside the panel. */
+.devtools-grip {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -16px;
+  width: 8px;
+  border-radius: 4px;
+  cursor: col-resize;
+  touch-action: none;
+}
+.devtools-grip:hover,
+.devtools-grip:active {
+  background: #c7d2de;
+}
+.dt {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 12px;
+}
+.dt button,
+.dt textarea,
+.dt input {
+  font: inherit;
+}
+.dt button {
+  cursor: pointer;
+}
+.dt textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: ui-monospace, monospace;
+  resize: vertical;
+}
+.dt ul,
+.dt ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.dt-tabs {
+  display: flex;
+  border-bottom: 1px solid #d6dee8;
+}
+.dt-tabs button {
+  flex: 1;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  padding: 8px;
+  text-transform: capitalize;
+}
+.dt-tabs [aria-selected="true"] {
+  border-bottom-color: #2f6fd6;
+  font-weight: 600;
+}
+.dt-meta {
+  color: #5b6b7e;
+}
+.dt-failed {
+  color: #a31919;
+}
+.dt > .dt-failed {
+  margin: 0;
+  padding: 6px 10px;
+  background: #fdecec;
+}
+.dt-activity,
+.dt-stores,
+.dt-views {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.dt-toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 10px;
+  border-bottom: 1px solid #eef2f6;
+}
+.dt-toolbar button[aria-pressed="true"] {
+  background: #e3edfb;
+  border-color: #2f6fd6;
+}
+.dt-toolbar .dt-latency {
+  margin-left: auto;
+  color: #5b6b7e;
+}
+.dt-lane-heads {
+  display: grid;
+  border-bottom: 1px solid #eef2f6;
+}
+.dt-lane-heads h3 {
+  padding: 4px 10px;
+}
+/* Reversed, so it opens scrolled to its end: the newest entry. */
+.dt-timeline {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column-reverse;
+}
+.dt-timeline ol {
+  display: grid;
+  align-content: start;
+}
+/* A line between the lanes. */
+.dt-timeline ol.dt-lanes-2 {
+  background: linear-gradient(#d6dee8, #d6dee8) 50% 0 / 1px 100% no-repeat;
+}
+.dt-timeline ol > li {
+  min-width: 0;
+  padding: 2px 8px;
+}
+.dt-act {
+  position: relative;
+  padding: 3px 6px;
+  border-left: 3px solid #c7d2de;
+  border-radius: 3px;
+  background: #fafbfd;
+}
+.dt-act-revision {
+  border-left-color: #7a3e9d;
+}
+.dt-act-pass {
+  border-left-color: #1d7a45;
+}
+.dt-act-action {
+  border-left-color: #c98a1b;
+}
+.dt-act-wire {
+  border-left-color: #2f6fd6;
+}
+.dt-time {
+  float: right;
+  margin-left: 6px;
+  font-size: 10px;
+}
+.dt-act button:not(.dt-chip, .dt-anchor) {
+  border: 0;
+  background: none;
+  padding: 0;
+  text-align: left;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dt-act button:not(.dt-chip, .dt-anchor):hover {
+  text-decoration: underline;
+}
+.dt-entry-line {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+}
+.dt-entry-line > button:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.dt-entry-line > .dt-chip {
+  flex-shrink: 0;
+}
+.dt-changes,
+.dt-hits,
+.dt .dt-instances {
+  padding-left: 10px;
+}
+/* A batch's queries hang off one rail, each its own line. */
+.dt-queries {
+  margin: 2px 0 0 4px;
+  padding-left: 8px;
+  border-left: 2px solid #b9dcc6;
+}
+.dt-action-children {
+  border-left-color: #f0d6a8;
+}
+.dt-time .dt-chip {
+  font-size: 10px;
+}
+.dt-batch-head {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dt-hits,
+.dt-reads {
+  font-size: 11px;
+}
+.dt .dt-reads {
+  padding-left: 16px;
+}
+.dt-hits > li,
+.dt-reads > li {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dt-act-query {
+  position: relative;
+  padding: 1px 0;
+}
+.dt-act-query + .dt-act-query {
+  border-top: 1px dashed #e6ebf1;
+}
+.dt-chip {
+  border: 1px solid #c7d2de;
+  border-radius: 8px;
+  background: #fff;
+  padding: 0 5px;
+  color: #2457a8;
+  font-size: 11px;
+}
+button.dt-chip:hover {
+  background: #e3edfb;
+}
+/* Takes focus only to scroll its entry into view. */
+.dt-anchor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  scroll-margin: 40px;
+}
+.dt-focused {
+  animation: dt-flash 1.5s ease-out;
+  outline: 2px solid #2f6fd6;
+}
+@keyframes dt-flash {
+  from {
+    background: #cfe0fb;
+  }
+}
+.dt-badge {
+  display: inline-block;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: #e6ebf1;
+  color: #34465c;
+  font-size: 11px;
+}
+.dt-badge.dt-wire {
+  background: #e3edfb;
+}
+.dt-badge.dt-query,
+.dt-badge.dt-pass {
+  background: #e2f4e8;
+}
+.dt-badge.dt-read {
+  background: #eef2f6;
+}
+.dt-badge.dt-update {
+  background: #fde9d2;
+}
+.dt-badge.dt-revision {
+  background: #f1e4f7;
+}
+.dt-badge.dt-action {
+  background: #fbefd9;
+}
+.dt-payload {
+  padding: 2px 6px 4px;
+  background: #fafbfd;
+}
+.dt-tree {
+  font-family: ui-monospace, monospace;
+}
+.dt-tree summary {
+  cursor: pointer;
+  list-style: none;
+}
+.dt-tree summary::-webkit-details-marker {
+  display: none;
+}
+/* Its own marker, one width wide, so a leaf's key lines up with a branch's. */
+.dt-tree summary::before {
+  content: "▸";
+  display: inline-block;
+  width: 1em;
+  color: #6b7a8c;
+}
+.dt-tree details[open] > summary::before {
+  content: "▾";
+}
+.dt-tree li.dt-branch {
+  display: block;
+}
+.dt-tree li.dt-branch > details > summary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dt-tree li:not(.dt-branch) {
+  padding-left: 1em;
+}
+/* A hinted summary stays one line, the hint clipped. */
+.dt-tree summary.dt-hinted {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dt .dt-tree ul {
+  margin-left: 0.4em;
+  padding-left: 0.5em;
+  border-left: 1px solid #e6ebf1;
+}
+.dt .dt-bare > ul {
+  margin-left: 0;
+  padding-left: 0;
+  border-left: none;
+}
+/* A value sits beside its key, and shrinks before it wraps below. */
+.dt-tree li {
+  display: flex;
+  gap: 4px;
+  align-items: baseline;
+}
+.dt-tree li > :not(.dt-key) {
+  min-width: 0;
+}
+.dt-key {
+  flex: none;
+  color: #7a3e9d;
+}
+.dt-string {
+  color: #1d7a45;
+  word-break: break-all;
+}
+.dt-literal {
+  color: #2457a8;
+}
+.dt-tree .dt-ref,
+.dt-tree .dt-action {
+  border: 1px solid #c7d2de;
+  border-radius: 4px;
+  background: #f3f6fa;
+  padding: 0 4px;
+  font-family: inherit;
+}
+.dt-tree .dt-ref,
+.dt-tree .dt-action button {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+.dt-tree .dt-ref {
+  color: #2457a8;
+}
+.dt-tree .dt-action {
+  color: #8a5300;
+}
+.dt-hint {
+  color: #3b4b5c;
+}
+.dt-input {
+  color: #8a5300;
+  font-style: italic;
+}
+.dt-tree form {
+  display: grid;
+  gap: 4px;
+  margin: 4px 0;
+  padding: 6px;
+  border: 1px dashed #c7d2de;
+  border-radius: 4px;
+}
+.dt-stores nav {
+  display: grid;
+  gap: 4px;
+  padding: 6px 10px;
+  border-bottom: 1px solid #eef2f6;
+}
+.dt-stores nav div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+.dt h3 {
+  margin: 0 4px 0 0;
+  font-size: 11px;
+  color: #5b6b7e;
+  text-transform: uppercase;
+}
+.dt-stores nav button[aria-pressed="true"] {
+  background: #e3edfb;
+  border-color: #2f6fd6;
+}
+.dt-entries {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 10px;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+.dt-entry {
+  display: grid;
+  gap: 4px;
+}
+.dt-entry-head {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-family: ui-monospace, monospace;
+}
+.dt-entry-head > :first-child {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dt-views nav {
+  flex: none;
+  max-height: 45%;
+  overflow-y: auto;
+  padding: 6px 10px;
+  border-bottom: 1px solid #d6dee8;
+}
+.dt-views nav > button {
+  float: right;
+}
+.dt-list {
+  padding: 2px 0;
+}
+.dt-list summary {
+  cursor: pointer;
+}
+.dt-list li {
+  padding: 1px 0 1px 12px;
+}
+.dt-list form {
+  display: grid;
+  gap: 4px;
+  margin: 4px 0 6px;
+}
+.dt-frames {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 8px;
+  padding: 8px 10px;
+}
+.dt-frame {
+  border: 1px solid #d6dee8;
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+.dt-frame header {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.dt-frame header > b {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* A kept pin, expanded: the ref it keeps, straight away. */
+.dt .dt-pinned {
+  display: flex;
+  gap: 4px;
+  align-items: baseline;
+  padding: 0 0 2px 10px;
+  min-width: 0;
+}
+.dt-pinned > :last-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.dt .dt-name {
+  color: #7a3e9d;
+}
+.dt .dt-args {
+  color: #5b6b7e;
+}
+.dt .dt-action .dt-name {
+  color: inherit;
+}

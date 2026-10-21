@@ -1,0 +1,259 @@
+:root {
+  color-scheme: light;
+  font: 14px/1.4 system-ui, sans-serif;
+  color: #182333;
+  background: #eef2f6;
+}
+body {
+  margin: 0;
+  padding: 24px;
+  display: grid;
+  /* The devtools take a third, once that is wider than 480px, or the width dragged to. */
+  grid-template-columns: minmax(0, 2fr) var(
+      --devtools-width,
+      minmax(480px, 1fr)
+    );
+  gap: 24px;
+}
+/* The devtools are closed until their button opens them. */
+:root:not(.devtools-open) body {
+  grid-template-columns: minmax(0, 1fr);
+}
+:root:not(.devtools-open) #devtools {
+  display: none;
+}
+/* In the page's padding, below the devtools. */
+.devtools-toggle {
+  position: fixed;
+  right: 24px;
+  bottom: 2px;
+  padding: 1px 8px;
+  border: 1px solid #c7d2de;
+  border-radius: 4px;
+  background: #fff;
+  color: #5b6b7e;
+  font: 12px system-ui, sans-serif;
+  cursor: pointer;
+}
+#error:empty {
+  display: none;
+}
+#error {
+  grid-column: 1 / -1;
+  color: #a31919;
+}
+.chat {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  height: calc(100vh - 48px);
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.chat aside {
+  border-right: 1px solid #d6dee8;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.chat aside header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  position: relative;
+}
+.chat h1 {
+  font-size: 16px;
+  margin: 0;
+}
+.chat button {
+  font: inherit;
+  cursor: pointer;
+}
+.menu {
+  position: relative;
+}
+.menu [role="menu"] {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  white-space: nowrap;
+  z-index: 1;
+  display: grid;
+  background: #fff;
+  border: 1px solid #c7d2de;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 12%);
+}
+.menu [role="menu"] button {
+  border: 0;
+  background: none;
+  padding: 8px 14px;
+  text-align: left;
+}
+.menu [role="menu"] button:hover:not(:disabled) {
+  background: #eef2f6;
+}
+.menu [aria-checked="true"]::before {
+  content: "✓ ";
+}
+.chat nav {
+  display: grid;
+  align-content: start;
+  overflow-y: auto;
+}
+.chat-link {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  border: 0;
+  border-bottom: 1px solid #eef2f6;
+  background: none;
+  padding: 10px 12px;
+}
+.chat-link small {
+  color: #5b6b7e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chat-link[aria-current="true"] {
+  background: #e3edfb;
+}
+.chat-link[aria-busy="true"] {
+  background: #f0f4fa;
+  cursor: progress;
+}
+.room {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.room.empty {
+  align-items: center;
+  justify-content: center;
+  color: #5b6b7e;
+}
+.room h2 {
+  margin: 0;
+  padding: 12px 16px;
+  font-size: 16px;
+  border-bottom: 1px solid #d6dee8;
+}
+.room h2 small {
+  color: #5b6b7e;
+  font-weight: normal;
+}
+.room .status {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  padding: 4px 16px;
+  min-height: 1.4em;
+  line-height: 1.4em;
+  font-size: 12px;
+  color: #5b6b7e;
+}
+.room .status .live::before,
+.room .status .syncing::before {
+  content: "●";
+  margin-right: 4px;
+  color: #2e9e5b;
+}
+.room .status .syncing::before {
+  color: #d9a400;
+}
+.history {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column-reverse;
+}
+.history ol {
+  list-style: none;
+  margin: 0;
+  padding: 12px 16px;
+  display: grid;
+  gap: 10px;
+}
+.history li {
+  max-width: 70%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #eef2f6;
+}
+.history li.mine {
+  justify-self: end;
+  background: #d9e8ff;
+}
+.history li p {
+  margin: 2px 0;
+}
+.history .more {
+  display: block;
+  margin: 8px auto 0;
+}
+.history .more:last-child {
+  margin: 0 auto 8px;
+}
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 6px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  vertical-align: middle;
+}
+.history time {
+  margin-left: 6px;
+  font-size: 11px;
+  color: #5b6b7e;
+}
+.likes {
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #5b6b7e;
+}
+.likes button {
+  margin-right: 6px;
+  padding: 0 4px;
+  border: none;
+  background: none;
+  color: #c0392b;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+.likes .avatar {
+  margin-right: 2px;
+}
+.likes .more-likes {
+  margin-left: 4px;
+}
+.compact .history ol {
+  gap: 2px;
+}
+.compact .history li {
+  padding: 2px 8px;
+}
+.composer {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid #d6dee8;
+}
+.composer input {
+  flex: 1;
+  font: inherit;
+  padding: 6px 10px;
+}
+.loading {
+  padding: 24px;
+}

@@ -1,0 +1,21 @@
+- Write tests for source code with `fast-check` and native `node:test`, under the closest ancestor `__tests__` folder.
+  - Test interface, not implementation: assert only documented behaviour, via public entry points
+  - Stateful code: model-based tests (`fc.commands`); incremental code: compare with recomputation from scratch; pure code: properties of the contract
+  - A model must be simpler than the code, never mirror its algorithm; where the contract leaves choices to the implementation, check that an answer is allowed, don't predict it
+  - One interface, one shared suite, run against every implementation
+  - Minimal or no mocking (inject anything mockable via arguments)
+- Assert in source code, TigerStyle with `assertAlways`/`assertNever`/`assertSometimes` from `src/env/assert.ts`; these are DST checks (see `docs/architecture/testing.md`), not just debug aids
+  - Assert arguments, preconditions, postconditions, invariants and loop bounds; aim for ~2 per function
+  - Assert only what the type system cannot check (values, ranges, relations, presence in a map, phase order)
+  - Pair asserts: check a property where it is written and where it is read; assert both what must hold and what must not
+  - Split compound conditions (`assertAlways(env, a); assertAlways(env, b)`); write implications as `if (a) assertAlways(env, b)`
+  - Add `assertSometimes(env, cond, "literal message")` for rare but valid states a simulation must reach
+  - Pass `env` explicitly, never via globals; arguments besides the condition must be side-effect free and cheap (no `details` on hot paths); omit `always`/`never` messages, since the call site is the identity
+- Do not use branded types in Typescript.
+- Do not use the word "Seam" in documents or source code
+- Always ask a user before editing a contract file (`src/api.*.ts`) - this our public contract, any changes there could be breaking
+- Entry points (`src/index.ts`, `src/*/index.ts`) export every symbol by name: named re-exports are fine, barrels (`export *`) and namespaces (`export { ns }`) are not. Every contract type the public API reaches is exported; helpers a contract file keeps unexported are exempt.
+- Contract files declare shapes with `type`. An `interface` is an empty extension point, re-exported under its own name. `declare global`, `declare module` and `/// <reference>` appear only in contract files and entry points.
+- Write code for performance: minimal allocations, leverage CPU caches - process in batches, etc
+- No global state, including WeakMaps
+- Use `yarn` and `package.json` scripts where possible (`yarn build`, `yarn types`, `yarn lint`, `yarn test`); format with the repository's Prettier config

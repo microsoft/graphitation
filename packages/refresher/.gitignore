@@ -1,0 +1,2 @@
+# The example's own lib/ is source, not build output.
+!/examples/federated-chat/lib/
