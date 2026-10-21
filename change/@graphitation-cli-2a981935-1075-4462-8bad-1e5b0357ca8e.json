@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Add --generate-type-map to opt in to public GraphQL payload TypeMap generation in legacy interfaces.",
+  "packageName": "@graphitation/cli",
+  "email": "jakubvejr@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
