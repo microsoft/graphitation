@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Add opt-in schema TypeMap generation in legacy interfaces using generateTypeMap or --generate-type-map, preserving public GraphQL payload shapes and strict operation root mock typing independently of resolver models.",
-  "packageName": "@graphitation/ts-codegen",
-  "email": "jakubvejr@microsoft.com_msteamsmdb",
-  "dependentChangeType": "patch"
-}

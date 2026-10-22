@@ -1,8 +1,17 @@
 # Change Log - @graphitation/cli
 
-<!-- This log was last generated on Mon, 19 Oct 2026 16:34:37 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 22 Oct 2026 09:31:02 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 3.5.0
+
+Thu, 22 Oct 2026 09:31:02 GMT
+
+### Minor changes
+
+- Add --generate-type-map to opt in to public GraphQL payload TypeMap generation in legacy interfaces. (jakubvejr@microsoft.com_msteamsmdb)
+- Bump @graphitation/ts-codegen to v5.7.0
 
 ## 3.4.0
 

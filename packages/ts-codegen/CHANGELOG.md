@@ -1,8 +1,16 @@
 # Change Log - @graphitation/ts-codegen
 
-<!-- This log was last generated on Mon, 19 Oct 2026 16:34:37 GMT and should not be manually modified. -->
+<!-- This log was last generated on Thu, 22 Oct 2026 09:31:02 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 5.7.0
+
+Thu, 22 Oct 2026 09:31:02 GMT
+
+### Minor changes
+
+- Add opt-in schema TypeMap generation in legacy interfaces using generateTypeMap or --generate-type-map, preserving public GraphQL payload shapes and strict operation root mock typing independently of resolver models. (jakubvejr@microsoft.com_msteamsmdb)
 
 ## 5.6.0
 
