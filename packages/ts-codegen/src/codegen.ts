@@ -17,6 +17,7 @@ export interface GenerateTSOptions {
   contextTypeName?: string;
   enumsImport?: string | null;
   legacyCompat?: boolean;
+  generateTypeMap?: boolean;
   useStringUnionsInsteadOfEnums?: boolean;
   legacyNoModelsForObjects?: boolean;
   modelScope?: string | null;
@@ -72,6 +73,7 @@ export function generateTS(
     contextTypeName,
     enumsImport,
     legacyCompat,
+    generateTypeMap = false,
     useStringUnionsInsteadOfEnums,
     legacyNoModelsForObjects,
     modelScope,
@@ -137,7 +139,7 @@ export function generateTS(
       }
 
       if (legacyCompat) {
-        result.push(generateLegacyTypes(context));
+        result.push(generateLegacyTypes(context, generateTypeMap));
         result.push(generateLegacyResolvers(context));
       }
     }

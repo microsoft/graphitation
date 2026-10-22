@@ -13,8 +13,28 @@ import {
 import { GeneratedFile } from "./types";
 
 export function generateModels(context: TsCodegenContext): GeneratedFile {
-  const statements = context
-    .getAllTypes()
+  let types = context.getAllTypes();
+  if (context.isLegacyCompatMode()) {
+    const mergedTypes = new Map<string, Type>();
+    for (const type of types) {
+      const previous = mergedTypes.get(type.name);
+      mergedTypes.set(
+        type.name,
+        type.kind === "OBJECT" && previous?.kind === "OBJECT"
+          ? {
+              ...previous,
+              isExtension: previous.isExtension && type.isExtension,
+              fields: [...previous.fields, ...type.fields],
+              interfaces: [
+                ...new Set([...previous.interfaces, ...type.interfaces]),
+              ],
+            }
+          : type,
+      );
+    }
+    types = Array.from(mergedTypes.values());
+  }
+  const statements = types
     .map((type) => createModelForType(context, type))
     .filter((t) => t != null) as string[];
 
@@ -87,7 +107,10 @@ function createObjectTypeModel(
   context: TsCodegenContext,
   type: ObjectType,
 ): string | null {
-  if (isRootOperationType(type.name) || type.isExtension) {
+  if (
+    !context.isLegacyCompatMode() &&
+    (isRootOperationType(type.name) || type.isExtension)
+  ) {
     return null;
   }
 

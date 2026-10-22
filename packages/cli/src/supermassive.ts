@@ -21,6 +21,7 @@ type GenerateInterfacesOptions = {
   enumMigrationJsonFile?: string;
   enumMigrationExceptionsJsonFile?: string;
   generateOnlyEnums?: boolean;
+  generateTypeMap?: boolean;
   generateResolverMap?: boolean;
   mandatoryResolverTypes?: boolean;
   scope?: string;
@@ -61,6 +62,10 @@ export function supermassive(): Command {
       "When this flag is set, then enums are replaced by string unions.",
     )
     .option("--generate-only-enums", "Generate only enum file")
+    .option(
+      "--generate-type-map",
+      "Generate a public GraphQL payload TypeMap in legacy types (requires --legacy)",
+    )
     .option("--scope [scope]", "generate models only for scope")
     .option(
       "--enum-migration-json-file [enumMigrationJsonFile]",
@@ -218,6 +223,7 @@ async function generateInterfaces(
       legacyNoModelsForObjects: !!options.legacyModels,
       useStringUnionsInsteadOfEnums: !!options.useStringUnionsInsteadOfEnums,
       generateOnlyEnums: !!options.generateOnlyEnums,
+      generateTypeMap: !!options.generateTypeMap,
       generateResolverMap: !!options.generateResolverMap,
       mandatoryResolverTypes: !!options.mandatoryResolverTypes,
       enumNamesToMigrate,

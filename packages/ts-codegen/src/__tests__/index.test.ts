@@ -1621,6 +1621,10 @@ describe(generateTS, () => {
           readonly id: string;
       }
       export type Users = Admin | User;
+      export interface Query extends BaseModel {
+          readonly __typename?: "Query";
+          readonly node: Node;
+      }
       "
     `);
     expect(resolvers).toMatchInlineSnapshot(`
@@ -2285,20 +2289,20 @@ describe(generateTS, () => {
     "
     `);
     expect(legacyTypes).toMatchInlineSnapshot(`
-    "import * as Models from "./models.interface";
-    export * from "./models.interface";
-    export interface Scalars {
-        readonly ID: string;
-        readonly Int: number;
-        readonly Float: number;
-        readonly String: string;
-        readonly Boolean: boolean;
-    }
-    export interface Types {
-        readonly User: Models.User;
-        readonly UserInput: Models.UserInput;
-    }
-    "
+      "import * as Models from "./models.interface";
+      export * from "./models.interface";
+      export interface Scalars {
+          readonly ID: string;
+          readonly Int: number;
+          readonly Float: number;
+          readonly String: string;
+          readonly Boolean: boolean;
+      }
+      export interface Types {
+          readonly User: Models.User;
+          readonly UserInput: Models.UserInput;
+      }
+      "
     `);
   });
 });
