@@ -6,10 +6,7 @@
 import { TextDecoder } from "util";
 global.TextDecoder = TextDecoder as any;
 
-import {
-  GraphQLRuleTester,
-  ParserOptions,
-} from "@graphql-eslint/eslint-plugin";
+import { GraphQLRuleTester } from "./utils/graphql-rule-tester";
 import missingApolloKeyFieldsRule, {
   parseKeySpecifier,
   keyFieldsForType,
@@ -61,38 +58,40 @@ const TEST_SCHEMA = /* GraphQL */ `
 `;
 
 const WITH_SCHEMA = {
-  parserOptions: <ParserOptions>{
-    schema: TEST_SCHEMA,
-    operations: [
-      `fragment HasIdFields on HasId {
+  parserOptions: {
+    graphQLConfig: {
+      schema: TEST_SCHEMA,
+      documents: [
+        `fragment HasIdFields on HasId {
         id
       }`,
-      `fragment NestedHasIdFields on HasId {
+        `fragment NestedHasIdFields on HasId {
         ...HasIdFields
       }`,
-      `fragment DeeplyNestedHasIdFields on HasId {
+        `fragment DeeplyNestedHasIdFields on HasId {
         ...NestedHasIdFields
       }`,
-      `fragment NestedNameOnly on HasId {
+        `fragment NestedNameOnly on HasId {
         ...NameOnly
       }`,
-      `fragment NameOnly on HasId {
+        `fragment NameOnly on HasId {
         name
       }`,
-      `fragment InlineFragmentWithId on Vehicle {
+        `fragment InlineFragmentWithId on Vehicle {
         ...on Car {
           id
         }
       }`,
-      `fragment BookAuthorName on Book {
+        `fragment BookAuthorName on Book {
         author {
           name
         }
       }`,
-      `fragment AuthorName on Author {
+        `fragment AuthorName on Author {
         name
       }`,
-    ],
+      ],
+    },
   },
 };
 const ruleTester = new GraphQLRuleTester();
