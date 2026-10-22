@@ -251,8 +251,13 @@ export function createClient({
   };
 
   for (const remote of remotes) {
+    // Only a changed answer: the snapshot of any other is the object it was.
     remote.feed.subscribe((changes) =>
-      notify(changes.map((change) => String(change.value))),
+      notify(
+        changes
+          .filter((change) => change.operation === "answer")
+          .map((change) => String(change.value)),
+      ),
     );
   }
 

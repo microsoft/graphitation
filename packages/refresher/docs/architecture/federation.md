@@ -670,10 +670,13 @@ the answering session's revision, and it invalidates the reads of the refs it
 names, through external views and external refs alike. A live remote query
 visits instances as they appear, so a new message and its author's profile
 arrive in the store along with it. When nothing reads a query any more, the
-answering session lets it go, and the remote store
-[stops observing](stores.md#when-a-store-stops-observing) the instances no
-remaining query visits: it says so with a change, and answers them stale from
-what it kept until its own policy drops them.
+answering session lets it go, and the remote store stops observing the
+instances no remaining query visits. It keeps them, and answers them stale to
+whatever reads them anew, until its own policy drops them. Letting a query go
+hits no read: whether a query still brings an answer is not data, and the
+readers' results are as current as anything the store can tell them. Once a
+query brings them again, only answers that changed are delivered, and a pending
+query's progress reads from a view of its own, not from every instance.
 
 > **TODO.** How the asking session tells the answering session what to keep
 > live and when to let it go is part of [the protocol](#the-protocol).

@@ -131,8 +131,10 @@ export function remoteStore(name: StoreName): RemoteStore {
         ? data
         : annotate({ data, revision: stoppedAt });
     },
+    // Only a changed answer: whether a query still brings it is not data, and its readers
+    // keep what they hold. A reader reading it anew reads it stale; `opening` says syncing.
     matches: (ref, change) =>
-      change.operation !== "opening" && change.value === ref,
+      change.operation === "answer" && change.value === ref,
   });
   const opening = storeView<ExternalRef, boolean, RemoteHandle>({
     store: name,
@@ -187,8 +189,8 @@ export type RemoteConnection = {
   readonly handle: RemoteHandle;
 
   /**
-   * Announces the instances whose answers changed. Merge it into the runtime's feed: its
-   * revisions are its own.
+   * Announces the instances whose answers changed, and, for `entries` alone, those it stops
+   * or starts observing again. Merge it into the runtime's feed: its revisions are its own.
    */
   readonly feed: ChangeFeed;
 
@@ -209,9 +211,9 @@ export type RemoteConnection = {
 
   /**
    * Lets go of one `open` of the query. The last one stops it at once: the host stops it,
-   * and the store stops observing every instance only it brought. It says so with a change,
-   * which hits what read them, and answers them stale from what it kept until a query brings
-   * them again, or `keep` drops them; reading a dropped one fails.
+   * and the store stops observing every instance only it brought. What read them keeps what
+   * it holds: the store answers them stale from what it kept, to whatever reads them anew,
+   * until a query brings them again, or `keep` drops them; reading a dropped one fails.
    */
   close<V extends QueryableView, Followed>(
     query: ExternalQuery<V, Followed>,
@@ -298,7 +300,7 @@ export function connectRemote(
   let outbox: RemoteQuery[] | undefined;
 
   const change = (
-    operation: "answer" | "unobserved" | "opening",
+    operation: "answer" | "released" | "observed" | "opening",
     key: string,
   ): StoreChange => ({
     store: store.name,
@@ -341,30 +343,30 @@ export function connectRemote(
   };
 
   /**
-   * Lets the entry go, and stops observing every instance it alone brought: announces them,
-   * so what read them is hit, and keeps them to answer stale, dropping the ones released
-   * longest ago beyond `keep`.
+   * Lets the entry go, and stops observing every instance it alone brought, keeping them to
+   * answer stale, dropping the ones released longest ago beyond `keep`. Only `entries` is
+   * told: what read them keeps what it holds, so leaving a query reruns nothing.
    */
   const forget = (entry: Entry): void => {
     entries.delete(entry.key);
     const changes: StoreChange[] = [];
     settle(entry, changes);
-    const unobserved: string[] = [];
+    const released: string[] = [];
     for (const key of entry.brought) {
       const count = (holders.get(key) ?? 1) - 1;
       if (count > 0) {
         holders.set(key, count);
       } else {
         holders.delete(key);
-        unobserved.push(key);
-        changes.push(change("unobserved", key));
+        released.push(key);
+        changes.push(change("released", key));
       }
     }
     announce(changes);
-    if (unobserved.length === 0) return;
+    if (released.length === 0) return;
     // The runtime took the change at once: its revision is the one the store stopped at.
     const at = latestRevision();
-    for (const key of unobserved) stopped.set(key, at);
+    for (const key of released) stopped.set(key, at);
     // Whole releases go: an instance stops with the last query bringing it, never before
     // a root that reads it, so a kept root still reads all it brought. A reopened root is
     // read until its query answers, so neither its release nor any later one goes.
@@ -427,14 +429,14 @@ export function connectRemote(
         entry.brought.add(key);
         holders.set(key, (holders.get(key) ?? 0) + 1);
       }
-      // One kept since a close was read stale: the fresh answer reruns its readers, even unchanged.
       const kept = stopped.delete(key);
       const previous = values.get(key);
-      // An equal answer keeps its object, so what holds it sees no change.
+      // An equal answer keeps its object, and reruns nothing: what read it holds it already.
       const changed =
         previous === undefined || stableJson(previous) !== stableJson(answer);
       if (changed) values.set(key, answer);
-      if (kept || changed) changes.push(change("answer", key));
+      if (changed) changes.push(change("answer", key));
+      else if (kept) changes.push(change("observed", key));
     }
     settle(entry, changes);
     if (entry.status === "pending") {
