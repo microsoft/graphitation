@@ -38,6 +38,7 @@ import type {
   ValueError,
   View,
   ViewInstanceId,
+  StoreName,
 } from "../api.core";
 import type {
   ExecuteFn,
@@ -46,6 +47,7 @@ import type {
   ExecutionWave,
   ViewInstance,
 } from "../api.execution";
+import type { ViewInstanceDescriptor } from "../api.invalidation";
 import type { StoreRead } from "../api.stores";
 import { assertAlways, assertSometimes } from "../env/assert";
 import {
@@ -297,7 +299,7 @@ function followPin(context: ExecutionContext, pin: ViewInstance): void {
   if (internals?.kind !== "pin") return;
   assertAlways(context.env, isViewRef(ref));
   assertAlways(context.env, ref.view === internals.target);
-  assertAlways(context.env, pin.descriptor?.storeReads.length === 0);
+  assertAlways(context.env, pin.descriptor?.storeReads.size === 0);
   const pins = context.pins;
   if (pins !== undefined) {
     assertAlways(context.env, (pins.get(pin.id) ?? pin) === pin);
@@ -451,59 +453,85 @@ function completeReadsOf(
   const reads = context.inlineReads.get(instance);
   assertAlways(context.env, reads !== undefined);
   for (const callee of reads) completeReadsOf(context, incomplete, callee);
-  const storeReads: StoreRead[] = [];
-  const complete = collectReads(context, reads, storeReads);
-  assertAlways(context.env, complete);
+  assertAlways(context.env, readsComplete(context, reads));
+  const storeReads = collectReads(context, reads);
   applyOutcome(context, instance, storeReads, instance.data, instance.errors);
 }
 
+/** Whether every instance an instance read inline has settled, its own reads complete. */
+function readsComplete(
+  context: ExecutionContext,
+  reads: ReadonlySet<ViewInstance>,
+): boolean {
+  for (const callee of reads) {
+    if (callee.status === "running" || context.incomplete?.has(callee) === true)
+      return false;
+  }
+  return true;
+}
+
 /**
- * Adds the store reads of the instances an instance read inline. False while one of them
- * still runs or is itself incomplete.
+ * The store reads of the instances an instance read inline that have settled, grouped by
+ * store, each once. When they are all one instance's, that instance's are returned as they
+ * are: a descriptor's are never changed once made.
  */
 function collectReads(
   context: ExecutionContext,
   reads: ReadonlySet<ViewInstance>,
-  storeReads: StoreRead[],
-): boolean {
-  let complete = true;
+): StoreReads {
+  let first: StoreReads | undefined;
+  let merged: Map<StoreName, StoreRead[]> | undefined;
+  let count = 0;
   let seen: Set<StoreRead> | undefined;
   for (const callee of reads) {
-    if (
-      callee.status === "running" ||
-      context.incomplete?.has(callee) === true
-    ) {
-      complete = false;
+    if (callee.status === "running" || context.incomplete?.has(callee) === true)
       continue;
-    }
     const descriptor = callee.descriptor;
     assertAlways(context.env, descriptor !== undefined);
-    for (const read of descriptor.storeReads) {
-      seen = addUnique(storeReads, seen, read);
+    const found = descriptor.storeReads;
+    if (found.size === 0 || found === first) continue;
+    if (first === undefined) {
+      first = found;
+      continue;
+    }
+    if (merged === undefined) {
+      merged = new Map();
+      for (const [store, group] of first) {
+        merged.set(store, [...group]);
+        count += group.length;
+      }
+      if (count >= SMALL) seen = setOf(merged);
+    }
+    for (const [store, group] of found) {
+      let into = merged.get(store);
+      if (into === undefined) {
+        into = [];
+        merged.set(store, into);
+      }
+      for (const read of group) {
+        if (seen === undefined) {
+          if (into.includes(read)) continue;
+          into.push(read);
+          if (++count >= SMALL) seen = setOf(merged);
+        } else if (!seen.has(read)) {
+          seen.add(read);
+          into.push(read);
+        }
+      }
     }
   }
-  return complete;
+  return merged ?? first ?? NO_STORE_READS;
+}
+
+function setOf(storeReads: StoreReads): Set<StoreRead> {
+  const set = new Set<StoreRead>();
+  for (const group of storeReads.values())
+    for (const read of group) set.add(read);
+  return set;
 }
 
 /** Below this, a linear scan finds duplicates faster than a set: measured on V8. */
 const SMALL = 64;
-
-/** Appends `item` unless present; returns the set that tracks `items` once a scan is too slow. */
-function addUnique<T>(
-  items: T[],
-  seen: Set<T> | undefined,
-  item: T,
-): Set<T> | undefined {
-  if (seen === undefined) {
-    if (items.includes(item)) return undefined;
-    items.push(item);
-    return items.length < SMALL ? undefined : new Set(items);
-  }
-  if (seen.has(item)) return seen;
-  seen.add(item);
-  items.push(item);
-  return seen;
-}
 
 // Instances
 
@@ -511,7 +539,9 @@ function isMemo(view: AnyView): boolean {
   return view.deterministic !== false && view.memo === true;
 }
 
-const NO_STORE_READS: readonly StoreRead[] = Object.freeze([]);
+type StoreReads = ViewInstanceDescriptor["storeReads"];
+
+const NO_STORE_READS: StoreReads = new Map();
 
 /** Starts an instance `enter` left running: a derived view's or a pin's `resolve`, or a store view's read. */
 function start(context: ExecutionContext, instance: ViewInstance): void {
@@ -653,9 +683,10 @@ function takeCached(
 }
 
 /** Whether there are store reads, and each was answered as of the revision it was asked at. */
-function allExact(reads: readonly StoreRead[]): boolean {
-  for (const read of reads) if (!read.exact) return false;
-  return reads.length > 0;
+function allExact(reads: StoreReads): boolean {
+  for (const group of reads.values())
+    for (const read of group) if (!read.exact) return false;
+  return reads.size > 0;
 }
 
 /** Calls the `resolve` of a derived view or a pin, settling and delivering the instance when it answers at once. */
@@ -887,19 +918,23 @@ function settle(
   assertAlways(context.env, instance.depth <= context.maxDepth);
   const reads = instance.reads;
   assertAlways(context.env, reads !== undefined);
-  const storeReads: StoreRead[] = [];
-  if (own !== undefined) {
+  let storeReads: StoreReads;
+  if (own === undefined) {
+    if (reads.size > 0) context.inlineReads.set(instance, reads);
+    storeReads = collectReads(context, reads);
+    const complete = readsComplete(context, reads);
+    assertSometimes(
+      context.env,
+      !complete,
+      "An instance settles before every instance it read has",
+    );
+    if (!complete) (context.incomplete ??= new Set()).add(instance);
+  } else {
     assertAlways(context.env, reads.size === 0);
-    storeReads.push(own);
+    const internals = internalsOf(own.view);
+    assertAlways(context.env, internals?.kind === "store");
+    storeReads = new Map([[internals.store, [own]]]);
   }
-  if (reads.size > 0) context.inlineReads.set(instance, reads);
-  const complete = collectReads(context, reads, storeReads);
-  assertSometimes(
-    context.env,
-    !complete,
-    "An instance settles before every instance it read has",
-  );
-  if (!complete) (context.incomplete ??= new Set()).add(instance);
   assertAlways(context.env, instance.revision === context.startedAt);
   applyOutcome(context, instance, storeReads, data, errors);
   assertSometimes(
@@ -921,7 +956,7 @@ function settle(
 function applyOutcome(
   context: ExecutionContext,
   instance: ViewInstance,
-  collected: readonly StoreRead[],
+  collected: StoreReads,
   data: unknown,
   errors: readonly ValueError[],
 ): void {
@@ -935,20 +970,24 @@ function applyOutcome(
     assertAlways(context.env, errors.length === 0);
     assertSometimes(
       context.env,
-      collected.length > 0,
+      collected.size > 0,
       "A pin keeps an answer it read stores for",
     );
   }
   const storeReads = kept ? NO_STORE_READS : collected;
+  assertAlways(context.env, NO_STORE_READS.size === 0);
   const lagging = context.lagging;
   let oldest: number | undefined;
   if (lagging !== undefined) {
-    for (const read of storeReads) {
-      if (
-        lagging.has(read) &&
-        (oldest === undefined || read.revision < oldest)
-      ) {
-        oldest = read.revision;
+    for (const group of storeReads.values()) {
+      assertAlways(context.env, group.length > 0);
+      for (const read of group) {
+        if (
+          lagging.has(read) &&
+          (oldest === undefined || read.revision < oldest)
+        ) {
+          oldest = read.revision;
+        }
       }
     }
   }

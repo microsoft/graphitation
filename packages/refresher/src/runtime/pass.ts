@@ -8,10 +8,21 @@
  * pending pass if there is none. It starts once no pass runs, where the environment's
  * `scheduleUpdatePass` calls back, never during a call to it: its revision is
  * fixed at the latest delivered, and `invalidate` matches the changes through it against
- * the views of every subscribed query. A query with a stale view restarts in it, given
+ * the views of subscribed queries. A query with a stale view restarts in it, given
  * those as invalidated; a new one starts; others do not run. A pass with nothing to run
  * settles as it starts. An immediate run takes no pass: it runs at the latest revision, and
  * once subscribed, the next pass matches its views as any other's.
+ *
+ * A pass matches only the queries that read a store changed since the last match, so its
+ * cost follows what changed, not how many queries are subscribed. Only verified queries are
+ * filed by the stores their views read: subscribed, idle, and with every change through
+ * `cursor`, the last match's revision, matched against their views. So a match lifts a
+ * filed query's views to `cursor` and reads the log only from there; the view cache,
+ * sharing the descriptors, gains as much. A query leaves the files as it restarts or ends.
+ * As it subscribes idle, or a subscribed run finishes, it is filed if its views are valid
+ * through the latest revision; otherwise it is unverified, and the next match checks it
+ * whatever changed, each view from its own `validThrough`. Lifting claims only what the log
+ * holds: a store that stops observing says so with a change, which hits its reads.
  *
  * Every run fills a descriptor, which its result keeps until it is subscribed: an
  * unsubscribed one is never matched, and is collected with its result.
@@ -22,20 +33,32 @@
  * pass: a slow run, such as a streamed one, delays every query's next run.
  *
  * - The pass invalidates as its revision is fixed, so it matches changes through that
- *   revision, and advances the `validThrough` of every view descriptor no change reached to
- *   it.
+ *   revision, and advances the `validThrough` of every view descriptor it matched and no
+ *   change reached to it.
  * - After a restart, every descriptor it was given as invalidated and that its run did not
  *   replace leaves `views`: nothing advances a stale descriptor, so it would be reported
- *   again on every pass.
- * - Before the change log is trimmed past a subscribed view's `validThrough`, the view is
- *   validated, as the view cache does; otherwise every query would restart as unverifiable.
+ *   again on every pass that matches it.
+ * - The runtime keeps the edges results reported `traversed`. A run that lost one, as an
+ *   instance with edges ran again or left `views`, is collected once it finishes: every
+ *   view its roots no longer reach through edges leaves `views`, with its edges. Mark and
+ *   sweep, at a cost of the views kept, only after a run that may have orphaned some.
+ * - Before the change log is trimmed, a match moves `cursor` to the latest revision and
+ *   checks the views of running subscribed queries too, as the view cache validates;
+ *   otherwise every query would restart as unverifiable. It restarts nothing: a stale query
+ *   waits unverified for the next pass.
  *
  * View failures are values in a run's output: a failed instance stays in `views`, and a
  * change to what it read restarts the query. A driver that throws or rejects fails only its
  * query: a failed start rejects the run, and a failed restart ends the subscription.
  * Unsubscribing removes the descriptor from both passes and aborts its run.
  */
-import type { BindFn, PromiseOrValue, Revision } from "../api.core";
+import type {
+  BindFn,
+  PromiseOrValue,
+  Revision,
+  StoreName,
+  ViewInstanceId,
+} from "../api.core";
 import type { Environment } from "../api.env";
 import type {
   LatestRevisionFn,
@@ -63,7 +86,7 @@ import type {
   Runtime,
 } from "../api.runtime";
 import type { GetStoreFn } from "../api.stores";
-import { assertAlways } from "../env/assert";
+import { assertAlways, assertSometimes } from "../env/assert";
 import { operationError } from "../errors";
 import { execute } from "../execution/execute";
 import { invalidate } from "../invalidation/invalidate";
@@ -87,6 +110,9 @@ export type QueryState = {
   /** Whether `subscribe` was called. */
   subscribed: boolean;
 
+  /** While filed: the stores its `views` read, it is filed under. */
+  stores: Set<StoreName> | undefined;
+
   /** Set once subscribed, until it ends. */
   observer: QueryObserver | undefined;
 
@@ -95,6 +121,15 @@ export type QueryState = {
 
   /** Why it ended before it was subscribed: kept to tell the subscriber. */
   failure: Failure | undefined;
+
+  /**
+   * The edges its results reported `traversed`, each non-empty, under its source's id:
+   * `undefined` once a result reported none, as it is never collected then.
+   */
+  edges: Map<ViewInstanceId, readonly ViewInstanceId[]> | undefined;
+
+  /** Whether its run in flight lost an edge, so its roots may reach less: collected as it finishes. */
+  lost: boolean;
 };
 
 type Deferred = {
@@ -168,6 +203,60 @@ export function createPasses(args: PassesArgs): Passes {
   const subscribed = new Set<QueryState>();
   /** Queries with a run in flight, in a pass or not. */
   const inFlight = new Set<QueryState>();
+  /** For each store, the filed queries whose `views` read it. */
+  const readers = new Map<StoreName, Set<QueryState>>();
+  /** Subscribed idle queries not filed: the next match checks each view from its own `validThrough`. */
+  const unverified = new Set<QueryState>();
+  /** Every change through it was matched against the views of every filed query. */
+  let cursor = log.head;
+
+  /** A subscribed query turned idle: filed if verified through the latest revision, unverified otherwise. */
+  const admit = (state: QueryState) => {
+    assertAlways(env, subscribed.has(state));
+    assertAlways(env, state.controller === undefined);
+    const head = log.head;
+    for (const descriptor of state.descriptor.views.values()) {
+      if (descriptor.validThrough >= head) continue;
+      unverified.add(state);
+      requestPass();
+      return;
+    }
+    file(state);
+  };
+
+  /** Files a verified query under the stores its views read. */
+  const file = (state: QueryState) => {
+    assertAlways(env, state.stores === undefined);
+    assertAlways(env, !unverified.has(state));
+    const stores = new Set<StoreName>();
+    for (const descriptor of state.descriptor.views.values()) {
+      for (const name of descriptor.storeReads.keys()) stores.add(name);
+    }
+    for (const name of stores) {
+      let found = readers.get(name);
+      if (found === undefined) {
+        found = new Set();
+        readers.set(name, found);
+      }
+      found.add(state);
+    }
+    state.stores = stores;
+  };
+
+  /** Takes a query out of the files, or out of `unverified`: it restarts, or ends. */
+  const unfile = (state: QueryState) => {
+    unverified.delete(state);
+    const { stores } = state;
+    if (stores === undefined) return;
+    for (const name of stores) {
+      const found = readers.get(name);
+      assertAlways(env, found !== undefined);
+      const removed = found.delete(state);
+      assertAlways(env, removed);
+      if (found.size === 0) readers.delete(name);
+    }
+    state.stores = undefined;
+  };
 
   const requestPass = (): PendingPass => {
     pending ??= { queries: new Set() };
@@ -195,12 +284,12 @@ export function createPasses(args: PassesArgs): Passes {
     const revision = log.head;
     const pass: RunningPass = { revision, running: new Set() };
     running = pass;
-    const restarts = match(revision, false);
+    const restarts = match(false);
     for (const state of queries) pass.running.add(state);
-    for (const [state] of restarts) pass.running.add(state);
+    for (const state of restarts.keys()) pass.running.add(state);
     for (const state of queries) startIn(state, revision);
-    for (const [state, invalidated] of restarts)
-      restartIn(state, revision, invalidated);
+    for (const [state, stale] of restarts)
+      restartIn(state, revision, { stale });
     if (running === pass && pass.running.size === 0) settle();
   };
 
@@ -215,24 +304,65 @@ export function createPasses(args: PassesArgs): Passes {
   };
 
   /**
-   * Matches the views of every subscribed query against the changes through the latest
-   * revision, `invalidate` called once, and advances each view no change reached to it.
-   * Returns the idle queries with stale views; `all` matches running ones too.
+   * Matches the changes through the latest revision, `invalidate` called once, against the
+   * views of the filed queries reading a store changed since `cursor`, lifted to it first,
+   * and of the unverified ones; `validating` adds running subscribed ones. Advances each view
+   * no change reached to the latest revision, files each unverified query found valid, and
+   * returns the queries to restart, each with its stale views. `validating` restarts none:
+   * a stale query waits unverified for the next pass.
    */
   const match = (
-    revision: Revision,
-    all: boolean,
-  ): (readonly [QueryState, InvalidateResult<ViewInstanceDescriptor>])[] => {
-    const restarts: (readonly [
-      QueryState,
-      InvalidateResult<ViewInstanceDescriptor>,
-    ])[] = [];
+    validating: boolean,
+  ): Map<QueryState, Invalidated<ViewInstanceDescriptor>[]> => {
+    const head = log.head;
+    const previous = cursor;
+    assertAlways(env, log.tail <= previous);
+    assertAlways(env, previous <= head);
+    cursor = head;
+    let filed: ReadonlySet<QueryState> = NO_QUERIES;
+    let merged: Set<QueryState> | undefined;
+    if (previous < head) {
+      let changed: Set<StoreName> | undefined;
+      for (const delivery of log.since(previous)) {
+        for (const change of delivery.changes) {
+          if (changed?.has(change.store) === true) continue;
+          (changed ??= new Set()).add(change.store);
+          const found = readers.get(change.store);
+          if (found === undefined) continue;
+          // One store's readers are taken as they are: copied only to merge another's.
+          if (filed.size === 0) {
+            filed = found;
+            continue;
+          }
+          if (merged === undefined) filed = merged = new Set(filed);
+          for (const state of found) merged.add(state);
+        }
+      }
+    }
     const descriptors: ViewInstanceDescriptor[] = [];
-    for (const state of subscribed) {
-      if (!all && state.controller !== undefined) continue;
+    for (const state of filed) {
+      for (const descriptor of state.descriptor.views.values()) {
+        // Every change through `previous` was matched against it.
+        if (descriptor.validThrough < previous)
+          descriptor.validThrough = previous;
+        descriptors.push(descriptor);
+      }
+    }
+    for (const state of unverified) {
       for (const descriptor of state.descriptor.views.values())
         descriptors.push(descriptor);
     }
+    if (validating) {
+      for (const state of inFlight) {
+        if (!subscribed.has(state)) continue;
+        for (const descriptor of state.descriptor.views.values())
+          descriptors.push(descriptor);
+      }
+    }
+    const restarts = new Map<
+      QueryState,
+      Invalidated<ViewInstanceDescriptor>[]
+    >();
     if (descriptors.length === 0) return restarts;
     const { stale } = invalidate({ env, changes: log, descriptors });
     let staleBy:
@@ -241,19 +371,42 @@ export function createPasses(args: PassesArgs): Passes {
     for (const invalidated of stale) {
       (staleBy ??= new Map()).set(invalidated.descriptor, invalidated);
     }
-    for (const state of subscribed) {
-      if (!all && state.controller !== undefined) continue;
-      let invalidated: Invalidated<ViewInstanceDescriptor>[] | undefined;
+    /** Advances the query's views no change reached to `head`, and returns its stale ones. */
+    const verify = (state: QueryState) => {
+      let found: Invalidated<ViewInstanceDescriptor>[] | undefined;
       for (const descriptor of state.descriptor.views.values()) {
-        const found = staleBy?.get(descriptor);
-        if (found !== undefined) (invalidated ??= []).push(found);
-        else if (descriptor.validThrough < revision)
-          descriptor.validThrough = revision;
+        const hit = staleBy?.get(descriptor);
+        if (hit !== undefined) (found ??= []).push(hit);
+        else if (descriptor.validThrough < head) descriptor.validThrough = head;
       }
-      if (invalidated !== undefined && state.controller === undefined) {
-        restarts.push([state, { stale: invalidated }]);
+      return found;
+    };
+    // `filed` may be a store's live readers: done before filing any unverified query into them.
+    for (const state of filed) {
+      const found = verify(state);
+      if (found === undefined) continue;
+      unfile(state);
+      if (validating) unverified.add(state);
+      else restarts.set(state, found);
+    }
+    for (const state of unverified) {
+      const found = verify(state);
+      if (found === undefined) {
+        unverified.delete(state);
+        file(state);
+      } else if (!validating) {
+        unverified.delete(state);
+        restarts.set(state, found);
       }
     }
+    if (validating) {
+      for (const state of inFlight) if (subscribed.has(state)) verify(state);
+    }
+    assertSometimes(
+      env,
+      validating && unverified.size > 0,
+      "Validating ahead of a trim finds a stale view",
+    );
     return restarts;
   };
 
@@ -326,18 +479,18 @@ export function createPasses(args: PassesArgs): Passes {
     deliver: (result: QueryResult<unknown>) => T,
   ): T => {
     if (!("initialResult" in result)) {
-      absorb(state.descriptor, result);
+      absorb(state, result);
       const delivered = deliver(result);
       finish(state, invalidated, undefined);
       return delivered;
     }
-    absorb(state.descriptor, result.initialResult);
+    absorb(state, result.initialResult);
     const rest = createBuffer<QueryPayload<unknown>>();
     const delivered = deliver({
       initialResult: result.initialResult,
       subsequentResults: rest,
     });
-    void pump(state.descriptor, result.subsequentResults, rest, (failure) =>
+    void pump(state, result.subsequentResults, rest, (failure) =>
       finish(state, invalidated, failure),
     );
     return delivered;
@@ -352,26 +505,58 @@ export function createPasses(args: PassesArgs): Passes {
     inFlight.delete(state);
     state.controller = undefined;
     const { views } = state.descriptor;
+    const { edges } = state;
     if (failure === undefined && invalidated !== undefined) {
       for (const { descriptor } of invalidated.stale) {
-        if (views.get(descriptor.id) === descriptor)
-          views.delete(descriptor.id);
+        if (views.get(descriptor.id) !== descriptor) continue;
+        views.delete(descriptor.id);
+        if (edges?.delete(descriptor.id) === true) state.lost = true;
       }
     }
+    if (failure === undefined && state.lost && edges !== undefined)
+      collect(state, edges);
+    state.lost = false;
     if (!state.ended) {
       if (failure !== undefined || views.size === 0) end(state, failure);
-      else if (
-        state.observer !== undefined &&
-        latestRevision() > state.revision
-      )
-        requestPass();
+      else if (state.observer !== undefined) admit(state);
     }
     leavePass(state);
   };
 
+  /** Drops every view the query's roots no longer reach through `edges`, with its edges. */
+  const collect = (
+    state: QueryState,
+    edges: Map<ViewInstanceId, readonly ViewInstanceId[]>,
+  ) => {
+    const { views, roots } = state.descriptor;
+    const reached = new Set<ViewInstanceId>();
+    const stack: ViewInstanceId[] = [];
+    for (const root of roots)
+      stack.push(codec.instanceKey(root.view, root.args));
+    for (let id = stack.pop(); id !== undefined; id = stack.pop()) {
+      if (reached.has(id) || !views.has(id)) continue;
+      reached.add(id);
+      const targets = edges.get(id);
+      if (targets !== undefined)
+        for (const target of targets) stack.push(target);
+    }
+    const before = views.size;
+    if (reached.size < views.size)
+      for (const id of views.keys()) if (!reached.has(id)) views.delete(id);
+    if (reached.size < edges.size)
+      for (const id of edges.keys()) if (!reached.has(id)) edges.delete(id);
+    assertAlways(env, views.size === reached.size);
+    assertAlways(env, edges.size <= views.size);
+    assertSometimes(
+      env,
+      views.size < before,
+      "A collection drops a view its roots no longer reach",
+    );
+  };
+
   const end = (state: QueryState, failure: Failure | undefined) => {
     state.ended = true;
-    subscribed.delete(state);
+    if (subscribed.delete(state)) unfile(state);
     const { observer } = state;
     if (observer === undefined) {
       state.failure = failure;
@@ -448,8 +633,7 @@ export function createPasses(args: PassesArgs): Passes {
       return subscription;
     }
     subscribed.add(state);
-    if (state.controller === undefined && latestRevision() > state.revision)
-      requestPass();
+    if (state.controller === undefined) admit(state);
     return subscription;
   };
 
@@ -457,7 +641,7 @@ export function createPasses(args: PassesArgs): Passes {
     state.observer = undefined;
     if (state.ended) return;
     state.ended = true;
-    subscribed.delete(state);
+    if (subscribed.delete(state)) unfile(state);
     if (!state.restarting) return;
     state.controller?.abort(
       operationError({
@@ -491,9 +675,12 @@ export function createPasses(args: PassesArgs): Passes {
       restarting: false,
       started: undefined,
       subscribed: false,
+      stores: undefined,
       observer: undefined,
       ended: false,
       failure: undefined,
+      edges: new Map(),
+      lost: false,
     };
     if (immediate) {
       return launch(state, log.head, undefined, (first) =>
@@ -512,7 +699,8 @@ export function createPasses(args: PassesArgs): Passes {
       if (subscribed.size > 0) requestPass();
     },
     validate() {
-      if (subscribed.size > 0) match(log.head, true);
+      match(true);
+      if (unverified.size > 0) requestPass();
     },
     dispose(reason) {
       if (disposal !== undefined) return;
@@ -528,34 +716,46 @@ export function createPasses(args: PassesArgs): Passes {
   };
 }
 
-/** Each payload's waves into `views`, what pins pinned included, and its footprint, as it arrives. */
-function absorb(descriptor: QueryDescriptor, payload: QueryPayload<unknown>) {
-  const { views } = descriptor;
+/**
+ * Each payload's waves into `views`, what pins pinned included, each losing its edges, then
+ * the edges it traversed, and its footprint, as it arrives.
+ */
+function absorb(state: QueryState, payload: QueryPayload<unknown>) {
   for (const wave of payload.waves) {
-    for (const instance of wave.evaluated) keepDescriptor(views, instance);
-    for (const target of wave.pinned.evaluated) keepDescriptor(views, target);
+    for (const instance of wave.evaluated) keepDescriptor(state, instance);
+    for (const target of wave.pinned.evaluated) keepDescriptor(state, target);
   }
-  if (payload.footprint !== undefined) descriptor.footprint = payload.footprint;
+  if (payload.footprint !== undefined)
+    state.descriptor.footprint = payload.footprint;
+  const { traversed } = payload;
+  const { edges } = state;
+  if (traversed === undefined) state.edges = undefined;
+  else if (edges !== undefined) {
+    for (const [id, targets] of traversed) {
+      if (targets.length === 0) continue;
+      const kept = edges.get(id);
+      edges.set(id, kept === undefined ? targets : [...kept, ...targets]);
+    }
+  }
 }
 
-function keepDescriptor(
-  views: QueryDescriptor["views"],
-  instance: ViewInstance,
-): void {
+function keepDescriptor(state: QueryState, instance: ViewInstance): void {
   const evaluated = instance.descriptor;
-  if (evaluated !== undefined) views.set(evaluated.id, evaluated);
+  if (evaluated === undefined) return;
+  state.descriptor.views.set(evaluated.id, evaluated);
+  if (state.edges?.delete(evaluated.id) === true) state.lost = true;
 }
 
 /** Reads a run's later parts as they come, whether its consumer reads them or not. */
 async function pump(
-  descriptor: QueryDescriptor,
+  state: QueryState,
   results: AsyncIterable<QueryPayload<unknown>>,
   rest: Buffer<QueryPayload<unknown>>,
   finished: (failure: Failure | undefined) => void,
 ): Promise<void> {
   try {
     for await (const payload of results) {
-      absorb(descriptor, payload);
+      absorb(state, payload);
       rest.push(payload);
     }
   } catch (error) {
@@ -584,6 +784,8 @@ function notify(call: () => void) {
 }
 
 function ignore() {}
+
+const NO_QUERIES: ReadonlySet<QueryState> = new Set();
 
 /** Payloads kept for one consumer until it reads them. */
 type Buffer<T> = AsyncIterable<T> & {

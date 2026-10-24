@@ -129,12 +129,24 @@ function checkInstance(
     assert.deepEqual(settledOf(instance).data, outcome.data);
     assert.deepEqual(settledOf(instance).errors, []);
   }
-  const reads = settledOf(instance).descriptor.storeReads.map((read) => {
-    assert.equal(read.revision, REVISION);
-    return `${String(read.view.name).slice(1)}:${String(read.args)}`;
-  });
+  const reads = [...settledOf(instance).descriptor.storeReads.values()]
+    .flat()
+    .map((read) => {
+      assert.equal(read.revision, REVISION);
+      return `${String(read.view.name).slice(1)}:${String(read.args)}`;
+    });
   assert.equal(new Set(reads).size, reads.length, "store reads repeat");
   assert.deepEqual(new Set(reads), outcome.reads);
+  const { storeReads } = settledOf(instance).descriptor;
+  assert.deepEqual(
+    new Set(storeReads.keys()),
+    new Set([...outcome.reads].map((read) => `store${read.split(":")[0]}`)),
+  );
+  for (const [store, group] of storeReads) {
+    assert.ok(group.length > 0, `${store} holds no read`);
+    for (const read of group)
+      assert.equal(read.view.name, `s${store.slice("store".length)}`);
+  }
 }
 
 for (const [name, env] of ENVIRONMENTS) {

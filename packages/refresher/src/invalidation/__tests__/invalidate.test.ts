@@ -158,7 +158,13 @@ function buildWorld(spec: WorldSpec): World {
   const copies = new Map<ViewInstanceDescriptor, ViewInstanceDescriptor>();
   const descriptors = spec.descriptors.map(
     (each, index): ViewInstanceDescriptor => {
-      const storeReads = each.reads.map((read) => reads[read]!);
+      const storeReads = new Map<string, StoreRead[]>();
+      for (const read of each.reads) {
+        const store = VIEW_STORES[spec.reads[read]!.view]!;
+        const group = storeReads.get(store) ?? [];
+        storeReads.set(store, group);
+        group.push(reads[read]!);
+      }
       const id = `owner:${index}`;
       const made = {
         view: OWNER,
@@ -167,7 +173,10 @@ function buildWorld(spec: WorldSpec): World {
         storeReads,
         validThrough: each.validThrough,
       };
-      copies.set(made, { ...made, storeReads: [...storeReads] });
+      const copied = new Map(
+        [...storeReads].map(([store, group]) => [store, [...group]]),
+      );
+      copies.set(made, { ...made, storeReads: copied });
       return made;
     },
   );
@@ -214,7 +223,7 @@ function checkHit(
   assert.equal(reason.kind, "hit");
   if (reason.kind !== "hit") return;
   assert.ok(
-    descriptor.storeReads.includes(reason.read),
+    [...descriptor.storeReads.values()].flat().includes(reason.read),
     "the hit read is not the descriptor's",
   );
   const start = Math.max(reason.read.revision, descriptor.validThrough);
@@ -273,14 +282,16 @@ for (const [name, run] of IMPLEMENTATIONS) {
               continue;
             }
             const unverifiable = each.validThrough < log.tail;
-            const hit = each.storeReads.some((read) =>
-              hitBetween(
-                world.deliveries,
-                read,
-                Math.max(read.revision, each.validThrough),
-                Infinity,
-              ),
-            );
+            const hit = [...each.storeReads.values()]
+              .flat()
+              .some((read) =>
+                hitBetween(
+                  world.deliveries,
+                  read,
+                  Math.max(read.revision, each.validThrough),
+                  Infinity,
+                ),
+              );
             if (!unverifiable && !hit) {
               assert.equal(invalidated, undefined, "valid, but reported");
               continue;

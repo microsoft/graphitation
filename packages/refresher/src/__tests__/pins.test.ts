@@ -277,7 +277,7 @@ void describe("pins", () => {
               return;
             }
             assert.deepEqual(Reflect.get(Object(root.data), "args"), pinned);
-            assert.deepEqual(root.descriptor?.storeReads, []);
+            assert.equal(root.descriptor?.storeReads.size, 0);
             const target = [...latest.values()].find(
               (instance) => instance.view === item && instance.args === pinned,
             );

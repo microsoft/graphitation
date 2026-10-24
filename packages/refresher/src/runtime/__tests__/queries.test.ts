@@ -6,9 +6,11 @@ import type {
   AnyView,
   PromiseOrValue,
   QueryableView,
+  ReferenceableView,
   Revision,
 } from "../../api.core";
 import type { Environment } from "../../api.env";
+import type { ViewInstanceDescriptor } from "../../api.invalidation";
 import type { QueryDriver, QueryPayload, QueryResult } from "../../api.queries";
 import type {
   CreateRuntimeFn,
@@ -455,7 +457,7 @@ const disposeArb = fc.constant<Command>({
   toString: () => "dispose()",
 });
 
-async function settle(real: Real) {
+async function settle(real: { readonly env: ManualEnvironment }) {
   for (let round = 0; round < 1000; round++) {
     real.env.flush();
     await tick();
@@ -555,6 +557,19 @@ const commandsArb = fc.commands(
     ),
   ],
   { maxCommands: 40, size: "max" },
+);
+
+/** Steps of the oracle property: runs subscribed once they arrive, deliveries, and settling. */
+const oracleStepArb = fc.oneof(
+  fc.record({
+    kind: fc.constant("run" as const),
+    keys: fc.uniqueArray(fc.nat(KEYS - 1), { minLength: 1 }),
+  }),
+  fc.record({
+    kind: fc.constant("deliver" as const),
+    keys: fc.uniqueArray(fc.nat(KEYS - 1)),
+  }),
+  fc.record({ kind: fc.constant("settle" as const) }),
 );
 
 /** A runtime over cells 0 to `KEYS - 1`, each 0, at `revision`. */
@@ -665,6 +680,121 @@ for (const [name, create] of IMPLEMENTATIONS) {
           },
         ),
       );
+    });
+  });
+
+  void describe(`${name}: what a restart is told is stale`, () => {
+    void it("tells each restart exactly the views a delivered change hit since they were read", async () => {
+      let restarts = 0;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.boolean(),
+          fc.boolean(),
+          fc.array(oracleStepArb, { maxLength: 30 }),
+          async (async, viewCache, steps) => {
+            const env = manualEnvironment();
+            const { runtime, feed, cells, root } = setup(
+              create,
+              env,
+              1,
+              async,
+              viewCache,
+            );
+            const delivered: {
+              readonly revision: Revision;
+              readonly keys: readonly number[];
+            }[] = [];
+            /** Whether a change to one of `read`'s keys was delivered after it, through `head`. */
+            const hit = (descriptor: ViewInstanceDescriptor, head: Revision) =>
+              [...descriptor.storeReads.values()]
+                .flat()
+                .some((read) =>
+                  delivered.some(
+                    ({ revision, keys }) =>
+                      revision > read.revision &&
+                      revision <= head &&
+                      keys.includes(read.args as number),
+                  ),
+                );
+            const inner = createSimpleDriver();
+            const driver: QueryDriver<Output, never, never> = {
+              start: (args) => inner.start(args),
+              restart(args) {
+                restarts++;
+                const head = args.context.revision;
+                const told = new Set<ViewInstanceDescriptor>();
+                for (const { descriptor, reason } of args.invalidated.stale) {
+                  assert.ok(!told.has(descriptor), "told twice");
+                  told.add(descriptor);
+                  assert.equal(
+                    args.descriptor.views.get(descriptor.id),
+                    descriptor,
+                    "not current",
+                  );
+                  assert.equal(
+                    reason.kind,
+                    "hit",
+                    "unverifiable with nothing trimmed",
+                  );
+                  if (reason.kind !== "hit") continue;
+                  assert.ok(
+                    [...descriptor.storeReads.values()]
+                      .flat()
+                      .includes(reason.read),
+                    "a read it never made",
+                  );
+                  assert.ok(
+                    reason.revision > reason.read.revision,
+                    "a change before the read",
+                  );
+                  assert.ok(
+                    reason.revision <= head,
+                    "a change after the restart's revision",
+                  );
+                  assert.equal(
+                    reason.change.value,
+                    reason.read.args,
+                    "a change that misses",
+                  );
+                }
+                for (const descriptor of args.descriptor.views.values()) {
+                  assert.equal(
+                    told.has(descriptor),
+                    hit(descriptor, head),
+                    "stale views differ",
+                  );
+                }
+                return inner.restart(args);
+              },
+            };
+            let revision = 1;
+            for (const step of steps) {
+              if (step.kind === "run") {
+                const roots = step.keys.map((key) => createRef(root, key));
+                void Promise.resolve(runtime.run({ driver, roots })).then(
+                  (result) => result.subscribe({ next: () => undefined }),
+                );
+              } else if (step.kind === "deliver") {
+                revision++;
+                for (const key of step.keys) cells.set(key, revision);
+                delivered.push({ revision, keys: step.keys });
+                feed.deliver(
+                  step.keys.map((key) => ({
+                    store: "cells",
+                    operation: "put",
+                    value: key,
+                  })),
+                  revision,
+                );
+              } else {
+                await settle({ env });
+              }
+            }
+            await settle({ env });
+          },
+        ),
+      );
+      assert.ok(restarts > 0, "no run restarted");
     });
   });
 
@@ -792,6 +922,89 @@ for (const [name, create] of IMPLEMENTATIONS) {
       const parts: QueryPayload<Output>[] = [];
       for await (const part of result.subsequentResults) parts.push(part);
       assert.deepEqual([...valuesOf(parts[0]!)], [[1, 0]]);
+    });
+
+    void it("keeps subscribed exactly what its roots reach through the edges its results traversed, as its graph is rewired", async () => {
+      const NODES = 6;
+      const NEXT = "next";
+      const targetsArb = fc.array(fc.nat(NODES - 1), { maxLength: 3 });
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(targetsArb, { minLength: NODES, maxLength: NODES }),
+          fc.array(fc.tuple(fc.nat(NODES - 1), targetsArb), { maxLength: 12 }),
+          async (initial, rewirings) => {
+            const env = manualEnvironment();
+            const feed = feedAt(1);
+            const links = new Map(
+              initial.map((targets, node) => [node, targets]),
+            );
+            const runtime = create({ env, feed, store: () => links });
+            const linksOf = storeView({
+              store: "links",
+              name: "links",
+              resolve: (node: number, { store }: StoreViewContext) =>
+                (store as ReadonlyMap<number, readonly number[]>).get(node),
+              matches: (node: number, stored: StoreChange) =>
+                stored.value === node,
+            });
+            const node: AnyView = view({
+              name: "node",
+              resolve: (at: number, context) =>
+                (context.read(linksOf, at) as readonly number[]).map((target) =>
+                  context.ref(node as ReferenceableView<number>, target, {
+                    tags: [NEXT],
+                  }),
+                ),
+            });
+            const reachable = () => {
+              const reached = new Set<number>();
+              const stack = [0];
+              for (let at = stack.pop(); at !== undefined; at = stack.pop()) {
+                if (reached.has(at)) continue;
+                reached.add(at);
+                stack.push(...links.get(at)!);
+              }
+              return reached;
+            };
+            const inner = createSimpleDriver([NEXT]);
+            let views: ReadonlyMap<unknown, ViewInstanceDescriptor> | undefined;
+            let restarts = 0;
+            const driver: QueryDriver<Output, never, never> = {
+              start: (args) => inner.start(args),
+              restart: (args) => {
+                restarts++;
+                views = args.descriptor.views;
+                return inner.restart(args);
+              },
+            };
+            const result = runtime.run({
+              driver,
+              roots: [createRef(node, 0)],
+              immediate: true,
+            });
+            assert.ok(!(result instanceof Promise));
+            result.subscribe({ next: () => undefined });
+            let revision = 1;
+            for (const [rewired, targets] of rewirings) {
+              const reached = reachable().has(rewired);
+              const before = restarts;
+              links.set(rewired, targets);
+              feed.deliver(
+                [{ store: "links", operation: "put", value: rewired }],
+                ++revision,
+              );
+              env.flush();
+              assert.equal(restarts - before, reached ? 1 : 0);
+              if (views === undefined) continue;
+              const subscribed = [...views.values()].map(
+                ({ args }) => args as number,
+              );
+              assert.deepEqual(new Set(subscribed), reachable());
+            }
+            runtime.dispose();
+          },
+        ),
+      );
     });
 
     void it("completes a subscription at once when its run evaluated nothing", async () => {

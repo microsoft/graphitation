@@ -11,7 +11,7 @@
  *
  * Driver-author vocabulary, separate from the consumer contract in `./api.core`.
  */
-import type { AnyView, Revision, ViewInstanceId } from "./api.core";
+import type { AnyView, Revision, StoreName, ViewInstanceId } from "./api.core";
 import type { Environment } from "./api.env";
 import type { StoreChange, StoreRead } from "./api.stores";
 
@@ -77,11 +77,14 @@ export type ViewInstanceDescriptor = {
   readonly id: ViewInstanceId;
 
   /**
-   * Every store read its result depends on, each recorded once: its own view's and those
-   * of every view it read inline, recursively, memoized or not. A memoized view's are the
-   * same objects its own instance holds, with that instance's revisions.
+   * Every store read its result depends on, grouped by the store read as the reads are
+   * made, each recorded once: its own view's and those of every view it read inline,
+   * recursively, memoized or not. A memoized view's are the same objects its own instance
+   * holds, with that instance's revisions. Its keys are what a holder indexes it by, and
+   * what a change must touch to hit it; each holds at least one read. Shared, not copied:
+   * an instance whose reads are all one other instance's may hold that one's.
    */
-  readonly storeReads: readonly StoreRead[];
+  readonly storeReads: ReadonlyMap<StoreName, readonly StoreRead[]>;
 
   /**
    * The latest revision it is known valid at: its instance's `revision` when it settles,

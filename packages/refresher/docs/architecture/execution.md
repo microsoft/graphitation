@@ -124,6 +124,15 @@ A query is a driver and its roots. How many executions a run takes is the
 driver's choice, and a restart starts a new one. Several drivers share one
 execution behind a driver that composes them.
 
+Only the driver knows which refs it follows, so each result reports the edges
+it traversed: under each instance it searched, the instances it leads to. The
+runtime keeps them, replacing an instance's edges when it runs again. When a
+restart drops an edge, as when a chat is no longer selected, the runtime walks
+the edges from the roots once the run finishes, and stops matching changes
+against every instance it no longer reaches, as a garbage collector would. A
+driver that reports no edges keeps everything a long-lived query ever read
+subscribed, and every update pass pays for it.
+
 Views never see drivers, so a view's result depends only on its arguments and
 data, and instances are shared across drivers.
 

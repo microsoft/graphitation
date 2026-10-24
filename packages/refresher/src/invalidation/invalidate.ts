@@ -3,7 +3,8 @@
  * following `../api.invalidation`.
  *
  * It scans the log once, from the earliest revision any descriptor needs, grouping changes
- * by store into parallel arrays, so a read is tested only against changes to its own store.
+ * by store into parallel arrays; a descriptor's reads come grouped by store too, so only
+ * the reads of a store that changed are tested, and only against changes to it.
  * A read shared by several descriptors, as every reader of one memoized view shares its
  * reads, is matched once per revision it is asked from, and the answer is reused.
  */
@@ -27,6 +28,7 @@ const UNVERIFIABLE: Unverifiable = Object.freeze({ kind: "unverifiable" });
 
 /** The changes to one store, in revision order, with the revision of each. */
 type StoreChanges = {
+  readonly store: StoreName;
   readonly revisions: number[];
   readonly changes: StoreChange[];
 };
@@ -53,7 +55,7 @@ export const invalidate: InvalidateFn = <T extends ViewInstanceDescriptor>(
   let from = head;
   for (const each of descriptors) {
     const validThrough = each.validThrough;
-    if (each.storeReads.length === 0) continue;
+    if (each.storeReads.size === 0) continue;
     if (validThrough >= tail && validThrough < from) from = validThrough;
   }
   const byStore = from < head ? changesByStore(env, log, from) : undefined;
@@ -104,7 +106,7 @@ function changesByStore(
     for (const change of delivery.changes) {
       let group = byStore.get(change.store);
       if (group === undefined) {
-        group = { revisions: [], changes: [] };
+        group = { store: change.store, revisions: [], changes: [] };
         byStore.set(change.store, group);
       }
       group.revisions.push(revision);
@@ -121,16 +123,44 @@ function firstHit(
   scans: Map<StoreRead, Scan>,
   descriptor: ViewInstanceDescriptor,
 ): StaleReason | undefined {
-  for (const read of descriptor.storeReads) {
+  const own = descriptor.storeReads;
+  // Walks the smaller side: the stores it read, or the stores that changed.
+  if (own.size < byStore.size) {
+    for (const [store, reads] of own) {
+      const group = byStore.get(store);
+      if (group === undefined) continue;
+      const hit = hitIn(env, scans, group, reads, descriptor.validThrough);
+      if (hit !== undefined) return hit;
+    }
+  } else {
+    for (const group of byStore.values()) {
+      const reads = own.get(group.store);
+      if (reads === undefined) continue;
+      const hit = hitIn(env, scans, group, reads, descriptor.validThrough);
+      if (hit !== undefined) return hit;
+    }
+  }
+  return undefined;
+}
+
+/** The first of the reads, all of the group's store, a change of the group hits, if any. */
+function hitIn(
+  env: Environment,
+  scans: Map<StoreRead, Scan>,
+  group: StoreChanges,
+  reads: readonly StoreRead[],
+  validThrough: number,
+): StaleReason | undefined {
+  assertAlways(env, reads.length > 0);
+  for (const read of reads) {
     const internals = internalsOf(read.view);
     assertAlways(
       env,
       internals?.kind === "store",
       "A store read names a store view",
     );
-    const group = byStore.get(internals.store);
-    if (group === undefined) continue;
-    const start = Math.max(read.revision, descriptor.validThrough);
+    assertAlways(env, internals.store === group.store);
+    const start = Math.max(read.revision, validThrough);
     const hit = scanOf(scans, group, read, internals.matches, start);
     if (hit < 0) continue;
     return {

@@ -12,7 +12,7 @@ import type {
   SimpleDriverOutput,
 } from "../api.queries";
 import { isValueError } from "../errors";
-import { createRef } from "../views/ref";
+import { createRef, isViewRef } from "../views/ref";
 
 export type { CreateSimpleDriverFn, SimpleDriverOutput };
 
@@ -26,8 +26,11 @@ export type { CreateSimpleDriverFn, SimpleDriverOutput };
  * leaving an input without a default open is not followed.
  *
  * A restart runs the stale instances' refs the same way, but follows no ref to a valid instance: its
- * data, and so what it leads to, is as the earlier run left it. Instances no longer reached
- * stay subscribed: a change to one restarts the query with output nothing refers to.
+ * data, and so what it leads to, is as the earlier run left it.
+ *
+ * Its results report as `traversed` what each instance it searched leads to: the tagged refs
+ * in its data, followed or not, and its target when it is a pin. So the runtime drops what
+ * a restart's instances no longer lead to.
  *
  * Every instance a wave evaluated counts as reached, those its pins pinned included, and a ref
  * to an instance already reached is not followed again.
@@ -60,8 +63,14 @@ function runSimple(
 ): PromiseOrValue<QueryPayload<SimpleDriverOutput, never>> {
   const { codec, bind } = context;
   const instances = new Map<ViewInstanceId, ViewInstance>();
-  if (roots.length === 0)
-    return { output: { roots: [], instances }, waves: [] };
+  if (roots.length === 0) {
+    return {
+      output: { roots: [], instances },
+      waves: [],
+      traversed: new Map(),
+    };
+  }
+  const traversed = new Map<ViewInstanceId, ViewInstanceId[]>();
 
   /** The tagged refs to instances not reached yet, in the last wave's instances not searched before. */
   const nextRefs = (state: ExecutionState): Ref[] | undefined => {
@@ -75,18 +84,28 @@ function runSimple(
     // All recorded before any is searched: a pin's ref leads to a target the wave ran.
     for (const instance of wave.evaluated) reach(instance);
     for (const target of wave.pinned.evaluated) reach(target);
-    if (tags.size === 0) return undefined;
     let next: Ref[] | undefined;
     for (const instance of unsearched) {
-      if (instance.data === null) continue;
-      for (const found of codec.findRefs(instance.view, instance.data).refs) {
-        if (!isTagged(found, tags)) continue;
-        const ref = bindDefaults(bind, found);
-        if (ref === undefined) continue;
-        const id = codec.instanceKey(ref.view, ref.args);
-        if (instances.has(id) || isValid?.(id) === true) continue;
-        (next ??= []).push(ref);
+      const { data } = instance;
+      if (data === null) continue;
+      let targets: ViewInstanceId[] | undefined;
+      if (isViewRef(data)) {
+        const pinned = bindDefaults(bind, data);
+        if (pinned !== undefined)
+          (targets ??= []).push(codec.instanceKey(pinned.view, pinned.args));
       }
+      if (tags.size > 0) {
+        for (const found of codec.findRefs(instance.view, data).refs) {
+          if (!isTagged(found, tags)) continue;
+          const ref = bindDefaults(bind, found);
+          if (ref === undefined) continue;
+          const id = codec.instanceKey(ref.view, ref.args);
+          (targets ??= []).push(id);
+          if (instances.has(id) || isValid?.(id) === true) continue;
+          (next ??= []).push(ref);
+        }
+      }
+      if (targets !== undefined) traversed.set(instance.id, targets);
     }
     return next;
   };
@@ -98,10 +117,8 @@ function runSimple(
       const refs = nextRefs(state);
       if (refs === undefined) {
         // The last result: the execution never continues, so its live `waves` stays as is.
-        return {
-          output: { roots: state.waves[0]!.evaluated, instances },
-          waves: state.waves,
-        };
+        const output = { roots: state.waves[0]!.evaluated, instances };
+        return { output, waves: state.waves, traversed };
       }
       const executed = context.execute({ state, refs });
       if (executed instanceof Promise) return executed.then(follow);

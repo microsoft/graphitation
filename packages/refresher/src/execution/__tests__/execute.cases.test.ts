@@ -22,7 +22,7 @@ import { defaultEnvironment } from "../../env/environment";
 import { createChangeLog } from "../../invalidation/changeLog";
 import { execute } from "../execute";
 import { createViewCache } from "../viewCache";
-import { codec, readOf, refFnOf, settledOf } from "./world";
+import { codec, readOf, readsOf, refFnOf, settledOf } from "./world";
 
 const matches = (): boolean => true;
 
@@ -434,10 +434,7 @@ describe("execute: revisions", () => {
           assert.equal(state.settledAt, latest);
           const instance = state.waves[0]!.evaluated[0]!;
           assert.equal(instance.revision, startedAt);
-          assert.equal(
-            settledOf(instance).descriptor.storeReads[0]!.revision,
-            startedAt,
-          );
+          assert.equal(readsOf(instance)[0]!.revision, startedAt);
         },
       ),
     );
@@ -507,10 +504,7 @@ describe("execute: revisions", () => {
           for (const wave of state.waves) {
             const instance = wave.evaluated[0]!;
             assert.equal(instance.revision, start);
-            assert.equal(
-              settledOf(instance).descriptor.storeReads[0]!.revision,
-              start,
-            );
+            assert.equal(readsOf(instance)[0]!.revision, start);
           }
         },
       ),
@@ -526,7 +520,7 @@ describe("execute: revisions", () => {
     const wave = await waveOf([createRef(reader, 4)]);
     const instance = wave.instances[0]!;
     assert.deepEqual(settledOf(instance).data, ["v4", 4]);
-    const [annotated, bare] = settledOf(instance).descriptor.storeReads;
+    const [annotated, bare] = readsOf(instance);
     assert.equal(annotated!.revision, 3);
     assert.deepEqual(annotated!.footprint, { arg: 4 });
     assert.equal(annotated!.exact, false);
@@ -543,7 +537,7 @@ describe("execute: revisions", () => {
         4,
       ),
     ]);
-    const [read] = settledOf(exact.instances[0]).descriptor.storeReads;
+    const [read] = readsOf(exact.instances[0]);
     assert.equal(read!.revision, 1);
     assert.equal(read!.exact, true);
   });
@@ -671,7 +665,7 @@ describe("execute: view cache", () => {
       settledOf(again).descriptor.storeReads,
       settledOf(cached).descriptor.storeReads,
     );
-    assert.equal(settledOf(again).descriptor.storeReads[0]!.revision, 1);
+    assert.equal(readsOf(again)[0]!.revision, 1);
     assert.equal(second.state.instances.get(cached.id), cached);
     assert.equal(root, cached);
     assert.equal(again!.revision, 5);

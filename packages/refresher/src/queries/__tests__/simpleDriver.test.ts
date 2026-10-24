@@ -116,7 +116,13 @@ function whole<Output>(
 /** What a runtime would keep of node `id`: its reads do not matter to the driver. */
 function descriptorOf(node: AnyView, id: number): ViewInstanceDescriptor {
   const key = createJsonCodec().instanceKey(node, id);
-  return { view: node, args: id, id: key, storeReads: [], validThrough: 0 };
+  return {
+    view: node,
+    args: id,
+    id: key,
+    storeReads: new Map(),
+    validThrough: 0,
+  };
 }
 
 /** The nodes reachable from `roots` over edges holding a followed tag, not entering `valid`. */
@@ -131,9 +137,11 @@ function reachable(
     grew = false;
     for (const from of reached) {
       for (const edge of scenario.edges[from] ?? []) {
-        const followed =
-          edge.tags?.some((tag) => scenario.follow?.includes(tag)) ?? false;
-        if (followed && !reached.has(edge.to) && !valid.has(edge.to)) {
+        if (
+          isFollowed(scenario, edge) &&
+          !reached.has(edge.to) &&
+          !valid.has(edge.to)
+        ) {
           reached.add(edge.to);
           grew = true;
         }
@@ -141,6 +149,16 @@ function reachable(
     }
   }
   return reached;
+}
+
+/** How many times each id occurs: a list compared as a multiset. */
+function counts(ids: readonly string[]): Map<string, number> {
+  const counted = new Map<string, number>();
+  for (const id of ids) counted.set(id, (counted.get(id) ?? 0) + 1);
+  return counted;
+}
+function isFollowed(scenario: Scenario, edge: Edge): boolean {
+  return edge.tags?.some((tag) => scenario.follow?.includes(tag)) ?? false;
 }
 
 /** A view per scenario: node `id` returns its id and a ref per edge, counting its runs. */
@@ -169,7 +187,7 @@ function nodeView(scenario: Scenario, runs: number[]): AnyView {
 }
 
 void describe("simpleDriver", () => {
-  void it("runs every instance the roots and tagged refs reach, each once and nothing else, and on restart no valid one", async () => {
+  void it("runs every instance the roots and tagged refs reach, each once and nothing else, and on restart no valid one, reporting each one's tagged refs as traversed", async () => {
     await fc.assert(
       fc.asyncProperty(scenarios, async (scenario) => {
         const runs: number[] = [];
@@ -219,8 +237,19 @@ void describe("simpleDriver", () => {
           );
         }
 
-        const { output, waves } = result;
+        const { output, waves, traversed } = result;
         const expected = reachable(scenario, roots, valid);
+        assert.ok(traversed !== undefined);
+        for (const id of traversed.keys()) assert.ok(output.instances.has(id));
+        for (const instance of output.instances.values()) {
+          const leads = (scenario.edges[instance.args as number] ?? [])
+            .filter((edge) => isFollowed(scenario, edge))
+            .map((edge) => context.codec.instanceKey(node, edge.to));
+          assert.deepEqual(
+            counts(traversed.get(instance.id) ?? []),
+            counts(leads),
+          );
+        }
         const reached = new Set<number>();
         for (const instance of output.instances.values()) {
           assert.notEqual(instance.status, "running");

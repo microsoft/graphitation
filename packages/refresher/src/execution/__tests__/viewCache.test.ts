@@ -111,9 +111,11 @@ function validNow(
   return (
     validThrough >= model.head ||
     (validThrough >= model.tail &&
-      !descriptorOf(instance).storeReads.some((read) =>
-        hitAfter(model, read, Math.max(read.revision, validThrough)),
-      ))
+      ![...descriptorOf(instance).storeReads.values()]
+        .flat()
+        .some((read) =>
+          hitAfter(model, read, Math.max(read.revision, validThrough)),
+        ))
   );
 }
 
@@ -277,14 +279,18 @@ const keepArb = fc
       run(model, real) {
         const [each, cacheable] = VIEWS[spec.view]!;
         const revision = Math.max(0, model.head - spec.back);
-        const storeReads = spec.reads.map(
-          (read): StoreRead => ({
-            view: STORE_VIEWS[read.view]! as StoreRead["view"],
+        const storeReads = new Map<string, StoreRead[]>();
+        for (const read of spec.reads) {
+          const store = STORES[read.view]!;
+          const group = storeReads.get(store) ?? [];
+          storeReads.set(store, group);
+          group.push({
+            view: STORE_VIEWS[read.view]!,
             args: read.keys,
             revision: Math.max(0, revision - read.back),
             exact: false,
-          }),
-        );
+          });
+        }
         const validThrough = spec.settledStale
           ? revision - 1
           : revision + spec.ahead;

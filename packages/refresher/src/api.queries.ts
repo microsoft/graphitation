@@ -54,7 +54,8 @@ export type QueryDescriptor<Footprint = unknown> = {
    * Every instance a ref led to in the query's runs, under its id, without its result:
    * one descriptor per id, the latest. Instances read only inline are left out: their
    * reads are in their readers' `storeReads`. It grows during a run, as results arrive;
-   * after a restart, what was invalidated and not run again is dropped.
+   * after a restart, what was invalidated and not run again is dropped, and once a run
+   * finishes, what its roots no longer reach through the edges results reported `traversed`.
    */
   readonly views: Map<ViewInstanceId, ViewInstanceDescriptor>;
 
@@ -87,11 +88,11 @@ export type QueryDescriptor<Footprint = unknown> = {
  * its own. Neither the runtime nor the driver keeps an execution past its run's last
  * result: a run knows of the runs before it only their footprint.
  *
- * Which instances the query still reaches is the driver's to track, through its footprint:
- * plain, immutable data describing what its runs covered, such as the ids each instance led
- * to. A driver may keep none, at the cost of occasional redundant output: an instance its
- * runs no longer reach stays subscribed, and a change to it restarts the query with output
- * nothing refers to.
+ * Which instances the query still reaches, the runtime finds from the edges each result
+ * reports `traversed`: once a run finishes, those its roots no longer reach leave `views`.
+ * A driver that reports none keeps every instance its runs ever reached, at a cost that
+ * grows with the query's life: every update pass matches them, and a change to one
+ * restarts the query with output nothing refers to.
  */
 export type QueryDriver<
   Output = unknown,
@@ -203,6 +204,23 @@ export type QueryPayload<Output, Footprint = unknown> = {
    * when the run fails, the kept one stays.
    */
   readonly footprint?: Footprint;
+
+  /**
+   * The edges the driver traversed since the previous result: under the id of each instance
+   * it searched, the ids of those it leads to, by refs in its data the driver followed or
+   * found already reached, and its target when it is a pin. The runtime keeps the arrays:
+   * they must not change once returned.
+   *
+   * An instance `waves` evaluated loses the edges earlier results gave it, before these are
+   * added; one not evaluated again keeps them, as its data is as it was. Once a run
+   * finishes, every instance in `views` the roots no longer reach through edges leaves it,
+   * so a change to it restarts nothing, such as one only a stale instance's old result led
+   * to. A driver finding a ref elsewhere, such as from a source of its own, files it under
+   * an instance whose loss should drop it, such as a root.
+   *
+   * A query whose results leave it out once is never collected again.
+   */
+  readonly traversed?: ReadonlyMap<ViewInstanceId, readonly ViewInstanceId[]>;
 };
 
 /**

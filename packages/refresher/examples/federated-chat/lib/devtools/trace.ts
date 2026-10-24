@@ -166,12 +166,14 @@ export function createTracer({
         label: labelOf(viewName(instance.view), instance.args),
         data: describe(instance.data, options),
         errors: instance.errors.map((error) => error.message),
-        reads: (instance.descriptor?.storeReads ?? []).map((read) => ({
-          label: labelOf(viewName(read.view), read.args),
-          revision: read.revision,
-          footprint:
-            read.footprint === undefined ? null : brief(read.footprint),
-        })),
+        reads: [...(instance.descriptor?.storeReads.values() ?? [])]
+          .flat()
+          .map((read) => ({
+            label: labelOf(viewName(read.view), read.args),
+            revision: read.revision,
+            footprint:
+              read.footprint === undefined ? null : brief(read.footprint),
+          })),
         pinned:
           internalsOf(instance.view)?.kind === "pin" && instance.data !== null,
       });

@@ -18,7 +18,7 @@ import type {
 import type { Codec } from "../../api.codec";
 import type { ViewInstance } from "../../api.execution";
 import type { ViewInstanceDescriptor } from "../../api.invalidation";
-import type { GetStoreFn } from "../../api.stores";
+import type { GetStoreFn, StoreRead } from "../../api.stores";
 import { createJsonCodec } from "../../codec/json";
 import { storeView, view } from "../../views/definitions";
 import { createRef, isViewRef } from "../../views/ref";
@@ -381,6 +381,11 @@ export function settledOf(instance: ViewInstance | undefined): SettledInstance {
     `${instance.id} settled stale`,
   );
   return instance;
+}
+
+/** A settled instance's store reads, in the order its stores were first read. */
+export function readsOf(instance: ViewInstance | undefined): StoreRead[] {
+  return [...settledOf(instance).descriptor.storeReads.values()].flat();
 }
 
 export function isSettled(instance: ViewInstance): instance is SettledInstance {
