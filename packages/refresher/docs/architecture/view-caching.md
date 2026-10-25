@@ -66,12 +66,12 @@ only their inputs determine their result.
 ## Validation
 
 A cache entry is checked when it is used, against what changed since it was
-current. To validate an entry current at revision `R` for an execution at
-revision `C`, the session matches the changes in its [change log](#the-change-log)
-for `(R, C]` against the entry's recorded reads, with the same matching as a
-live instance:
+last matched. To validate an entry matched through revision `R` (at first, the
+revision it ran at) for an execution at revision `C`, the session matches the
+changes in its [change log](#the-change-log) for `(R, C]` against the entry's
+recorded reads, with the same matching as a live instance:
 
-- **No hit.** The entry is current at `C`. The revision it is known valid at
+- **No hit.** The entry is current at `C`. The revision it is matched through
   moves to `C`, and its result is used.
 - **A hit.** The entry goes stale and stays, and the view runs.
 - **Outside the window.** The log no longer holds every change since `R`, so
@@ -87,22 +87,21 @@ reading its current state can't, and running the view again gains nothing.
 // Pseudo-implementation: validating a cached instance on use.
 function validate(instance, revision) {
   if (instance.status === "stale") return undefined;
-  if (instance.revision > revision) {
-    // Settled stale: valid at no revision up to `revision`.
-    if (instance.validThrough < instance.revision) return undefined;
-    if (
-      instance.storeReads.length > 0 &&
-      instance.storeReads.every((read) => read.exact)
-    ) {
+  // Settled stale: an execution takes no stale result.
+  if (instance.storeReads.some((read) => read.reported < read.startedAt))
+    return undefined;
+  if (instance.startedAt > revision) {
+    const exact = (read) => read.reported === read.startedAt;
+    if (instance.storeReads.length > 0 && instance.storeReads.every(exact)) {
       return undefined; // every store keeps history: read again as of `revision`
     }
   }
-  if (instance.validThrough >= revision) return instance;
-  if (!changeLog.covers(instance.validThrough)) {
+  if (instance.matchedThrough >= revision) return instance;
+  if (!changeLog.covers(instance.matchedThrough)) {
     instance.status = "stale"; // stays cached
     return undefined;
   }
-  for (const change of changeLog.between(instance.validThrough, revision)) {
+  for (const change of changeLog.between(instance.matchedThrough, revision)) {
     if (
       instance.storeReads.some((read) =>
         read.view.matches(read.args, change, read.footprint),
@@ -112,7 +111,7 @@ function validate(instance, revision) {
       return undefined;
     }
   }
-  instance.validThrough = revision;
+  instance.matchedThrough = revision;
   return instance;
 }
 ```
@@ -128,7 +127,7 @@ matched as each change arrives. See [Invalidation](invalidation.md).
 ### Stale entries
 
 A stale entry stays in the cache until it is evicted. An execution never uses
-one, but it is still a result as of its `validThrough`, and the
+one, but it is still a result as of the revision it was last valid through, and the
 [remotes controller](lifecycles.md#controllers) may answer another session with
 it while the view runs again: stale-while-revalidate across sessions. See
 [Stale answers](federation.md#stale-answers).

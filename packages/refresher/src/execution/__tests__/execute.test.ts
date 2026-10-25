@@ -21,6 +21,7 @@ import {
   settledOf,
   worldArb,
 } from "./world";
+import { settledStale } from "../../invalidation/reads";
 
 const REVISION = 7;
 
@@ -118,8 +119,9 @@ function checkInstance(
 ): void {
   const [index, arg] = parseKey(instanceKey(world, instance));
   const outcome = model.evaluate(index, arg);
-  assert.equal(instance.revision, REVISION);
-  assert.equal(settledOf(instance).descriptor.validThrough, REVISION);
+  assert.equal(instance.startedAt, REVISION);
+  assert.equal(settledOf(instance).descriptor.matchedThrough, REVISION);
+  assert.ok(!settledStale(settledOf(instance).descriptor));
   if (outcome.failed) {
     assert.equal(settledOf(instance).data, null);
     assert.equal(settledOf(instance).errors.length, 1);
@@ -132,7 +134,8 @@ function checkInstance(
   const reads = [...settledOf(instance).descriptor.storeReads.values()]
     .flat()
     .map((read) => {
-      assert.equal(read.revision, REVISION);
+      assert.equal(read.startedAt, REVISION);
+      assert.equal(read.reported, undefined);
       return `${String(read.view.name).slice(1)}:${String(read.args)}`;
     });
   assert.equal(new Set(reads).size, reads.length, "store reads repeat");

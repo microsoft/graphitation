@@ -52,8 +52,8 @@ export type LatestRevisionFn = () => Revision;
  * The settled instances kept across executions, so one whose reads no change has hit is
  * reused in place of running its view. It decides what it keeps, and validates an instance
  * against the changes since before handing it out, moving one a change hit to `stale`. A
- * stale instance stays until it is replaced or deleted: still a result as of its
- * `validThrough`, for whoever may show it while the view runs again.
+ * stale instance stays until it is replaced or deleted: still a result as of the revision
+ * it was valid through, for whoever may show it while the view runs again.
  */
 export type ViewCache = {
   /**
@@ -63,22 +63,25 @@ export type ViewCache = {
   cacheable(view: AnyView): boolean;
 
   /**
-   * The instance kept under `id`, validated through the latest change it knows: its
-   * `validThrough` advanced when no change since hit its reads. One a change hit, or one
-   * too old to validate, moves to `stale` instead, and is returned as it is, as is one
+   * The instance kept under `id`, matched against every change it knows: its
+   * `matchedThrough` advanced when no change since hit its reads. One a change hit, or one
+   * too old to match, moves to `stale` instead, and is returned as it is, as is one
    * already stale.
    *
-   * Execution never reuses a stale instance. It reuses an instance valid at the execution's revision, `startedAt <=
-   * validThrough`, newer than asked included: a store reading current state would answer
-   * that newer state anyway. It runs the view again when the instance is newer, `startedAt
-   * < revision`, and every store read it made is `exact`: those stores keep history, and
-   * answer as of `startedAt` instead.
+   * Execution never reuses a stale instance, nor one that settled stale, one of its store
+   * reads answered from state older than asked: its result misses what its store had not
+   * caught up with. It
+   * reuses one matched through the execution's `startedAt`, newer than asked included: a
+   * store reading current state would answer that newer state anyway. It runs the view
+   * again when the instance started after the execution and every store read it made was
+   * answered exactly as of when it was asked: those stores keep history, and answer as of
+   * the execution's `startedAt` instead.
    */
   get(id: ViewInstanceId): ViewInstance | undefined;
 
   /**
    * Keeps a settled instance of a cacheable view under its id, and says whether it did.
-   * A settled one replaces a stale one, and one valid at its `revision` replaces one that
+   * A settled one replaces a stale one, and one valid at its `startedAt` replaces one that
    * settled stale; otherwise the newer one stays, so an older instance never displaces a
    * newer one, which more executions can use.
    */
@@ -88,8 +91,8 @@ export type ViewCache = {
   delete(id: ViewInstanceId): boolean;
 
   /**
-   * Validates every instance it keeps whose `validThrough` is below `before`, as `get`
-   * does: each is validated through the latest change it knows, or moved to `stale`; one
+   * Matches every instance it keeps whose `matchedThrough` is below `before`, as `get`
+   * does: each is matched through the latest change it knows, or moved to `stale`; one
    * already stale is left as it is. Runtime
    * maintenance calls it before trimming the change log to `before`, so that what it keeps
    * stays verifiable.
@@ -114,13 +117,14 @@ export type CreateViewCacheArgs = {
  * A view instance: one view with one set of arguments, named by `id`. One object for its
  * whole life, moved in place, so whoever holds it sees each move. Execution creates it
  * running and settles it, setting its `descriptor` and its result. Running a view again
- * makes a new instance under the same id, with its own `revision`.
+ * makes a new instance under the same id, with its own `startedAt`.
  *
- * Settled, it is valid at the revisions from `revision` through `descriptor.validThrough`.
- * One that settled stale, a store answering one of its reads from state older than asked,
- * has `validThrough` below `revision`: valid at none until whoever keeps it, such as the
- * view cache, advances `validThrough` past `revision`, as changes since are matched
- * against its reads and none reaches them.
+ * Settled, no change after `startedAt` through `descriptor.matchedThrough` hit its reads,
+ * so it reflects every change through `matchedThrough`. One that settled stale, a store
+ * answering one of its reads from state older than asked (`StoreRead.reported` below
+ * `StoreRead.startedAt`), reflects only the changes through the oldest such answer, and
+ * stays so: its result misses what the store had not caught up with, until a change the
+ * store registers hits the read, and whoever holds it runs the view again.
  *
  * Also what the view cache keeps for a memoized view. Settled, it holds no other instance,
  * so keeping one keeps nothing else. Which refs led to it is the driver's to know.
@@ -137,10 +141,11 @@ export type ViewInstance<Args = unknown, Result = unknown> = {
   readonly id: ViewInstanceId;
 
   /**
-   * The revision its reads are asked at: the `startedAt` of the execution that runs it.
-   * Known when it is created and fixed for its whole life.
+   * The `startedAt` of the execution that runs it: the revision every store read it makes is
+   * asked at, and the earliest its result is known to hold at. Known when it is created and
+   * fixed for its whole life.
    */
-  readonly revision: Revision;
+  readonly startedAt: Revision;
 
   /**
    * How many inline reads deep it ran: 0 for an instance a ref leads to. A store read
@@ -153,11 +158,11 @@ export type ViewInstance<Args = unknown, Result = unknown> = {
    *
    * - `running`: its view runs in one execution. Waves deliver no running instance.
    * - `settled`: it holds its result and its `descriptor`. One that settled stale is
-   *   `settled` too: validating it may still make it valid at its `revision`.
-   * - `stale`: a change after `descriptor.validThrough` reached its reads, or they can no
-   *   longer be checked against the changes since. Set by whoever validates it, such as
-   *   the view cache. Its result still reflects at least the state at `validThrough`, but
-   *   execution never reuses it.
+   *   `settled` too, until a change hits its reads.
+   * - `stale`: a change after `descriptor.matchedThrough` reached its reads, or they can no
+   *   longer be checked against the changes since. Set by whoever matches it, such as
+   *   the view cache. Its result still reflects at least the state it was valid through,
+   *   but execution never reuses it.
    */
   status: "running" | "settled" | "stale";
 
@@ -222,10 +227,11 @@ export type NewExecutionArgs = {
    * answers, or one several executions must share. Without it, reads are asked at the
    * latest revision when the execution starts.
    *
-   * A store that cannot read as of the revision answers from current state, never from
-   * older; the caller, which follows the feed, matches the changes that landed meanwhile
-   * against the reads it gets back. A store read that reports no revision of its own
-   * reflects `asOf`.
+   * A store that cannot read as of the revision answers from current state, or, acting as
+   * a cache, from older state it reports, never from before a change that hit the read;
+   * the caller, which follows the feed, matches the changes that landed meanwhile against
+   * the reads it gets back. A store read that reports no revision of its own reflects
+   * `asOf`.
    */
   readonly asOf?: Revision | undefined;
 

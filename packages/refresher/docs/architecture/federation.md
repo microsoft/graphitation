@@ -669,13 +669,16 @@ change. Each push is a delivery on the remote store's change feed, stamped with
 the answering session's revision, and it invalidates the reads of the refs it
 names, through external views and external refs alike. A live remote query
 visits instances as they appear, so a new message and its author's profile
-arrive in the store along with it. When nothing reads a query any more, the
-answering session lets it go, and the remote store stops observing the
-instances no remaining query visits. It keeps them, and answers them stale to
-whatever reads them anew, until its own policy drops them. Letting a query go
-hits no read: whether a query still brings an answer is not data, and the
-readers' results are as current as anything the store can tell them. Once a
-query brings them again, only answers that changed are delivered, and a pending
+arrive in the store along with it. A restart that no longer reaches an instance
+it visited before, as when a message leaves the page, says so in its push, and
+the remote store stops observing that instance as below unless another query
+still brings it. When nothing reads a query any more, the
+answering session lets it go, and the remote store
+[stops observing](stores.md#when-a-store-stops-observing) the instances no
+remaining query visits: it says so with a change, which hits what read them, and
+answers them stale, as of that change, from what it kept until its own policy
+drops them. Once a query brings them again, answers that changed hit every read
+of them, and unchanged ones only the reads they answered stale; a pending
 query's progress reads from a view of its own, not from every instance.
 
 > **TODO.** How the asking session tells the answering session what to keep

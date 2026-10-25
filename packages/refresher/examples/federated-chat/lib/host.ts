@@ -1,7 +1,7 @@
 /**
  * The answering side of federation: runs the queries another session asks for in a
- * runtime of its own, answers every instance they visit, and pushes what each restart ran
- * until the query is released. What one pass runs goes in one message, once every query
+ * runtime of its own, answers every instance they visit, and pushes what each restart ran,
+ * and what it no longer holds, until the query is released. What one pass runs goes in one message, once every query
  * it started or restarted has answered. Runs the action refs its answers offered, when the asking
  * session sends them back. See docs/architecture/federation.md.
  */
@@ -10,6 +10,7 @@ import type {
   AnyActionRef,
   PromiseOrValue,
   QueryableView,
+  QueryDescriptor,
   QueryDriver,
   QuerySubscription,
   Revision,
@@ -76,8 +77,10 @@ type Batch = {
 type LiveQuery = {
   /** The ref the asking session opened it by. */
   readonly ref: EncodedRef;
-  /** Every instance its runs visited, the latest of each. */
+  /** Every instance its runs visited that it still holds, the latest of each. */
   readonly instances: Map<ViewInstanceId, ViewInstance>;
+  /** The query as the runtime keeps it, once restarted: its `views` are what it holds. */
+  descriptor: QueryDescriptor | undefined;
   /** The root's instance, once run. Its answers are also sent under `ref`. */
   rootId: ViewInstanceId | undefined;
   subscription: QuerySubscription | undefined;
@@ -87,6 +90,19 @@ type LiveQuery = {
 function merge(query: LiveQuery, output: SimpleDriverOutput): void {
   for (const [id, instance] of output.instances)
     query.instances.set(id, instance);
+}
+
+/** Takes out of `query.instances` those the runtime no longer keeps for it, answering with them. */
+function prune(query: LiveQuery): ViewInstance[] {
+  const views = query.descriptor?.views;
+  const dropped: ViewInstance[] = [];
+  if (views === undefined) return dropped;
+  for (const [id, instance] of query.instances) {
+    if (views.has(id)) continue;
+    query.instances.delete(id);
+    dropped.push(instance);
+  }
+  return dropped;
 }
 
 /** An action ref's arguments, as plain JSON data: each open input a marker. */
@@ -209,14 +225,15 @@ export function serve<A extends Action>({
     flush(batch);
   };
 
-  /** The query's driver, telling the host the pass that runs it. */
-  const tracked = (key: string, driver: Driver): Driver => ({
+  /** The query's driver, telling the host the pass that runs it, and what the query holds. */
+  const tracked = (key: string, query: LiveQuery, driver: Driver): Driver => ({
     start(args) {
       join(key, args.context.revision);
       return driver.start(args);
     },
     restart(args) {
       join(key, args.context.revision);
+      query.descriptor = args.descriptor;
       return driver.restart(args);
     },
   });
@@ -303,13 +320,14 @@ export function serve<A extends Action>({
     const query: LiveQuery = {
       ref: encodeRef(id, args),
       instances: new Map(),
+      descriptor: undefined,
       rootId: undefined,
       subscription: undefined,
       released: false,
     };
     live.set(key, query);
     // Every query of one message starts in the same pending pass, at one revision.
-    runtime.query(view, args, tracked(key, driverFor(tags))).then(
+    runtime.query(view, args, tracked(key, query, driverFor(tags))).then(
       (result) => answer(key, query, result),
       (error: unknown) => fail(key, error),
     );
@@ -331,10 +349,17 @@ export function serve<A extends Action>({
       next(restart) {
         if (!("output" in restart)) return deliver(key, null);
         merge(query, restart.output);
-        deliver(key, {
-          type: "push",
-          key,
-          answers: answersOf(query, restart.output.instances.values()),
+        // The runtime drops what the restart left behind once it took its result, at once.
+        queueMicrotask(() => {
+          if (query.released) return;
+          deliver(key, {
+            type: "push",
+            key,
+            answers: answersOf(query, restart.output.instances.values()),
+            dropped: prune(query).map((instance) =>
+              encodeRefTo(instance.view, instance.args),
+            ),
+          });
         });
       },
       error: (error) => fail(key, error),

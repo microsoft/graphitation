@@ -133,6 +133,15 @@ against every instance it no longer reaches, as a garbage collector would. A
 driver that reports no edges keeps everything a long-lived query ever read
 subscribed, and every update pass pays for it.
 
+The edges also let a restart run in the waves a start would. The simple driver
+walks from the roots again, through valid instances by their kept edges, without
+running them: the first wave runs the stale instances reached through valid ones
+alone, each later one those the last wave's results lead to. A stale instance
+runs only after the stale ones above it, and not at all once they no longer lead
+to it, as when a chat stops being selected: the runtime drops it with what only
+it reached. Waves hold whatever the walk reached, from any depth, so there are no
+empty ones; nothing stale reached, nothing runs.
+
 Views never see drivers, so a view's result depends only on its arguments and
 data, and instances are shared across drivers.
 

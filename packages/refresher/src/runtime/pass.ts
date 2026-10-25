@@ -21,7 +21,7 @@
  * sharing the descriptors, gains as much. A query leaves the files as it restarts or ends.
  * As it subscribes idle, or a subscribed run finishes, it is filed if its views are valid
  * through the latest revision; otherwise it is unverified, and the next match checks it
- * whatever changed, each view from its own `validThrough`. Lifting claims only what the log
+ * whatever changed, each view from its own `matchedThrough`. Lifting claims only what the log
  * holds: a store that stops observing says so with a change, which hits its reads.
  *
  * Every run fills a descriptor, which its result keeps until it is subscribed: an
@@ -33,7 +33,7 @@
  * pass: a slow run, such as a streamed one, delays every query's next run.
  *
  * - The pass invalidates as its revision is fixed, so it matches changes through that
- *   revision, and advances the `validThrough` of every view descriptor it matched and no
+ *   revision, and advances the `matchedThrough` of every view descriptor it matched and no
  *   change reached to it.
  * - After a restart, every descriptor it was given as invalidated and that its run did not
  *   replace leaves `views`: nothing advances a stale descriptor, so it would be reported
@@ -61,6 +61,7 @@ import type {
 } from "../api.core";
 import type { Environment } from "../api.env";
 import type {
+  ExecutionState,
   LatestRevisionFn,
   ViewCache,
   ViewInstance,
@@ -90,6 +91,7 @@ import { assertAlways, assertSometimes } from "../env/assert";
 import { operationError } from "../errors";
 import { execute } from "../execution/execute";
 import { invalidate } from "../invalidation/invalidate";
+import { failStaleAnswers } from "./staleAnswers";
 
 /** What the runtime keeps of one run of `run`: its descriptor, and its subscription. */
 export type QueryState = {
@@ -205,7 +207,7 @@ export function createPasses(args: PassesArgs): Passes {
   const inFlight = new Set<QueryState>();
   /** For each store, the filed queries whose `views` read it. */
   const readers = new Map<StoreName, Set<QueryState>>();
-  /** Subscribed idle queries not filed: the next match checks each view from its own `validThrough`. */
+  /** Subscribed idle queries not filed: the next match checks each view from its own `matchedThrough`. */
   const unverified = new Set<QueryState>();
   /** Every change through it was matched against the views of every filed query. */
   let cursor = log.head;
@@ -216,7 +218,7 @@ export function createPasses(args: PassesArgs): Passes {
     assertAlways(env, state.controller === undefined);
     const head = log.head;
     for (const descriptor of state.descriptor.views.values()) {
-      if (descriptor.validThrough >= head) continue;
+      if (descriptor.matchedThrough >= head) continue;
       unverified.add(state);
       requestPass();
       return;
@@ -343,8 +345,8 @@ export function createPasses(args: PassesArgs): Passes {
     for (const state of filed) {
       for (const descriptor of state.descriptor.views.values()) {
         // Every change through `previous` was matched against it.
-        if (descriptor.validThrough < previous)
-          descriptor.validThrough = previous;
+        if (descriptor.matchedThrough < previous)
+          descriptor.matchedThrough = previous;
         descriptors.push(descriptor);
       }
     }
@@ -377,7 +379,8 @@ export function createPasses(args: PassesArgs): Passes {
       for (const descriptor of state.descriptor.views.values()) {
         const hit = staleBy?.get(descriptor);
         if (hit !== undefined) (found ??= []).push(hit);
-        else if (descriptor.validThrough < head) descriptor.validThrough = head;
+        else if (descriptor.matchedThrough < head)
+          descriptor.matchedThrough = head;
       }
       return found;
     };
@@ -429,34 +432,49 @@ export function createPasses(args: PassesArgs): Passes {
     const { descriptor } = state;
     const cache = viewCache();
     const signal = controller.signal;
+    const checked = new WeakSet<ViewInstance>();
+    const check = (executed: ExecutionState): ExecutionState => {
+      failStaleAnswers(env, log, executed, checked);
+      return executed;
+    };
     const context: DriverContext = {
       revision,
       env,
       codec,
       bind,
       signal,
-      execute: ({ state: continuing, refs, meta }) =>
-        continuing !== undefined
-          ? execute({ state: continuing, refs, meta })
-          : execute({
-              asOf: revision,
-              latestRevision,
-              env,
-              codec,
-              store,
-              viewCache: cache,
-              pins: descriptor.pins,
-              signal,
-              refs,
-              meta,
-            }),
+      execute: ({ state: continuing, refs, meta }) => {
+        const executed =
+          continuing !== undefined
+            ? execute({ state: continuing, refs, meta })
+            : execute({
+                asOf: revision,
+                latestRevision,
+                env,
+                codec,
+                store,
+                viewCache: cache,
+                pins: descriptor.pins,
+                signal,
+                refs,
+                meta,
+              });
+        return executed instanceof Promise
+          ? executed.then(check)
+          : check(executed);
+      },
     };
     let result: PromiseOrValue<QueryResult<unknown>>;
     try {
       result =
         invalidated === undefined
           ? descriptor.driver.start({ roots: descriptor.roots, context })
-          : descriptor.driver.restart({ descriptor, invalidated, context });
+          : descriptor.driver.restart({
+              descriptor,
+              invalidated,
+              edges: state.edges,
+              context,
+            });
     } catch (error) {
       finish(state, invalidated, { error });
       throw error;

@@ -23,6 +23,7 @@ import type { Environment } from "../api.env";
 import type { StoreChange, StoreRead } from "../api.stores";
 import { assertAlways, assertSometimes } from "../env/assert";
 import { internalsOf } from "../views/definitions";
+import { answeredAt } from "./reads";
 
 const UNVERIFIABLE: Unverifiable = Object.freeze({ kind: "unverifiable" });
 
@@ -54,9 +55,9 @@ export const invalidate: InvalidateFn = <T extends ViewInstanceDescriptor>(
 
   let from = head;
   for (const each of descriptors) {
-    const validThrough = each.validThrough;
+    const matchedThrough = each.matchedThrough;
     if (each.storeReads.size === 0) continue;
-    if (validThrough >= tail && validThrough < from) from = validThrough;
+    if (matchedThrough >= tail && matchedThrough < from) from = matchedThrough;
   }
   const byStore = from < head ? changesByStore(env, log, from) : undefined;
 
@@ -66,7 +67,7 @@ export const invalidate: InvalidateFn = <T extends ViewInstanceDescriptor>(
   for (const each of descriptors) {
     if (reported.has(each)) continue;
     let reason: StaleReason | undefined;
-    if (each.validThrough < tail) reason = UNVERIFIABLE;
+    if (each.matchedThrough < tail) reason = UNVERIFIABLE;
     else if (byStore !== undefined)
       reason = firstHit(env, byStore, scans, each);
     if (reason === undefined) continue;
@@ -129,14 +130,14 @@ function firstHit(
     for (const [store, reads] of own) {
       const group = byStore.get(store);
       if (group === undefined) continue;
-      const hit = hitIn(env, scans, group, reads, descriptor.validThrough);
+      const hit = hitIn(env, scans, group, reads, descriptor.matchedThrough);
       if (hit !== undefined) return hit;
     }
   } else {
     for (const group of byStore.values()) {
       const reads = own.get(group.store);
       if (reads === undefined) continue;
-      const hit = hitIn(env, scans, group, reads, descriptor.validThrough);
+      const hit = hitIn(env, scans, group, reads, descriptor.matchedThrough);
       if (hit !== undefined) return hit;
     }
   }
@@ -149,7 +150,7 @@ function hitIn(
   scans: Map<StoreRead, Scan>,
   group: StoreChanges,
   reads: readonly StoreRead[],
-  validThrough: number,
+  matchedThrough: number,
 ): StaleReason | undefined {
   assertAlways(env, reads.length > 0);
   for (const read of reads) {
@@ -160,7 +161,7 @@ function hitIn(
       "A store read names a store view",
     );
     assertAlways(env, internals.store === group.store);
-    const start = Math.max(read.revision, validThrough);
+    const start = Math.max(answeredAt(read), matchedThrough);
     const hit = scanOf(scans, group, read, internals.matches, start);
     if (hit < 0) continue;
     return {

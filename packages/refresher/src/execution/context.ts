@@ -21,7 +21,7 @@ import type {
   ViewCache,
   ViewInstance,
 } from "../api.execution";
-import type { GetStoreFn, StoreRead, StoreViewContext } from "../api.stores";
+import type { GetStoreFn, StoreViewContext } from "../api.stores";
 import { assertAlways } from "../env/assert";
 
 export const DEFAULT_MAX_WAVES = 1000;
@@ -99,8 +99,6 @@ export type ExecutionContext = {
   readonly inlineReads: Map<ViewInstance, ReadonlySet<ViewInstance>>;
   /** Instances that settled while an instance they read still ran. */
   incomplete: Set<ViewInstance> | undefined;
-  /** Store reads answered from state older than asked: whoever collects one settles stale. */
-  lagging: Set<StoreRead> | undefined;
   /** Each store the execution has read, in its current phase. */
   readonly stores: Map<StoreName, StorePhase>;
   /** The store reads waiting for the next round. */
@@ -161,7 +159,6 @@ export function buildExecutionContext(
     refIds: new Map(),
     inlineReads: new Map(),
     incomplete: undefined,
-    lagging: undefined,
     stores: new Map(),
     round: emptyRound(),
     pinned: undefined,

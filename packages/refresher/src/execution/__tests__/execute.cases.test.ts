@@ -14,12 +14,17 @@ import type {
   ViewCache,
   ViewInstance,
 } from "../../api.execution";
-import type { GetStoreFn, StoreViewContext } from "../../api.stores";
+import type { GetStoreFn, StoreRead, StoreViewContext } from "../../api.stores";
 import { internalError, isRefresherError } from "../../errors";
 import { storeView, view } from "../../views/definitions";
 import { createRef, isActionRef, isRef, isViewRef } from "../../views/ref";
 import { defaultEnvironment } from "../../env/environment";
 import { createChangeLog } from "../../invalidation/changeLog";
+import {
+  isExact,
+  settledStale,
+  validThroughOf,
+} from "../../invalidation/reads";
 import { execute } from "../execute";
 import { createViewCache } from "../viewCache";
 import { codec, readOf, readsOf, refFnOf, settledOf } from "./world";
@@ -433,8 +438,8 @@ describe("execute: revisions", () => {
           assert.equal(state.startedAt, startedAt);
           assert.equal(state.settledAt, latest);
           const instance = state.waves[0]!.evaluated[0]!;
-          assert.equal(instance.revision, startedAt);
-          assert.equal(readsOf(instance)[0]!.revision, startedAt);
+          assert.equal(instance.startedAt, startedAt);
+          assert.equal(readsOf(instance)[0]!.startedAt, startedAt);
         },
       ),
     );
@@ -503,8 +508,8 @@ describe("execute: revisions", () => {
           assert.equal(state.waves.length, gaps.length + 1);
           for (const wave of state.waves) {
             const instance = wave.evaluated[0]!;
-            assert.equal(instance.revision, start);
-            assert.equal(readsOf(instance)[0]!.revision, start);
+            assert.equal(instance.startedAt, start);
+            assert.equal(readsOf(instance)[0]!.startedAt, start);
           }
         },
       ),
@@ -521,12 +526,15 @@ describe("execute: revisions", () => {
     const instance = wave.instances[0]!;
     assert.deepEqual(settledOf(instance).data, ["v4", 4]);
     const [annotated, bare] = readsOf(instance);
-    assert.equal(annotated!.revision, 3);
+    assert.equal(annotated!.startedAt, 1);
+    assert.equal(annotated!.reported, 3);
     assert.deepEqual(annotated!.footprint, { arg: 4 });
-    assert.equal(annotated!.exact, false);
-    assert.equal(bare!.revision, 1);
-    assert.equal(bare!.exact, false);
-    assert.ok(!("footprint" in bare!));
+    assert.equal(isExact(annotated!), false);
+    assert.equal(bare!.startedAt, 1);
+    assert.equal(bare!.reported, undefined);
+    assert.equal(isExact(bare!), false);
+    assert.equal(bare!.footprint, undefined);
+    assert.deepEqual(Object.keys(bare!), Object.keys(annotated!));
 
     const history = single((arg, { annotate, revision }) =>
       annotate({ data: arg, revision }),
@@ -538,8 +546,9 @@ describe("execute: revisions", () => {
       ),
     ]);
     const [read] = readsOf(exact.instances[0]);
-    assert.equal(read!.revision, 1);
-    assert.equal(read!.exact, true);
+    assert.equal(read!.startedAt, 1);
+    assert.equal(read!.reported, 1);
+    assert.equal(isExact(read!), true);
   });
 
   it("settles stale every instance that reads, inline, a store answer older than asked", async () => {
@@ -609,8 +618,18 @@ describe("execute: revisions", () => {
             assert.equal(instance.status, "settled");
             assert.ok(instance.descriptor !== undefined);
             assert.equal(
-              instance.descriptor.validThrough,
+              validThroughOf(instance.descriptor),
               expected ?? STARTED,
+              `${index}`,
+            );
+            assert.equal(
+              settledStale(instance.descriptor),
+              expected !== undefined,
+              `${index}`,
+            );
+            assert.equal(
+              instance.descriptor.matchedThrough,
+              STARTED,
               `${index}`,
             );
             assert.ok(instance.data !== null);
@@ -641,11 +660,11 @@ describe("execute: view cache", () => {
     const cached = [...first.state.instances.values()].find(
       (each) => each.view === memo,
     )!;
-    assert.equal(cached.revision, 1);
+    assert.equal(cached.startedAt, 1);
 
     const viewCache = cacheOf((id) => {
       if (id !== cached.id) return undefined;
-      settledOf(cached).descriptor.validThrough = 5;
+      settledOf(cached).descriptor.matchedThrough = 5;
       return cached;
     });
     const reports: AssertReport[] = [];
@@ -665,10 +684,10 @@ describe("execute: view cache", () => {
       settledOf(again).descriptor.storeReads,
       settledOf(cached).descriptor.storeReads,
     );
-    assert.equal(readsOf(again)[0]!.revision, 1);
+    assert.equal(readsOf(again)[0]!.startedAt, 1);
     assert.equal(second.state.instances.get(cached.id), cached);
     assert.equal(root, cached);
-    assert.equal(again!.revision, 5);
+    assert.equal(again!.startedAt, 5);
     assert.ok(
       reports.some(
         (report) =>
@@ -702,19 +721,42 @@ describe("execute: view cache", () => {
       });
       const instance = again.instances[0]!;
       assert.notEqual(instance, cached);
-      assert.equal(instance.revision, 5);
+      assert.equal(instance.startedAt, 5);
     };
     await rerun(settled);
-    // Newer than asked and valid at 5, but settled stale: valid at none.
-    await rerun({
-      ...settled,
-      revision: 7,
-      descriptor: { ...settled.descriptor, validThrough: 6 },
+    // Newer than asked and matched through 7, but settled stale: valid at none.
+    const lagging = storeView({
+      store: "db",
+      name: "lagging",
+      matches,
+      resolve: (arg: number) => arg,
     });
-    // Valid through 5, but a change after it reached its reads.
     await rerun({
       ...settled,
-      descriptor: { ...settled.descriptor, validThrough: 5 },
+      startedAt: 7,
+      descriptor: {
+        ...settled.descriptor,
+        storeReads: new Map([
+          [
+            "db",
+            [
+              {
+                view: lagging as unknown as StoreRead["view"],
+                args: 1,
+                startedAt: 7,
+                reported: 6,
+                footprint: undefined,
+              },
+            ],
+          ],
+        ]),
+        matchedThrough: 7,
+      },
+    });
+    // Matched through 5, but a change after it reached its reads.
+    await rerun({
+      ...settled,
+      descriptor: { ...settled.descriptor, matchedThrough: 5 },
       status: "stale",
     });
     assert.equal(runs, 4);
@@ -770,7 +812,7 @@ describe("execute: view cache", () => {
         latestRevision: () => 5,
       });
       const cached = first.instances[0]!;
-      assert.equal(cached.revision, 5);
+      assert.equal(cached.startedAt, 5);
       const viewCache = cacheOf((id) =>
         id === cached.id ? cached : undefined,
       );
@@ -782,7 +824,7 @@ describe("execute: view cache", () => {
       const instance = again.instances[0]!;
       assert.equal(instance === cached, taken);
       assert.equal(runs, taken ? 1 : 2);
-      if (!taken) assert.equal(instance.revision, 2);
+      if (!taken) assert.equal(instance.startedAt, 2);
     };
     await check((arg) => arg, true);
     await check(

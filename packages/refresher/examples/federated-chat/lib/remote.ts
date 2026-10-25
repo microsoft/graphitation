@@ -129,12 +129,15 @@ export function remoteStore(name: StoreName): RemoteStore {
       // Kept since its last query stopped: stale, as of the store's last look at it.
       return stoppedAt === undefined
         ? data
-        : annotate({ data, revision: stoppedAt });
+        : annotate({ data, revision: stoppedAt, footprint: { stoppedAt } });
     },
-    // Only a changed answer: whether a query still brings it is not data, and its readers
-    // keep what they hold. A reader reading it anew reads it stale; `opening` says syncing.
-    matches: (ref, change) =>
-      change.operation === "answer" && change.value === ref,
+    // A changed answer, and the store's no longer observing it, hit every read of it. Its
+    // observing it again, unchanged, hits only a read it answered stale.
+    matches: (ref, change, footprint) =>
+      change.value === ref &&
+      (change.operation === "answer" ||
+        change.operation === "unobserved" ||
+        (change.operation === "observed" && footprint !== undefined)),
   });
   const opening = storeView<ExternalRef, boolean, RemoteHandle>({
     store: name,
@@ -189,8 +192,8 @@ export type RemoteConnection = {
   readonly handle: RemoteHandle;
 
   /**
-   * Announces the instances whose answers changed, and, for `entries` alone, those it stops
-   * or starts observing again. Merge it into the runtime's feed: its revisions are its own.
+   * Announces the instances whose answers changed, and those it stops or starts observing
+   * again. Merge it into the runtime's feed: its revisions are its own.
    */
   readonly feed: ChangeFeed;
 
@@ -211,9 +214,9 @@ export type RemoteConnection = {
 
   /**
    * Lets go of one `open` of the query. The last one stops it at once: the host stops it,
-   * and the store stops observing every instance only it brought. What read them keeps what
-   * it holds: the store answers them stale from what it kept, to whatever reads them anew,
-   * until a query brings them again, or `keep` drops them; reading a dropped one fails.
+   * and the store stops observing every instance only it brought. It says so with a change,
+   * which hits what read them, and answers them stale from what it kept until a query brings
+   * them again, or `keep` drops them; reading a dropped one fails.
    */
   close<V extends QueryableView, Followed>(
     query: ExternalQuery<V, Followed>,
@@ -300,7 +303,7 @@ export function connectRemote(
   let outbox: RemoteQuery[] | undefined;
 
   const change = (
-    operation: "answer" | "released" | "observed" | "opening",
+    operation: "answer" | "unobserved" | "observed" | "opening",
     key: string,
   ): StoreChange => ({
     store: store.name,
@@ -343,30 +346,49 @@ export function connectRemote(
   };
 
   /**
-   * Lets the entry go, and stops observing every instance it alone brought, keeping them to
-   * answer stale, dropping the ones released longest ago beyond `keep`. Only `entries` is
-   * told: what read them keeps what it holds, so leaving a query reruns nothing.
+   * Lets the entry go, and stops observing every instance it alone brought: announces them,
+   * so what read them is hit, and keeps them to answer stale, dropping the ones released
+   * longest ago beyond `keep`.
    */
   const forget = (entry: Entry): void => {
     entries.delete(entry.key);
     const changes: StoreChange[] = [];
     settle(entry, changes);
-    const released: string[] = [];
-    for (const key of entry.brought) {
+    const unobserved = unhold(entry.brought, changes);
+    announce(changes);
+    stop(unobserved);
+  };
+
+  /**
+   * One entry fewer brings the instances `keys` names: adds to `changes` that the store
+   * stops observing those no entry brings any longer, and answers with their keys.
+   */
+  const unhold = (keys: Iterable<string>, changes: StoreChange[]): string[] => {
+    const unobserved: string[] = [];
+    for (const key of keys) {
       const count = (holders.get(key) ?? 1) - 1;
       if (count > 0) {
         holders.set(key, count);
       } else {
         holders.delete(key);
-        released.push(key);
-        changes.push(change("released", key));
+        unobserved.push(key);
+        changes.push(change("unobserved", key));
       }
     }
-    announce(changes);
-    if (released.length === 0) return;
-    // The runtime took the change at once: its revision is the one the store stopped at.
+    return unobserved;
+  };
+
+  /**
+   * Keeps the instances the store stopped observing, once it announced so, to answer stale,
+   * dropping the ones released longest ago beyond `keep`. One some entry brought again since
+   * is not stopped.
+   */
+  const stop = (unobserved: readonly string[]): void => {
+    if (unobserved.length === 0) return;
+    // The runtime took the change at once: its revision is the one the store stopped at,
+    // so no stale answer predates the change that hit its readers.
     const at = latestRevision();
-    for (const key of released) stopped.set(key, at);
+    for (const key of unobserved) if (!holders.has(key)) stopped.set(key, at);
     // Whole releases go: an instance stops with the last query bringing it, never before
     // a root that reads it, so a kept root still reads all it brought. A reopened root is
     // read until its query answers, so neither its release nor any later one goes.
@@ -413,8 +435,15 @@ export function connectRemote(
     return entry;
   };
 
-  /** Takes in one query's result, adding the changes it makes to `changes`. */
-  const take = (result: RemoteResult, changes: StoreChange[]): void => {
+  /**
+   * Takes in one query's result, adding the changes it makes to `changes`, and the keys of
+   * the instances the store stops observing for it to `unobserved`.
+   */
+  const take = (
+    result: RemoteResult,
+    changes: StoreChange[],
+    unobserved: string[],
+  ): void => {
     const entry = entries.get(result.key);
     // Released already: what was on its way is of no use.
     if (entry === undefined) return;
@@ -431,12 +460,17 @@ export function connectRemote(
       }
       const kept = stopped.delete(key);
       const previous = values.get(key);
-      // An equal answer keeps its object, and reruns nothing: what read it holds it already.
+      // An equal answer keeps its object, and reruns only what read it stale.
       const changed =
         previous === undefined || stableJson(previous) !== stableJson(answer);
       if (changed) values.set(key, answer);
       if (changed) changes.push(change("answer", key));
       else if (kept) changes.push(change("observed", key));
+    }
+    if (result.type === "push") {
+      // The query no longer holds them: the host stops observing them for it.
+      const dropped = result.dropped.filter((key) => entry.brought.delete(key));
+      unobserved.push(...unhold(dropped, changes));
     }
     settle(entry, changes);
     if (entry.status === "pending") {
@@ -505,8 +539,10 @@ export function connectRemote(
       }
       // One delivery for the whole message: what one pass there ran, one pass here reruns.
       const changes: StoreChange[] = [];
-      for (const result of message.results) take(result, changes);
+      const unobserved: string[] = [];
+      for (const result of message.results) take(result, changes, unobserved);
       announce(changes);
+      stop(unobserved);
     },
     async open<V extends QueryableView, Followed>(
       query: ExternalQuery<V, Followed>,

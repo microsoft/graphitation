@@ -35,6 +35,7 @@ import type {
   Ref,
   RefMeta,
   ResolveContext,
+  Revision,
   ValueError,
   View,
   ViewInstanceId,
@@ -59,6 +60,7 @@ import {
   valueErrorOf,
 } from "../errors";
 import { annotationOf, internalsOf } from "../views/definitions";
+import { isExact, settledStale } from "../invalidation/reads";
 import type {
   DerivedViewInternals,
   PinInternals,
@@ -581,7 +583,7 @@ function enter(
     view,
     args,
     id,
-    revision: context.startedAt,
+    startedAt: context.startedAt,
     depth,
     status: "running",
     descriptor: undefined,
@@ -638,7 +640,7 @@ function takeKept(
 }
 
 /**
- * The cached instance, when it is not stale, and valid at its own revision and at the
+ * The cached instance, when it is not stale, and valid at its own `startedAt` and at the
  * execution's. A newer
  * one is taken too, unless every store read it made came from history: those stores answer
  * as of the execution's revision instead.
@@ -654,10 +656,9 @@ function takeCached(
   const startedAt = context.startedAt;
   const descriptor = cached.descriptor;
   assertAlways(context.env, descriptor !== undefined);
-  const validThrough = descriptor.validThrough;
-  if (validThrough < startedAt || validThrough < cached.revision)
-    return undefined;
-  if (cached.revision > startedAt) {
+  if (settledStale(descriptor)) return undefined;
+  if (descriptor.matchedThrough < startedAt) return undefined;
+  if (cached.startedAt > startedAt) {
     if (allExact(descriptor.storeReads)) {
       assertSometimes(
         context.env,
@@ -685,7 +686,7 @@ function takeCached(
 /** Whether there are store reads, and each was answered as of the revision it was asked at. */
 function allExact(reads: StoreReads): boolean {
   for (const group of reads.values())
-    for (const read of group) if (!read.exact) return false;
+    for (const read of group) if (!isExact(read)) return false;
   return reads.size > 0;
 }
 
@@ -808,19 +809,13 @@ function settleValue(
     const annotation = annotationOf(answer);
     if (annotation !== undefined) value = annotation.data;
     const reported = annotation?.revision;
-    read = storeReadOf(
-      instance,
-      reported ?? instance.revision,
-      reported === instance.revision,
-      annotation?.footprint,
-    );
-    if (reported !== undefined && reported < instance.revision) {
+    read = storeReadOf(instance, reported, annotation?.footprint);
+    if (reported !== undefined && reported < instance.startedAt) {
       assertSometimes(
         context.env,
         true,
         "A store answers from state older than asked",
       );
-      (context.lagging ??= new Set()).add(read);
     }
   }
   let data: unknown;
@@ -887,7 +882,7 @@ function settleFailure(
   (context.failures ??= new Map()).set(instance.id, error);
   const read =
     internalsOf(instance.view)?.kind === "store"
-      ? storeReadOf(instance, instance.revision, false, undefined)
+      ? storeReadOf(instance, undefined, undefined)
       : undefined;
   settle(context, instance, null, [valueErrorOf(error, keepPath)], read);
   assertAlways(context.env, context.failures.get(instance.id) === error);
@@ -895,13 +890,11 @@ function settleFailure(
 
 function storeReadOf(
   instance: ViewInstance,
-  revision: number,
-  exact: boolean,
+  reported: Revision | undefined,
   footprint: StoreRead["footprint"],
 ): StoreRead {
-  return footprint === undefined
-    ? { view: instance.view, args: instance.args, revision, exact }
-    : { view: instance.view, args: instance.args, revision, exact, footprint };
+  const { view, args, startedAt } = instance;
+  return { view, args, startedAt, reported, footprint };
 }
 
 /**
@@ -935,7 +928,7 @@ function settle(
     assertAlways(context.env, internals?.kind === "store");
     storeReads = new Map([[internals.store, [own]]]);
   }
-  assertAlways(context.env, instance.revision === context.startedAt);
+  assertAlways(context.env, instance.startedAt === context.startedAt);
   applyOutcome(context, instance, storeReads, data, errors);
   assertSometimes(
     context.env,
@@ -946,8 +939,8 @@ function settle(
 
 /**
  * Records an instance's outcome, dropping its inline reads but its waiters, which
- * delivering takes: valid through its `revision`, or, when one of `storeReads` was answered
- * from state older than asked, through the oldest of those. Its execution may record it
+ * delivering takes: matched through its `startedAt`, and stale-settled when one of
+ * `storeReads` was answered from state older than asked. Its execution may record it
  * again, once the reads of the instances it read are complete.
  *
  * A pin that answered with a ref keeps none of `storeReads`: its answer is kept, so no
@@ -976,29 +969,13 @@ function applyOutcome(
   }
   const storeReads = kept ? NO_STORE_READS : collected;
   assertAlways(context.env, NO_STORE_READS.size === 0);
-  const lagging = context.lagging;
-  let oldest: number | undefined;
-  if (lagging !== undefined) {
-    for (const group of storeReads.values()) {
-      assertAlways(context.env, group.length > 0);
-      for (const read of group) {
-        if (
-          lagging.has(read) &&
-          (oldest === undefined || read.revision < oldest)
-        ) {
-          oldest = read.revision;
-        }
-      }
-    }
-  }
-  if (oldest !== undefined) {
-    assertAlways(context.env, oldest < instance.revision);
+  if (settledStale({ storeReads })) {
     assertSometimes(context.env, true, "An instance settles stale");
   }
   const { view, args, id } = instance;
-  const validThrough = oldest ?? instance.revision;
+  const matchedThrough = instance.startedAt;
   instance.status = "settled";
-  instance.descriptor = { view, args, id, storeReads, validThrough };
+  instance.descriptor = { view, args, id, storeReads, matchedThrough };
   instance.reads = undefined;
   instance.data = data;
   instance.errors = errors;

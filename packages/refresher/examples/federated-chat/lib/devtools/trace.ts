@@ -170,7 +170,7 @@ export function createTracer({
           .flat()
           .map((read) => ({
             label: labelOf(viewName(read.view), read.args),
-            revision: read.revision,
+            revision: read.reported ?? read.startedAt,
             footprint:
               read.footprint === undefined ? null : brief(read.footprint),
           })),

@@ -107,8 +107,8 @@ export type QueryDriver<
   /**
    * Runs it again, once a change reached what an earlier run read. It may run just the
    * stale instances' refs, following only refs to instances not subscribed or stale, or walk
-   * from `descriptor.roots` again to find what is no longer reached. Its output covers
-   * what it ran.
+   * from `descriptor.roots` again, through valid instances by `edges`, running only the stale
+   * ones the walk still reaches. Its output covers what it ran.
    */
   restart(
     args: QueryRestartArgs<Footprint>,
@@ -131,9 +131,19 @@ export type QueryRestartArgs<Footprint = unknown> = {
 
   /**
    * The instances in `descriptor.views` a change reached, each once, with why: never
-   * empty. Their refs are read together.
+   * empty. Which of them run, and in which waves, is the driver's.
    */
   readonly invalidated: InvalidateResult<ViewInstanceDescriptor>;
+
+  /**
+   * The edges the query's results reported `traversed`, as the runtime keeps them: under the
+   * id of an instance in `descriptor.views`, the ids its data leads to. A valid instance's
+   * are as its data is, so a driver may walk through it without running it. `undefined`
+   * once a result reported none. The runtime's own map: the run's results change it.
+   */
+  readonly edges:
+    | ReadonlyMap<ViewInstanceId, readonly ViewInstanceId[]>
+    | undefined;
 
   readonly context: DriverContext;
 };
@@ -251,8 +261,8 @@ export type CreateSimpleDriverFn = (
 
 export type SimpleDriverOutput = {
   /**
-   * One per root, in order, or per stale instance for a restart: refs naming one instance get the
-   * same object.
+   * One per root, in order, or, for a restart, the instances of its first wave: refs naming
+   * one instance get the same object.
    */
   readonly roots: readonly ViewInstance[];
 

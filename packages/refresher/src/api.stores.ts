@@ -160,12 +160,22 @@ export type AnnotationArgs<Result, Footprint = unknown> = {
    * knows it, and nothing otherwise.
    *
    * Below the revision asked, the answer is stale: it misses changes the reader asked to
-   * see. The instance that read it, and every instance reading that one inline, settles
-   * stale, and whoever keeps it decides when to read again.
+   * see, as a store acting as a cache may answer from what it still holds while it
+   * catches up. The instance that read it, and every instance reading that one inline,
+   * settles stale, and stays so: changes through the revision asked are not matched
+   * against the read again, so only a later change the store registers, which its
+   * `matches` accepts for the read, makes whoever holds it read again. A store that caught
+   * up must say so with such a change.
    *
-   * Changes after it are matched against the read. Without it, the read gets the revision
-   * it was asked at, and its answer may reflect later changes too. A read that reports
-   * the revision it was asked at is taken to come from history: see `StoreRead.exact`.
+   * Contract: a store never answers from before a change it registered that its `matches`
+   * accepts for the read. That change would already lie behind the read, and could never
+   * restart it. The runtime checks a stale answer against its change log, and fails the
+   * instances that read it with a `STALE_ANSWER` store error when it breaks the contract.
+   *
+   * Changes after it, and after the revision asked, are matched against the read. Without
+   * it, the read gets the revision it was asked at, and its answer may reflect later
+   * changes too. A read that reports the revision it was asked at is taken to come from
+   * history: see `StoreRead.reported`.
    */
   readonly revision?: Revision;
   /**
@@ -323,7 +333,7 @@ export type StoreViewFn = {
 
 /**
  * One read a store view performed, as plain data. Nothing here is state, and nothing
- * outside `view` and `revision` is interpreted by the engine.
+ * outside `view` and the revisions is interpreted by the engine.
  *
  * A change affects a read when the store view's `matches` says so: a pure
  * function, so the engine knows that a read has a test, never what the test means.
@@ -339,20 +349,20 @@ export type StoreRead<Args = unknown, Footprint = unknown> = {
   readonly args: Args;
 
   /**
-   * The answer reflects every change up to this revision: the one the store reported, or
-   * the revision it was asked at. Only later changes are matched. Below the revision it
-   * was asked at, the answer is stale: see `AnnotationArgs.revision`.
+   * The revision the read was asked at: the `startedAt` of the execution that read it.
+   * Reads collected from a cached instance keep the one they were asked at.
    */
-  readonly revision: Revision;
+  readonly startedAt: Revision;
 
   /**
-   * Whether the store reported the revision it was asked at: the answer is the state at
-   * exactly that revision, as a store keeping history reads it, and the store can answer
-   * as of an earlier revision just as well. A store reading its current state that
-   * happens to be at the revision asked looks the same, and costs a rerun at most.
+   * The revision the store reported its answer reflects, if it reported one. The answer
+   * reflects every change through it, or, without it, through `startedAt`; only later
+   * changes are matched. Equal to `startedAt`, the answer is the state at exactly that
+   * revision, as a store keeping history reads it. Below it, the answer is stale: see
+   * `AnnotationArgs.revision`.
    */
-  readonly exact: boolean;
+  readonly reported: Revision | undefined;
 
   /** What the answer covered, as the store view reported it. See `AnnotationArgs.footprint`. */
-  readonly footprint?: Footprint;
+  readonly footprint: Footprint | undefined;
 };

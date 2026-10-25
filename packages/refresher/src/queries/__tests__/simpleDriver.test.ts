@@ -121,7 +121,7 @@ function descriptorOf(node: AnyView, id: number): ViewInstanceDescriptor {
     args: id,
     id: key,
     storeReads: new Map(),
-    validThrough: 0,
+    matchedThrough: 0,
   };
 }
 
@@ -161,8 +161,12 @@ function isFollowed(scenario: Scenario, edge: Edge): boolean {
   return edge.tags?.some((tag) => scenario.follow?.includes(tag)) ?? false;
 }
 
-/** A view per scenario: node `id` returns its id and a ref per edge, counting its runs. */
-function nodeView(scenario: Scenario, runs: number[]): AnyView {
+/** A view over `graph` as it is when it runs: node `id` returns its id and a ref per edge, counting its runs. */
+function nodeView(
+  graph: () => readonly (readonly Edge[])[],
+  async: boolean,
+  runs: number[],
+): AnyView {
   const node: AnyView = view({
     name: "node",
     resolve: (id: number, { ref }) => {
@@ -172,7 +176,7 @@ function nodeView(scenario: Scenario, runs: number[]): AnyView {
         args: number,
         meta?: RefMeta,
       ) => AnyRef;
-      const children = (scenario.edges[id] ?? []).map((edge) =>
+      const children = (graph()[id] ?? []).map((edge) =>
         refTo(
           node,
           edge.to,
@@ -180,18 +184,49 @@ function nodeView(scenario: Scenario, runs: number[]): AnyView {
         ),
       );
       const data = { id, children };
-      return scenario.async ? Promise.resolve(data) : data;
+      return async ? Promise.resolve(data) : data;
     },
   });
   return node;
 }
 
+/** What `id` leads to in `graph` over edges holding a tag `follow` names. */
+function leadsTo(
+  graph: readonly (readonly Edge[])[],
+  follow: readonly string[] | undefined,
+  id: number,
+): number[] {
+  return (graph[id] ?? [])
+    .filter((edge) => edge.tags?.some((tag) => follow?.includes(tag)) ?? false)
+    .map((edge) => edge.to);
+}
+
+/** The nodes not `valid` that `starts` are or lead to through `valid` ones alone. */
+function front(
+  graph: readonly (readonly Edge[])[],
+  follow: readonly string[] | undefined,
+  starts: Iterable<number>,
+  valid: ReadonlySet<number>,
+): Set<number> {
+  const found = new Set<number>();
+  const walked = new Set<number>();
+  const stack = [...starts];
+  for (let id = stack.pop(); id !== undefined; id = stack.pop()) {
+    if (!valid.has(id)) found.add(id);
+    else if (!walked.has(id)) {
+      walked.add(id);
+      stack.push(...leadsTo(graph, follow, id));
+    }
+  }
+  return found;
+}
+
 void describe("simpleDriver", () => {
-  void it("runs every instance the roots and tagged refs reach, each once and nothing else, and on restart no valid one, reporting each one's tagged refs as traversed", async () => {
+  void it("runs every instance the roots and tagged refs reach, each once and nothing else, and on a restart without kept edges, every stale one first and no valid one, reporting each one's tagged refs as traversed", async () => {
     await fc.assert(
       fc.asyncProperty(scenarios, async (scenario) => {
         const runs: number[] = [];
-        const node = nodeView(scenario, runs);
+        const node = nodeView(() => scenario.edges, scenario.async, runs);
         const context = driverContext();
         const driver = createSimpleDriver(scenario.follow);
         const refs = (ids: readonly number[]) =>
@@ -231,6 +266,7 @@ void describe("simpleDriver", () => {
                   footprint: undefined,
                 },
                 invalidated: { stale },
+                edges: undefined,
                 context,
               }),
             ),
@@ -273,6 +309,99 @@ void describe("simpleDriver", () => {
           assert.equal(root.id, context.codec.instanceKey(node, id));
           assert.equal(output.instances.get(root.id), root);
         });
+      }),
+    );
+  });
+
+  void it("on a restart with the kept edges, walks from the roots through valid instances, running each instance not valid they still reach once, in the first wave its roots reach through valid ones alone, and in each later wave those the last one leads to", async () => {
+    const changes = fc.record({
+      stale: fc.subarray([...Array(NODES).keys()], { minLength: 1 }),
+      edges: scenarios.map((scenario) => scenario.edges),
+    });
+    await fc.assert(
+      fc.asyncProperty(scenarios, changes, async (scenario, change) => {
+        const runs: number[] = [];
+        let graph = scenario.edges;
+        const node = nodeView(() => graph, scenario.async, runs);
+        const context = driverContext();
+        const key = (id: number) => context.codec.instanceKey(node, id);
+        const driver = createSimpleDriver(scenario.follow);
+        const roots = scenario.roots.map((id) => createRef(node, id));
+        const started = await single(driver.start({ roots, context }));
+        const views = new Map<string, ViewInstanceDescriptor>();
+        for (const instance of started.output.instances.values()) {
+          const kept = descriptorOf(node, instance.args as number);
+          views.set(kept.id, kept);
+        }
+        const stale = change.stale.filter((id) => views.has(key(id)));
+        fc.pre(stale.length > 0);
+        const valid = new Set<number>();
+        for (const kept of views.values())
+          if (!stale.includes(kept.args as number))
+            valid.add(kept.args as number);
+        // A stale node's data changed; a valid one's is as the start left it.
+        graph = graph.map((edges, id) =>
+          stale.includes(id) ? change.edges[id]! : edges,
+        );
+        runs.length = 0;
+        const result = await single(
+          driver.restart({
+            descriptor: {
+              id: 0,
+              driver,
+              roots,
+              views,
+              pins: new Map(),
+              footprint: undefined,
+            },
+            invalidated: {
+              stale: stale.map((id) => ({
+                descriptor: views.get(key(id))!,
+                reason: { kind: "unverifiable" as const },
+              })),
+            },
+            edges: new Map(started.traversed),
+            context,
+          }),
+        );
+
+        const { output, waves } = result;
+        const expected = new Set<number>();
+        for (const id of reachable(
+          { ...scenario, edges: graph },
+          scenario.roots,
+          new Set(),
+        ))
+          if (!valid.has(id)) expected.add(id);
+        for (let id = 0; id < NODES; id++) {
+          assert.equal(runs[id] ?? 0, expected.has(id) ? 1 : 0);
+        }
+        assert.deepEqual(
+          new Set([...output.instances.values()].map((i) => i.args)),
+          expected,
+        );
+        assert.equal(waves.length === 0, expected.size === 0);
+        const ran = new Set<number>();
+        let leads: Iterable<number> = scenario.roots;
+        for (const wave of waves) {
+          const next = front(graph, scenario.follow, leads, valid);
+          for (const id of ran) next.delete(id);
+          assert.deepEqual(
+            new Set(wave.refs.map((ref) => ref.args as number)),
+            next,
+          );
+          const evaluated = wave.evaluated.map(
+            (instance) => instance.args as number,
+          );
+          for (const id of evaluated) ran.add(id);
+          leads = evaluated.flatMap((id) =>
+            leadsTo(graph, scenario.follow, id),
+          );
+        }
+        assert.deepEqual(
+          output.roots.map((root) => root.args),
+          waves[0]?.evaluated.map((instance) => instance.args) ?? [],
+        );
       }),
     );
   });

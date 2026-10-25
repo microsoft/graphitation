@@ -22,6 +22,7 @@ import type { GetStoreFn, StoreRead } from "../../api.stores";
 import { createJsonCodec } from "../../codec/json";
 import { storeView, view } from "../../views/definitions";
 import { createRef, isViewRef } from "../../views/ref";
+import { settledStale } from "../../invalidation/reads";
 
 /** The codec every execution in these tests shares, so instance ids agree across them. */
 export const codec: Codec = createJsonCodec();
@@ -376,10 +377,7 @@ export type SettledInstance = ViewInstance & {
 export function settledOf(instance: ViewInstance | undefined): SettledInstance {
   assert.ok(instance !== undefined, "no instance");
   assert.ok(isSettled(instance), `${instance.id} runs`);
-  assert.ok(
-    instance.descriptor.validThrough >= instance.revision,
-    `${instance.id} settled stale`,
-  );
+  assert.ok(!settledStale(instance.descriptor), `${instance.id} settled stale`);
   return instance;
 }
 

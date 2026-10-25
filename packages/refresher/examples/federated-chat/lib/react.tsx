@@ -274,7 +274,7 @@ export function createClient({
       // Runs settle out of order: an older one never replaces what a newer one ran.
       if (
         existing !== undefined &&
-        existing.instance.revision > incoming.revision
+        existing.instance.startedAt > incoming.startedAt
       )
         continue;
       // Encoded first, so an action ref both hold stays registered.

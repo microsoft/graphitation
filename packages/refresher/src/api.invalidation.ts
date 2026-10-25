@@ -67,9 +67,9 @@ export type CreateChangeLogArgs = {
 
 /**
  * A settled view instance without its result: which one it is, and the store reads its
- * result depends on, known valid through `validThrough`, to match changes against. Each
- * settled `ViewInstance` holds one, which the view cache validates and a subscription
- * keeps in place of the instance.
+ * result depends on, matched against the changes through `matchedThrough`. Each settled
+ * `ViewInstance` holds one, which the view cache validates and a subscription keeps in
+ * place of the instance.
  */
 export type ViewInstanceDescriptor = {
   readonly view: AnyView;
@@ -87,27 +87,38 @@ export type ViewInstanceDescriptor = {
   readonly storeReads: ReadonlyMap<StoreName, readonly StoreRead[]>;
 
   /**
-   * The latest revision it is known valid at: its instance's `revision` when it settles,
-   * or, settled stale, the oldest revision a store answered one of its stale reads at.
-   * Whoever holds it advances it in place as changes since are matched against its reads
-   * and none reaches them, so every holder shares what was checked. It only increases, so
-   * whatever was decided against an earlier value still holds.
+   * Every change through it was matched against its reads, and none hit them: its
+   * instance's `startedAt` when it settles. A read is matched only against the changes
+   * after it and after what its store reported. A stale read, its store answering from
+   * state older than asked, misses no change through the revision asked the store
+   * registered, as a store never answers from before a change that hit the read; so it is
+   * matched from there too, waiting for a change that tells the store caught up. Whoever
+   * holds it advances it in place as later changes are matched and none reaches them, so
+   * every holder shares what was checked. It only increases, so whatever was decided
+   * against an earlier value still holds.
+   *
+   * The result reflects every change through it, unless it settled stale: then only
+   * through the oldest revision a stale read reported, however far it is matched. See
+   * `AnnotationArgs.revision`.
    */
-  validThrough: Revision;
+  matchedThrough: Revision;
 };
 
 /**
  * Matches descriptors against every change through `changes.head`. Each one it is given ends
  * in one of three ways:
  *
- * - **Valid.** No change after its `validThrough` hits its `storeReads`: it is valid through
- *   `changes.head`, and the result leaves it out.
+ * - **Valid.** No change after its `matchedThrough` hits its `storeReads`: none reached it
+ *   through `changes.head`, and the result leaves it out.
  * - **Stale.** One does, and the result says which.
- * - **Unverifiable.** The log no longer holds every change since its `validThrough`.
+ * - **Unverifiable.** The log no longer holds every change since its `matchedThrough`.
  *
- * A read is matched only against changes after its own `revision` and after `validThrough`:
- * whatever was decided before still holds. Nothing given is changed: dropping a stale
- * descriptor, or advancing `validThrough`, is the caller's.
+ * A read is matched only against changes after what it reflects, `reported` or else
+ * `startedAt`, and after `matchedThrough`: whatever was decided before still holds. A
+ * descriptor that settled stale, a store answering one of its reads from state older than
+ * asked, is matched the same way: it stays stale, but only a later change restarts what
+ * holds it. Nothing given is changed:
+ * dropping a stale descriptor, or advancing `matchedThrough`, is the caller's.
  */
 export type InvalidateFn = <T extends ViewInstanceDescriptor>(
   args: InvalidateArgs<T>,
@@ -154,7 +165,7 @@ export type Hit = {
   readonly revision: Revision;
 };
 
-/** Nothing can confirm the reads: the log no longer holds every change since `validThrough`. */
+/** Nothing can confirm the reads: the log no longer holds every change since `matchedThrough`. */
 export type Unverifiable = {
   readonly kind: "unverifiable";
 };

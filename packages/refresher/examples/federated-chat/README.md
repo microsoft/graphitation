@@ -251,11 +251,15 @@ export async function selectChat(
 
 `queries.reopen` answers at once with the room's ref if the worker store still
 holds its answer, and opens its query again in the background. Once a query is
-closed, the store stops observing what only that query brought, and keeps it to
-answer stale, as of the close, until a query brings it again. Closing reruns
-nothing: what read those answers keeps what it holds. So a room left a moment
-ago shows at once, as it was, and once its reopened query answers, only the
-views whose answers changed run again. Any other
+closed, the store
+[stops observing](../../docs/architecture/stores.md#when-a-store-stops-observing)
+what only that query brought: it says so with a change, and answers it stale,
+as of the close, until a query brings it again. So a room left a moment ago
+shows stale, and once its reopened query answers, its views run again: every
+view of an answer that changed, and of an unchanged one only those that read it
+stale. A live query that stops reaching an instance, as when a message leaves
+the page, lists it as dropped in its push, and the store stops observing it the
+same way unless another query still brings it. Any other
 room is opened, and waits for its first answer: until then, the room on screen
 stays and its link shows as pending (`aria-busy`). A navigation started
 meanwhile wins, and the room it superseded is closed. Every remote wait is an

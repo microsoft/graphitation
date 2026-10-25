@@ -82,7 +82,8 @@ reads it, directly or inline through other views, settles stale instead of
 settled:
 
 - It holds its result, which reflects at least the state of the oldest stale
-  answer it read. That revision is its `validThrough`.
+  answer it read. Each read records the revision it was asked at and the one
+  its store reported, so this is derived from the reads, not stored apart.
 - A view that only holds a ref to it is unaffected. It never read its data, as
   with [caching](view-caching.md#what-is-cached).
 - An execution never takes a stale instance from the view cache.
@@ -95,6 +96,17 @@ only report what is already known. The session's
 [controllers](lifecycles.md#controllers) decide what to do with it: show it while
 asking for a fresh answer, wait for one, or fail. The fresh state arrives as a
 change, which hits the stale read and every instance that read it.
+
+A store may answer stale whenever it likes, as a cache does, but never from
+before a change it delivered that its store view matches against the read:
+running the read again for that change would get the same answer, and a query
+reading it would restart without end. The runtime checks every stale answer
+against the [change log](view-caching.md#the-change-log) and fails the instances
+reading one that breaks this with a `STALE_ANSWER` store error. So a stale instance is matched
+from the revision it started at, like a settled one, not from its stale answer's: no
+change in between hits it. The revision it is matched through, its
+`matchedThrough`, moves forward as changes are matched, while the revision its
+result is valid through stays that of its oldest stale answer.
 
 A store that stops observing its changes says so with a change too, which hits
 every read made through it before then, and answers stale until it observes

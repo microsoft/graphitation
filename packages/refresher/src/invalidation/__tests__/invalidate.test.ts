@@ -14,6 +14,7 @@ import { defaultEnvironment } from "../../env/environment";
 import { storeView, view } from "../../views/definitions";
 import { createChangeLog } from "../changeLog";
 import { invalidate } from "../invalidate";
+import { answeredAt } from "../reads";
 
 const IMPLEMENTATIONS: readonly (readonly [string, InvalidateFn])[] = [
   ["invalidate", invalidate],
@@ -42,11 +43,12 @@ const OWNER = view({ name: "owner", resolve: () => null });
 type ReadSpec = {
   readonly view: number;
   readonly keys: readonly number[];
-  readonly revision: number;
+  readonly startedAt: number;
+  readonly reported: number | null;
 };
 type DescriptorSpec = {
   readonly reads: readonly number[];
-  readonly validThrough: number;
+  readonly matchedThrough: number;
 };
 type ChangeSpec = { readonly store: number; readonly key: number };
 type WorldSpec = {
@@ -67,7 +69,8 @@ const worldArb: fc.Arbitrary<WorldSpec> = fc
       fc.record({
         view: fc.nat(STORE_VIEWS.length - 1),
         keys: keysArb,
-        revision: fc.nat(12),
+        startedAt: fc.nat(12),
+        reported: fc.option(fc.nat(12), { nil: null }),
       }),
       { minLength: 1, maxLength: 6 },
     ),
@@ -93,7 +96,7 @@ const worldArb: fc.Arbitrary<WorldSpec> = fc
         descriptors: fc.array(
           fc.record({
             reads: fc.uniqueArray(fc.nat(reads.length - 1), { maxLength: 4 }),
-            validThrough: fc.nat(16),
+            matchedThrough: fc.nat(16),
           }),
           { minLength: 1, maxLength: 6 },
         ),
@@ -151,8 +154,9 @@ function buildWorld(spec: WorldSpec): World {
     (read): StoreRead => ({
       view: STORE_VIEWS[read.view]! as StoreRead["view"],
       args: read.keys,
-      revision: read.revision,
-      exact: false,
+      startedAt: read.startedAt,
+      reported: read.reported ?? undefined,
+      footprint: undefined,
     }),
   );
   const copies = new Map<ViewInstanceDescriptor, ViewInstanceDescriptor>();
@@ -166,13 +170,8 @@ function buildWorld(spec: WorldSpec): World {
         group.push(reads[read]!);
       }
       const id = `owner:${index}`;
-      const made = {
-        view: OWNER,
-        args: index,
-        id,
-        storeReads,
-        validThrough: each.validThrough,
-      };
+      const { matchedThrough } = each;
+      const made = { view: OWNER, args: index, id, storeReads, matchedThrough };
       const copied = new Map(
         [...storeReads].map(([store, group]) => [store, [...group]]),
       );
@@ -226,7 +225,7 @@ function checkHit(
     [...descriptor.storeReads.values()].flat().includes(reason.read),
     "the hit read is not the descriptor's",
   );
-  const start = Math.max(reason.read.revision, descriptor.validThrough);
+  const start = Math.max(answeredAt(reason.read), descriptor.matchedThrough);
   assert.ok(
     reason.revision > start,
     "the witness precedes what the read was valid at",
@@ -281,14 +280,14 @@ for (const [name, run] of IMPLEMENTATIONS) {
               assert.equal(invalidated, undefined, "reported, but not given");
               continue;
             }
-            const unverifiable = each.validThrough < log.tail;
+            const unverifiable = each.matchedThrough < log.tail;
             const hit = [...each.storeReads.values()]
               .flat()
               .some((read) =>
                 hitBetween(
                   world.deliveries,
                   read,
-                  Math.max(read.revision, each.validThrough),
+                  Math.max(answeredAt(read), each.matchedThrough),
                   Infinity,
                 ),
               );

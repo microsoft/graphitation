@@ -16,6 +16,7 @@ import type {
 import type { StoreChange, StoreRead } from "../../api.stores";
 import { defaultEnvironment } from "../../env/environment";
 import { createChangeLog } from "../../invalidation/changeLog";
+import { answeredAt, settledStale } from "../../invalidation/reads";
 import { storeView, view } from "../../views/definitions";
 import { createViewCache } from "../viewCache";
 
@@ -102,65 +103,65 @@ function descriptorOf(instance: ViewInstance): ViewInstanceDescriptor {
   return instance.descriptor;
 }
 
-/** Whether an instance, valid through `validThrough` when last checked, is valid through the head. */
+/** Whether an instance, matched through `matchedThrough` when last checked, is valid through the head. */
 function validNow(
   model: Model,
   instance: ViewInstance,
-  validThrough: Revision,
+  matchedThrough: Revision,
 ): boolean {
   return (
-    validThrough >= model.head ||
-    (validThrough >= model.tail &&
+    matchedThrough >= model.head ||
+    (matchedThrough >= model.tail &&
       ![...descriptorOf(instance).storeReads.values()]
         .flat()
         .some((read) =>
-          hitAfter(model, read, Math.max(read.revision, validThrough)),
+          hitAfter(model, read, Math.max(answeredAt(read), matchedThrough)),
         ))
   );
 }
 
 /**
- * Checks a kept instance the cache validated, not stale and valid through `validThrough`
+ * Checks a kept instance the cache validated, not stale and matched through `matchedThrough`
  * before: valid through the head, or stale, as the model then is.
  */
 function checkValidated(
   model: Model,
   instance: ViewInstance,
-  validThrough: Revision,
+  matchedThrough: Revision,
 ): void {
-  const after = descriptorOf(instance).validThrough;
-  if (validNow(model, instance, validThrough)) {
+  const after = descriptorOf(instance).matchedThrough;
+  if (validNow(model, instance, matchedThrough)) {
     assert.ok(after >= model.head, "not validated through the head");
     return;
   }
-  assert.equal(after, validThrough, "a stale instance was validated");
+  assert.equal(after, matchedThrough, "a stale instance was validated");
   model.stale.add(instance);
 }
 
 /** Checks `get(id)` against the model, which validates what it keeps under `id` unless stale. */
 function checkGet(model: Model, real: Real, id: string): void {
   const kept = model.kept.get(id);
-  const validThrough =
-    kept === undefined ? undefined : descriptorOf(kept).validThrough;
+  const matchedThrough =
+    kept === undefined ? undefined : descriptorOf(kept).matchedThrough;
   const got = real.cache.get(id);
   assert.equal(got, kept, "handed out");
-  if (kept !== undefined && validThrough !== undefined) {
+  if (kept !== undefined && matchedThrough !== undefined) {
     if (model.stale.has(kept)) {
       assert.equal(
-        descriptorOf(kept).validThrough,
-        validThrough,
+        descriptorOf(kept).matchedThrough,
+        matchedThrough,
         "a stale instance was validated",
       );
     } else {
-      checkValidated(model, kept, validThrough);
+      checkValidated(model, kept, matchedThrough);
     }
   }
   checkKept(model, real);
 }
 
-/** Whether it is valid at its own revision: it did not settle stale, or was validated since. */
+/** Whether it is valid at its own `startedAt`: it did not settle stale. */
 function isCurrent(instance: ViewInstance): boolean {
-  return descriptorOf(instance).validThrough >= instance.revision;
+  return !settledStale(descriptorOf(instance));
 }
 
 /**
@@ -176,7 +177,7 @@ function displaces(
   const keptStale = model.stale.has(kept);
   if (keptStale !== model.stale.has(instance)) return keptStale;
   if (isCurrent(kept) !== isCurrent(instance)) return isCurrent(instance);
-  return kept.revision <= instance.revision;
+  return kept.startedAt <= instance.startedAt;
 }
 
 /** Checks the size, and which kept instances are marked stale. */
@@ -252,7 +253,7 @@ const cacheableArb = fc.nat(VIEWS.length - 1).map(
 );
 
 /**
- * An instance settled `back` revisions before the head and valid `ahead` revisions after
+ * An instance settled `back` revisions before the head and matched `ahead` revisions after
  * its own, reading keys at or before its revision; or one settled stale; marked `stale` or
  * not.
  */
@@ -287,25 +288,36 @@ const keepArb = fc
           group.push({
             view: STORE_VIEWS[read.view]!,
             args: read.keys,
-            revision: Math.max(0, revision - read.back),
-            exact: false,
+            startedAt: Math.max(0, revision - read.back),
+            reported: undefined,
+            footprint: undefined,
           });
         }
-        const validThrough = spec.settledStale
-          ? revision - 1
-          : revision + spec.ahead;
+        if (spec.settledStale) {
+          const store = STORES[0];
+          const group = storeReads.get(store) ?? [];
+          storeReads.set(store, group);
+          group.push({
+            view: STORE_VIEWS[0]!,
+            args: [],
+            startedAt: revision,
+            reported: revision - 1,
+            footprint: undefined,
+          });
+        }
+        const matchedThrough = revision + spec.ahead;
         const instance: ViewInstance = {
           view: each,
           args: null,
           id: spec.id,
-          revision,
+          startedAt: revision,
           depth: 0,
           descriptor: {
             view: each,
             args: null,
             id: spec.id,
             storeReads,
-            validThrough,
+            matchedThrough,
           },
           status: spec.stale ? "stale" : "settled",
           data: null,
@@ -356,17 +368,17 @@ const validateArb = fc
         const due: (readonly [ViewInstance, Revision])[] = [];
         const untouched: (readonly [ViewInstance, Revision])[] = [];
         for (const kept of model.kept.values()) {
-          const validThrough = descriptorOf(kept).validThrough;
-          const isDue = validThrough < before && !model.stale.has(kept);
-          (isDue ? due : untouched).push([kept, validThrough]);
+          const matchedThrough = descriptorOf(kept).matchedThrough;
+          const isDue = matchedThrough < before && !model.stale.has(kept);
+          (isDue ? due : untouched).push([kept, matchedThrough]);
         }
         real.cache.validate(before);
-        for (const [kept, validThrough] of due)
-          checkValidated(model, kept, validThrough);
-        for (const [kept, validThrough] of untouched) {
+        for (const [kept, matchedThrough] of due)
+          checkValidated(model, kept, matchedThrough);
+        for (const [kept, matchedThrough] of untouched) {
           assert.equal(
-            descriptorOf(kept).validThrough,
-            validThrough,
+            descriptorOf(kept).matchedThrough,
+            matchedThrough,
             "one not due was validated",
           );
         }
@@ -377,7 +389,7 @@ const validateArb = fc
         for (const kept of model.kept.values()) {
           if (!model.stale.has(kept)) {
             assert.ok(
-              descriptorOf(kept).validThrough >= before,
+              descriptorOf(kept).matchedThrough >= before,
               "lost to the trim",
             );
           }

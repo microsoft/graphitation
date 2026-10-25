@@ -36,6 +36,7 @@ import {
 import { storeView, view } from "../../views/definitions";
 import { createRef } from "../../views/ref";
 import { createRuntime } from "../runtime";
+import { answeredAt } from "../../invalidation/reads";
 
 const IMPLEMENTATIONS: readonly (readonly [string, CreateRuntimeFn])[] = [
   ["createRuntime", createRuntime],
@@ -711,7 +712,7 @@ for (const [name, create] of IMPLEMENTATIONS) {
                 .some((read) =>
                   delivered.some(
                     ({ revision, keys }) =>
-                      revision > read.revision &&
+                      revision > answeredAt(read) &&
                       revision <= head &&
                       keys.includes(read.args as number),
                   ),
@@ -744,7 +745,7 @@ for (const [name, create] of IMPLEMENTATIONS) {
                     "a read it never made",
                   );
                   assert.ok(
-                    reason.revision > reason.read.revision,
+                    reason.revision > answeredAt(reason.read),
                     "a change before the read",
                   );
                   assert.ok(
@@ -818,6 +819,53 @@ for (const [name, create] of IMPLEMENTATIONS) {
       const later = runtime.query(root as QueryableView<number>, 2, driver);
       assert.ok(later instanceof Promise);
       assert.deepEqual([...valuesOf(await later)], [[2, 0]]);
+    });
+
+    void it("fails a store answer older than a change its store matched against the read", () => {
+      const answer = (lag: number, accepts = true, trim?: Revision) => {
+        const feed = feedAt(0);
+        const runtime = create({
+          env: defaultEnvironment,
+          feed,
+          store: () => ({}),
+        });
+        feed.deliver([{ store: "other", operation: "put", value: 0 }], 2);
+        feed.deliver([{ store: "lagging", operation: "put", value: 0 }], 4);
+        feed.deliver([], 6);
+        if (trim !== undefined) runtime.trim(trim);
+        const lagging = storeView({
+          store: "lagging",
+          name: "lagging",
+          matches: () => accepts,
+          resolve: (key: number, { annotate, revision }: StoreViewContext) =>
+            annotate({ data: key, revision: revision - lag }),
+        });
+        const reader: AnyView = view({
+          name: "reader",
+          resolve: (key: number, context) => context.read(lagging, key),
+        });
+        const result = runtime.immediateQuery(
+          reader as QueryableView<number>,
+          1,
+          createSimpleDriver(),
+        );
+        assert.ok(!(result instanceof Promise));
+        assert.ok(!("initialResult" in result));
+        const [root] = result.output.roots;
+        runtime.dispose();
+        return root!;
+      };
+      // Answered after the change at 4: stale, as the store may be.
+      const after = answer(1);
+      assert.deepEqual(after.errors, []);
+      assert.equal(after.data, 1);
+      // Answered before it: the change could never restart the read.
+      const before = answer(3);
+      assert.equal(before.data, null);
+      assert.equal(before.errors[0]?.code, "STALE_ANSWER");
+      // Before a change its store does not match against the read, or one the log let go of.
+      assert.deepEqual(answer(3, false).errors, []);
+      assert.deepEqual(answer(3, true, 4).errors, []);
     });
 
     void it("restarts on a synchronous write before any later task, when passes run in a microtask", async () => {
@@ -924,14 +972,22 @@ for (const [name, create] of IMPLEMENTATIONS) {
       assert.deepEqual([...valuesOf(parts[0]!)], [[1, 0]]);
     });
 
-    void it("keeps subscribed exactly what its roots reach through the edges its results traversed, as its graph is rewired", async () => {
+    void it("keeps subscribed exactly what its roots reach through the edges its results traversed, as its graph is rewired, rerunning only the rewired nodes they still reach and those they newly do", async () => {
       const NODES = 6;
       const NEXT = "next";
       const targetsArb = fc.array(fc.nat(NODES - 1), { maxLength: 3 });
       await fc.assert(
         fc.asyncProperty(
           fc.array(targetsArb, { minLength: NODES, maxLength: NODES }),
-          fc.array(fc.tuple(fc.nat(NODES - 1), targetsArb), { maxLength: 12 }),
+          fc.array(
+            fc.array(fc.tuple(fc.nat(NODES - 1), targetsArb), {
+              minLength: 1,
+              maxLength: 3,
+            }),
+            {
+              maxLength: 8,
+            },
+          ),
           async (initial, rewirings) => {
             const env = manualEnvironment();
             const feed = feedAt(1);
@@ -947,14 +1003,18 @@ for (const [name, create] of IMPLEMENTATIONS) {
               matches: (node: number, stored: StoreChange) =>
                 stored.value === node,
             });
+            const ran: number[] = [];
             const node: AnyView = view({
               name: "node",
-              resolve: (at: number, context) =>
-                (context.read(linksOf, at) as readonly number[]).map((target) =>
-                  context.ref(node as ReferenceableView<number>, target, {
-                    tags: [NEXT],
-                  }),
-                ),
+              resolve: (at: number, context) => {
+                ran.push(at);
+                return (context.read(linksOf, at) as readonly number[]).map(
+                  (target) =>
+                    context.ref(node as ReferenceableView<number>, target, {
+                      tags: [NEXT],
+                    }),
+                );
+              },
             });
             const reachable = () => {
               const reached = new Set<number>();
@@ -985,16 +1045,32 @@ for (const [name, create] of IMPLEMENTATIONS) {
             assert.ok(!(result instanceof Promise));
             result.subscribe({ next: () => undefined });
             let revision = 1;
-            for (const [rewired, targets] of rewirings) {
-              const reached = reachable().has(rewired);
-              const before = restarts;
-              links.set(rewired, targets);
-              feed.deliver(
-                [{ store: "links", operation: "put", value: rewired }],
-                ++revision,
+            for (const batch of rewirings) {
+              const before = reachable();
+              const stale = new Set(
+                batch
+                  .map(([rewired]) => rewired)
+                  .filter((at) => before.has(at)),
               );
+              const restartsBefore = restarts;
+              for (const [rewired, targets] of batch)
+                links.set(rewired, targets);
+              ran.length = 0;
+              const changes = batch.map(([rewired]) => ({
+                store: "links",
+                operation: "put" as const,
+                value: rewired,
+              }));
+              feed.deliver(changes, ++revision);
               env.flush();
-              assert.equal(restarts - before, reached ? 1 : 0);
+              assert.equal(restarts - restartsBefore, stale.size > 0 ? 1 : 0);
+              // A stale node its rewired parent no longer leads to does not run; a cached one may not.
+              const after = reachable();
+              assert.equal(new Set(ran).size, ran.length, "a node ran twice");
+              for (const at of ran)
+                assert.ok(after.has(at) && (stale.has(at) || !before.has(at)));
+              for (const at of stale)
+                if (after.has(at)) assert.ok(ran.includes(at));
               if (views === undefined) continue;
               const subscribed = [...views.values()].map(
                 ({ args }) => args as number,

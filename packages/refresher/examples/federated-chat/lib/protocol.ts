@@ -73,11 +73,15 @@ export type RemoteResult =
       readonly key: string;
       readonly answers: readonly Answer[];
     }
-  /** The instances a restart of a live query ran. */
+  /**
+   * The instances a restart of a live query ran, and those it no longer holds: stale ones
+   * the restart did not reach again, and the ones only they led to.
+   */
   | {
       readonly type: "push";
       readonly key: string;
       readonly answers: readonly Answer[];
+      readonly dropped: readonly EncodedRef[];
     }
   /** The query could not start, or stopped. */
   | { readonly type: "failed"; readonly key: string; readonly message: string };

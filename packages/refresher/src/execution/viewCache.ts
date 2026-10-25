@@ -12,17 +12,15 @@ import type { CreateViewCacheFn, ViewInstance } from "../api.execution";
 import type { ViewInstanceDescriptor } from "../api.invalidation";
 import { assertAlways, assertSometimes } from "../env/assert";
 import { invalidate } from "../invalidation/invalidate";
+import { settledStale } from "../invalidation/reads";
 
 function cacheable(view: AnyView): boolean {
   return view.deterministic !== false && view.memo === true;
 }
 
-/** Whether it is valid at its own revision: it did not settle stale, or was validated since. */
-function current(
-  instance: ViewInstance,
-  descriptor: ViewInstanceDescriptor,
-): boolean {
-  return descriptor.validThrough >= instance.revision;
+/** Whether it is valid at its own `startedAt`: no store answered one of its reads from older state. */
+function current(descriptor: ViewInstanceDescriptor): boolean {
+  return !settledStale(descriptor);
 }
 
 /** Whether `instance` replaces `kept`: one not stale, then one current, then the newer one. */
@@ -34,9 +32,9 @@ function displaces(
 ): boolean {
   const keptStale = kept.status === "stale";
   if (keptStale !== (instance.status === "stale")) return keptStale;
-  const valid = current(instance, descriptor);
-  if (valid !== current(kept, keptDescriptor)) return valid;
-  return kept.revision <= instance.revision;
+  const valid = current(descriptor);
+  if (valid !== current(keptDescriptor)) return valid;
+  return kept.startedAt <= instance.startedAt;
 }
 
 export const createViewCache: CreateViewCacheFn = ({ env, changes }) => {
@@ -51,7 +49,7 @@ export const createViewCache: CreateViewCacheFn = ({ env, changes }) => {
       const descriptor = instance.descriptor;
       assertAlways(env, descriptor !== undefined);
       const head = changes.head;
-      if (descriptor.validThrough >= head) return instance;
+      if (descriptor.matchedThrough >= head) return instance;
       const { stale } = invalidate({ env, changes, descriptors: [descriptor] });
       if (stale.length > 0) {
         assertSometimes(
@@ -62,7 +60,7 @@ export const createViewCache: CreateViewCacheFn = ({ env, changes }) => {
         instance.status = "stale";
         return instance;
       }
-      descriptor.validThrough = head;
+      descriptor.matchedThrough = head;
       return instance;
     },
     keep(instance) {
@@ -87,8 +85,9 @@ export const createViewCache: CreateViewCacheFn = ({ env, changes }) => {
         if (instance.status === "stale") continue;
         const descriptor = instance.descriptor;
         assertAlways(env, descriptor !== undefined);
-        const validThrough = descriptor.validThrough;
-        if (validThrough < before && validThrough < head) due.push(descriptor);
+        const matchedThrough = descriptor.matchedThrough;
+        if (matchedThrough < before && matchedThrough < head)
+          due.push(descriptor);
       }
       if (due.length === 0) return;
       const { stale } = invalidate({ env, changes, descriptors: due });
@@ -104,7 +103,7 @@ export const createViewCache: CreateViewCacheFn = ({ env, changes }) => {
       }
       for (const descriptor of due) {
         if (entries.get(descriptor.id)?.status === "settled")
-          descriptor.validThrough = head;
+          descriptor.matchedThrough = head;
       }
     },
     get size() {
