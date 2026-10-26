@@ -15,12 +15,18 @@ export function createBind(codec: Codec): BindFn {
     values?: object,
   ): AnyRef | AnyActionRef {
     const args = bindArgs(ref.args, values);
-    if (args === ref.args) return ref;
     if (isViewRef(ref)) {
+      // A ref the runtime made keyed its instance when it left no input open.
+      if (args === ref.args && ref.instanceId !== undefined) return ref;
       const captured = codec.captureArgs(ref.view, args);
-      codec.argsKey(ref.view, captured);
-      return createRef(ref.view, captured, ref.meta);
+      return createRef(
+        ref.view,
+        captured,
+        ref.meta,
+        codec.instanceKey(ref.view, captured),
+      );
     }
+    if (args === ref.args) return ref;
     const action = ref.action;
     const captured = codec.captureActionArgs(action, args);
     codec.actionArgsKey(action, captured);

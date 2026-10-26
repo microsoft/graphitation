@@ -26,13 +26,14 @@
 import type {
   AccessConfig,
   Action,
-  ActionRef,
+  ActionRefLeaving,
   AnyActionRef,
   AnyRef,
   AnyView,
   OpenInput,
   PromiseOrValue,
   Ref,
+  RefLeaving,
   RefMeta,
   ResolveContext,
   Revision,
@@ -46,6 +47,7 @@ import type {
   ExecutionState,
   ExecutionStateKey,
   ExecutionWave,
+  ViewCache,
   ViewInstance,
 } from "../api.execution";
 import type { ViewInstanceDescriptor } from "../api.invalidation";
@@ -68,7 +70,7 @@ import type {
   ViewInternals,
 } from "../views/definitions";
 import { createInput, throwIfOpen } from "../views/input";
-import { createActionRef, createRef, isViewRef } from "../views/ref";
+import { createActionRef, createAnyRef, isViewRef } from "../views/ref";
 import {
   NO_ERRORS,
   buildExecutionContext,
@@ -105,11 +107,6 @@ export const execute: ExecuteFn = (args) => {
     throw error;
   }
   context.running = true;
-  if (signal !== undefined) {
-    const onAbort = (): void => stop(context, abortedBy(signal));
-    signal.addEventListener("abort", onAbort, { once: true });
-    context.detach = () => signal.removeEventListener("abort", onAbort);
-  }
   let wave: PromiseOrValue<void>;
   try {
     wave = runWave(context, args.refs, args.meta);
@@ -118,6 +115,8 @@ export const execute: ExecuteFn = (args) => {
     throw error;
   }
   if (isPromiseLike(wave)) {
+    // While it runs synchronously, `throwIfStopped` notices an abort: only a wave that waits listens.
+    if (signal !== undefined) listen(context, signal);
     return wave.then(
       () => finishWave(context),
       (error: unknown) => {
@@ -212,8 +211,26 @@ function limit(
   return error;
 }
 
+/** Stops the execution once `signal` aborts, or now if it has. */
+function listen(context: ExecutionContext, signal: AbortSignal): void {
+  assertAlways(context.env, context.detach === undefined);
+  if (signal.aborted) {
+    stop(context, abortedBy(signal));
+    return;
+  }
+  const onAbort = (): void => stop(context, abortedBy(signal));
+  signal.addEventListener("abort", onAbort, { once: true });
+  context.detach = () => signal.removeEventListener("abort", onAbort);
+}
+
+/** Throws once the execution stopped, or the caller's signal aborted, which stops it. */
 function throwIfStopped(context: ExecutionContext): void {
-  if (context.stopped) throw context.failure;
+  if (!context.stopped) {
+    const signal = context.signal;
+    if (signal === undefined || !signal.aborted) return;
+    stop(context, abortedBy(signal));
+  }
+  throw context.failure;
 }
 
 /** `value`, which also rejects when the execution stops. */
@@ -257,8 +274,10 @@ function evaluate(
   meta: unknown,
 ): PromiseOrValue<void> {
   context.pinned = undefined;
-  const instances: ViewInstance[] = [];
-  for (const ref of refs) {
+  // Sized up front: growing it by `push` leaves a backing store behind at each step.
+  const instances = new Array<ViewInstance>(refs.length);
+  for (let index = 0; index < refs.length; index++) {
+    const ref = refs[index]!;
     const id = idOf(context, ref);
     let instance = context.instances.get(id);
     if (instance === undefined) {
@@ -268,7 +287,7 @@ function evaluate(
     }
     // A pin already settled, kept or resolved by an earlier wave, leads to its target now.
     followPin(context, instance);
-    instances.push(instance);
+    instances[index] = instance;
   }
   throwIfStopped(context);
   const rounds = runRounds(context);
@@ -278,16 +297,13 @@ function evaluate(
 
 /** The id of the instance `ref` names, which must be bound. */
 function idOf(context: ExecutionContext, ref: AnyRef): ViewInstanceId {
-  let id = context.refIds.get(ref);
-  if (id === undefined) {
-    throwIfOpen(
-      ref.args,
-      "A ref leaving inputs open is bound before it is followed",
-    );
-    id = context.codec.instanceKey(ref.view, ref.args);
-    context.refIds.set(ref, id);
-  }
-  return id;
+  if (ref.instanceId !== undefined) return ref.instanceId;
+  // Only a template, or a ref no runtime made, carries no key.
+  throwIfOpen(
+    ref.args,
+    "A ref leaving inputs open is bound before it is followed",
+  );
+  return context.codec.instanceKey(ref.view, ref.args);
 }
 
 /**
@@ -390,11 +406,15 @@ function evaluated(
   assertAlways(context.env, pinned.refs.length === pinned.evaluated.length);
   const viewCache = context.viewCache;
   if (viewCache !== undefined) {
-    const reached = new Map<ViewInstanceId, ViewInstance>();
-    for (const instance of instances) reach(context, reached, instance);
-    for (const target of pinned.evaluated) reach(context, reached, target);
-    assertAlways(context.env, reached.size <= context.instances.size);
-    for (const instance of reached.values()) viewCache.keep(instance);
+    let followed: Set<ViewInstance> | undefined;
+    for (let index = 0; index < instances.length; index++) {
+      followed = reach(context, viewCache, followed, instances[index]!);
+    }
+    for (let index = 0; index < pinned.evaluated.length; index++) {
+      followed = reach(context, viewCache, followed, pinned.evaluated[index]!);
+    }
+    if (followed !== undefined)
+      assertAlways(context.env, followed.size <= context.instances.size);
   }
   const settledAt = context.latestRevision();
   context.waves.push({ settledAt, refs, meta, evaluated: instances, pinned });
@@ -406,29 +426,38 @@ const NOTHING_PINNED: ExecutionWave["pinned"] = Object.freeze({
   evaluated: Object.freeze([]),
 });
 
+/**
+ * Has the view cache keep `instance`, and the memoized views it read inline. `followed`
+ * holds the instances whose inline reads were followed already, made at the first: most
+ * instances a wave reaches, such as those taken from the cache, read none in the execution.
+ */
 function reach(
   context: ExecutionContext,
-  reached: Map<ViewInstanceId, ViewInstance>,
+  viewCache: ViewCache,
+  followed: Set<ViewInstance> | undefined,
   instance: ViewInstance,
-): void {
-  if (reached.has(instance.id)) return;
-  reached.set(instance.id, instance);
-  reachInline(context, reached, new Set(), instance);
+): Set<ViewInstance> | undefined {
+  viewCache.keep(instance);
+  if (!context.inlineReads.has(instance)) return followed;
+  followed ??= new Set();
+  reachInline(context, viewCache, followed, instance);
+  assertAlways(context.env, followed.has(instance));
+  return followed;
 }
 
-/** Adds the memoized views `instance` read inline, directly or through views that are not. */
+/** Reaches the memoized views `instance` read inline, directly or through views that are not. */
 function reachInline(
   context: ExecutionContext,
-  reached: Map<ViewInstanceId, ViewInstance>,
-  seen: Set<ViewInstance>,
+  viewCache: ViewCache,
+  followed: Set<ViewInstance>,
   instance: ViewInstance,
 ): void {
   const reads = context.inlineReads.get(instance);
-  if (reads === undefined || seen.has(instance)) return;
-  seen.add(instance);
+  if (reads === undefined || followed.has(instance)) return;
+  followed.add(instance);
   for (const callee of reads) {
-    if (isMemo(callee.view)) reach(context, reached, callee);
-    else reachInline(context, reached, seen, callee);
+    if (isMemo(callee.view)) viewCache.keep(callee);
+    reachInline(context, viewCache, followed, callee);
   }
 }
 
@@ -758,7 +787,7 @@ function resolveContextOf(
     view: View<Args, Result, AccessConfig>,
     args?: unknown,
     meta?: RefMeta,
-  ): Ref<Result, Args, Inputs>;
+  ): RefLeaving<Result, Args, Inputs>;
   function ref(view: AnyView, args?: unknown, meta?: RefMeta): AnyRef {
     return refTo(context, view, args, meta);
   }
@@ -781,7 +810,7 @@ function resolveContextOf(
     target: A,
     args?: unknown,
     meta?: RefMeta,
-  ): ActionRef<A, Inputs>;
+  ): ActionRefLeaving<A, Inputs>;
   function action(
     target: Action,
     args?: unknown,
@@ -1124,11 +1153,8 @@ function refTo(
       view,
     );
   }
-  const codec = context.codec;
-  const captured = codec.captureArgs(view, args);
-  const ref = createRef(view, captured, meta);
-  context.refIds.set(ref, codec.instanceKey(view, captured));
-  return ref;
+  const captured = context.codec.captureArgs(view, args);
+  return createAnyRef(context.codec, view, captured, meta);
 }
 
 function actionRefTo(

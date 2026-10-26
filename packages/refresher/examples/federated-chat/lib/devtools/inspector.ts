@@ -133,7 +133,11 @@ export function createInspector({
   };
   const plain: DescribeOptions = {
     ref: (ref) =>
-      handle(refs, `ref ${codec.instanceKey(ref.view, ref.args)}`, ref),
+      handle(
+        refs,
+        `ref ${ref.instanceId ?? codec.instanceKey(ref.view, ref.args)}`,
+        ref,
+      ),
     action: (ref) =>
       handle(
         actions,
@@ -199,7 +203,7 @@ export function createInspector({
     // Every definition settles its access: none is left absent.
     const access = shown.access ?? {};
     const direct = runtime.root(shown as never, args as never);
-    const id = codec.instanceKey(direct.view, direct.args);
+    const id = direct.instanceId;
     if (access.queryable === true) return { root: direct, shown: id };
     if (access.referenceable === true) {
       return {
@@ -212,7 +216,7 @@ export function createInspector({
         `${viewName(shown)} is neither queryable, referenceable nor readable`,
       );
     const root = runtime.root(readerOf(shown, false) as never, args as never);
-    return { root, shown: codec.instanceKey(root.view, root.args) };
+    return { root, shown: root.instanceId };
   };
 
   const watches = new Map<string, Watch>();

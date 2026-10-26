@@ -33,22 +33,29 @@ import { findRefsBySearch } from "./findRefs";
  * from its own counter, and its arguments are captured and keyed as a view's are.
  */
 export function createJsonCodec(options?: JsonCodecOptions): Codec {
-  const ids = new WeakMap<AnyView, ViewId>();
+  const keys = new WeakMap<AnyView, ViewKeys>();
   const issued = new Set<ViewId>();
   let local = 0;
   const actionIds = new WeakMap<Action, ActionId>();
   let localActions = 0;
+  const captureArgs = options?.freezeArgs === true ? freezeArgs : identity;
+  // `write` reports where an argument fails along one path, emptied before each key and
+  // copied only into an error: most keys are made with no path at all.
+  const path: (string | number)[] = [];
+  const keyOf = (args: unknown): string => {
+    path.length = 0;
+    return write(args, path, viewKey);
+  };
   const argsKey =
     options?.base64Keys === true
       ? (_view: unknown, args: unknown): string =>
-          args === undefined ? "" : base64url(write(args, [], viewKey))
+          args === undefined ? "" : base64url(keyOf(args))
       : (_view: unknown, args: unknown): string =>
-          args === undefined ? "" : write(args, [], viewKey);
-  const captureArgs = options?.freezeArgs === true ? freezeArgs : identity;
-  function viewKey(view: AnyView): ViewId {
-    let id = ids.get(view);
-    if (id !== undefined) return id;
-    id = view.id;
+          args === undefined ? "" : keyOf(args);
+  function keysOf(view: AnyView): ViewKeys {
+    const known = keys.get(view);
+    if (known !== undefined) return known;
+    let id = view.id;
     if (id === undefined) {
       do id = localId(view.name, ++local);
       while (issued.has(id));
@@ -61,8 +68,13 @@ export function createJsonCodec(options?: JsonCodecOptions): Codec {
       );
     }
     issued.add(id);
-    ids.set(view, id);
-    return id;
+    // The length prefix keeps the pair unambiguous whatever characters either key holds.
+    const made: ViewKeys = { id, prefix: `${id.length}:${id}` };
+    keys.set(view, made);
+    return made;
+  }
+  function viewKey(view: AnyView): ViewId {
+    return keysOf(view).id;
   }
   return Object.freeze({
     viewKey,
@@ -70,7 +82,7 @@ export function createJsonCodec(options?: JsonCodecOptions): Codec {
     captureArgs,
     argsKey,
     instanceKey(view: AnyView, args: unknown): ViewInstanceId {
-      return lengthPrefixed(viewKey(view), argsKey(view, args));
+      return keysOf(view).prefix + argsKey(view, args);
     },
     actionKey(action: Action): ActionId {
       let id = actionIds.get(action);
@@ -86,10 +98,8 @@ export function createJsonCodec(options?: JsonCodecOptions): Codec {
   });
 }
 
-/** The length prefix keeps the pair unambiguous whatever characters either key holds. */
-function lengthPrefixed(viewKey: ViewId, argsKey: string): ViewInstanceId {
-  return `${viewKey.length}:${viewKey}${argsKey}`;
-}
+/** A view's id, and the length-prefixed form an instance key starts with. */
+type ViewKeys = { readonly id: ViewId; readonly prefix: string };
 
 function localId(name: string | undefined, counter: number): ViewId {
   return name === undefined || name === ""

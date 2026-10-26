@@ -42,6 +42,10 @@ const IMPLEMENTATIONS: readonly (readonly [string, CreateRuntimeFn])[] = [
   ["createRuntime", createRuntime],
 ];
 
+/** A ref to an instance of `target`, keyed by `runtime`'s codec, as any of its views makes one. */
+const rootOf = (runtime: Runtime, target: AnyView, key: number) =>
+  createRef(target, key, undefined, runtime.codec.instanceKey(target, key));
+
 const KEYS = 3;
 
 type Output = SimpleDriverOutput;
@@ -292,7 +296,7 @@ const runArb = fc
     ({ keys, immediate }): Command => ({
       check: () => true,
       async run(model, real) {
-        const roots = keys.map((key) => createRef(real.root, key));
+        const roots = keys.map((key) => rootOf(real.runtime, real.root, key));
         const observed = newObserved();
         real.queries.push(observed);
         const query: Query = {
@@ -771,7 +775,9 @@ for (const [name, create] of IMPLEMENTATIONS) {
             let revision = 1;
             for (const step of steps) {
               if (step.kind === "run") {
-                const roots = step.keys.map((key) => createRef(root, key));
+                const roots = step.keys.map((key) =>
+                  rootOf(runtime, root, key),
+                );
                 void Promise.resolve(runtime.run({ driver, roots })).then(
                   (result) => result.subscribe({ next: () => undefined }),
                 );
@@ -873,7 +879,7 @@ for (const [name, create] of IMPLEMENTATIONS) {
       const { runtime, feed, cells, root } = setup(create, env, 1, false, true);
       const result = await runtime.run({
         driver: createSimpleDriver(),
-        roots: [createRef(root, 0)],
+        roots: [rootOf(runtime, root, 0)],
       });
       const log: unknown[] = [];
       result.subscribe({
@@ -922,7 +928,10 @@ for (const [name, create] of IMPLEMENTATIONS) {
         start: (args) => inner.start(args),
         restart: () => Promise.reject(failure),
       };
-      const result = await runtime.run({ driver, roots: [createRef(root, 0)] });
+      const result = await runtime.run({
+        driver,
+        roots: [rootOf(runtime, root, 0)],
+      });
       const errors: unknown[] = [];
       let nexts = 0;
       result.subscribe({
@@ -949,7 +958,7 @@ for (const [name, create] of IMPLEMENTATIONS) {
       const driver = splitDriver(createSimpleDriver());
       const result = await runtime.run({
         driver,
-        roots: [createRef(root, 0), createRef(root, 1)],
+        roots: [rootOf(runtime, root, 0), rootOf(runtime, root, 1)],
       });
       assert.ok("initialResult" in result);
       assert.deepEqual([...valuesOf(result.initialResult)], [[0, 0]]);
@@ -1039,7 +1048,7 @@ for (const [name, create] of IMPLEMENTATIONS) {
             };
             const result = runtime.run({
               driver,
-              roots: [createRef(node, 0)],
+              roots: [rootOf(runtime, node, 0)],
               immediate: true,
             });
             assert.ok(!(result instanceof Promise));
@@ -1108,13 +1117,19 @@ for (const [name, create] of IMPLEMENTATIONS) {
         true,
       );
       const driver = createSimpleDriver();
-      const live = await runtime.run({ driver, roots: [createRef(root, 0)] });
+      const live = await runtime.run({
+        driver,
+        roots: [rootOf(runtime, root, 0)],
+      });
       const errors: unknown[] = [];
       live.subscribe({
         next: () => undefined,
         error: (error) => void errors.push(error),
       });
-      const pending = runtime.run({ driver, roots: [createRef(root, 1)] });
+      const pending = runtime.run({
+        driver,
+        roots: [rootOf(runtime, root, 1)],
+      });
       runtime.dispose();
       assert.equal(errors.length, 1);
       assert.ok(isDisposed(errors[0]));

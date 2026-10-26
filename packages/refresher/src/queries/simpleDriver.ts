@@ -12,6 +12,7 @@ import type {
   QueryPayload,
   SimpleDriverOutput,
 } from "../api.queries";
+import { assertAlways } from "../env/assert";
 import { isValueError } from "../errors";
 import { createRef, isViewRef } from "../views/ref";
 
@@ -57,7 +58,7 @@ export const createSimpleDriver: CreateSimpleDriverFn = (tags = []) => {
       const isValid = (id: ViewInstanceId) => views.has(id) && !stale.has(id);
       if (edges === undefined) {
         const refs = [...stale.values()].map((instance) =>
-          createRef(instance.view, instance.args),
+          createRef(instance.view, instance.args, undefined, instance.id),
         );
         return runSimple(refs, context, followed, (id, ref, next) => {
           if (!isValid(id)) next.push(ref);
@@ -78,8 +79,16 @@ export const createSimpleDriver: CreateSimpleDriverFn = (tags = []) => {
             if (isValid(target)) stack.push(target);
             else if (!reached.has(target)) {
               const instance = stale.get(target);
-              if (instance !== undefined)
-                next.push(createRef(instance.view, instance.args));
+              if (instance !== undefined) {
+                next.push(
+                  createRef(
+                    instance.view,
+                    instance.args,
+                    undefined,
+                    instance.id,
+                  ),
+                );
+              }
             }
           }
         }
@@ -89,8 +98,7 @@ export const createSimpleDriver: CreateSimpleDriverFn = (tags = []) => {
         else next.push(ref);
       };
       const first: Ref[] = [];
-      for (const root of roots)
-        lead(idOf(context, root), root, first, new Map());
+      for (const root of roots) lead(root.instanceId, root, first, new Map());
       return runSimple(first, context, followed, lead);
     },
   };
@@ -112,10 +120,6 @@ const runEvery: Lead = (_id, ref, next) => {
   next.push(ref);
 };
 
-function idOf(context: DriverContext, ref: Ref): ViewInstanceId {
-  return context.codec.instanceKey(ref.view, ref.args);
-}
-
 function runSimple(
   roots: readonly Ref[],
   context: DriverContext,
@@ -132,41 +136,47 @@ function runSimple(
     };
   }
   const traversed = new Map<ViewInstanceId, ViewInstanceId[]>();
+  // Emptied by each wave's search, so the waves share it.
+  const unsearched: ViewInstance[] = [];
 
   /** What the next wave runs for the tagged refs in the last wave's instances not searched before. */
   const nextRefs = (state: ExecutionState): Ref[] | undefined => {
     const wave = state.waves[state.waves.length - 1]!;
-    const unsearched: ViewInstance[] = [];
-    const reach = (instance: ViewInstance) => {
-      if (instances.has(instance.id)) return;
-      instances.set(instance.id, instance);
-      unsearched.push(instance);
-    };
+    const { evaluated } = wave;
+    const pinTargets = wave.pinned.evaluated;
+    assertAlways(context.env, unsearched.length === 0);
     // All recorded before any is searched: a pin's ref leads to a target the wave ran.
-    for (const instance of wave.evaluated) reach(instance);
-    for (const target of wave.pinned.evaluated) reach(target);
+    for (let index = 0; index < evaluated.length; index++) {
+      reachIn(instances, unsearched, evaluated[index]!);
+    }
+    for (let index = 0; index < pinTargets.length; index++) {
+      reachIn(instances, unsearched, pinTargets[index]!);
+    }
     const next: Ref[] = [];
-    for (const instance of unsearched) {
+    for (let index = 0; index < unsearched.length; index++) {
+      const instance = unsearched[index]!;
       const { data } = instance;
       if (data === null) continue;
       let targets: ViewInstanceId[] | undefined;
       if (isViewRef(data)) {
         const pinned = bindDefaults(bind, data);
-        if (pinned !== undefined)
-          (targets ??= []).push(codec.instanceKey(pinned.view, pinned.args));
+        if (pinned !== undefined) targets = [pinned.instanceId];
       }
       if (tags.size > 0) {
-        for (const found of codec.findRefs(instance.view, data).refs) {
-          if (!isTagged(found, tags)) continue;
-          const ref = bindDefaults(bind, found);
+        const found = codec.findRefs(instance.view, data).refs;
+        for (let at = 0; at < found.length; at++) {
+          if (!isTagged(found[at]!, tags)) continue;
+          const ref = bindDefaults(bind, found[at]!);
           if (ref === undefined) continue;
-          const id = codec.instanceKey(ref.view, ref.args);
-          (targets ??= []).push(id);
+          const id = ref.instanceId;
+          if (targets === undefined) targets = [id];
+          else targets.push(id);
           if (!instances.has(id)) lead(id, ref, next, instances);
         }
       }
       if (targets !== undefined) traversed.set(instance.id, targets);
     }
+    unsearched.length = 0;
     return next.length === 0 ? undefined : next;
   };
 
@@ -188,6 +198,17 @@ function runSimple(
 
   const started = context.execute({ refs: roots });
   return started instanceof Promise ? started.then(follow) : follow(started);
+}
+
+/** Records `instance` in `instances`, and among those to search, unless it is recorded. */
+function reachIn(
+  instances: Map<ViewInstanceId, ViewInstance>,
+  unsearched: ViewInstance[],
+  instance: ViewInstance,
+): void {
+  if (instances.has(instance.id)) return;
+  instances.set(instance.id, instance);
+  unsearched.push(instance);
 }
 
 /** `ref` bound with no variables, or nothing when it leaves an input without a default open. */

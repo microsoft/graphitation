@@ -549,8 +549,7 @@ export function createPasses(args: PassesArgs): Passes {
     const { views, roots } = state.descriptor;
     const reached = new Set<ViewInstanceId>();
     const stack: ViewInstanceId[] = [];
-    for (const root of roots)
-      stack.push(codec.instanceKey(root.view, root.args));
+    for (const root of roots) stack.push(root.instanceId);
     for (let id = stack.pop(); id !== undefined; id = stack.pop()) {
       if (reached.has(id) || !views.has(id)) continue;
       reached.add(id);
@@ -739,9 +738,15 @@ export function createPasses(args: PassesArgs): Passes {
  * the edges it traversed, and its footprint, as it arrives.
  */
 function absorb(state: QueryState, payload: QueryPayload<unknown>) {
-  for (const wave of payload.waves) {
-    for (const instance of wave.evaluated) keepDescriptor(state, instance);
-    for (const target of wave.pinned.evaluated) keepDescriptor(state, target);
+  const { waves } = payload;
+  for (let at = 0; at < waves.length; at++) {
+    const { evaluated, pinned } = waves[at]!;
+    for (let index = 0; index < evaluated.length; index++) {
+      keepDescriptor(state, evaluated[index]!);
+    }
+    for (let index = 0; index < pinned.evaluated.length; index++) {
+      keepDescriptor(state, pinned.evaluated[index]!);
+    }
   }
   if (payload.footprint !== undefined)
     state.descriptor.footprint = payload.footprint;
@@ -749,11 +754,12 @@ function absorb(state: QueryState, payload: QueryPayload<unknown>) {
   const { edges } = state;
   if (traversed === undefined) state.edges = undefined;
   else if (edges !== undefined) {
-    for (const [id, targets] of traversed) {
-      if (targets.length === 0) continue;
+    // `forEach` makes no entry per edge, as iterating entries may.
+    traversed.forEach((targets, id) => {
+      if (targets.length === 0) return;
       const kept = edges.get(id);
       edges.set(id, kept === undefined ? targets : [...kept, ...targets]);
-    }
+    });
   }
 }
 

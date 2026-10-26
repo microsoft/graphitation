@@ -193,7 +193,7 @@ export type QuerySubscription = {
  * A ref to an instance of a queryable view, with its arguments captured by the runtime's
  * codec: the root an execution starts from. Only a queryable view may be one; naming
  * another is an error at the call site. See docs/architecture/views.md#access. Arguments
- * that may be `undefined` may be left out.
+ * that may be `undefined` may be left out; arguments leaving an input open are a value error.
  */
 export type RootFn = <V extends QueryableView>(
   view: V,

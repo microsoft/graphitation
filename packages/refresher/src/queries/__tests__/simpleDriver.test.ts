@@ -230,7 +230,9 @@ void describe("simpleDriver", () => {
         const context = driverContext();
         const driver = createSimpleDriver(scenario.follow);
         const refs = (ids: readonly number[]) =>
-          ids.map((id) => createRef(node, id));
+          ids.map((id) =>
+            createRef(node, id, undefined, context.codec.instanceKey(node, id)),
+          );
         const settled = <T>(result: PromiseOrValue<T>) => {
           if (!scenario.async)
             assert.ok(!(result instanceof Promise), "settled in a later task");
@@ -326,7 +328,9 @@ void describe("simpleDriver", () => {
         const context = driverContext();
         const key = (id: number) => context.codec.instanceKey(node, id);
         const driver = createSimpleDriver(scenario.follow);
-        const roots = scenario.roots.map((id) => createRef(node, id));
+        const roots = scenario.roots.map((id) =>
+          createRef(node, id, undefined, key(id)),
+        );
         const started = await single(driver.start({ roots, context }));
         const views = new Map<string, ViewInstanceDescriptor>();
         for (const instance of started.output.instances.values()) {
@@ -412,11 +416,18 @@ void describe("simpleDriver", () => {
       resolve: () => new Promise<number>(() => undefined),
     });
     const controller = new AbortController();
+    const context = driverContext(controller.signal);
+    const root = createRef(
+      pending as unknown as AnyView,
+      0,
+      undefined,
+      context.codec.instanceKey(pending, 0),
+    );
     const aborted = Promise.resolve(
       single(
         createSimpleDriver().start({
-          roots: [createRef(pending as unknown as AnyView, 0)],
-          context: driverContext(controller.signal),
+          roots: [root],
+          context,
         }),
       ),
     );

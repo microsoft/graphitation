@@ -1,5 +1,5 @@
 import { pin, view } from "../../../../src/index";
-import type { ActionRef, Ref } from "../../../../src/index";
+import type { ActionRefTemplate, Ref } from "../../../../src/index";
 import { ids } from "../../shared";
 import type { ChatRecord } from "../../shared";
 import { sendMessage } from "../actions";
@@ -16,7 +16,7 @@ export type RoomData = {
   /** The latest page, as of opening the room: older pages are queries of their own. */
   readonly latest: Ref<Ref<PageData, PageArgs> | null>;
   /** Leaves the message's id and text open: its sender chooses the id, to tell it once it lands. */
-  readonly send: ActionRef<
+  readonly send: ActionRefTemplate<
     typeof sendMessage,
     { readonly id: string; readonly text: string }
   >;

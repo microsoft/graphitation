@@ -94,7 +94,9 @@ positions.
 ordinary ref: one whose arguments are the inputs in full. A template is never
 evaluated or run itself; its bound refs are. A view ref bound with
 different values leads to different instances, each keyed by its bound
-arguments, as if a view had made it with those arguments.
+arguments, as if a view had made it with those arguments. A bound view ref
+carries that key as its `instanceId`; a template, naming no instance yet, has
+none.
 
 Binding needs a value for every open input without a default; an input with
 one takes its default when no value is supplied. A missing value is a **value**
@@ -112,7 +114,7 @@ open inputs in its type:
 
 ```ts
 const send = action(sendMessage, { chatId, text: input("text") });
-// ActionRef<typeof sendMessage, { readonly text: string }>
+// ActionRefTemplate<typeof sendMessage, { readonly text: string }>
 
 run(send, { text: "hello" }); // compiles
 run(send); // fails: `text` is missing
@@ -128,9 +130,12 @@ A ref fits where a consumer supplies at least the inputs it leaves open, with
 values its positions accept. A ref that leaves fewer inputs open, or accepts
 wider values, fits too, the way a GraphQL resolver may ignore an argument.
 
-Binding returns a ref without open inputs, so a consumer that receives a
-template cannot use it as an ordinary ref by mistake: a driver or runner
-that only takes bound refs fails to compile on a template.
+A template is typed `RefTemplate` or `ActionRefTemplate`, and binding returns
+a `Ref` or `ActionRef`, which leaves no input open. A template does not fit
+where a `Ref` or `ActionRef` is required, so a consumer that receives one
+cannot use it as an ordinary ref by mistake: a driver or runner that only takes
+bound refs fails to compile on a template. A bound ref fits wherever a template
+does.
 
 ## Supplying variables
 

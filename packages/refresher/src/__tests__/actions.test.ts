@@ -4,6 +4,7 @@ import type {
   Action,
   ActionArgsOf,
   ActionRef,
+  ActionRefTemplate,
   ActionResultOf,
   AnyActionRef,
   External,
@@ -87,7 +88,7 @@ function actionChecks(
     External<Message>,
     { readonly text: string; readonly like: ExternalActionRef<typeof like> }
   >(true);
-  type Template = ActionRef<typeof like, { readonly message: string }>;
+  type Template = ActionRefTemplate<typeof like, { readonly message: string }>;
   equal<
     External<Template>,
     ExternalActionRef<typeof like, { readonly message: string }>

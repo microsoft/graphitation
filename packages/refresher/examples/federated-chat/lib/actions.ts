@@ -8,7 +8,8 @@
 import { view } from "../../../src/index";
 import type {
   Action,
-  ActionRef,
+  ActionRefLeaving,
+  ActionRefTemplate,
   ActionRefFn,
   ActionResultOf,
   AnyActionRef,
@@ -113,7 +114,7 @@ export type InputsParams<Inputs> = {} extends Inputs
  */
 export type RunFn<Services> = {
   <A extends ActionWith<Services>, Inputs extends object>(
-    ref: ActionRef<A, Inputs>,
+    ref: ActionRefTemplate<A, Inputs>,
     ...inputs: InputsParams<Inputs>
   ): void;
   <A extends Action, Inputs extends object>(
@@ -177,7 +178,7 @@ export function actions(runtime: Runtime): ActionRefFn {
     target: A,
     args?: unknown,
     meta?: RefMeta,
-  ): ActionRef<A, Inputs>;
+  ): ActionRefLeaving<A, Inputs>;
   function action(
     target: Action,
     args?: unknown,

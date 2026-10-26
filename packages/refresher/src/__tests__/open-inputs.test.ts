@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import type {
   Action,
   ActionRef,
+  ActionRefTemplate,
   AnyActionRef,
   AnyRef,
   AnyView,
@@ -10,6 +11,7 @@ import type {
   ExternalRef,
   InputsOf,
   Ref,
+  RefTemplate,
   ResolveContext,
   ViewFn,
 } from "../index";
@@ -47,9 +49,10 @@ function openInputsChecks(view: ViewFn): readonly AnyView[] {
     resolve: (chatId: string, { ref, action, input, read }: ResolveContext) => {
       // An input left open is typed by its position.
       const sendText = action(send, { chatId, text: input("text") });
-      equal<typeof sendText, ActionRef<typeof send, { readonly text: string }>>(
-        true,
-      );
+      equal<
+        typeof sendText,
+        ActionRefTemplate<typeof send, { readonly text: string }>
+      >(true);
       equal<InputsOf<typeof sendText>, { readonly text: string }>(true);
 
       // Bound in full: no inputs left open.
@@ -73,9 +76,10 @@ function openInputsChecks(view: ViewFn): readonly AnyView[] {
         chatId,
         first: input("first", { default: 20 }),
       });
-      equal<typeof page, Ref<string[], Page, { readonly first?: number }>>(
-        true,
-      );
+      equal<
+        typeof page,
+        RefTemplate<string[], Page, { readonly first?: number }>
+      >(true);
       // @ts-expect-error -- a default must fit its position.
       ref(messages, { chatId, first: input("first", { default: "20" }) });
 
@@ -122,9 +126,9 @@ function externalChecks(view: ViewFn): void {
 /** Binding: compile-time checks too. */
 function bindChecks(
   bind: BindFn,
-  sendText: ActionRef<typeof send, { readonly text: string }>,
-  page: Ref<readonly string[], Page, { readonly first?: number }>,
-  clash: ActionRef<typeof move, { readonly v: number & string }>,
+  sendText: ActionRefTemplate<typeof send, { readonly text: string }>,
+  page: RefTemplate<readonly string[], Page, { readonly first?: number }>,
+  clash: ActionRefTemplate<typeof move, { readonly v: number & string }>,
   found: AnyRef,
   foundAction: AnyActionRef,
 ): void {
@@ -152,17 +156,23 @@ function bindChecks(
   equal<typeof run, ActionRef<Action>>(true);
 
   // A ref leaving fewer inputs open fits where more are supplied.
-  const supplied: Ref<
+  const supplied: RefTemplate<
     readonly string[],
     Page,
     { readonly first?: number; readonly last: number }
   > = page;
   const bound: Ref<readonly string[], Page> = paged;
-  const template: Ref<readonly string[], Page, { readonly first?: number }> =
-    bound;
+  const template: RefTemplate<
+    readonly string[],
+    Page,
+    { readonly first?: number }
+  > = bound;
   // @ts-expect-error -- but not where fewer are, or other types.
-  const mistyped: Ref<readonly string[], Page, { readonly first?: string }> =
-    page;
+  const mistyped: RefTemplate<
+    readonly string[],
+    Page,
+    { readonly first?: string }
+  > = page;
   assert.ok([supplied, template, mistyped]);
 }
 

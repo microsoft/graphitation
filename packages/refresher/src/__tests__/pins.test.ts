@@ -335,8 +335,7 @@ void describe("pins", () => {
     const wrong = pin({
       target: item,
       access: { queryable: true },
-      resolve: (_args: undefined, { ref }) =>
-        ref(other, 1) as unknown as Ref<number, number>,
+      resolve: (_args: undefined, { ref }) => ref(other, 1),
     });
     const open = pin({
       target: page,

@@ -25,8 +25,12 @@ function search(
 ): AnyRef[] | undefined {
   if (typeof value !== "object" || value === null) return refs;
   if (isRef(value)) {
-    // An action ref is a leaf, never found.
-    if (isViewRef(value)) (refs ??= []).push(value);
+    // An action ref is a leaf, never found. Most results hold one ref or none: an array
+    // made with it has room for it alone.
+    if (isViewRef(value)) {
+      if (refs === undefined) refs = [value];
+      else refs.push(value);
+    }
     return refs;
   }
   if (isOpenInput(value)) return refs;

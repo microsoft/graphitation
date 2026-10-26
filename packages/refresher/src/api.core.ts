@@ -264,22 +264,44 @@ export type ViewInstanceId = CodecSuppliedKey;
 
 /**
  * Defers another view instance behind a cache, update, and error boundary. Like a React
- * element, a frozen record anyone may read: the view, its arguments as captured, and the
- * meta it was made with. Make one with `ref`; `isRef` tells one from data shaped like it.
- * A ref decoded from data is linked before it reaches execution, so `view` is always a
- * definition. See `ActionRef` for the other kind of ref, which `action` makes.
+ * element, a frozen record anyone may read: the view, its arguments as captured, the meta
+ * it was made with, and the instance it names. Make one with `ref`; `isRef` tells one from
+ * data shaped like it. A ref decoded from data is linked before it reaches execution, so
+ * `view` is always a definition. See `ActionRef` for the other kind of ref, which `action`
+ * makes.
  *
- * `Inputs` are the inputs its arguments leave open, by name: `{}` for a bound ref, which
- * leaves none. A ref leaving inputs open is a template, never followed itself: binding it
- * supplies them. A ref fits where its consumer supplies at least the inputs it leaves
- * open, with values they accept, so a bound ref fits anywhere and a template never fits
- * where a bound ref is required. See docs/architecture/variables.md.
+ * A `Ref` is bound: its arguments leave no input open. One that does is a `RefTemplate`,
+ * never followed itself: binding it supplies them and makes a `Ref`. See
+ * docs/architecture/variables.md.
  */
-export type Ref<Result = unknown, Args = unknown, Inputs = {}> = {
+export type Ref<Result = unknown, Args = unknown> = {
   readonly view: View<Args, Result, AccessConfig>;
-  /** Its arguments, with open inputs where a template leaves values to its consumer. */
+  readonly args: Args;
+  readonly meta: RefMeta | undefined;
+  /**
+   * The instance it names, keyed by the codec of the runtime that made it. Runtimes that
+   * exchange refs must use codecs that agree on instance keys.
+   */
+  readonly instanceId: ViewInstanceId;
+  /** Type-only carrier; never set at runtime. */
+  readonly signature?: RefSignature<{}>;
+};
+
+/**
+ * A ref whose arguments may leave inputs open, by name in `Inputs`, for its consumer to
+ * supply: `bind` makes a `Ref` of it. It names no instance until bound, so its
+ * `instanceId` is `undefined` while it leaves any input open. A ref fits where its consumer
+ * supplies at least the inputs it leaves open, with values they accept, so a `Ref` fits
+ * anywhere and a template never fits where a `Ref` is required. See
+ * docs/architecture/variables.md.
+ */
+export type RefTemplate<Result, Args, Inputs> = {
+  readonly view: View<Args, Result, AccessConfig>;
+  /** Its arguments, with open inputs where it leaves values to its consumer. */
   readonly args: ArgsLeaving<Args, Inputs>;
   readonly meta: RefMeta | undefined;
+  /** As on a `Ref`, when it leaves no input open; else `undefined`. */
+  readonly instanceId: ViewInstanceId | undefined;
   /** Type-only carrier; never set at runtime. */
   readonly signature?: RefSignature<Inputs>;
 };
@@ -380,8 +402,8 @@ export type RefMeta = RefMetaExtensions & {
  */
 export interface RefMetaExtensions {}
 
-/** Any view ref, bound or a template. `Ref` alone is a bound one. */
-export type AnyRef = Ref<unknown, unknown, never>;
+/** Any view ref, bound or a template. */
+export type AnyRef = RefTemplate<unknown, unknown, never>;
 
 export type RefFor<V extends AnyView> = Ref<ResultOf<V>, ArgsOf<V>>;
 
@@ -434,11 +456,11 @@ export type IsOpenInputFn = (value: unknown) => value is OpenInput;
  */
 export type BindFn = {
   <Result, Args, Inputs>(
-    ref: Ref<Result, Args, Inputs>,
+    ref: RefTemplate<Result, Args, Inputs>,
     ...inputs: InputsParams<Inputs>
   ): Ref<Result, Args>;
   <A extends Action, Inputs>(
-    ref: ActionRef<A, Inputs>,
+    ref: ActionRefTemplate<A, Inputs>,
     ...inputs: InputsParams<Inputs>
   ): ActionRef<A>;
 };
@@ -499,12 +521,24 @@ export type ActionId = CodecSuppliedKey;
  * follow the rules for a view's: JSON, holding no refs but external ones. Two action refs
  * are equal when they name the same action and the codec keys their arguments alike.
  *
- * `Inputs` are the inputs its arguments leave open, as on a `Ref`: the runner binds
- * them. See docs/architecture/variables.md.
+ * An `ActionRef` is bound: its arguments leave no input open. One that does is an
+ * `ActionRefTemplate`, which the runner binds. See docs/architecture/variables.md.
  */
-export type ActionRef<A extends Action, Inputs = {}> = {
+export type ActionRef<A extends Action> = {
   readonly action: A;
-  /** Its arguments, with open inputs where a template leaves values to its runner. */
+  readonly args: ActionArgsOf<A>;
+  readonly meta: RefMeta | undefined;
+  /** Type-only carrier; never set at runtime. */
+  readonly signature?: RefSignature<{}>;
+};
+
+/**
+ * An action ref whose arguments may leave inputs open, by name in `Inputs`, as a
+ * `RefTemplate` does: the runner binds them. An `ActionRef` fits wherever one is accepted.
+ */
+export type ActionRefTemplate<A extends Action, Inputs> = {
+  readonly action: A;
+  /** Its arguments, with open inputs where it leaves values to its runner. */
   readonly args: ArgsLeaving<ActionArgsOf<A>, Inputs>;
   readonly meta: RefMeta | undefined;
   /** Type-only carrier; never set at runtime. */
@@ -601,7 +635,19 @@ export type RefFn = <
 >(
   view: V,
   ...argsAndMeta: ArgsAndMetaParams<ArgsOf<V>, Given>
-) => Ref<ResultOf<V>, ArgsOf<V>, OpenInputsOf<Given, ArgsOf<V>>>;
+) => RefLeaving<ResultOf<V>, ArgsOf<V>, OpenInputsOf<Given, ArgsOf<V>>>;
+
+/** A `Ref` when `Inputs` names no input, else a `RefTemplate` leaving them open. */
+export type RefLeaving<Result, Args, Inputs> = [keyof Inputs] extends [never]
+  ? Ref<Result, Args>
+  : RefTemplate<Result, Args, Inputs>;
+
+/** An `ActionRef` when `Inputs` names no input, else an `ActionRefTemplate` leaving them open. */
+export type ActionRefLeaving<A extends Action, Inputs> = [
+  keyof Inputs,
+] extends [never]
+  ? ActionRef<A>
+  : ActionRefTemplate<A, Inputs>;
 
 /**
  * An action ref: an address the application runs, never run here. Canonicalizes
@@ -615,7 +661,7 @@ export type ActionRefFn = <
 >(
   action: A,
   ...argsAndMeta: ArgsAndMetaParams<ActionArgsOf<A>, Given>
-) => ActionRef<A, OpenInputsOf<Given, ActionArgsOf<A>>>;
+) => ActionRefLeaving<A, OpenInputsOf<Given, ActionArgsOf<A>>>;
 
 type ArgsParams<Args> = undefined extends Args ? [args?: Args] : [args: Args];
 
@@ -906,7 +952,7 @@ declare const externalActionRefSignature: unique symbol;
  * A result as another runtime answers it: every ref in it is an external ref, followed
  * when its result is in `Followed`, and every action ref an external action ref.
  */
-export type External<T, Followed = never> = T extends Ref<
+export type External<T, Followed = never> = T extends RefTemplate<
   infer Result,
   unknown,
   never

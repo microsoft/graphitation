@@ -98,13 +98,14 @@ const placed: fc.Arbitrary<Placed> = fc.letrec<{ node: Placed }>((tie) => {
     )
     .map((value): Placed => ({ value, refs: NO_REFS }));
   const ref = fc.nat(9).map((arg): Placed => {
-    const made = createRef(refTarget, arg);
+    // Any key: finding refs never reads it.
+    const made = createRef(refTarget, arg, undefined, `target:${arg}`);
     return { value: made, refs: [made] };
   });
   // An action ref is a leaf, never found.
   const actionRef = fc.nat(9).map(
     (arg): Placed => ({
-      value: createActionRef(actionTarget, arg),
+      value: createActionRef(actionTarget, arg, undefined),
       refs: NO_REFS,
     }),
   );

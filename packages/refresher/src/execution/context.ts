@@ -91,7 +91,6 @@ export type ExecutionContext = {
   readonly instances: Map<ViewInstanceId, ViewInstance>;
   /** What a reader's `read` throws, for each instance that failed or was built for a cached failure. */
   failures: Map<ViewInstanceId, unknown> | undefined;
-  readonly refIds: Map<AnyRef, ViewInstanceId>;
   /**
    * The instances each settled instance read inline, for those that read any. What a
    * settled wave follows to the memoized views among them, to keep in the view cache.
@@ -156,7 +155,6 @@ export function buildExecutionContext(
     waves: [],
     instances: new Map(),
     failures: undefined,
-    refIds: new Map(),
     inlineReads: new Map(),
     incomplete: undefined,
     stores: new Map(),

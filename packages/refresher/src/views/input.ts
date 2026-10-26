@@ -47,7 +47,7 @@ const MAX_DEPTH = 256;
 
 /** Throws a value error if `args` hold an open input, as arguments that must be bound may not. */
 export function throwIfOpen(args: unknown, message: string): void {
-  if (typeof args !== "object" || args === null) return;
+  if (typeof args !== "object" || args === null || !holdsOpen(args, 0)) return;
   const path: (string | number)[] = [];
   if (findOpen(args, path)) throw inputError("OPEN_INPUT", message, path);
 }
@@ -81,7 +81,34 @@ function findOpen(value: unknown, path: (string | number)[]): boolean {
  * `args` itself when it holds none. An input with neither is a value error.
  */
 export function bindArgs(args: unknown, values: object | undefined): unknown {
+  // Most arguments hold no input: those are told apart without a path to report one at.
+  if (!holdsOpen(args, 0)) return args;
   return substitute(args, values, []);
+}
+
+/** Whether `args` hold an open input, so a ref with them is a template. */
+export function isOpen(args: unknown): boolean {
+  return holdsOpen(args, 0);
+}
+
+/** Whether `value` holds an open input, within `MAX_DEPTH` as `substitute` searches. */
+function holdsOpen(value: unknown, depth: number): boolean {
+  if (typeof value !== "object" || value === null) return false;
+  if (isOpenInput(value)) return true;
+  if (depth >= MAX_DEPTH) return false;
+  if (Array.isArray(value)) {
+    const array: readonly unknown[] = value;
+    for (let index = 0; index < array.length; index++) {
+      if (holdsOpen(array[index], depth + 1)) return true;
+    }
+    return false;
+  }
+  if (!isPlain(value)) return false;
+  for (const key in value) {
+    if (Object.hasOwn(value, key) && holdsOpen(value[key], depth + 1))
+      return true;
+  }
+  return false;
 }
 
 function substitute(

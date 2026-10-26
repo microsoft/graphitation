@@ -1,5 +1,5 @@
 import { view } from "../../../../src/index";
-import type { ActionRef, Ref } from "../../../../src/index";
+import type { ActionRefTemplate, Ref } from "../../../../src/index";
 import { YOU, ids } from "../../shared";
 import { likeMessage } from "../actions";
 import { likes as likesStore, likesOf } from "../stores/likes";
@@ -17,7 +17,10 @@ export type LikesData = {
   /** Whether You like it. */
   readonly liked: boolean;
   /** Likes it as You, or takes your like back: `liked` says which. */
-  readonly like: ActionRef<typeof likeMessage, { readonly liked: boolean }>;
+  readonly like: ActionRefTemplate<
+    typeof likeMessage,
+    { readonly liked: boolean }
+  >;
 };
 
 /** A message's likes: its own instance, so a like reruns it alone rather than the message. */

@@ -11,7 +11,9 @@ import * as fc from "fast-check";
 import type {
   Ref,
   AnyView,
+  ArgsOf,
   PromiseOrValue,
+  RefFor,
   RefMeta,
   ResolveContext,
 } from "../../api.core";
@@ -26,6 +28,15 @@ import { settledStale } from "../../invalidation/reads";
 
 /** The codec every execution in these tests shares, so instance ids agree across them. */
 export const codec: Codec = createJsonCodec();
+
+/** A bound ref to an instance of `target`, keyed by the shared codec, as a runtime makes one. */
+export function refOf<V extends AnyView>(
+  target: V,
+  args: ArgsOf<V>,
+  meta?: RefMeta,
+): RefFor<V> {
+  return createRef(target, args, meta, codec.instanceKey(target, args));
+}
 
 export const ARGS = 3;
 
@@ -284,7 +295,7 @@ export function buildWorld(spec: WorldSpec): World {
     getStore: (name) =>
       spec.asyncHandles ? Promise.resolve({ name }) : { name },
     indexOf: (each) => positions.get(each) ?? -1,
-    roots: spec.roots.map(([index, arg]) => createRef(views[index]!, arg)),
+    roots: spec.roots.map(([index, arg]) => refOf(views[index]!, arg)),
   };
 }
 
@@ -325,7 +336,8 @@ export function modelOf(world: World): Model {
         if (!step.detached) data.push(storeAnswer(step.target, at));
       } else if (step.kind === "ref") {
         refs.push(keyOf(step.target, at));
-        data.push(createRef(world.views[step.target]!, at));
+        const target = world.views[step.target]!;
+        data.push(refOf(target, at));
       } else {
         const callee = evaluate(step.target, at);
         for (const read of callee.reads) reads.add(read);

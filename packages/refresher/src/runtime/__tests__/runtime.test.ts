@@ -14,14 +14,19 @@ import type {
 } from "../../api.stores";
 import { createJsonCodec } from "../../codec/json";
 import { defaultEnvironment } from "../../env/environment";
-import { isRefresherError } from "../../errors";
+import { isRefresherError, isValueError } from "../../errors";
 import { storeView, view } from "../../views/definitions";
+import { createInput } from "../../views/input";
 import { createRef } from "../../views/ref";
 import { createRuntime } from "../runtime";
 
 const IMPLEMENTATIONS: readonly (readonly [string, CreateRuntimeFn])[] = [
   ["createRuntime", createRuntime],
 ];
+
+/** A ref to an instance of `target`, keyed by `runtime`'s codec, as any of its views makes one. */
+const rootOf = (runtime: Runtime, target: AnyView, key: number) =>
+  createRef(target, key, undefined, runtime.codec.instanceKey(target, key));
 
 const KEYS = 3;
 
@@ -92,7 +97,7 @@ function runOnce(
   root: AnyView,
   key: number,
 ): [ExecutionState, ViewInstance] {
-  const state = executeIn(runtime, [createRef(root, key)]);
+  const state = executeIn(runtime, [rootOf(runtime, root, key)]);
   assert.ok(!(state instanceof Promise), "settled in a later task");
   assert.equal(state.waves.length, 1);
   return [state, state.waves[0]!.evaluated[0]!];
@@ -295,6 +300,26 @@ for (const [name, create] of IMPLEMENTATIONS) {
       }
     });
 
+    it("roots only bound arguments, keyed by its codec", () => {
+      const runtime = create({
+        env: defaultEnvironment,
+        store: () => new Map(),
+      });
+      const page = view({
+        access: { queryable: true },
+        resolve: (args: { readonly first: number }) => args.first,
+      });
+      assert.equal(
+        runtime.root(page, { first: 1 }).instanceId,
+        runtime.codec.instanceKey(page, { first: 1 }),
+      );
+      const open = { first: createInput(page, "first", { default: 1 }) };
+      assert.throws(
+        () => runtime.root(page, open as never),
+        (error) => isValueError(error, "OPEN_INPUT"),
+      );
+    });
+
     it("throws and detaches when its feed announces no revision", () => {
       const feed = feedAt(3, false);
       assert.throws(
@@ -317,7 +342,7 @@ for (const [name, create] of IMPLEMENTATIONS) {
       });
       const runtime = create({ env: defaultEnvironment, store: () => ({}) });
       const disposed = Promise.resolve(
-        executeIn(runtime, [createRef(root, 1)]),
+        executeIn(runtime, [rootOf(runtime, root, 1)]),
       );
       runtime.dispose();
       await assert.rejects(disposed, (error) =>
@@ -325,7 +350,7 @@ for (const [name, create] of IMPLEMENTATIONS) {
       );
       assert.equal(runtime.viewCache, undefined);
       assert.throws(
-        () => executeIn(runtime, [createRef(root, 1)]),
+        () => executeIn(runtime, [rootOf(runtime, root, 1)]),
         (error) => isSessionError(error, "DISPOSED"),
       );
     });

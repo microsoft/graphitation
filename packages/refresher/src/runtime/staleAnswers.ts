@@ -19,8 +19,9 @@ import { internalsOf } from "../views/definitions";
 /**
  * Fails, with a `STALE_ANSWER` store error, every settled instance of `state` reading a
  * store answer older than asked that breaks the contract: the store instance that read it,
- * and every instance reading that one inline, as each records the read. Each instance is
- * checked once, in `checked`. Nothing tells once `log` is trimmed past the answer.
+ * and every instance reading that one inline, as each records the read. Each instance
+ * reading an answer older than asked is checked once, in `checked`. Nothing tells once
+ * `log` is trimmed past the answer.
  */
 export function failStaleAnswers(
   env: Environment,
@@ -28,17 +29,25 @@ export function failStaleAnswers(
   state: ExecutionState,
   checked: WeakSet<ViewInstance>,
 ): void {
-  const broken = new Map<StoreRead, unknown>();
-  for (const instance of state.instances.values()) {
-    if (instance.status !== "settled" || checked.has(instance)) continue;
-    checked.add(instance);
+  let broken: Map<StoreRead, unknown> | undefined;
+  // `forEach` makes no entry or iterator result per instance, as `for...of` may.
+  state.instances.forEach((instance) => {
+    if (instance.status !== "settled") return;
     const descriptor = instance.descriptor;
-    if (descriptor === undefined || !settledStale(descriptor)) continue;
+    // Most read no stale answer: checking that again is cheaper than holding each in `checked`.
+    if (
+      descriptor === undefined ||
+      !settledStale(descriptor) ||
+      checked.has(instance)
+    )
+      return;
+    checked.add(instance);
+    broken ??= new Map();
     const error = firstBroken(env, log, broken, descriptor.storeReads.values());
-    if (error === undefined) continue;
+    if (error === undefined) return;
     instance.data = null;
     instance.errors = [valueErrorOf(error, false)];
-  }
+  });
 }
 
 /** What the first of `reads` answered from older state than asked that breaks the contract fails with. */

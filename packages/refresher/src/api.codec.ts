@@ -25,8 +25,8 @@ import type {
 /**
  * How a runtime identifies instances, captures arguments, and checks the values it
  * publishes. A runtime uses the default codec when given none. Runtimes that exchange
- * refs, such as a federation client and its host, must use codecs that agree on view ids
- * and `argsKey`.
+ * refs, such as a federation client and its host, must use codecs that agree on view ids,
+ * `argsKey` and `instanceKey`.
  *
  * View ids are part of the system's schema, as the runtime definitions a schema-aware
  * codec checks values against are, so the codec issues them. Mapping an id back to a

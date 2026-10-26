@@ -15,6 +15,7 @@
     "test": "node ./scripts/run-tests.mjs",
     "test:watch": "node ./scripts/run-tests.mjs --watch",
     "test:stress": "node ./scripts/run-tests.mjs",
+    "bench:garbage": "tsx --expose-gc --enable-source-maps --min-semi-space-size=256 --max-semi-space-size=256 scripts/bench/garbage.mts",
     "types": "monorepo-scripts types && yarn types:examples",
     "types:examples": "tsc --noEmit -p scripts && tsc --noEmit -p examples/federated-chat",
     "dev:federated-chat": "tsx scripts/federated-chat.mts dev",

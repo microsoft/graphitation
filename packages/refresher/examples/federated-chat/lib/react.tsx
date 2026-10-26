@@ -167,8 +167,9 @@ export function createClient({
     }
   >();
 
+  // A template names no instance: it is keyed by its arguments, open inputs included.
   const idOf = (ref: AnyRef): ViewInstanceId =>
-    runtime.codec.instanceKey(ref.view, ref.args);
+    ref.instanceId ?? runtime.codec.instanceKey(ref.view, ref.args);
 
   const actionKeyOf = (ref: AnyActionRef): string => {
     const id = runtime.codec.actionKey(ref.action);

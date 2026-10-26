@@ -17,6 +17,7 @@ import { sessionError } from "../errors";
 import { createViewCache } from "../execution/viewCache";
 import { createChangeLog } from "../invalidation/changeLog";
 import { createBind } from "../views/bind";
+import { throwIfOpen } from "../views/input";
 import { createRef } from "../views/ref";
 import { createPasses, type Passes } from "./pass";
 
@@ -70,8 +71,16 @@ export const createRuntime: CreateRuntimeFn = ({
   passes = queries;
   const { run } = queries;
 
-  const root: Runtime["root"] = (view, args?) =>
-    createRef(view, codec.captureArgs(view, args));
+  const root: Runtime["root"] = (view, args?) => {
+    const captured = codec.captureArgs(view, args);
+    throwIfOpen(captured, "A root takes no open inputs");
+    return createRef(
+      view,
+      captured,
+      undefined,
+      codec.instanceKey(view, captured),
+    );
+  };
 
   return {
     latestRevision: () => log.head,
