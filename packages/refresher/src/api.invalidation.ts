@@ -41,11 +41,13 @@ export type ChangeLog = {
 
   /**
    * The deliveries after `revision`, up to `head`, in strictly increasing revision order;
-   * `tail <= revision <= head`. A delivery that changed nothing may be left out. Read
+   * `tail <= revision <= head`. A delivery that changed nothing may be left out. Given a
+   * `store`, each holds only the changes to it, in their order, and one that changed nothing
+   * in it is left out: a scan costs the changes to that store, not every change. Read
    * synchronously, one scan at a time: an implementation may reuse its iterator, and the
    * window does not move during a scan.
    */
-  since(revision: Revision): Iterable<Delivery>;
+  since(revision: Revision, store?: StoreName): Iterable<Delivery>;
 
   /**
    * Adds a delivery after `head`, and `head` moves to its revision. One that changed

@@ -76,12 +76,10 @@ function missedChange(
   if (reported >= through) return undefined;
   let missed: Revision | undefined;
   try {
-    for (const delivery of log.since(reported)) {
+    for (const delivery of log.since(reported, internals.store)) {
       if (delivery.revision > through) break;
-      const hit = delivery.changes.some(
-        (change) =>
-          change.store === internals.store &&
-          internals.matches(read.args, change, read.footprint),
+      const hit = delivery.changes.some((change) =>
+        internals.matches(read.args, change, read.footprint),
       );
       if (hit) {
         missed = delivery.revision;
