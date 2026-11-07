@@ -85,7 +85,7 @@ export function applyDefaultValues(
   variableValues: VariableValues,
   variableDefinitions: readonly VariableDefinitionNode[] | undefined,
 ): VariableValues {
-  if (!variableDefinitions?.length) {
+  if (!variableDefinitions?.length || !hasDefaultValues(variableDefinitions)) {
     return variableValues;
   }
   // Note: ideally there should be either variableValue, or vd.defaultValue
@@ -93,11 +93,12 @@ export function applyDefaultValues(
   // FIXME: throw proper error and fix on the consumer side instead
 
   let defaultValues: VariableValues | null = null;
-  for (const variableDef of variableDefinitions) {
+  for (let i = 0; i < variableDefinitions.length; i++) {
+    const variableDef = variableDefinitions[i];
     const variableName = variableDef.variable.name.value;
     if (
-      variableValues[variableName] !== undefined ||
-      variableDef.defaultValue === undefined
+      variableDef.defaultValue === undefined ||
+      variableValues[variableName] !== undefined
     ) {
       continue;
     }
@@ -113,6 +114,22 @@ export function applyDefaultValues(
   return defaultValues
     ? { ...variableValues, ...defaultValues }
     : variableValues;
+}
+
+const defaultsPresence = new WeakMap<
+  readonly VariableDefinitionNode[],
+  boolean
+>();
+
+function hasDefaultValues(
+  variableDefinitions: readonly VariableDefinitionNode[],
+): boolean {
+  let result = defaultsPresence.get(variableDefinitions);
+  if (result === undefined) {
+    result = variableDefinitions.some((def) => def.defaultValue !== undefined);
+    defaultsPresence.set(variableDefinitions, result);
+  }
+  return result;
 }
 
 function getKeyVars(doc: OperationDefinitionNode): VariableName[] | null {
@@ -205,7 +222,8 @@ export function createVariablesKey(
   // Note: string concatenation in V8 is fast and memory efficient due to string interning and windowing
   let key = "";
   if (defs?.length) {
-    for (const variableDef of defs) {
+    for (let i = 0; i < defs.length; i++) {
+      const variableDef = defs[i];
       const variableName = variableDef.variable.name.value;
       const value = variablesWithDefaults[variableName];
       key += variableName + ":" + JSON.stringify(sortKeys(value)) + ",";

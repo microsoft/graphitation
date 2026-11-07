@@ -255,7 +255,7 @@ function collectChunks(
   if (!filter.types && !filter.nodes) {
     const chunks: ObjectChunk[] = [];
     for (const nodeChunks of tree.nodes.values()) {
-      chunks.push(...nodeChunks);
+      pushAll(chunks, nodeChunks);
     }
     return chunks;
   }
@@ -264,11 +264,13 @@ function collectChunks(
 
   const chunks: ObjectChunk[] = [];
   for (const typeName of typeSet) {
-    chunks.push(...(tree.typeMap.get(typeName) ?? EMPTY_ARRAY));
+    pushAll(chunks, tree.typeMap.get(typeName) ?? EMPTY_ARRAY);
   }
   const nodes = filter.nodes ?? tree.nodes.keys();
   for (const nodeKey of nodes) {
-    for (const chunk of tree.nodes.get(nodeKey) ?? EMPTY_ARRAY) {
+    const nodeChunks = tree.nodes.get(nodeKey) ?? EMPTY_ARRAY;
+    for (let i = 0; i < nodeChunks.length; i++) {
+      const chunk = nodeChunks[i];
       if (!typeSet.has(chunk.type as string)) {
         // Chunks for this type were already added
         chunks.push(chunk);
@@ -276,8 +278,22 @@ function collectChunks(
     }
   }
   return direction === "ASCEND"
-    ? chunks.sort((a, b) => b.selection.depth - a.selection.depth)
-    : chunks.sort((a, b) => a.selection.depth - b.selection.depth);
+    ? chunks.sort(byDepthDesc)
+    : chunks.sort(byDepthAsc);
+}
+
+function pushAll(target: ObjectChunk[], source: readonly ObjectChunk[]) {
+  for (let i = 0; i < source.length; i++) {
+    target.push(source[i]);
+  }
+}
+
+function byDepthDesc(a: ObjectChunk, b: ObjectChunk) {
+  return b.selection.depth - a.selection.depth;
+}
+
+function byDepthAsc(a: ObjectChunk, b: ObjectChunk) {
+  return a.selection.depth - b.selection.depth;
 }
 
 function resolveLevelChunks(
@@ -286,7 +302,8 @@ function resolveLevelChunks(
 ): ObjectChunk[] {
   const chunkQueue: ObjectChunk[] = [];
   let stopDepth = -1;
-  for (const chunk of chunksSortedByLevel) {
+  for (let i = 0; i < chunksSortedByLevel.length; i++) {
+    const chunk = chunksSortedByLevel[i];
     const depth = chunk.selection.depth;
     if (depth < level) {
       continue;

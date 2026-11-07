@@ -2,6 +2,10 @@ export function sortKeys<T>(value: T): T {
   if (typeof value !== "object" || value === null) {
     return value;
   }
+  return sortObjectKeys(value);
+}
+
+function sortObjectKeys<T>(value: T & object): T {
   if (Array.isArray(value)) {
     return value.map((test) => sortKeys(test)) as T;
   }

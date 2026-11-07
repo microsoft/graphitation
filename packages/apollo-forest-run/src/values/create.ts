@@ -33,7 +33,7 @@ import type {
 } from "./types";
 import { ValueKind } from "./types";
 import * as Predicates from "./predicates";
-import { assert, assertNever } from "../jsutils/assert";
+import { assert, assertNever, fail } from "../jsutils/assert";
 import { resolveSelection } from "../descriptor/resolvedSelection";
 
 export type ChunkAccumulator = {
@@ -223,7 +223,25 @@ export function createObjectChunk(
   key: string | false,
   missingFields: Set<FieldInfo> | null = null,
 ): ObjectChunk {
-  let typeName = source.__typename;
+  return createTypedObjectChunk(
+    operation,
+    possibleSelections,
+    source,
+    source.__typename,
+    key,
+    missingFields,
+  );
+}
+
+export function createTypedObjectChunk(
+  operation: OperationDescriptor,
+  possibleSelections: PossibleSelections,
+  source: SourceObject,
+  sourceTypeName: string | undefined,
+  key: string | false,
+  missingFields: Set<FieldInfo> | null = null,
+): ObjectChunk {
+  let typeName = sourceTypeName;
   if (!typeName && key !== false && key === operation.rootNodeKey) {
     typeName = operation.rootType;
   }
@@ -321,7 +339,7 @@ export function createObjectAggregate(
   undefinedChunks?: CompositeUndefinedChunk[],
 ): ObjectAggregate {
   if (!chunks.length) {
-    throw new Error("Object chunks are empty");
+    fail("Object chunks are empty");
   }
   const chunk = chunks[0];
   return {
@@ -343,7 +361,7 @@ export function createCompositeListAggregate(
   nullChunks?: CompositeNullChunk[],
 ): CompositeListAggregate {
   if (!chunks.length) {
-    throw new Error("List chunks are empty");
+    fail("List chunks are empty");
   }
   return {
     kind: ValueKind.CompositeList,
@@ -358,7 +376,7 @@ export function createCompositeNullAggregate(
   chunks: CompositeNullChunk[],
 ): CompositeNullAggregate {
   if (!chunks.length) {
-    throw new Error("List chunks are empty");
+    fail("List chunks are empty");
   }
   return {
     kind: ValueKind.CompositeNull,
@@ -372,7 +390,7 @@ export function createCompositeUndefinedAggregate(
   chunks: CompositeUndefinedChunk[],
 ): CompositeUndefinedAggregate {
   if (!chunks.length) {
-    throw new Error("List chunks are empty");
+    fail("List chunks are empty");
   }
   return {
     kind: ValueKind.CompositeUndefined,
