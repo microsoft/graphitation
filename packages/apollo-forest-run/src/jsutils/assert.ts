@@ -1,12 +1,7 @@
 export function assert(condition: unknown, message = ""): asserts condition {
   if (!condition) {
-    invariantViolation(message);
+    throw new Error("Invariant violation" + (message ? `: ${message}` : ""));
   }
-}
-
-// Kept out of line so optimized callers don't embed the cold throw path
-function invariantViolation(message: string): never {
-  throw new Error("Invariant violation" + (message ? `: ${message}` : ""));
 }
 
 export function assertNever(...values: never[]): never {
