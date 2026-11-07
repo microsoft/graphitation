@@ -49,10 +49,12 @@ export function resolveOperationDescriptor(
     variants = new Map<CacheKey, OperationDescriptor>();
     operations.set(document, variants);
   }
-  const variablesWithDefaultValues = applyDefaultValues(
-    variables ?? {},
-    documentDescriptor.definition.variableDefinitions,
-  );
+  const variablesWithDefaultValues = documentDescriptor.hasDefaultValues
+    ? applyDefaultValues(
+        variables ?? {},
+        documentDescriptor.definition.variableDefinitions,
+      )
+    : variables ?? {};
   const variablesKey = createVariablesKey(
     documentDescriptor.definition.variableDefinitions,
     variablesWithDefaultValues,

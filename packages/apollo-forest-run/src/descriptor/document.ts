@@ -27,7 +27,22 @@ export function describeDocument(document: DocumentNode): DocumentDescriptor {
     debugName: debugName(operationDefinition),
     definition: operationDefinition,
     fragmentMap,
+    hasDefaultValues: hasDefaultValues(operationDefinition),
   };
+}
+
+function hasDefaultValues({
+  variableDefinitions,
+}: OperationDefinitionNode): boolean {
+  if (!variableDefinitions) {
+    return false;
+  }
+  for (let i = 0; i < variableDefinitions.length; i++) {
+    if (variableDefinitions[i].defaultValue !== undefined) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function debugName({

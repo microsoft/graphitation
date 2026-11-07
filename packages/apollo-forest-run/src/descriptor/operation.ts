@@ -53,7 +53,9 @@ export function describeOperation(
     throw new Error(`Unexpected operation type: ${operation}`);
   }
 
-  variablesWithDefaults ??= applyDefaultValues(variables, variableDefinitions);
+  variablesWithDefaults ??= documentDescriptor.hasDefaultValues
+    ? applyDefaultValues(variables, variableDefinitions)
+    : variables;
 
   return {
     ...documentDescriptor,
@@ -85,7 +87,7 @@ export function applyDefaultValues(
   variableValues: VariableValues,
   variableDefinitions: readonly VariableDefinitionNode[] | undefined,
 ): VariableValues {
-  if (!variableDefinitions?.length || !hasDefaultValues(variableDefinitions)) {
+  if (!variableDefinitions?.length) {
     return variableValues;
   }
   // Note: ideally there should be either variableValue, or vd.defaultValue
@@ -114,22 +116,6 @@ export function applyDefaultValues(
   return defaultValues
     ? { ...variableValues, ...defaultValues }
     : variableValues;
-}
-
-const defaultsPresence = new WeakMap<
-  readonly VariableDefinitionNode[],
-  boolean
->();
-
-function hasDefaultValues(
-  variableDefinitions: readonly VariableDefinitionNode[],
-): boolean {
-  let result = defaultsPresence.get(variableDefinitions);
-  if (result === undefined) {
-    result = variableDefinitions.some((def) => def.defaultValue !== undefined);
-    defaultsPresence.set(variableDefinitions, result);
-  }
-  return result;
 }
 
 function getKeyVars(doc: OperationDefinitionNode): VariableName[] | null {
