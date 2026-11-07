@@ -282,6 +282,7 @@ function collectChunks(
     : chunks.sort(byDepthAsc);
 }
 
+// Avoids push(...source): spreading very large arrays exceeds the max call argument count (RangeError)
 function pushAll(target: ObjectChunk[], source: readonly ObjectChunk[]) {
   for (let i = 0; i < source.length; i++) {
     target.push(source[i]);
