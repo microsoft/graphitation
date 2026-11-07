@@ -90,7 +90,7 @@ function diffNodesImpl(
   for (const nodeChunks of nodes.values()) {
     assert(nodeChunks.length);
     nodeDiffState.difference = undefined;
-    clearArray(nodeDiffState.errors);
+    nodeDiffState.errors.length = 0;
 
     const modelNode =
       nodeChunks.length === 1
@@ -239,8 +239,4 @@ function getErrors(context: Context): GraphDiffError[] {
     });
   }
   return errors;
-}
-
-function clearArray(array: unknown[]): void {
-  array.length = 0;
 }
