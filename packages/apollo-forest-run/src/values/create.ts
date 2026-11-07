@@ -33,7 +33,7 @@ import type {
 } from "./types";
 import { ValueKind } from "./types";
 import * as Predicates from "./predicates";
-import { assert, assertNever, fail } from "../jsutils/assert";
+import { assert, assertNever } from "../jsutils/assert";
 import { resolveSelection } from "../descriptor/resolvedSelection";
 
 export type ChunkAccumulator = {
@@ -339,7 +339,7 @@ export function createObjectAggregate(
   undefinedChunks?: CompositeUndefinedChunk[],
 ): ObjectAggregate {
   if (!chunks.length) {
-    fail("Object chunks are empty");
+    throw new Error("Object chunks are empty");
   }
   const chunk = chunks[0];
   return {
@@ -361,7 +361,7 @@ export function createCompositeListAggregate(
   nullChunks?: CompositeNullChunk[],
 ): CompositeListAggregate {
   if (!chunks.length) {
-    fail("List chunks are empty");
+    throw new Error("List chunks are empty");
   }
   return {
     kind: ValueKind.CompositeList,
@@ -376,7 +376,7 @@ export function createCompositeNullAggregate(
   chunks: CompositeNullChunk[],
 ): CompositeNullAggregate {
   if (!chunks.length) {
-    fail("List chunks are empty");
+    throw new Error("List chunks are empty");
   }
   return {
     kind: ValueKind.CompositeNull,
@@ -390,7 +390,7 @@ export function createCompositeUndefinedAggregate(
   chunks: CompositeUndefinedChunk[],
 ): CompositeUndefinedAggregate {
   if (!chunks.length) {
-    fail("List chunks are empty");
+    throw new Error("List chunks are empty");
   }
   return {
     kind: ValueKind.CompositeUndefined,

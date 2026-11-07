@@ -9,7 +9,3 @@ export function assertNever(...values: never[]): never {
     `Unexpected member of typed union: \n` + JSON.stringify(values),
   );
 }
-
-export function fail(message: string): never {
-  throw new Error(message);
-}

@@ -306,7 +306,7 @@ function createSourceCopiesUpToRoot(
     let draft = drafts.get(data);
     statsLogger?.copyParentChunkStats(from, draft);
     if (!draft) {
-      draft = copyObject(data);
+      draft = { ...data };
       drafts.set(data, draft);
     }
     return data;
@@ -335,21 +335,11 @@ function createSourceCopiesUpToRoot(
     statsLogger?.copyParentChunkStats(from, draft);
   }
   if (!draft) {
-    draft = copyValue(value);
+    draft = (Array.isArray(value) ? [...value] : { ...value }) as Draft;
     drafts.set(value, draft);
   }
   (parentDraft as any)[dataKey] = draft;
   return value;
-}
-
-function copyObject(data: SourceObject): Draft {
-  return { ...data };
-}
-
-function copyValue(value: unknown): Draft {
-  return (
-    Array.isArray(value) ? [...value] : { ...(value as object) }
-  ) as Draft;
 }
 
 function apolloBackwardsCompatibility_saveOrphanNodes(
