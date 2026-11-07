@@ -33,9 +33,7 @@ export function enqueueField(
   diff: ObjectDifference = createObjectDifference(),
   fieldName: FieldName | NormalizedFieldEntry,
 ) {
-  if (!diff.fieldQueue) {
-    diff.fieldQueue = createFieldSet();
-  }
+  diff.fieldQueue ??= new Set();
   diff.fieldQueue.add(Descriptor.getFieldName(fieldName));
   return diff;
 }
@@ -54,9 +52,7 @@ export function addDirtyField(
   diff: ObjectDifference,
   fieldName: FieldName | NormalizedFieldEntry,
 ) {
-  if (!diff.dirtyFields) {
-    diff.dirtyFields = createFieldSet();
-  }
+  diff.dirtyFields ??= new Set();
   diff.dirtyFields.add(Descriptor.getFieldName(fieldName));
 }
 
@@ -351,8 +347,4 @@ function fieldHasStructuralChanges(
     return hasStructuralChanges(fieldDiff.state);
   }
   return fieldDiff.some((entry) => hasStructuralChanges(entry.state));
-}
-
-function createFieldSet(): Set<FieldName> {
-  return new Set();
 }
