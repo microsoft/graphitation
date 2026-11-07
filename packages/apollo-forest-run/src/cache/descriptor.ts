@@ -5,6 +5,7 @@ import type {
 } from "graphql";
 import type { CacheEnv, CacheKey, Store } from "./types";
 import type {
+  DocumentDescriptor,
   OperationDescriptor,
   ResultTreeDescriptor,
 } from "../descriptor/types";
@@ -31,6 +32,7 @@ export const ROOT_NODES = Object.freeze([
 const documentCache = new WeakMap<DocumentNode, DocumentNode>();
 const reverseDocumentCache = new WeakMap<DocumentNode, DocumentNode>();
 const definitionsCache = new WeakMap<DefinitionNode, DefinitionNode>();
+const documentDescriptors = new WeakMap<DocumentNode, DocumentDescriptor>();
 const resultTreeDescriptors = new WeakMap<DocumentNode, ResultTreeDescriptor>();
 const diffDescriptors = new WeakMap<Cache.DiffOptions, OperationDescriptor>();
 
@@ -42,7 +44,11 @@ export function resolveOperationDescriptor(
   rootNodeKey?: string,
 ): OperationDescriptor & { rootNodeKey: string | false } {
   const document = env.addTypename ? transformDocument(doc) : doc;
-  const documentDescriptor = describeDocument(document);
+  let documentDescriptor = documentDescriptors.get(document);
+  if (!documentDescriptor) {
+    documentDescriptor = describeDocument(document);
+    documentDescriptors.set(document, documentDescriptor);
+  }
 
   let variants = operations.get(document);
   if (!variants) {
