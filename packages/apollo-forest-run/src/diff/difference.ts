@@ -15,6 +15,7 @@ import { ValueKind } from "../values/types";
 import { DifferenceKind } from "./types";
 
 const EMPTY_ARRAY = Object.freeze([]);
+const isArray = Array.isArray;
 
 export function createObjectDifference(
   fieldQueue: Iterable<FieldName> | null = null,
@@ -64,7 +65,7 @@ export function allFieldEntriesComplete(
     // Field is enqueued, but state is not initialized yet
     return false;
   }
-  if (!Array.isArray(fieldDiff)) {
+  if (!isArray(fieldDiff)) {
     return isComplete(fieldDiff.state);
   }
   return fieldDiff.every((entryDiff) => isComplete(entryDiff.state));
@@ -132,7 +133,7 @@ export function getFieldEntryQueue(
   if (!fieldDiff) {
     return;
   }
-  if (!Array.isArray(fieldDiff)) {
+  if (!isArray(fieldDiff)) {
     return isComplete(fieldDiff.state) ? undefined : fieldDiff.fieldEntry;
   }
   const fieldEntryQueue: NormalizedFieldEntry[] = [];
@@ -166,7 +167,7 @@ export function getFieldDifference(
   if (!fieldState) {
     return undefined;
   }
-  if (!Array.isArray(fieldState)) {
+  if (!isArray(fieldState)) {
     return Descriptor.fieldEntriesAreEqual(fieldState.fieldEntry, fieldEntry)
       ? fieldState
       : undefined;
@@ -206,7 +207,7 @@ export function addFieldDifference(
     fieldState.set(fieldName, fieldEntryDiff);
     return fieldEntryDiff;
   }
-  if (!Array.isArray(existingFieldEntries)) {
+  if (!isArray(existingFieldEntries)) {
     fieldState.set(fieldName, [existingFieldEntries, fieldEntryDiff]);
     return fieldEntryDiff;
   }
@@ -342,7 +343,7 @@ function fieldHasStructuralChanges(
   if (!fieldDiff) {
     return false;
   }
-  if (!Array.isArray(fieldDiff)) {
+  if (!isArray(fieldDiff)) {
     return hasStructuralChanges(fieldDiff.state);
   }
   return fieldDiff.some((entry) => hasStructuralChanges(entry.state));

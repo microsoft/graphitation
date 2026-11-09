@@ -68,6 +68,7 @@ export type DocumentDescriptor = {
   fragmentMap: FragmentMap;
   debugName: string;
   definition: OperationDefinitionNode;
+  hasDefaultValues: boolean;
 };
 
 export type ResultTreeDescriptor = {
@@ -91,6 +92,7 @@ export type OperationDescriptor = {
   fragmentMap: FragmentMap;
   debugName: string;
   definition: OperationDefinitionNode;
+  hasDefaultValues: boolean;
   possibleSelections: PossibleSelections;
   variables: VariableValues;
   variablesWithDefaults: VariableValues;

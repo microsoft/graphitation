@@ -53,7 +53,9 @@ export function describeOperation(
     throw new Error(`Unexpected operation type: ${operation}`);
   }
 
-  variablesWithDefaults ??= applyDefaultValues(variables, variableDefinitions);
+  variablesWithDefaults ??= documentDescriptor.hasDefaultValues
+    ? applyDefaultValues(variables, variableDefinitions)
+    : variables;
 
   return {
     ...documentDescriptor,
@@ -93,11 +95,12 @@ export function applyDefaultValues(
   // FIXME: throw proper error and fix on the consumer side instead
 
   let defaultValues: VariableValues | null = null;
-  for (const variableDef of variableDefinitions) {
+  for (let i = 0; i < variableDefinitions.length; i++) {
+    const variableDef = variableDefinitions[i];
     const variableName = variableDef.variable.name.value;
     if (
-      variableValues[variableName] !== undefined ||
-      variableDef.defaultValue === undefined
+      variableDef.defaultValue === undefined ||
+      variableValues[variableName] !== undefined
     ) {
       continue;
     }
@@ -205,7 +208,8 @@ export function createVariablesKey(
   // Note: string concatenation in V8 is fast and memory efficient due to string interning and windowing
   let key = "";
   if (defs?.length) {
-    for (const variableDef of defs) {
+    for (let i = 0; i < defs.length; i++) {
+      const variableDef = defs[i];
       const variableName = variableDef.variable.name.value;
       const value = variablesWithDefaults[variableName];
       key += variableName + ":" + JSON.stringify(sortKeys(value)) + ",";

@@ -37,7 +37,7 @@ import {
   createCompositeListChunk,
   createCompositeNullChunk,
   createCompositeUndefinedChunk,
-  createObjectChunk,
+  createTypedObjectChunk,
   createParentLocator,
   findClosestNode,
   getDataPathForDebugging,
@@ -68,6 +68,7 @@ type Context = {
 };
 
 const EMPTY_ARRAY = Object.freeze([]);
+const isArray = Array.isArray;
 
 export function indexTree(
   env: ForestEnv,
@@ -276,9 +277,8 @@ function indexSourceObject(
   } = context;
 
   const isRoot = isRootRef(parent) && !parent.detached;
-  const typeName = isRoot
-    ? source.__typename ?? op.rootType
-    : source.__typename;
+  const sourceTypeName = source.__typename;
+  const typeName = isRoot ? sourceTypeName ?? op.rootType : sourceTypeName;
 
   const selection = resolveSelection(op, possibleSelections, typeName || null);
   const objectKeyResult = isRoot
@@ -288,10 +288,11 @@ function indexSourceObject(
   const key = typeof objectKeyResult === "string" ? objectKeyResult : false;
   const missingFields = knownMissingFields?.get(source);
 
-  const chunk = createObjectChunk(
+  const chunk = createTypedObjectChunk(
     op,
     possibleSelections,
     source,
+    sourceTypeName,
     key,
     missingFields,
   );
@@ -330,7 +331,8 @@ function indexSourceObject(
     // Field names are grouped by aliases. Index each group once, not once per alias.
     index += aliases.length || 1;
 
-    for (const fieldInfo of aliases) {
+    for (let i = 0; i < aliases.length; i++) {
+      const fieldInfo = aliases[i];
       const value = source[fieldInfo.dataKey];
       const entryParentInfo = {
         value: null as any,
@@ -339,7 +341,7 @@ function indexSourceObject(
       };
       assert(fieldInfo.selection && isSourceCompositeValue(value, fieldInfo));
       let fieldValue: CompositeValueChunk;
-      if (Array.isArray(value)) {
+      if (isArray(value)) {
         fieldValue = indexSourceList(
           context,
           value,

@@ -7,6 +7,7 @@ import {
   parallel,
   EsbuildBuildOptions,
 } from "just-scripts";
+import type { Plugin as EsbuildPlugin } from "esbuild";
 import * as path from "path";
 import * as glob from "fast-glob";
 import * as fs from "fs";
@@ -18,6 +19,25 @@ export const types = () => {
     outDir: "lib",
     emitDeclarationOnly: true,
   });
+};
+
+const inlineAssertPlugin: EsbuildPlugin = {
+  name: "inline-assert",
+  setup(build) {
+    // TODO: switch to SWC or tree-sitter
+    build.onLoad({ filter: /apollo-forest-run/ }, async (args) => {
+      const result = transformFileSync(args.path, {
+        filename: args.path,
+        presets: ["@babel/preset-typescript"],
+        plugins: [inlineAssert()],
+        sourceMaps: "inline",
+      });
+      return {
+        contents: result?.code ?? undefined,
+        loader: args.path.endsWith(".ts") ? "ts" : "js",
+      };
+    });
+  },
 };
 
 export const build = () => {
@@ -34,24 +54,7 @@ export const build = () => {
       bundle: true,
       outExtension: { ".js": ".mjs" },
       plugins: [
-        {
-          name: "inline-assert",
-          setup(build) {
-            // TODO: switch to SWC or tree-sitter
-            build.onLoad({ filter: /apollo-forest-run/ }, async (args) => {
-              const result = transformFileSync(args.path, {
-                filename: args.path,
-                presets: ["@babel/preset-typescript"],
-                plugins: [inlineAssert()],
-                sourceMaps: "inline",
-              });
-              return {
-                contents: result?.code ?? undefined,
-                loader: args.path.endsWith(".ts") ? "ts" : "js",
-              };
-            });
-          },
-        },
+        inlineAssertPlugin,
         {
           name: "add-mjs",
           setup(build) {
@@ -87,6 +90,7 @@ export const build = () => {
     esbuildTask({
       ...baseEsbuildOptions,
       format: "cjs",
+      plugins: [inlineAssertPlugin],
     }),
   );
 };

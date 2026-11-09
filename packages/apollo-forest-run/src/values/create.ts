@@ -223,7 +223,25 @@ export function createObjectChunk(
   key: string | false,
   missingFields: Set<FieldInfo> | null = null,
 ): ObjectChunk {
-  let typeName = source.__typename;
+  return createTypedObjectChunk(
+    operation,
+    possibleSelections,
+    source,
+    source.__typename,
+    key,
+    missingFields,
+  );
+}
+
+export function createTypedObjectChunk(
+  operation: OperationDescriptor,
+  possibleSelections: PossibleSelections,
+  source: SourceObject,
+  sourceTypeName: string | undefined,
+  key: string | false,
+  missingFields: Set<FieldInfo> | null = null,
+): ObjectChunk {
+  let typeName = sourceTypeName;
   if (!typeName && key !== false && key === operation.rootNodeKey) {
     typeName = operation.rootType;
   }

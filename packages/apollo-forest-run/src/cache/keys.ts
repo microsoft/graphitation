@@ -113,8 +113,9 @@ export function objectKey(
   //   }
   // }
   //
-  if (typeName && object["id"] !== undefined) {
-    return `${typeName}:${object["id"]}`;
+  const id = object["id"];
+  if (typeName && id !== undefined) {
+    return `${typeName}:${id}`;
   }
   if (typeName && object["_id"] !== undefined) {
     return `${typeName}:${object["_id"]}`;
