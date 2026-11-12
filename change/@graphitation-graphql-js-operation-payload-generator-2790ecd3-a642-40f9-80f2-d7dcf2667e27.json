@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Declare the utils-12-compatible GraphQL schema dependency used by payload-generator tests instead of relying on hoisting.",
+  "packageName": "@graphitation/graphql-js-operation-payload-generator",
+  "email": "celiac@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}

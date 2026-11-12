@@ -1,7 +1,5 @@
-import {
-  GraphQLRuleTester,
-  ParserOptions,
-} from "@graphql-eslint/eslint-plugin";
+import { ParserOptions } from "@graphql-eslint/eslint-plugin";
+import { GraphQLRuleTester } from "./utils/graphql-rule-tester";
 import rule from "../strict-non-nullable-variables";
 
 const ruleTester = new GraphQLRuleTester();
@@ -28,7 +26,7 @@ const TEST_SCHEMA = /* GraphQL */ `
 `;
 
 const parserOptions: ParserOptions = {
-  schema: TEST_SCHEMA,
+  graphQLConfig: { schema: TEST_SCHEMA },
   filePath: "test.graphql",
 };
 

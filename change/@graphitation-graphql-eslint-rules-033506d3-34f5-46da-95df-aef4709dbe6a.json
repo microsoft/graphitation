@@ -1,0 +1,7 @@
+{
+  "type": "major",
+  "comment": "Upgrade to GraphQL ESLint v4 and GraphQL 16 with utils-12-compatible schema loading; preserve custom rule diagnostics and fixes.",
+  "packageName": "@graphitation/graphql-eslint-rules",
+  "email": "celiac@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}

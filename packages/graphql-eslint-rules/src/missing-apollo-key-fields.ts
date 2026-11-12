@@ -15,8 +15,8 @@ import {
 import {
   GraphQLESLintRule,
   CategoryType,
-  requireGraphQLSchemaFromContext,
-  requireSiblingsOperations,
+  requireGraphQLSchema,
+  requireGraphQLOperations,
 } from "@graphql-eslint/eslint-plugin";
 
 export const REQUIRE_KEY_FIELDS_WHEN_AVAILABLE = "missing-apollo-key-fields";
@@ -177,14 +177,15 @@ const missingApolloKeyFieldsRule: GraphQLESLintRule<
     },
   },
   create(context) {
-    requireGraphQLSchemaFromContext(REQUIRE_KEY_FIELDS_WHEN_AVAILABLE, context);
-    requireSiblingsOperations(REQUIRE_KEY_FIELDS_WHEN_AVAILABLE, context);
+    requireGraphQLSchema(REQUIRE_KEY_FIELDS_WHEN_AVAILABLE, context);
+    const siblings = requireGraphQLOperations(
+      REQUIRE_KEY_FIELDS_WHEN_AVAILABLE,
+      context,
+    );
 
     return {
       SelectionSet(node) {
         const { typePolicies } = context.options[0];
-        const siblings = context.parserServices?.siblingOperations;
-
         if (!node.selections || node.selections.length === 0) {
           return;
         }
