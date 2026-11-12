@@ -36,7 +36,7 @@ extends:
     stages:
       - stage: release
         variables:
-          # ESRP publishing is handled by EsrpRelease@9.
+          # ESRP publishing is handled by EsrpRelease@13.
           Build.ESRP.CodeSign.Enabled: false
           # OPTIONAL: To disable required tools not applicable in the pipeline set to false.
           # Supported values: BinSkim, Roslyn, ESLint, PREFast.
@@ -166,7 +166,7 @@ extends:
               - script: find "$(packagesArtifactPath)" -maxdepth 2 -type f -name "*.tgz" -print
                 displayName: Show packages artifact contents
 
-              - task: EsrpRelease@9
+              - task: EsrpRelease@13
                 displayName: ESRP Release to npm
                 inputs:
                   connectedservicename: $(Release.ConnectedServiceName)
