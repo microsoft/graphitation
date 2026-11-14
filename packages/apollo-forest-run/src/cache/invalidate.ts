@@ -11,7 +11,7 @@ import { OperationDescriptor } from "../descriptor/types";
 import { NodeDifferenceMap } from "../forest/updateTree";
 import { IndexedTree } from "../forest/types";
 import type { NodeChunk, ObjectChunk } from "../values/types";
-import { isNodeValue } from "../values/predicates";
+import { isNodeValue, isObjectValue } from "../values/predicates";
 import { assert } from "../jsutils/assert";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import { hasFieldEntry } from "../values/resolve";
@@ -96,10 +96,10 @@ export function invalidateReadResults(
         const optimisticResults = optimisticReadResults.get(operation);
 
         if (results) {
-          markIncompleteNodesAsDirty(results, incomingResult);
+          markIncompleteNodesAsDirty(env, results, incomingResult);
         }
         if (optimisticResults) {
-          markIncompleteNodesAsDirty(optimisticResults, incomingResult);
+          markIncompleteNodesAsDirty(env, optimisticResults, incomingResult);
         }
       }
     }
@@ -107,6 +107,7 @@ export function invalidateReadResults(
 }
 
 function markIncompleteNodesAsDirty(
+  env: CacheEnv,
   readResult: TransformedResult,
   incomingResult: IndexedTree,
 ) {
@@ -120,7 +121,24 @@ function markIncompleteNodesAsDirty(
     if (!chunks?.length) {
       continue;
     }
-    markProvidedMissingFieldsAsDirty(incompleteChunk, chunks, dirtyNodes);
+    if (env.optimizeIncompleteChunkInvalidation) {
+      markProvidedMissingFieldsAsDirty(incompleteChunk, chunks, dirtyNodes);
+      continue;
+    }
+    let dirtyFields = dirtyNodes.get(incompleteChunk.key);
+    for (const missingField of incompleteChunk.missingFields ?? EMPTY_ARRAY) {
+      const normalizedField = resolveNormalizedField(
+        incompleteChunk.selection,
+        missingField,
+      );
+      if (chunks.some((chunk) => hasFieldEntry(chunk, normalizedField))) {
+        dirtyFields ??= new Set();
+        dirtyFields.add(missingField.name);
+      }
+    }
+    if (dirtyFields?.size) {
+      dirtyNodes.set(incompleteChunk.key, dirtyFields);
+    }
   }
 }
 
@@ -163,35 +181,88 @@ function markChangedNodesAsDirty(
   //   We keep track of those additional "read" dependencies via forest.operationsByNodes, so they will be properly invalidated
   //   when those nodes change. However, when readResults contain missing fields and incoming operation simply brings
   //   new data for those nodes (but not changes per se) - those nodes won't be invalidated without the code below.
-  //   Only missing fields that the incoming result actually provides are marked as dirty: re-hydrating a read result
-  //   for unrelated incoming fields of the same node is wasteful (the result stays incomplete anyway).
+  if (env.optimizeIncompleteChunkInvalidation && incomingResult) {
+    markIncompleteChunksProvidedByIncomingResult(
+      readResult,
+      incomingResult,
+      env,
+    );
+    return;
+  }
   const incompleteChunks = outputTree.incompleteChunks;
   for (const chunk of incompleteChunks) {
+    if (!isObjectValue(chunk) || typeof chunk.key !== "string") {
+      continue;
+    }
+    if (incomingResult && !incomingResult.nodes.has(chunk.key)) {
+      continue;
+    }
+    assert(chunk.missingFields?.size);
+    let currentDirtyFields = dirtyNodes.get(chunk.key);
+    if (!currentDirtyFields) {
+      currentDirtyFields = new Set();
+      dirtyNodes.set(chunk.key, currentDirtyFields);
+    }
+    for (const field of chunk.missingFields) {
+      currentDirtyFields.add(field.name);
+    }
+  }
+}
+
+/**
+ * Optimized counterpart of the incomplete chunks loop in `markChangedNodesAsDirty` (`optimizeIncompleteChunkInvalidation`).
+ *
+ * Instead of marking all missing fields of incomplete node chunks as dirty whenever incoming result contains
+ * the same node, marks only missing fields that incoming chunks actually provide. This uses the same field matching
+ * as hydration (normalized field entries: arguments / keyArgs aware, alias-independent), so a missing field that
+ * is not marked here can't be resolved from incoming chunks on re-hydration anyway.
+ *
+ * Note: dirty fields computed here are always a subset of the fields marked by the conservative loop
+ *   (which marks every missing field of the chunk)
+ */
+function markIncompleteChunksProvidedByIncomingResult(
+  readResult: TransformedResult,
+  incomingResult: IndexedTree,
+  env: CacheEnv,
+) {
+  const { outputTree, dirtyNodes } = readResult;
+
+  for (const chunk of outputTree.incompleteChunks) {
     if (!isNodeValue(chunk)) {
       continue;
     }
-    const incomingChunks = incomingResult?.nodes.get(chunk.key);
-    if (incomingResult && !incomingChunks?.length) {
+    const incomingChunks = incomingResult.nodes.get(chunk.key);
+    if (!incomingChunks?.length) {
       continue;
     }
-    if (dirtyNodes.get(chunk.key)?.size === 0) {
-      continue; // Already scheduled for full diff of all fields
-    }
     assert(chunk.missingFields?.size);
-    if (!incomingChunks || hasMissingFieldsWithReadPolicies(env, chunk)) {
-      // No incoming result (e.g. cache.modify) or read policies (which may compute missing fields from other data):
-      //   conservatively mark all missing fields as dirty
-      let currentDirtyFields = dirtyNodes.get(chunk.key);
-      if (!currentDirtyFields) {
-        currentDirtyFields = new Set();
-        dirtyNodes.set(chunk.key, currentDirtyFields);
-      }
-      for (const field of chunk.missingFields) {
-        currentDirtyFields.add(field.name);
-      }
+
+    if (dirtyNodes.get(chunk.key)?.size === 0) {
+      continue; // Already scheduled for full diff of all fields: must not be downgraded to specific fields
+    }
+    if (chunk.hasNestedReadPolicies || hasReadPolicies(env, chunk)) {
+      // Read policies may compute fields from data outside of the selection (e.g. via readField / toReference),
+      //   so conservatively mark all missing fields as dirty (same as the non-optimized loop)
+      markAllMissingFieldsAsDirty(chunk, dirtyNodes);
       continue;
     }
     markProvidedMissingFieldsAsDirty(chunk, incomingChunks, dirtyNodes);
+  }
+}
+
+function markAllMissingFieldsAsDirty(
+  chunk: NodeChunk,
+  dirtyNodes: DirtyNodeMap,
+) {
+  assert(chunk.missingFields?.size);
+  let dirtyFields = dirtyNodes.get(chunk.key);
+  assert(dirtyFields?.size !== 0, "Full diff must not be downgraded");
+  if (!dirtyFields) {
+    dirtyFields = new Set();
+    dirtyNodes.set(chunk.key, dirtyFields);
+  }
+  for (const field of chunk.missingFields) {
+    dirtyFields.add(field.name);
   }
 }
 
@@ -212,7 +283,14 @@ function markProvidedMissingFieldsAsDirty(
       incompleteChunk.selection,
       missingField,
     );
-    if (incomingChunks.some((chunk) => hasFieldEntry(chunk, normalizedField))) {
+    const isProvided = incomingChunks.some((incomingChunk) => {
+      assert(incomingChunk.key === incompleteChunk.key);
+      return hasFieldEntry(incomingChunk, normalizedField);
+    });
+    if (isProvided) {
+      // Dirty fields are matched by name against chunk selections (see isDirtyNode),
+      //   so the field must be a part of the incomplete chunk selection to trigger re-hydration
+      assert(incompleteChunk.selection.fields.has(missingField.name));
       dirtyFields ??= new Set();
       dirtyFields.add(missingField.name);
     }
@@ -222,16 +300,14 @@ function markProvidedMissingFieldsAsDirty(
   }
 }
 
-function hasMissingFieldsWithReadPolicies(
-  env: CacheEnv,
-  chunk: NodeChunk,
-): boolean {
-  const fieldPolicies = env.readPolicies.get(chunk.type as string);
+function hasReadPolicies(env: CacheEnv, chunk: NodeChunk): boolean {
+  const fieldPolicies =
+    typeof chunk.type === "string" ? env.readPolicies.get(chunk.type) : null;
   if (!fieldPolicies?.size) {
     return false;
   }
-  for (const field of chunk.missingFields ?? EMPTY_ARRAY) {
-    if (fieldPolicies.has(field.name)) {
+  for (const fieldName of chunk.selection.fields.keys()) {
+    if (fieldPolicies.has(fieldName)) {
       return true;
     }
   }

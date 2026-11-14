@@ -196,6 +196,14 @@ export type ForestRunAdditionalConfig<
   logUpdateStats?: boolean;
   logStaleOperations?: boolean;
   optimizeFragmentReads?: boolean;
+  /**
+   * When enabled, incoming results invalidate incomplete (partial) read results only when they actually provide
+   * some of the missing fields (instead of any incoming data for the same node). Read results with read policies
+   * keep conservative invalidation.
+   *
+   * Avoids re-hydrating pending partial watches on every sibling response for a shared node.
+   */
+  optimizeIncompleteChunkInvalidation?: boolean;
   cleanupNonCacheableOperations?: boolean;
   reconcileDivergentChunks?: boolean;
   /**
@@ -277,6 +285,19 @@ export type CacheEnv<TPartitions extends HistoryPartitions = any> = {
   logUpdateStats: boolean;
   logStaleOperations: boolean;
   optimizeFragmentReads: boolean;
+  /**
+   * When enabled, incoming results mark missing fields of incomplete read result chunks as dirty only when
+   * incoming chunks for the same node actually provide those fields (matched by normalized field entry,
+   * i.e. arguments-aware and alias-independent). Otherwise, all missing fields of such chunks are marked as dirty
+   * whenever incoming result contains the same node.
+   *
+   * Chunks with read policies (own or nested) keep conservative invalidation, as well as invalidation
+   * without incoming result (e.g. cache.modify). Also, existing "full diff" dirty entries are never downgraded
+   * to specific fields.
+   *
+   * Disabled by default.
+   */
+  optimizeIncompleteChunkInvalidation: boolean;
   /**
    * When enabled, operation descriptors of non-cacheable operations (i.e. mutations without
    * the `@cache` directive) are released as soon as nothing references them anymore.

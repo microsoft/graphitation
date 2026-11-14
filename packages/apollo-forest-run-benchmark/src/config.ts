@@ -7,6 +7,12 @@ export const CONFIG = {
       description: "Default ForestRun configuration",
       options: {},
     },
+    {
+      name: "OptimizeIncompleteChunkInvalidation",
+      description:
+        "ForestRun with optimizeIncompleteChunkInvalidation enabled (ignored by baseline versions without this option)",
+      options: { optimizeIncompleteChunkInvalidation: true },
+    },
   ] as const satisfies CacheConfiguration[],
   watcherCounts: [0, 50],
   sampling: {

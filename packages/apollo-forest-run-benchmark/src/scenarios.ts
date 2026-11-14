@@ -456,7 +456,7 @@ export const scenarios = [
     // Measures a single response arriving for a node shared with other pending partial watches.
     name: "write-into-pending-partial-watches",
     prepare: (ctx: ScenarioContext) => {
-      const { CacheFactory, configuration } = ctx;
+      const { CacheFactory, configuration, watcherCount } = ctx;
       const cache = new CacheFactory(configuration);
 
       for (let m = 0; m < PENDING_SIZE; m++) {
@@ -473,6 +473,10 @@ export const scenarios = [
         }
       }
       const half = PENDING_SIZE / 2;
+      // Extra watchers of a hook that is still pending after `run()`
+      addWatchers(watcherCount, cache, pendingHookQueries[PENDING_SIZE - 1], {
+        id: "0",
+      });
       for (let h = 0; h < half; h++) {
         cache.writeQuery({
           query: pendingHookQueries[h],

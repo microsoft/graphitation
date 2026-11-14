@@ -48,6 +48,8 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
     logStaleOperations: config?.logStaleOperations ?? false,
     historyConfig: config?.historyConfig,
     optimizeFragmentReads: config?.optimizeFragmentReads ?? false,
+    optimizeIncompleteChunkInvalidation:
+      config?.optimizeIncompleteChunkInvalidation ?? false,
     cleanupNonCacheableOperations:
       config?.cleanupNonCacheableOperations ?? false,
     reconcileDivergentChunks: config?.reconcileDivergentChunks ?? false,
