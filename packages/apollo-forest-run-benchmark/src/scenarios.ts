@@ -11,6 +11,15 @@ const extraOperations = Array.from({ length: EXTRA_OPS_COUNT }, (_, i) => ({
   data: { [`node${i}`]: { __typename: `Node${i}`, id: `${i}`, value: i } },
 }));
 
+// N messages x N "hooks", each hook selects a single field of `Message:i` via `message(id)`.
+const PENDING_SIZE = 20;
+const pendingHookQueries = Array.from({ length: PENDING_SIZE }, (_, h) =>
+  parse(`query Hook${h}($id: ID!) { message(id: $id) { id field${h} } }`),
+);
+const pendingHookResult = (m: number, h: number) => ({
+  message: { __typename: "Message", id: String(m), [`field${h}`]: h },
+});
+
 const addWatchers = (
   watcherCount: number,
   cache: ForestRun,
@@ -437,6 +446,47 @@ export const scenarios = [
           return cache.writeQuery({
             query,
             data: data["complex-nested-single-field-change"],
+          });
+        },
+      };
+    },
+  },
+  {
+    // All queries are watched while their requests are in flight (as Apollo QueryInfo does).
+    // Measures a single response arriving for a node shared with other pending partial watches.
+    name: "write-into-pending-partial-watches",
+    prepare: (ctx: ScenarioContext) => {
+      const { CacheFactory, configuration } = ctx;
+      const cache = new CacheFactory(configuration);
+
+      for (let m = 0; m < PENDING_SIZE; m++) {
+        for (const query of pendingHookQueries) {
+          const watch = {
+            query,
+            variables: { id: String(m) },
+            optimistic: true,
+            returnPartialData: true,
+            callback: () => {},
+          };
+          cache.watch(watch);
+          cache.diff(watch);
+        }
+      }
+      const half = PENDING_SIZE / 2;
+      for (let h = 0; h < half; h++) {
+        cache.writeQuery({
+          query: pendingHookQueries[h],
+          variables: { id: "0" },
+          data: pendingHookResult(0, h),
+        });
+      }
+
+      return {
+        run() {
+          return cache.writeQuery({
+            query: pendingHookQueries[half],
+            variables: { id: "0" },
+            data: pendingHookResult(0, half),
           });
         },
       };
