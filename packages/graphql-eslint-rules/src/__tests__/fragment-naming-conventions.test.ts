@@ -1,10 +1,7 @@
 import { TextDecoder } from "util";
 global.TextDecoder = TextDecoder as any;
 
-import {
-  GraphQLRuleTester,
-  ParserOptions,
-} from "@graphql-eslint/eslint-plugin";
+import { GraphQLRuleTester } from "./utils/graphql-rule-tester";
 import rule from "../fragment-naming-conventions";
 
 const ruleTester = new GraphQLRuleTester();
@@ -17,8 +14,8 @@ const TEST_SCHEMA = /* GraphQL */ `
 `;
 
 const WITH_SCHEMA = {
-  parserOptions: <ParserOptions>{
-    schema: TEST_SCHEMA,
+  parserOptions: {
+    graphQLConfig: { schema: TEST_SCHEMA },
   },
 };
 
