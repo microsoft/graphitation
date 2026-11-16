@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Perf: targeted hot-path optimizations and per-document descriptor cache",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "vrazuvaev@microsoft.com_msteamsmdb",
-  "dependentChangeType": "patch"
-}
