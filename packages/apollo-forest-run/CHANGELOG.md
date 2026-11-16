@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Thu, 08 Oct 2026 13:41:06 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 16 Nov 2026 12:18:04 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.25.12
+
+Mon, 16 Nov 2026 12:18:04 GMT
+
+### Patches
+
+- Perf: targeted hot-path optimizations and per-document descriptor cache (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.25.11
 
