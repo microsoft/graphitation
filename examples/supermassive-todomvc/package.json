@@ -60,6 +60,6 @@
     "graphql-let": "^0.18.5",
     "prettier": "^2.8.7",
     "typescript": "^5.5.3",
-    "webpack-dev-server": "^4.13.3"
+    "webpack-dev-server": "^5.2.6"
   }
 }
