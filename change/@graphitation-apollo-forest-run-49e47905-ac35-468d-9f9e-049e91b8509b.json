@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Add optimizeIncompleteChunkInvalidation flag: avoid re-hydrating pending partial watches when an incoming result brings the same node without their missing fields",
-  "packageName": "@graphitation/apollo-forest-run",
-  "email": "vrazuvaev@microsoft.com_msteamsmdb",
-  "dependentChangeType": "patch"
-}

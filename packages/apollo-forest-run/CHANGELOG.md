@@ -1,8 +1,16 @@
 # Change Log - @graphitation/apollo-forest-run
 
-<!-- This log was last generated on Mon, 16 Nov 2026 12:18:04 GMT and should not be manually modified. -->
+<!-- This log was last generated on Mon, 16 Nov 2026 20:10:07 GMT and should not be manually modified. -->
 
 <!-- Start content -->
+
+## 0.25.13
+
+Mon, 16 Nov 2026 20:10:07 GMT
+
+### Patches
+
+- Add optimizeIncompleteChunkInvalidation flag: avoid re-hydrating pending partial watches when an incoming result brings the same node without their missing fields (vrazuvaev@microsoft.com_msteamsmdb)
 
 ## 0.25.12
 
