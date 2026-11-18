@@ -76,6 +76,7 @@ export function indexTree(
   result: OperationResult,
   knownMissingFields?: MissingFieldsMap,
   previousTreeState: IndexedTree | null = null,
+  rootNodeKeyOverride?: string,
 ): IndexedTree {
   let rootNodeKey;
   try {
@@ -92,6 +93,7 @@ export function indexTree(
   } catch (e) {
     rootNodeKey = operation.rootNodeKey;
   }
+  rootNodeKey = rootNodeKeyOverride ?? rootNodeKey;
   const dataMap = new Map();
   const context: Context = {
     env: env,

@@ -1,5 +1,9 @@
 import type { Cache } from "@apollo/client";
-import type { IndexedTree, UpdateTreeResult } from "../forest/types";
+import type {
+  IndexedTree,
+  UpdateTreeResult,
+  IncrementalTarget,
+} from "../forest/types";
 import type { OperationResult } from "../values/types";
 import type {
   CacheEnv,
@@ -39,24 +43,35 @@ import { replaceTree } from "../forest/addTree";
 import { invalidateReadResults } from "./invalidate";
 import { IndexedForest } from "../forest/types";
 
+export type IncrementalWriteContext = {
+  target?: IncrementalTarget;
+  beforeWrite(tree: IndexedTree): void;
+};
+
 export function write(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
   options: Cache.WriteOptions,
+  incremental?: IncrementalWriteContext,
 ): WriteResult {
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
   const targetForest = getActiveForest(store, activeTransaction);
 
-  const writeData =
+  const originalData =
     typeof options.result === "object" && options.result !== null
       ? options.result
       : {};
+  const target = incremental?.target;
+  const writeData =
+    target && !originalData.__typename
+      ? { ...originalData, __typename: target.typename }
+      : originalData;
   const rootNodeKey = options.dataId ?? objectKey(writeData);
   assert(rootNodeKey !== false);
 
   // ApolloCompat (apollo allows writing fragments without proper id in the data)
-  if (rootNodeKey !== undefined && options.dataId) {
+  if (!target && rootNodeKey !== undefined && options.dataId) {
     keyMap?.set(writeData, rootNodeKey);
   }
   const operationDescriptor = resolveOperationDescriptor(
@@ -65,9 +80,10 @@ export function write(
     options.query,
     options.variables,
     rootNodeKey,
+    target && { transient: true, rootType: target.typename },
   );
-  touchOperation(env, store, operationDescriptor);
-  if (!operationDescriptor.cache) {
+  if (!incremental) touchOperation(env, store, operationDescriptor);
+  if (!target && !operationDescriptor.cache) {
     // Results of this operation are never stored, so nothing will ever evict its descriptor.
     // Remember it, so that the outermost transaction can release it on completion.
     // (the set only exists when `env.cleanupNonCacheableOperations` is enabled)
@@ -93,7 +109,7 @@ export function write(
   // Safeguard: make sure previous state doesn't leak outside write operation
   assert(!existingResult?.prev);
 
-  if (writeData === existingData && existingResult) {
+  if (!incremental && writeData === existingData && existingResult) {
     return {
       options,
       incoming: existingResult,
@@ -104,7 +120,7 @@ export function write(
     };
   }
 
-  if (!ROOT_NODES.includes(operationDescriptor.rootNodeKey)) {
+  if (!target && !ROOT_NODES.includes(operationDescriptor.rootNodeKey)) {
     const typeName = resolveExtraRootNodeType(
       env,
       store,
@@ -127,7 +143,11 @@ export function write(
     operationResult,
     undefined,
     existingResult,
+    incremental ? options.dataId : undefined,
   );
+
+  incremental?.beforeWrite(incomingResult);
+  if (incremental && !target) touchOperation(env, store, operationDescriptor);
 
   // ApolloCompat: necessary for fragment writes with custom ids
   if (options.dataId && incomingResult.rootNodeKey !== options.dataId) {
@@ -196,6 +216,14 @@ export function write(
     targetForest,
     modifiedIncomingResult,
   );
+
+  if (incremental && !target) {
+    // A new execution may intentionally deliver a previously deleted ID.
+    // Old target tokens were invalidated at deletion; only its new targets apply.
+    for (const id of modifiedIncomingResult.nodes.keys()) {
+      targetForest.deletedNodes.delete(id);
+    }
+  }
 
   invalidateReadResults(
     env,

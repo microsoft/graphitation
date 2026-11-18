@@ -404,7 +404,7 @@ function inferPossibleType(
   // TODO: use inference to validate correctness of provided `possibleTypes` and throw on missing `possibleTypes`.
 }
 
-function collectConcreteTypes(
+export function collectConcreteTypes(
   possibleTypes: PossibleTypes,
   type: TypeName,
   acc: TypeName[] = [],

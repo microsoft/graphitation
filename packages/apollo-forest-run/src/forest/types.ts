@@ -128,6 +128,15 @@ export type IndexedForest = {
   operationsByCoveredName: Map<string, Set<OperationId>>; // coveredName → IDs of ops whose covers list includes it
   operationsByPartitions: Map<string, Set<OperationId>>; // partition key => operation IDs
   deletedNodes: Set<NodeKey>;
+  incremental?: {
+    targets: Map<NodeKey, IncrementalTarget>;
+  };
+};
+
+export type IncrementalTarget = {
+  id: NodeKey;
+  typename: TypeName;
+  token: object | undefined;
 };
 
 export type Source = Readonly<SourceObject | SourceCompositeList>;

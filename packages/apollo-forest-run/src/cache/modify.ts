@@ -58,6 +58,10 @@ import {
 import { invalidateReadResults } from "./invalidate";
 import { IndexedTree } from "../forest/types";
 import { getFieldName } from "../descriptor/resolvedSelection";
+import {
+  invalidateIncrementalTarget,
+  refreshIncrementalTargets,
+} from "./incrementalState";
 
 const EMPTY_ARRAY = Object.freeze([]);
 const DELETE: any = Object.freeze(Object.create(null));
@@ -321,6 +325,7 @@ function runModifiers(
 }
 
 function deleteNode(layer: DataForest | OptimisticLayer, nodeKey: string) {
+  invalidateIncrementalTarget(layer, nodeKey);
   layer.deletedNodes.add(nodeKey);
 
   // TODO (mayby): instead of mutating trees directly, we should have updateForest() which accepts GraphDifference
@@ -366,6 +371,7 @@ function deleteNode(layer: DataForest | OptimisticLayer, nodeKey: string) {
       // TODO: should we differentiate between incomplete/deleted chunks ?
       tree.incompleteChunks.add(chunk);
     }
+    refreshIncrementalTargets(layer, tree.nodes.keys());
   }
 }
 
@@ -418,6 +424,7 @@ function deletedNodeFields(
 
     if (deleted) {
       deletedFromOperations++;
+      refreshIncrementalTargets(layer, tree.nodes.keys());
     }
     const readResult = layer.readResults.get(operation);
     const optimisticReadResult = store.optimisticReadResults.get(operation);

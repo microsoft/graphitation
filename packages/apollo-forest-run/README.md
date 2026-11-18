@@ -35,6 +35,71 @@ of GraphQL client.
 
 # Architecture
 
+## Experimental native incremental writes
+
+`ForestRun.createIncrementalWriter({ query, variables })` creates a native
+`@defer` execution. ForestRun owns fragment planning, original path/label routing,
+out-of-order child-patch buffering, and target validity. No cache adapter or
+external normalization callbacks are required.
+
+Create one writer per network execution and deliver **unmerged** initial and
+incremental payloads in transport order:
+
+```ts
+const writer = cache.createIncrementalWriter({ query, variables });
+writer.write({ data: initialData, hasNext: true }, false);
+writer.write({
+  incremental: [
+    { path: ["messages", 0], label: "details", data: { text: "ready" } },
+  ],
+  hasNext: false,
+}, false);
+writer.finish();
+```
+
+The query must declare the matching deferred fragment and label. The second
+`write` argument is the initial-write `overwrite` policy; patches always merge.
+`finish()` checks for unresolved patches and releases execution state; it is
+idempotent and also runs on `hasNext: false`. Do not reuse a completed writer.
+The client owns request sharing, delivery deduplication, cancellation, and network
+result snapshots. Stock Apollo versions in this package's peer dependency range
+do not call this API; an integrating client must hand payloads to it explicitly.
+Ordinary cache writes remain unchanged.
+
+Deferred targets come from the incoming indexed tree, including custom keys,
+aliases, recycling, and repaired shared references. Targets are validated before
+data publication. Their incarnation tokens become invalid on eviction, type
+change, or removal of the last live cached occurrence, including through LRU.
+Recreating an ID does not revive old tokens. Reset/restore invalidates pending
+executions, whose subsequent writes are ignored.
+
+Patches use the existing descriptor resolver and write pipeline in transient mode:
+they update selected fields in existing trees without retaining separate patch
+descriptors, trees, or extra roots. Field policies and transaction notifications
+still apply. Writes join an existing base transaction or open a nonoptimistic
+transaction for the whole payload. Creating or writing a native execution inside
+an optimistic transaction throws.
+
+For example, after a list changes from `[1, 2, 3, 4]` to `[1, 2, 3]`, a deferred
+patch anchored to ID `4` cannot update ID `3` or reinsert `4`. It is dropped if no
+live occurrence of `4` remains. If another cached query still contains `4`, only
+that entity is updated; the removed list membership is not restored.
+
+This prevents retargeting, **not stale field overwrites**. An accepted patch may
+overwrite newer values of fields or links it explicitly selects. The caller must
+deliver the legacy path/label-based query protocol; `@stream`, field-level
+`@defer`, and unidentifiable deferred parents are rejected. Generated response
+paths are not durable identity. Manually republishing an entire `no-cache` result bypasses these
+protections. Ordinary ForestRun identity/key-field restrictions still apply.
+Operation history, if enabled on existing queries, retains normal bounded history
+of updates; incremental writes do not disable that feature.
+
+Token state lives directly on the indexed forest, is allocated lazily for native
+executions, and is cleared by reset. It keeps ID/type/token metadata, not response objects.
+While targets are tracked, tree replacement and eviction also check their live
+occurrences; applications with many overlapping cached queries should measure
+this additional write-side work.
+
 ## Overview
 
 Unlike normalized caches where data is stored in a single flat object and then propagated to "local live queries"

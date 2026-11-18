@@ -41,6 +41,12 @@ import {
   transformDocument,
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
+import type { IncrementalWriteContext } from "./cache/write";
+import type {
+  IncrementalWriteOptions,
+  IncrementalWriteSession,
+} from "./cache/incremental";
+import { createIncrementalWriter } from "./cache/incremental";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -125,6 +131,35 @@ export class ForestRun<
     return identify(this.env, object);
   }
 
+  public createIncrementalWriter(
+    options: IncrementalWriteOptions,
+  ): IncrementalWriteSession {
+    const forest = this.store.dataForest;
+    const assertBase = () => {
+      if (this.getActiveForest() !== forest) {
+        throw new Error("Incremental writes cannot run in an optimistic layer");
+      }
+    };
+    assertBase();
+    const writer = createIncrementalWriter(
+      this.env,
+      this.store,
+      options,
+      (writeOptions, context) => {
+        this.runWrite(writeOptions, context);
+      },
+    );
+    return {
+      write: (result, overwrite) => {
+        assertBase();
+        const update = () => writer.write(result, overwrite);
+        if (this.transactionStack.length) update();
+        else this.runTransaction({ update, optimistic: false });
+      },
+      finish: () => writer.finish(),
+    };
+  }
+
   public evict(options: Cache.EvictOptions): boolean {
     if ("id" in options && !options.id) {
       // ApolloCompat
@@ -207,10 +242,19 @@ export class ForestRun<
         });
   }
 
-  private runWrite(options: Cache.WriteOptions): Reference | undefined {
+  private runWrite(
+    options: Cache.WriteOptions,
+    incremental?: IncrementalWriteContext,
+  ): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
-    const result = write(this.env, this.store, transaction, options);
+    const result = write(
+      this.env,
+      this.store,
+      transaction,
+      options,
+      incremental,
+    );
     transaction.changelog.push(result);
 
     const incoming = result.incoming;

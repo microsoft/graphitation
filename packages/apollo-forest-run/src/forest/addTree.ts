@@ -6,6 +6,7 @@ import {
 } from "./types";
 import { assert } from "../jsutils/assert";
 import { getOrCreate } from "../jsutils/map";
+import { refreshIncrementalTargets } from "../cache/incrementalState";
 
 const newSet = () => new Set();
 
@@ -23,6 +24,7 @@ export function addTree(
   trackTreeNodes(forest, tree);
   trackOperationName(forest, tree);
   trackPartitions(env, forest, tree);
+  refreshIncrementalTargets(forest, tree.nodes.keys());
 }
 
 export function replaceTree(
@@ -31,11 +33,14 @@ export function replaceTree(
   tree: IndexedTree,
 ) {
   const { trees } = forest;
+  const previous = trees.get(tree.operation.id);
   trees.set(tree.operation.id, tree);
 
   trackTreeNodes(forest, tree);
   trackOperationName(forest, tree);
   trackPartitions(env, forest, tree);
+  if (previous) refreshIncrementalTargets(forest, previous.nodes.keys());
+  refreshIncrementalTargets(forest, tree.nodes.keys());
 }
 
 export function trackTreeNodes(forest: IndexedForest, tree: IndexedTree) {

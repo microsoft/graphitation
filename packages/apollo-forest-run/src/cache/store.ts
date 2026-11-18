@@ -18,6 +18,10 @@ import { assert } from "../jsutils/assert";
 import { IndexedTree, DefaultPartition } from "../forest/types";
 import { NodeChunk } from "../values/types";
 import { operationCacheKey } from "./descriptor";
+import {
+  refreshIncrementalTargets,
+  resetIncrementalState,
+} from "./incrementalState";
 
 const EMPTY_ARRAY = Object.freeze([]);
 const DEFAULT_PARTITION: DefaultPartition = "__default__";
@@ -464,7 +468,7 @@ function removeDataTree(
     watches,
     atime,
   }: Store,
-  { operation }: ResultTree,
+  { operation, nodes }: ResultTree,
   partition: string,
 ) {
   assert(!watches.has(operation));
@@ -480,6 +484,7 @@ function removeDataTree(
   partialReadResults.delete(operation);
   operations.get(operation.document)?.delete(operationCacheKey(operation));
   atime.delete(operation.id);
+  refreshIncrementalTargets(dataForest, nodes.keys());
   // Notes:
   // - Not deleting from optimistic layers because they are meant to be short-lived anyway
   // - Not removing operation from operationsByNodes because it is expensive to do during LRU eviction.
@@ -487,6 +492,7 @@ function removeDataTree(
 }
 
 export function resetStore(store: Store): void {
+  resetIncrementalState(store.dataForest);
   const { dataForest, optimisticReadResults, optimisticLayers, operations } =
     store;
   dataForest.trees.clear();
