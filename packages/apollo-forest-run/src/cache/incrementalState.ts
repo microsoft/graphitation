@@ -1,40 +1,35 @@
-import type { IndexedForest, IndexedTree } from "../forest/types";
+import type {
+  IndexedForest,
+  IndexedTree,
+  IncrementalTarget,
+} from "../forest/types";
 import type { ObjectChunk } from "../values/types";
 import { isParentListRef, isParentObjectRef } from "../values/predicates";
-import type { IncrementalIdentity, IncrementalTarget } from "./incremental";
 
-type State = { targets: Map<string, IncrementalTarget> };
-const states = new WeakMap<IndexedForest, State>();
-
-export function getIncrementalState(forest: IndexedForest): State {
-  let state = states.get(forest);
-  if (!state) {
-    state = { targets: new Map() };
-    states.set(forest, state);
-  }
-  return state;
+export function getIncrementalState(forest: IndexedForest) {
+  return (forest.incremental ??= { targets: new Map() });
 }
 
 export function resetIncrementalState(forest: IndexedForest) {
-  states.delete(forest);
-}
-
-export function isCurrentIncrementalState(forest: IndexedForest, state: State) {
-  return states.get(forest) === state;
+  forest.incremental?.targets.clear();
+  forest.incremental = undefined;
 }
 
 export function captureIncrementalTarget(
   forest: IndexedForest,
-  identity: IncrementalIdentity,
+  identity: Pick<IncrementalTarget, "id" | "typename">,
 ): IncrementalTarget {
   const state = getIncrementalState(forest);
   const type = getLiveType(forest, identity.id);
-  if (type !== identity.typename) {
+  let target = state.targets.get(identity.id);
+  if (target && target.typename !== type) {
     state.targets.delete(identity.id);
+    target = undefined;
+  }
+  if (type !== identity.typename) {
     return { ...identity, token: undefined };
   }
-  let target = state.targets.get(identity.id);
-  if (!target || target.typename !== type) {
+  if (!target) {
     target = { ...identity, token: {} };
     state.targets.set(identity.id, target);
   }
@@ -46,7 +41,7 @@ export function isIncrementalTargetValid(
   target: IncrementalTarget,
 ): boolean {
   refreshIncrementalTargets(forest, [target.id]);
-  const saved = states.get(forest)?.targets.get(target.id);
+  const saved = forest.incremental?.targets.get(target.id);
   return (
     target.token !== undefined &&
     saved?.token === target.token &&
@@ -55,7 +50,7 @@ export function isIncrementalTargetValid(
 }
 
 export function invalidateIncrementalTarget(forest: IndexedForest, id: string) {
-  states.get(forest)?.targets.delete(id);
+  forest.incremental?.targets.delete(id);
 }
 
 // Only tracked IDs are inspected; ordinary cache use allocates no token state.
@@ -63,7 +58,7 @@ export function refreshIncrementalTargets(
   forest: IndexedForest,
   ids: Iterable<string>,
 ) {
-  const targets = states.get(forest)?.targets;
+  const targets = forest.incremental?.targets;
   if (!targets?.size) return;
   for (const id of ids) {
     const target = targets.get(id);

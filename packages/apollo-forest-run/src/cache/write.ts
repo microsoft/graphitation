@@ -1,5 +1,9 @@
 import type { Cache } from "@apollo/client";
-import type { IndexedTree, UpdateTreeResult } from "../forest/types";
+import type {
+  IndexedTree,
+  UpdateTreeResult,
+  IncrementalTarget,
+} from "../forest/types";
 import type { OperationResult } from "../values/types";
 import type {
   CacheEnv,
@@ -17,7 +21,6 @@ import {
   isFragmentDocument,
   resolveResultDescriptor,
   resolveOperationDescriptor,
-  resolveTransientOperationDescriptor,
   ROOT_NODES,
   ROOT_TYPES,
 } from "./descriptor";
@@ -39,11 +42,10 @@ import { getNodeChunks } from "./draftHelpers";
 import { replaceTree } from "../forest/addTree";
 import { invalidateReadResults } from "./invalidate";
 import { IndexedForest } from "../forest/types";
-import type { IncrementalTarget, IncrementalWriteHooks } from "./incremental";
 
 export type IncrementalWriteContext = {
   target?: IncrementalTarget;
-  hooks: IncrementalWriteHooks;
+  beforeWrite(tree: IndexedTree): void;
 };
 
 export function write(
@@ -72,21 +74,14 @@ export function write(
   if (!target && rootNodeKey !== undefined && options.dataId) {
     keyMap?.set(writeData, rootNodeKey);
   }
-  const operationDescriptor = target
-    ? resolveTransientOperationDescriptor(
-        env,
-        options.query,
-        options.variables ?? {},
-        target.id,
-        target.typename,
-      )
-    : resolveOperationDescriptor(
-        env,
-        store,
-        options.query,
-        options.variables,
-        rootNodeKey,
-      );
+  const operationDescriptor = resolveOperationDescriptor(
+    env,
+    store,
+    options.query,
+    options.variables,
+    rootNodeKey,
+    target && { transient: true, rootType: target.typename },
+  );
   if (!incremental) touchOperation(env, store, operationDescriptor);
   if (!target && !operationDescriptor.cache) {
     // Results of this operation are never stored, so nothing will ever evict its descriptor.
@@ -148,19 +143,10 @@ export function write(
     operationResult,
     undefined,
     existingResult,
-    incremental && {
-      rootNodeKey: options.dataId,
-      onNormalized(value, key, type) {
-        incremental.hooks.onNormalized(
-          value === writeData ? originalData : value,
-          key,
-          type,
-        );
-      },
-    },
+    incremental ? options.dataId : undefined,
   );
 
-  incremental?.hooks.beforeWrite();
+  incremental?.beforeWrite(incomingResult);
   if (incremental && !target) touchOperation(env, store, operationDescriptor);
 
   // ApolloCompat: necessary for fragment writes with custom ids

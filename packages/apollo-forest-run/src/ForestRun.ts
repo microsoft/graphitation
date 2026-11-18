@@ -42,14 +42,11 @@ import {
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
 import type { IncrementalWriteContext } from "./cache/write";
-import type { IncrementalCacheAdapter } from "./cache/incremental";
-import {
-  getIncrementalState,
-  isCurrentIncrementalState,
-  captureIncrementalTarget,
-  isIncrementalTargetValid,
-} from "./cache/incrementalState";
-import { collectConcreteTypes } from "./descriptor/possibleSelection";
+import type {
+  IncrementalWriteOptions,
+  IncrementalWriteSession,
+} from "./cache/incremental";
+import { createIncrementalWriter } from "./cache/incremental";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -134,7 +131,9 @@ export class ForestRun<
     return identify(this.env, object);
   }
 
-  public createIncrementalCacheAdapter(): IncrementalCacheAdapter {
+  public createIncrementalWriter(
+    options: IncrementalWriteOptions,
+  ): IncrementalWriteSession {
     const forest = this.store.dataForest;
     const assertBase = () => {
       if (this.getActiveForest() !== forest) {
@@ -142,61 +141,22 @@ export class ForestRun<
       }
     };
     assertBase();
-    const state = getIncrementalState(forest);
-    const isCurrent = () =>
-      forest === this.store.dataForest &&
-      isCurrentIncrementalState(forest, state);
-
+    const writer = createIncrementalWriter(
+      this.env,
+      this.store,
+      options,
+      (writeOptions, context) => {
+        this.runWrite(writeOptions, context);
+      },
+    );
     return {
-      isCurrent,
-      captureTarget: (identity) => {
-        if (!isCurrent()) return { ...identity, token: undefined };
-        return captureIncrementalTarget(forest, identity);
-      },
-      isTargetValid: (target) =>
-        isCurrent() && isIncrementalTargetValid(forest, target),
-      fragmentMatches: (fragment, typename) => {
-        const condition = fragment.typeCondition?.name.value;
-        return (
-          !condition ||
-          (!!typename &&
-            (condition === typename ||
-              collectConcreteTypes(
-                this.env.possibleTypes ?? {},
-                condition,
-              ).includes(typename)))
-        );
-      },
-      write: (options, hooks) => {
+      write: (result, overwrite) => {
         assertBase();
-        if (!isCurrent()) {
-          throw new Error("Incremental cache adapter was invalidated by reset");
-        }
-        const { target } = options;
-        if (target && !isIncrementalTargetValid(forest, target)) return;
-        if (
-          target &&
-          options.data.__typename &&
-          options.data.__typename !== target.typename
-        ) {
-          throw new Error(
-            "Incremental payload type does not match its saved target",
-          );
-        }
-        const update = () =>
-          this.runWrite(
-            {
-              query: options.query,
-              variables: options.variables,
-              dataId: target?.id ?? "ROOT_QUERY",
-              result: options.data,
-              overwrite: options.overwrite,
-            },
-            { target, hooks },
-          );
+        const update = () => writer.write(result, overwrite);
         if (this.transactionStack.length) update();
         else this.runTransaction({ update, optimistic: false });
       },
+      finish: () => writer.finish(),
     };
   }
 

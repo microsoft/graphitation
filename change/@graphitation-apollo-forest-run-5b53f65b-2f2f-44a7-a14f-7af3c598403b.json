@@ -1,6 +1,6 @@
 {
   "type": "minor",
-  "comment": "Add an optional identity-anchored incremental cache adapter with transient patch writes and target lifecycle guards.",
+  "comment": "Add native identity-anchored defer executions with cache-owned routing, transient patch writes, and forest-owned target lifecycle guards.",
   "packageName": "@graphitation/apollo-forest-run",
   "email": "mnovikov@microsoft.com_msteamsmdb",
   "dependentChangeType": "patch"

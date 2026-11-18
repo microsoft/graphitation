@@ -10,10 +10,9 @@ export type {
 } from "./telemetry/types";
 export type { ForestRunAdditionalConfig } from "./cache/types";
 export type {
-  IncrementalCacheAdapter,
-  IncrementalIdentity,
-  IncrementalTarget,
-  IncrementalWriteHooks,
+  IncrementalPayload,
+  IncrementalResult,
+  IncrementalWriteSession,
   IncrementalWriteOptions,
 } from "./cache/incremental";
 

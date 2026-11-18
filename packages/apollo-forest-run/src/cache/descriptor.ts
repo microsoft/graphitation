@@ -8,6 +8,7 @@ import type {
   DocumentDescriptor,
   OperationDescriptor,
   ResultTreeDescriptor,
+  VariableValues,
 } from "../descriptor/types";
 import { equal } from "@wry/equality";
 import { describeDocument } from "../descriptor/document";
@@ -20,7 +21,6 @@ import { addTypenameToDocument } from "../descriptor/addTypenameToDocument";
 import { assert } from "../jsutils/assert";
 import { describeResultTree } from "../descriptor/possibleSelection";
 import { Cache } from "@apollo/client";
-import { VariableValues } from "../descriptor/types";
 
 export const ROOT_TYPES = Object.freeze(["Query", "Mutation", "Subscription"]);
 export const ROOT_NODES = Object.freeze([
@@ -36,39 +36,13 @@ const documentDescriptors = new WeakMap<DocumentNode, DocumentDescriptor>();
 const resultTreeDescriptors = new WeakMap<DocumentNode, ResultTreeDescriptor>();
 const diffDescriptors = new WeakMap<Cache.DiffOptions, OperationDescriptor>();
 
-export function resolveTransientOperationDescriptor(
-  env: CacheEnv,
-  doc: DocumentNode,
-  variables: VariableValues,
-  rootNodeKey: string,
-  rootType: string,
-): OperationDescriptor {
-  const document = env.addTypename ? transformDocument(doc) : doc;
-  const descriptor = describeDocument(document);
-  const operation = describeOperation(
-    env,
-    descriptor,
-    describeResultTree(descriptor, env.possibleTypes),
-    variables,
-    undefined,
-    undefined,
-    rootType,
-    rootNodeKey,
-  );
-  // A patch updates existing trees, but is not an independently cached operation.
-  operation.cache = false;
-  operation.keyVariables = null;
-  operation.covers = [];
-  operation.historySize = 0;
-  return operation;
-}
-
 export function resolveOperationDescriptor(
   env: CacheEnv,
   { operations, dataForest }: Store,
   doc: DocumentNode,
   variables?: { [key: string]: unknown },
   rootNodeKey?: string,
+  options?: { transient?: boolean; rootType?: string },
 ): OperationDescriptor & { rootNodeKey: string | false } {
   const document = env.addTypename ? transformDocument(doc) : doc;
   let documentDescriptor = documentDescriptors.get(document);
@@ -78,7 +52,7 @@ export function resolveOperationDescriptor(
   }
 
   let variants = operations.get(document);
-  if (!variants) {
+  if (!variants && !options?.transient) {
     variants = new Map<CacheKey, OperationDescriptor>();
     operations.set(document, variants);
   }
@@ -94,7 +68,7 @@ export function resolveOperationDescriptor(
   );
   const cacheKey = createCacheKeyImpl(variablesKey, rootNodeKey);
 
-  let match = variants.get(cacheKey);
+  let match = options?.transient ? undefined : variants?.get(cacheKey);
   if (!match) {
     let resultTreeDescriptor = resultTreeDescriptors.get(document);
     if (!resultTreeDescriptor) {
@@ -104,8 +78,8 @@ export function resolveOperationDescriptor(
       );
       resultTreeDescriptors.set(document, resultTreeDescriptor);
     }
-    let rootTypeName;
-    if (isFragmentDocument(document)) {
+    let rootTypeName = options?.rootType;
+    if (!rootTypeName && isFragmentDocument(document)) {
       const fragment = getFragmentNode(document);
       rootTypeName = fragment.typeCondition.name.value;
     }
@@ -119,9 +93,19 @@ export function resolveOperationDescriptor(
       rootTypeName,
       rootNodeKey,
     );
-    variants.set(cacheKey, match);
+    if (options?.transient) {
+      // Deferred fields update existing trees without becoming a cached operation.
+      match.cache = false;
+      match.keyVariables = null;
+      match.covers = [];
+      match.historySize = 0;
+    } else {
+      assert(variants);
+      variants.set(cacheKey, match);
+    }
   }
   if (
+    !options?.rootType &&
     typeof rootNodeKey !== "undefined" &&
     !ROOT_NODES.includes(rootNodeKey) &&
     ROOT_TYPES.includes(match.rootType)
