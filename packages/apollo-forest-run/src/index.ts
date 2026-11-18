@@ -9,6 +9,13 @@ export type {
   TelemetryEvent,
 } from "./telemetry/types";
 export type { ForestRunAdditionalConfig } from "./cache/types";
+export type {
+  IncrementalCacheAdapter,
+  IncrementalIdentity,
+  IncrementalTarget,
+  IncrementalWriteHooks,
+  IncrementalWriteOptions,
+} from "./cache/incremental";
 
 export { OPERATION_HISTORY_SYMBOL } from "./descriptor/operation";
 

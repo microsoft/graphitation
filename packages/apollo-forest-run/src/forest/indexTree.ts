@@ -53,6 +53,7 @@ import {
 } from "../values";
 
 type Context = {
+  onNormalized?: IndexTreeOptions["onNormalized"];
   env: ForestEnv;
   operation: OperationDescriptor;
   result: OperationResult;
@@ -67,6 +68,15 @@ type Context = {
   findParent: ParentLocator;
 };
 
+export type IndexTreeOptions = {
+  rootNodeKey?: string;
+  onNormalized?: (
+    source: SourceObject,
+    key: string | undefined,
+    type: string | undefined,
+  ) => void;
+};
+
 const EMPTY_ARRAY = Object.freeze([]);
 const isArray = Array.isArray;
 
@@ -76,6 +86,7 @@ export function indexTree(
   result: OperationResult,
   knownMissingFields?: MissingFieldsMap,
   previousTreeState: IndexedTree | null = null,
+  options?: IndexTreeOptions,
 ): IndexedTree {
   let rootNodeKey;
   try {
@@ -92,6 +103,7 @@ export function indexTree(
   } catch (e) {
     rootNodeKey = operation.rootNodeKey;
   }
+  rootNodeKey = options?.rootNodeKey ?? rootNodeKey;
   const dataMap = new Map();
   const context: Context = {
     env: env,
@@ -106,6 +118,7 @@ export function indexTree(
     rootNodeKey,
     recycleTree: previousTreeState,
     findParent: createParentLocator(dataMap),
+    onNormalized: options?.onNormalized,
   };
   const rootRef: RootChunkReference = {
     value: null,
@@ -286,6 +299,7 @@ function indexSourceObject(
     : env.objectKey(source, selection, context.operation);
 
   const key = typeof objectKeyResult === "string" ? objectKeyResult : false;
+  context.onNormalized?.(source, key === false ? undefined : key, typeName);
   const missingFields = knownMissingFields?.get(source);
 
   const chunk = createTypedObjectChunk(
@@ -438,6 +452,12 @@ function reIndexObject(
   recyclable: ObjectChunk,
   parent: GraphChunkReference,
 ) {
+  context.onNormalized?.(
+    recyclable.data,
+    recyclable.key === false ? undefined : recyclable.key,
+    recyclable.type ||
+      (isRootRef(parent) ? context.operation.rootType : undefined),
+  );
   const { dataMap, nodes, typeMap } = context;
   dataMap.set(recyclable.data, parent);
   context.indexedSources++;

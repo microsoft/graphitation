@@ -36,6 +36,33 @@ const documentDescriptors = new WeakMap<DocumentNode, DocumentDescriptor>();
 const resultTreeDescriptors = new WeakMap<DocumentNode, ResultTreeDescriptor>();
 const diffDescriptors = new WeakMap<Cache.DiffOptions, OperationDescriptor>();
 
+export function resolveTransientOperationDescriptor(
+  env: CacheEnv,
+  doc: DocumentNode,
+  variables: VariableValues,
+  rootNodeKey: string,
+  rootType: string,
+): OperationDescriptor {
+  const document = env.addTypename ? transformDocument(doc) : doc;
+  const descriptor = describeDocument(document);
+  const operation = describeOperation(
+    env,
+    descriptor,
+    describeResultTree(descriptor, env.possibleTypes),
+    variables,
+    undefined,
+    undefined,
+    rootType,
+    rootNodeKey,
+  );
+  // A patch updates existing trees, but is not an independently cached operation.
+  operation.cache = false;
+  operation.keyVariables = null;
+  operation.covers = [];
+  operation.historySize = 0;
+  return operation;
+}
+
 export function resolveOperationDescriptor(
   env: CacheEnv,
   { operations, dataForest }: Store,

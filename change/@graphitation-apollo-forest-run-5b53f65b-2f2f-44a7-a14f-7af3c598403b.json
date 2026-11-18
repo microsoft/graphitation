@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Add an optional identity-anchored incremental cache adapter with transient patch writes and target lifecycle guards.",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "mnovikov@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}

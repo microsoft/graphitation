@@ -41,6 +41,15 @@ import {
   transformDocument,
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
+import type { IncrementalWriteContext } from "./cache/write";
+import type { IncrementalCacheAdapter } from "./cache/incremental";
+import {
+  getIncrementalState,
+  isCurrentIncrementalState,
+  captureIncrementalTarget,
+  isIncrementalTargetValid,
+} from "./cache/incrementalState";
+import { collectConcreteTypes } from "./descriptor/possibleSelection";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -125,6 +134,72 @@ export class ForestRun<
     return identify(this.env, object);
   }
 
+  public createIncrementalCacheAdapter(): IncrementalCacheAdapter {
+    const forest = this.store.dataForest;
+    const assertBase = () => {
+      if (this.getActiveForest() !== forest) {
+        throw new Error("Incremental writes cannot run in an optimistic layer");
+      }
+    };
+    assertBase();
+    const state = getIncrementalState(forest);
+    const isCurrent = () =>
+      forest === this.store.dataForest &&
+      isCurrentIncrementalState(forest, state);
+
+    return {
+      isCurrent,
+      captureTarget: (identity) => {
+        if (!isCurrent()) return { ...identity, token: undefined };
+        return captureIncrementalTarget(forest, identity);
+      },
+      isTargetValid: (target) =>
+        isCurrent() && isIncrementalTargetValid(forest, target),
+      fragmentMatches: (fragment, typename) => {
+        const condition = fragment.typeCondition?.name.value;
+        return (
+          !condition ||
+          (!!typename &&
+            (condition === typename ||
+              collectConcreteTypes(
+                this.env.possibleTypes ?? {},
+                condition,
+              ).includes(typename)))
+        );
+      },
+      write: (options, hooks) => {
+        assertBase();
+        if (!isCurrent()) {
+          throw new Error("Incremental cache adapter was invalidated by reset");
+        }
+        const { target } = options;
+        if (target && !isIncrementalTargetValid(forest, target)) return;
+        if (
+          target &&
+          options.data.__typename &&
+          options.data.__typename !== target.typename
+        ) {
+          throw new Error(
+            "Incremental payload type does not match its saved target",
+          );
+        }
+        const update = () =>
+          this.runWrite(
+            {
+              query: options.query,
+              variables: options.variables,
+              dataId: target?.id ?? "ROOT_QUERY",
+              result: options.data,
+              overwrite: options.overwrite,
+            },
+            { target, hooks },
+          );
+        if (this.transactionStack.length) update();
+        else this.runTransaction({ update, optimistic: false });
+      },
+    };
+  }
+
   public evict(options: Cache.EvictOptions): boolean {
     if ("id" in options && !options.id) {
       // ApolloCompat
@@ -207,10 +282,19 @@ export class ForestRun<
         });
   }
 
-  private runWrite(options: Cache.WriteOptions): Reference | undefined {
+  private runWrite(
+    options: Cache.WriteOptions,
+    incremental?: IncrementalWriteContext,
+  ): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
-    const result = write(this.env, this.store, transaction, options);
+    const result = write(
+      this.env,
+      this.store,
+      transaction,
+      options,
+      incremental,
+    );
     transaction.changelog.push(result);
 
     const incoming = result.incoming;

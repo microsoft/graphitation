@@ -35,6 +35,54 @@ of GraphQL client.
 
 # Architecture
 
+## Experimental incremental cache adapter
+
+`ForestRun.createIncrementalCacheAdapter()` exposes an optional cache-side
+interface for clients implementing identity-anchored incremental writes. It does
+not enable `@defer` by itself or change ordinary Apollo writes. The client must
+implement the matching adapter protocol and opt into it; stock Apollo versions
+in this package's peer dependency range do not call this API.
+
+The client owns response-path/label routing, fragment selection, buffering,
+execution lifecycle, and unsupported-payload handling. The adapter supplies:
+
+- **Original identities:** `write(options, hooks)` reports original response
+  objects and their indexed IDs/types through `onNormalized`, including custom
+  keys and recycled objects. All callbacks run before `beforeWrite`; throwing
+  from either hook prevents data publication. Initial writes omit `target`.
+- **Saved targets:** after publication, `captureTarget({ id, typename })` returns
+  an opaque incarnation token. Pass it as `target` on later writes, with a
+  query-shaped document selecting only the deferred fields. Tokens become invalid
+  when the target is evicted, changes type, or loses its last live cached
+  occurrence, including through LRU eviction. Recreating the ID does not revive
+  old tokens. Reset/restore invalidates the entire adapter.
+- **Patch-only updates:** targeted writes update matching entities in existing
+  operation trees without replaying the original response's list or relations.
+  Their operation descriptors, trees, and extra roots are not retained as separate
+  cache entries. Existing field policies and transaction notifications still apply.
+- **Base-layer isolation:** capture and validity checks use base data. Writes run
+  in a nonoptimistic transaction, or join an existing base transaction. Creating
+  or writing through an adapter inside an optimistic transaction throws.
+
+For example, after a list changes from `[1, 2, 3, 4]` to `[1, 2, 3]`, a deferred
+patch anchored to ID `4` cannot update ID `3` or reinsert `4`. It is dropped if no
+live occurrence of `4` remains. If another cached query still contains `4`, only
+that entity is updated; the removed list membership is not restored.
+
+This prevents retargeting, **not stale field overwrites**. An accepted patch may
+overwrite newer values of fields or links it explicitly selects. The caller must
+reject unsupported unidentifiable parents; generated response paths are not
+durable identity. Manually republishing an entire `no-cache` result bypasses these
+protections. Ordinary ForestRun identity/key-field restrictions still apply.
+Operation history, if enabled on existing queries, retains normal bounded history
+of updates; the adapter does not disable that feature.
+
+Token state is allocated only after an adapter is created, and is shared across
+adapters for a base forest. It keeps ID/type/token metadata, not response objects.
+While targets are tracked, tree replacement and eviction also check their live
+occurrences; applications with many overlapping cached queries should measure
+this additional write-side work.
+
 ## Overview
 
 Unlike normalized caches where data is stored in a single flat object and then propagated to "local live queries"
