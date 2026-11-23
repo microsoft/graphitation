@@ -23,7 +23,7 @@ import type {
   PossibleSelections,
 } from "../descriptor/types";
 import type { ForestEnv, IndexedTree } from "./types";
-import { DeliveryScope, indexDeferred } from "./deferred";
+import { deferredPathKey, DeliveryScope } from "./deferred";
 import { ValueKind } from "../values/types";
 import {
   getFieldName,
@@ -66,6 +66,11 @@ type Context = {
   incompleteChunks: Set<ObjectChunk>;
   recycleTree: IndexedTree | null;
   findParent: ParentLocator;
+  delivery?: {
+    path: (string | number)[];
+    sites: [string, ObjectChunk, PossibleSelections][];
+    rootOwner?: ObjectChunk;
+  };
 };
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -96,6 +101,11 @@ export function indexTree(
     rootNodeKey = operation.rootNodeKey;
   }
   const dataMap = new Map();
+  const indexing: Context["delivery"] = delivery && {
+    path: [...delivery.path],
+    sites: [],
+    rootOwner: delivery.rootOwner,
+  };
   const context: Context = {
     env: env,
     operation,
@@ -108,6 +118,7 @@ export function indexTree(
     incompleteChunks: new Set(),
     rootNodeKey,
     recycleTree: delivery ? null : previousTreeState,
+    delivery: indexing,
     findParent: createParentLocator(dataMap),
   };
   const rootRef: RootChunkReference = {
@@ -135,12 +146,17 @@ export function indexTree(
   };
   // Every composite occurrence is counted, but dataMap keeps only unique sources.
   // This detects sharing without an additional map lookup or allocation per chunk.
-  const indexed =
-    context.indexedSources === dataMap.size
-      ? tree
-      : reindexSharedTree(env, tree, rootRef.value);
-  if (delivery) indexDeferred(indexed, delivery);
-  return indexed;
+  if (context.indexedSources !== dataMap.size) {
+    const indexed = reindexSharedTree(env, tree, rootRef.value, delivery);
+    if (indexed !== tree) return indexed;
+  }
+  // A repair indexes new chunks. Publish only the sites from the winning pass.
+  if (delivery && indexing) {
+    for (const [key, owner, selection] of indexing.sites) {
+      delivery.index.add(key, owner, selection);
+    }
+  }
+  return tree;
 }
 
 // Matches ObjectChunkReference structure with additional fields
@@ -228,6 +244,7 @@ function reindexSharedTree(
   env: ForestEnv,
   tree: IndexedTree,
   root: ObjectChunk,
+  delivery?: DeliveryScope,
 ): IndexedTree {
   const repaired = cloneSharedReferences(env, root);
   // Malformed, out-of-range list chunks may overcount without sharing actual data.
@@ -239,6 +256,8 @@ function reindexSharedTree(
     tree.operation,
     { ...tree.result, data: repaired.data },
     repaired.missingFields,
+    null,
+    delivery,
   );
   repairedTree.prev = tree.prev;
   repairedTree.history = tree.history;
@@ -307,7 +326,25 @@ function indexSourceObject(
     context.indexedSources++;
   }
 
-  if (missingFields?.size) {
+  if (context.delivery && chunk.selection.deferredFragments) {
+    const { path, sites, rootOwner } = context.delivery;
+    const owner = isRoot && rootOwner ? rootOwner : chunk;
+    for (const { label, selection } of chunk.selection.deferredFragments) {
+      sites.push([deferredPathKey(path, label), owner, selection]);
+      // Composite fields are checked below; deferred scalars must also report partial data.
+      for (const field of resolveSelection(op, selection, chunk.type || null)
+        .fieldQueue) {
+        if (source[field.dataKey] !== undefined) continue;
+        const missing = chunk.selection.fields
+          .get(field.name)
+          ?.find((f) => f.dataKey === field.dataKey);
+        if (missing && !chunk.selection.skippedFields?.has(missing)) {
+          (chunk.missingFields ??= new Set()).add(missing);
+        }
+      }
+    }
+  }
+  if (chunk.missingFields?.size) {
     markAsPartial(context, parent);
     context.incompleteChunks.add(chunk);
   }
@@ -346,20 +383,22 @@ function indexSourceObject(
       };
       assert(fieldInfo.selection && isSourceCompositeValue(value, fieldInfo));
       let fieldValue: CompositeValueChunk;
-      if (isArray(value)) {
-        fieldValue = indexSourceList(
-          context,
-          value,
-          fieldInfo.selection,
-          entryParentInfo,
-        );
-      } else if (isSourceObject(value)) {
-        fieldValue = indexSourceObject(
-          context,
-          value,
-          fieldInfo.selection,
-          entryParentInfo,
-        );
+      if (isArray(value) || isSourceObject(value)) {
+        context.delivery?.path.push(fieldInfo.dataKey);
+        fieldValue = isArray(value)
+          ? indexSourceList(
+              context,
+              value,
+              fieldInfo.selection,
+              entryParentInfo,
+            )
+          : indexSourceObject(
+              context,
+              value,
+              fieldInfo.selection,
+              entryParentInfo,
+            );
+        context.delivery?.path.pop();
       } else if (value === null) {
         fieldValue = createCompositeNullChunk(
           context.operation,
@@ -414,6 +453,7 @@ function indexSourceList(
       index,
     };
     let item;
+    context.delivery?.path.push(index);
     if (Array.isArray(value)) {
       item = indexSourceList(context, value, selection, itemParent);
     } else if (isSourceObject(value)) {
@@ -433,6 +473,7 @@ function indexSourceList(
       context.incompleteChunks.add(item);
     }
     itemParent.value = item;
+    context.delivery?.path.pop();
     chunk.itemChunks[index] = itemParent;
   }
   return chunk;

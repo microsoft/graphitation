@@ -67,8 +67,9 @@ Let's briefly walk through every step individually.
 
 For clients supplying raw `deferSpec=20220824` query payloads, ForestRun compiles
 each `@defer` site into the document descriptor alongside the usual field selections.
-Indexing the initial payload binds its response paths and labels to the original
-chunks. These bindings belong to the indexed tree and the individual execution;
+As the indexer descends through the payload, it tracks field aliases and list
+indices on one path stack. Only a deferred fragment needs a saved path, which
+binds its label to the original chunk. These bindings belong to the indexed tree and the individual execution;
 an ordinary cache write does not recalculate them from a newer list or relationship.
 A patch writes just the bound fragment and can introduce nested delivery sites.
 If the original entity is no longer reachable, ForestRun consumes the placeholder

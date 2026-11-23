@@ -1,13 +1,5 @@
-import { resolveSelection } from "../descriptor/resolvedSelection";
 import { accumulate } from "../jsutils/map";
-import {
-  createParentLocator,
-  getDataPathForDebugging,
-  isObjectValue,
-  markAsPartial,
-} from "../values";
 import { ObjectChunk, SourceObject } from "../values/types";
-import type { IndexedTree } from "./types";
 import { PossibleSelections } from "../descriptor/types";
 
 type Path = readonly (string | number)[];
@@ -66,36 +58,3 @@ export type DeliveryScope = {
   path: Path;
   rootOwner?: ObjectChunk;
 };
-
-export function indexDeferred(
-  tree: IndexedTree,
-  { index, path, rootOwner }: DeliveryScope,
-) {
-  const pathEnv = { findParent: createParentLocator(tree.dataMap) };
-  for (const { value: chunk } of tree.dataMap.values()) {
-    if (!isObjectValue(chunk) || !chunk.selection.deferredFragments?.length)
-      continue;
-    const location = [...path, ...getDataPathForDebugging(pathEnv, chunk)];
-    const owner =
-      chunk.data === tree.result.data && rootOwner ? rootOwner : chunk;
-    for (const { label, selection } of chunk.selection.deferredFragments) {
-      index.add(deferredPathKey(location, label), owner, selection);
-      // Composite fields are checked during indexing; deferred scalars also
-      // need to report partial data until they can be read.
-      for (const field of resolveSelection(
-        tree.operation,
-        selection,
-        chunk.type || null,
-      ).fieldQueue) {
-        if (chunk.data[field.dataKey] !== undefined) continue;
-        const missing = chunk.selection.fields
-          .get(field.name)
-          ?.find((f) => f.dataKey === field.dataKey);
-        if (!missing || chunk.selection.skippedFields?.has(missing)) continue;
-        (chunk.missingFields ??= new Set()).add(missing);
-        tree.incompleteChunks.add(chunk);
-        markAsPartial(pathEnv, pathEnv.findParent(chunk));
-      }
-    }
-  }
-}

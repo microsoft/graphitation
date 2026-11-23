@@ -267,6 +267,33 @@ test("independent unlabelled deliveries do not consume each other on an embedded
   });
 });
 
+test("shared embedded objects keep distinct response paths through nested lists", () => {
+  const query = gql`
+    query Shared {
+      rows: grid {
+        __typename
+        ... @defer {
+          name
+        }
+      }
+    }
+  `;
+  const cache = new ForestRun();
+  const delivery = execution(cache, query);
+  const shared = { __typename: "Cell" };
+  delivery.send({ data: { rows: [[shared], [shared]] }, hasNext: true });
+  delivery.send({
+    incremental: [
+      { path: ["rows", 1, 0], data: { name: "second" } },
+      { path: ["rows", 0, 0], data: { name: "first" } },
+    ],
+    hasNext: false,
+  });
+  expect(cache.readQuery({ query })).toEqual({
+    rows: [[{ ...shared, name: "first" }], [{ ...shared, name: "second" }]],
+  });
+});
+
 test("nested unkeyed target introduced by a patch", () => {
   const query = gql`
     query Embedded {
