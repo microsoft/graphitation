@@ -82,9 +82,8 @@ export class DeferredIndex {
 }
 
 export type DeliveryScope = {
-  index: DeferredIndex;
-  path: Path;
-  rootOwner?: ObjectChunk;
+  index?: DeferredIndex;
+  rootNodeKey?: string;
 };
 
 function acceptsPayload(

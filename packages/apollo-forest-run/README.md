@@ -71,8 +71,10 @@ As the indexer descends through the payload, it tracks field aliases and list
 indices on one path stack. Only a deferred fragment needs a saved path, which
 binds its label to the original chunk. These bindings belong to the indexed tree and the individual execution;
 an ordinary cache write does not recalculate them from a newer list or relationship.
-Entries in one incremental payload are matched in wire order, so a parent can
-introduce a nested delivery site for a later entry. Changes to the same target
+Only the initial result registers placeholders. A single `@defer` can target an
+object deep in that result, but nested delivery sites introduced by a patch
+are not supported. A consumed placeholder is not reused for duplicate entries.
+Changes to the same target
 are combined before field merge policies run; ForestRun applies the resulting
 node differences to each affected tree once, without replaying the root list.
 Overlapping object fields combine only when their ForestRun identities agree.

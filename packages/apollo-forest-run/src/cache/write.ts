@@ -141,7 +141,7 @@ export function write(
     operationResult,
     undefined,
     existingResult,
-    delivery && { index: delivery.index, path: [] },
+    delivery,
   );
 
   // ApolloCompat: necessary for fragment writes with custom ids

@@ -69,7 +69,6 @@ type Context = {
   delivery?: {
     path: (string | number)[];
     sites: [string, ObjectChunk, PossibleSelections][];
-    rootOwner?: ObjectChunk;
   };
 };
 
@@ -86,25 +85,25 @@ export function indexTree(
 ): IndexedTree {
   let rootNodeKey;
   try {
-    rootNodeKey = delivery?.rootOwner
-      ? operation.rootNodeKey
-      : env.objectKey(
-          result.data,
-          resolveSelection(
-            operation,
-            operation.possibleSelections,
-            operation.rootType,
-          ),
+    rootNodeKey =
+      delivery?.rootNodeKey ??
+      (env.objectKey(
+        result.data,
+        resolveSelection(
           operation,
-        ) || operation.rootNodeKey;
+          operation.possibleSelections,
+          operation.rootType,
+        ),
+        operation,
+      ) ||
+        operation.rootNodeKey);
   } catch (e) {
     rootNodeKey = operation.rootNodeKey;
   }
   const dataMap = new Map();
-  const indexing: Context["delivery"] = delivery && {
-    path: [...delivery.path],
+  const indexing: Context["delivery"] = delivery?.index && {
+    path: [],
     sites: [],
-    rootOwner: delivery.rootOwner,
   };
   const context: Context = {
     env: env,
@@ -151,7 +150,7 @@ export function indexTree(
     if (indexed !== tree) return indexed;
   }
   // A repair indexes new chunks. Publish only the sites from the winning pass.
-  if (delivery && indexing) {
+  if (delivery?.index && indexing) {
     for (const [key, owner, selection] of indexing.sites) {
       delivery.index.add(key, owner, selection);
     }
@@ -327,10 +326,9 @@ function indexSourceObject(
   }
 
   if (context.delivery && chunk.selection.deferredFragments) {
-    const { path, sites, rootOwner } = context.delivery;
-    const owner = isRoot && rootOwner ? rootOwner : chunk;
+    const { path, sites } = context.delivery;
     for (const { label, selection } of chunk.selection.deferredFragments) {
-      sites.push([deferredPathKey(path, label), owner, selection]);
+      sites.push([deferredPathKey(path, label), chunk, selection]);
       // Composite fields are checked below; deferred scalars must also report partial data.
       for (const field of resolveSelection(op, selection, chunk.type || null)
         .fieldQueue) {

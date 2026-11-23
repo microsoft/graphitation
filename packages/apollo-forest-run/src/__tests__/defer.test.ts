@@ -83,6 +83,7 @@ test("one payload applies a field policy once to the final value for each origin
         data: { name: "two", text: "second" },
       },
       { path: ["messages", 0], label: "b", data: { name: "new" } },
+      { path: ["messages", 0], label: "b", data: { name: "duplicate" } },
     ],
     hasNext: false,
   });
@@ -205,7 +206,7 @@ test("overlapping list fields follow entity keys, not slots, and use the last li
   ]);
 });
 
-test("a parent and its new embedded target can arrive in the same payload", () => {
+test("a patch for an unregistered nested site does not write to the parent result", () => {
   const cache = new ForestRun();
   const q = gql`
     query {
@@ -232,9 +233,11 @@ test("a parent and its new embedded target can arrive in the same payload", () =
     ],
     hasNext: false,
   });
-  expect(cache.readQuery({ query: q })).toMatchObject({
-    messages: [{ id: "1", author: { text: "keep", name: "Ada" } }],
+  const result = cache.readQuery<{ messages: { author: typeof author }[] }>({
+    query: q,
+    returnPartialData: true,
   });
+  expect(result?.messages[0].author).toEqual(author);
   expect(author).not.toHaveProperty("name");
 });
 test("a deferred fragment follows its original entity across a cache.modify prepend", () => {
@@ -346,18 +349,16 @@ test.each([false, true])(
   },
 );
 
-test("nested deliveries use original paths, alias and variables after the parent site is consumed", () => {
+test("a site in the initial result uses original paths, aliases and variables", () => {
   const cache = new ForestRun();
   const query = gql`
     query Nested($lang: String = "en", $include: Boolean = true) {
       list: messages {
         id
-        ... @defer(label: "outer") {
-          from: sender {
-            id
-            ... @include(if: $include) @defer(label: "inner") {
-              display: name(lang: $lang)
-            }
+        from: sender {
+          id
+          ... @include(if: $include) @defer(label: "inner") {
+            display: name(lang: $lang)
           }
         }
       }
@@ -365,15 +366,8 @@ test("nested deliveries use original paths, alias and variables after the parent
   `;
   const initial = { __typename: "Message", id: "1" };
   const delivery = execution(cache, query);
-  delivery.send({ data: { list: [initial] }, hasNext: true });
   delivery.send({
-    incremental: [
-      {
-        path: ["list", 0],
-        label: "outer",
-        data: { from: { __typename: "User", id: "a" } },
-      },
-    ],
+    data: { list: [{ ...initial, from: { __typename: "User", id: "a" } }] },
     hasNext: true,
   });
   const saved = {
@@ -617,46 +611,6 @@ test("shared embedded objects keep distinct response paths through nested lists"
   });
   expect(cache.readQuery({ query })).toEqual({
     rows: [[{ ...shared, name: "first" }], [{ ...shared, name: "second" }]],
-  });
-});
-
-test("nested unkeyed target introduced by a patch", () => {
-  const query = gql`
-    query Embedded {
-      message {
-        id
-        ... @defer(label: "outer") {
-          info {
-            __typename
-            ... @defer(label: "inner") {
-              name
-            }
-          }
-        }
-      }
-    }
-  `;
-  const cache = new ForestRun();
-  const delivery = execution(cache, query);
-  delivery.send({ data: { message: message("1") }, hasNext: true });
-  delivery.send({
-    incremental: [
-      {
-        path: ["message"],
-        label: "outer",
-        data: { info: { __typename: "Info" } },
-      },
-    ],
-    hasNext: true,
-  });
-  delivery.send({
-    incremental: [
-      { path: ["message", "info"], label: "inner", data: { name: "A" } },
-    ],
-    hasNext: false,
-  });
-  expect(cache.readQuery({ query })).toMatchObject({
-    message: { info: { name: "A" } },
   });
 });
 
