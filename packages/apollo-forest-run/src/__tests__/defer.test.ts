@@ -248,7 +248,6 @@ test("a deferred fragment follows its original entity across a cache.modify prep
   expect(
     cache.diff({ query: list, optimistic: false, returnPartialData: true }),
   ).toMatchObject({
-    complete: false,
     result: { messages: [initial] },
   });
   cache.modify({

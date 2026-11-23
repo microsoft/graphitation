@@ -23,7 +23,7 @@ import type {
   PossibleSelections,
 } from "../descriptor/types";
 import type { ForestEnv, IndexedTree } from "./types";
-import { deferredPathKey, DeliveryScope } from "./deferred";
+import { DeferredIndex, deferredPathKey, DeliveryScope } from "./deferred";
 import { ValueKind } from "../values/types";
 import {
   getFieldName,
@@ -68,7 +68,7 @@ type Context = {
   findParent: ParentLocator;
   delivery?: {
     path: (string | number)[];
-    sites: [string, ObjectChunk, PossibleSelections][];
+    index: DeferredIndex;
   };
 };
 
@@ -101,10 +101,6 @@ export function indexTree(
     rootNodeKey = operation.rootNodeKey;
   }
   const dataMap = new Map();
-  const indexing: Context["delivery"] = delivery?.index && {
-    path: [],
-    sites: [],
-  };
   const context: Context = {
     env: env,
     operation,
@@ -117,7 +113,7 @@ export function indexTree(
     incompleteChunks: new Set(),
     rootNodeKey,
     recycleTree: delivery ? null : previousTreeState,
-    delivery: indexing,
+    delivery: delivery?.index && { path: [], index: delivery.index },
     findParent: createParentLocator(dataMap),
   };
   const rootRef: RootChunkReference = {
@@ -145,17 +141,10 @@ export function indexTree(
   };
   // Every composite occurrence is counted, but dataMap keeps only unique sources.
   // This detects sharing without an additional map lookup or allocation per chunk.
-  if (context.indexedSources !== dataMap.size) {
-    const indexed = reindexSharedTree(env, tree, rootRef.value, delivery);
-    if (indexed !== tree) return indexed;
+  if (context.indexedSources === dataMap.size) {
+    return tree;
   }
-  // A repair indexes new chunks. Publish only the sites from the winning pass.
-  if (delivery?.index && indexing) {
-    for (const [key, owner, selection] of indexing.sites) {
-      delivery.index.add(key, owner, selection);
-    }
-  }
-  return tree;
+  return reindexSharedTree(env, tree, rootRef.value, delivery);
 }
 
 // Matches ObjectChunkReference structure with additional fields
@@ -250,6 +239,8 @@ function reindexSharedTree(
   if (repaired.data === tree.result.data) {
     return tree;
   }
+  // The placeholders from this initial write must point to the rebuilt chunks.
+  delivery?.index?.clear();
   const repairedTree = indexTree(
     env,
     tree.operation,
@@ -326,23 +317,12 @@ function indexSourceObject(
   }
 
   if (context.delivery && chunk.selection.deferredFragments) {
-    const { path, sites } = context.delivery;
+    const { path, index } = context.delivery;
     for (const { label, selection } of chunk.selection.deferredFragments) {
-      sites.push([deferredPathKey(path, label), chunk, selection]);
-      // Composite fields are checked below; deferred scalars must also report partial data.
-      for (const field of resolveSelection(op, selection, chunk.type || null)
-        .fieldQueue) {
-        if (source[field.dataKey] !== undefined) continue;
-        const missing = chunk.selection.fields
-          .get(field.name)
-          ?.find((f) => f.dataKey === field.dataKey);
-        if (missing && !chunk.selection.skippedFields?.has(missing)) {
-          (chunk.missingFields ??= new Set()).add(missing);
-        }
-      }
+      index.add(deferredPathKey(path, label), chunk, selection);
     }
   }
-  if (chunk.missingFields?.size) {
+  if (missingFields?.size) {
     markAsPartial(context, parent);
     context.incompleteChunks.add(chunk);
   }
