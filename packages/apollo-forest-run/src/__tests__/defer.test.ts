@@ -267,6 +267,138 @@ test("independent unlabelled deliveries do not consume each other on an embedded
   });
 });
 
+test("one unlabeled fragment does not consume another with overlapping response keys", () => {
+  const cache = new ForestRun();
+  const query = gql`
+    query Overlap {
+      message {
+        id
+        ... @defer {
+          text
+          name
+        }
+        ... @defer {
+          text
+          subject
+        }
+      }
+    }
+  `;
+  const delivery = execution(cache, query);
+  delivery.send({
+    data: { message: { __typename: "Message", id: "1" } },
+    hasNext: true,
+  });
+  delivery.send({
+    incremental: [{ path: ["message"], data: { text: "hi", name: "Alice" } }],
+    hasNext: true,
+  });
+  delivery.send({
+    incremental: [{ path: ["message"], data: { subject: "Meeting" } }],
+    hasNext: false,
+  });
+  expect(cache.readQuery({ query })).toMatchObject({
+    message: { text: "hi", name: "Alice", subject: "Meeting" },
+  });
+});
+
+test("unlabeled fragments can be distinguished by nested response keys", () => {
+  const cache = new ForestRun();
+  const query = gql`
+    query NestedOverlap {
+      message {
+        id
+        ... @defer {
+          detail {
+            id
+            x
+          }
+        }
+        ... @defer {
+          detail {
+            id
+            y
+          }
+        }
+      }
+    }
+  `;
+  const delivery = execution(cache, query);
+  delivery.send({ data: { message: message("1") }, hasNext: true });
+  const part = (fields: Record<string, unknown>, hasNext: boolean) =>
+    delivery.send({
+      incremental: [
+        {
+          path: ["message"],
+          data: { detail: { __typename: "Detail", id: "d", ...fields } },
+        },
+      ],
+      hasNext,
+    });
+  part({}, true);
+  part({ y: 2 }, true);
+  part({ x: 1 }, false);
+  expect(cache.readQuery({ query })).toMatchObject({
+    message: { detail: { id: "d", x: 1, y: 2 } },
+  });
+});
+
+test("gc neither removes nor reports a pending tree, then releases it after delivery", () => {
+  const cache = new ForestRun({ maxOperationCount: 1, autoEvict: false });
+  const delivery = execution(cache, list);
+  delivery.send({ data: { messages: [message("1")] }, hasNext: true });
+  cache.writeQuery({
+    query: gql`
+      query Newer {
+        x
+      }
+    `,
+    data: { x: 1 },
+  });
+  expect(cache.gc()).toEqual([]);
+  delivery.send({ incremental: [namePart("one")], hasNext: false });
+  expect(cache.readQuery({ query: list })).toEqual({
+    messages: [message("1", "one")],
+  });
+  cache.writeQuery({
+    query: gql`
+      query Newest {
+        y
+      }
+    `,
+    data: { y: 2 },
+  });
+  expect(cache.gc()).toHaveLength(2);
+  expect(cache.getStats().treeCount).toBe(1);
+});
+
+test("removing an optimistic prepend reveals the patched original entity", () => {
+  const cache = new ForestRun();
+  const delivery = execution(cache, list);
+  delivery.send({ data: { messages: [message("1")] }, hasNext: true });
+  cache.recordOptimisticTransaction(
+    (c) =>
+      c.writeQuery({
+        query: list,
+        data: { messages: [message("2", "two"), message("1")] },
+      }),
+    "send",
+  );
+  delivery.send({ incremental: [namePart("one")], hasNext: false });
+  expect(
+    cache.readQuery({ query: list, optimistic: true, returnPartialData: true }),
+  ).toMatchObject({
+    messages: [
+      { id: "2", name: "two" },
+      { id: "1", name: "one" },
+    ],
+  });
+  cache.removeOptimistic("send");
+  expect(cache.readQuery({ query: list })).toEqual({
+    messages: [message("1", "one")],
+  });
+});
+
 test("shared embedded objects keep distinct response paths through nested lists", () => {
   const query = gql`
     query Shared {

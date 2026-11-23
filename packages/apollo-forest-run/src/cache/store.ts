@@ -160,9 +160,8 @@ export function evictOldData(
         continue; // Skip non-evictable operations entirely
       }
       removeDataTree(store, tree, partition);
+      evictedIds.push(opId);
     }
-
-    evictedIds.push(...evictableOperationIds);
   }
 
   return evictedIds;
