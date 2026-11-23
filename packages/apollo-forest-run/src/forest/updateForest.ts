@@ -14,6 +14,7 @@ import type {
   ForestEnv,
   UpdateTreeResult,
   IndexedTree,
+  DeferredWrite,
 } from "./types";
 import { DataForest, OptimisticLayer } from "../cache/types";
 import { replaceTree } from "./addTree";
@@ -33,13 +34,20 @@ export function updateAffectedTrees(
   affectedOperations: Map<OperationDescriptor, NodeDifferenceMap>,
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
   incomingResult?: IndexedTree,
+  delivery?: DeferredWrite,
 ): UpdateTreeResult[] {
   // Note: affectedOperations may contain false-positives (updateTree will ignore those)
   const allUpdated: UpdateTreeResult[] = [];
   for (const [operation, difference] of affectedOperations.entries()) {
     const currentTreeState = forest.trees.get(operation.id);
     assert(currentTreeState);
-    const result = updateTree(env, currentTreeState, difference, getNodeChunks);
+    const result = updateTree(
+      env,
+      currentTreeState,
+      difference,
+      getNodeChunks,
+      operation.id === delivery?.owner ? delivery : undefined,
+    );
     if (result.updatedTree === currentTreeState) {
       // nodeDifference may not be overlapping with selections of this tree.
       //   E.g. difference could be for operation { id: "1", firstName: "Changed" }

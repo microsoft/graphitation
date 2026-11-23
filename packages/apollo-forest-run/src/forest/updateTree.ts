@@ -16,6 +16,7 @@ import type {
 import type { NodeDifferenceMap } from "../diff/types";
 import type {
   Draft,
+  DeferredWrite,
   ForestEnv,
   IndexedTree,
   UpdateTreeContext,
@@ -49,6 +50,7 @@ export function updateTree(
   base: IndexedTree,
   differenceMap: NodeDifferenceMap,
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
+  delivery?: DeferredWrite,
 ): UpdateTreeResult {
   const rootChunks = base.nodes.get(base.rootNodeKey);
   if (rootChunks?.length !== 1) {
@@ -60,6 +62,9 @@ export function updateTree(
     );
   }
   const rootChunk = rootChunks[0];
+  const materialized = delivery?.index.embedded.size
+    ? new Map<SourceObject, SourceObject>()
+    : undefined;
   const context: UpdateTreeContext = {
     operation: base.operation,
     drafts: new Map(),
@@ -67,7 +72,13 @@ export function updateTree(
     changedNodes: new Set(),
     affectedNodes: new Set(),
     missingFields: new Map(),
-    completeObject: completeObject.bind(null, env, base, getNodeChunks),
+    completeObject: completeObject.bind(
+      null,
+      env,
+      base,
+      getNodeChunks,
+      materialized,
+    ),
     findParent: createParentLocator(base.dataMap),
     statsLogger: createUpdateLogger(env.logUpdateStats),
     env,
@@ -180,6 +191,15 @@ export function updateTree(
     missingFields,
     base,
   );
+  if (delivery && materialized) {
+    const target = delivery.target;
+    const draft = target && drafts.get(target.data);
+    if (target && isSourceObject(draft)) materialized.set(target.data, draft);
+    for (const [source, data] of materialized) {
+      const copy = updatedTree.dataMap.get(data)?.value;
+      if (copy && isObjectValue(copy)) delivery.index.rebind(source, copy);
+    }
+  }
   if (env.apolloCompat_keepOrphanNodes) {
     apolloBackwardsCompatibility_saveOrphanNodes(base, updatedTree);
   }
@@ -228,6 +248,7 @@ function completeObject(
   env: ForestEnv,
   base: IndexedTree,
   getNodeChunks: ((key: NodeKey) => Iterable<NodeChunk>) | undefined,
+  materialized: Map<SourceObject, SourceObject> | undefined,
   object: ObjectValue,
   possibleSelections: PossibleSelections,
   operation: OperationDescriptor,
@@ -266,7 +287,17 @@ function completeObject(
 
   // Copy object value into a different selection set.
   // This way, logical graph value is materialized for usage in a different operation.
-  hydrateDraft(env, draft, object);
+  hydrateDraft(
+    env,
+    draft,
+    object,
+    undefined,
+    materialized &&
+      ((_selection, model, output) => {
+        if (model.key === false && !model.isAggregate)
+          materialized.set(model.data, output);
+      }),
+  );
 
   if (!draft.incompleteValues?.size) {
     return draft;

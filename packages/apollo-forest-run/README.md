@@ -63,6 +63,26 @@ capture history of every GraphQL result.
 
 Let's briefly walk through every step individually.
 
+### Incremental `@defer` delivery
+
+For clients supplying raw `deferSpec=20220824` query payloads, ForestRun compiles
+each `@defer` site into the document descriptor alongside the usual field selections.
+Indexing the initial payload binds its response paths and labels to the original
+chunks. These bindings belong to the indexed tree and the individual execution;
+an ordinary cache write does not recalculate them from a newer list or relationship.
+A patch writes just the bound fragment and can introduce nested delivery sites.
+If the original entity is no longer reachable, ForestRun consumes the placeholder
+without restoring the entity or writing to its replacement. For an embedded
+object without a cache key it requires the original source or a tracked copy;
+it does not guess which list item a replaced source represents.
+
+This requires the client to pass raw payloads through `cache.write` with the
+`Symbol.for("apollo.cache.incrementalDelivery.v1")` option and a per-execution
+abort signal. Cache writes without that option keep their existing behavior.
+Completion, abort, and cache reset release pending placeholders; they are not
+part of serialized cache data. This protocol covers deferred object fragments,
+not streamed list items.
+
 ### 1. Indexing operation result
 
 Indexing is a process of remembering positions of individual nodes (objects having identity) inside operation result.

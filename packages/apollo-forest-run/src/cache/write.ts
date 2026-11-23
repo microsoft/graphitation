@@ -1,5 +1,10 @@
 import type { Cache } from "@apollo/client";
-import type { IndexedTree, UpdateTreeResult } from "../forest/types";
+import type {
+  DeferredWrite,
+  IndexedTree,
+  UpdateTreeResult,
+} from "../forest/types";
+import type { DeferredIndex } from "../forest/deferred";
 import type { OperationResult } from "../values/types";
 import type {
   CacheEnv,
@@ -44,8 +49,9 @@ export function write(
   store: Store,
   activeTransaction: Transaction,
   options: Cache.WriteOptions,
+  index?: DeferredIndex,
 ): WriteResult {
-  const { mergePolicies, objectKey, addTypename, keyMap } = env;
+  const { objectKey, addTypename, keyMap } = env;
   const targetForest = getActiveForest(store, activeTransaction);
 
   const writeData =
@@ -82,7 +88,7 @@ export function write(
     throw new Error(`Could not identify object ${inspect(writeData)}`);
   }
 
-  let existingResult = getExistingResult(
+  const existingResult = getExistingResult(
     env,
     store,
     targetForest,
@@ -93,7 +99,7 @@ export function write(
   // Safeguard: make sure previous state doesn't leak outside write operation
   assert(!existingResult?.prev);
 
-  if (writeData === existingData && existingResult) {
+  if (writeData === existingData && existingResult && !index) {
     return {
       options,
       incoming: existingResult,
@@ -127,6 +133,7 @@ export function write(
     operationResult,
     undefined,
     existingResult,
+    index && { index, path: [] },
   );
 
   // ApolloCompat: necessary for fragment writes with custom ids
@@ -138,15 +145,44 @@ export function write(
     incomingResult.rootNodeKey = options.dataId;
   }
 
+  return writeIndexedTree(
+    env,
+    store,
+    targetForest,
+    options,
+    incomingResult,
+    existingResult,
+    undefined,
+    index && {
+      index,
+      owner: resolveResultDescriptor(env, store, operationDescriptor).id,
+    },
+  );
+}
+
+export function writeIndexedTree(
+  env: CacheEnv,
+  store: Store,
+  targetForest: DataForest | OptimisticLayer,
+  options: Cache.WriteOptions,
+  incomingResult: IndexedTree,
+  existingResult?: DataTree,
+  deferredPatch?: (forest: IndexedForest, tree: IndexedTree) => GraphDifference,
+  delivery?: DeferredWrite,
+): WriteResult {
+  const operationDescriptor = incomingResult.operation;
   const modifiedIncomingResult = applyMergePolicies(
     env,
     getEffectiveReadLayers(store, targetForest, false),
-    mergePolicies,
+    env.mergePolicies,
     incomingResult,
     options.overwrite ?? false,
+    delivery?.target,
   );
 
-  const difference = diffTree(targetForest, modifiedIncomingResult, env);
+  const difference = deferredPatch
+    ? deferredPatch(targetForest, modifiedIncomingResult)
+    : diffTree(targetForest, modifiedIncomingResult, env);
 
   if (difference.errors.length) {
     processDiffErrors(targetForest, modifiedIncomingResult, difference);
@@ -158,6 +194,8 @@ export function write(
     existingResult.incompleteChunks.size > 0
   ) {
     // Remove incomplete placeholder tree (saves unnecessary update)
+    if (existingResult.pendingDeferred)
+      modifiedIncomingResult.pendingDeferred = existingResult.pendingDeferred;
     targetForest.trees.delete(operationDescriptor.id);
     existingResult = undefined;
   }
@@ -179,9 +217,14 @@ export function write(
     affectedOperations,
     chunkProvider,
     modifiedIncomingResult,
+    delivery,
   );
 
-  if (!existingResult && shouldCache(targetForest, operationDescriptor)) {
+  if (
+    !deferredPatch &&
+    !existingResult &&
+    shouldCache(targetForest, operationDescriptor)
+  ) {
     affectedOperations.set(operationDescriptor, difference.nodeDifference);
     // Note: even with existingResult === undefined the tree for this operation may still exist in the cache
     //   (when existingResult is resolved with a different key descriptor due to key variables)
@@ -195,6 +238,7 @@ export function write(
     affectedOperations,
     targetForest,
     modifiedIncomingResult,
+    deferredPatch,
   );
 
   invalidateReadResults(
@@ -224,6 +268,8 @@ function appendAffectedOperationsFromOtherLayers(
   affectedForestOperationsMutable: Map<OperationDescriptor, NodeDifferenceMap>,
   targetForest: DataForest | OptimisticLayer,
   incomingResult: IndexedTree,
+  diff = (forest: IndexedForest, tree: IndexedTree) =>
+    diffTree(forest, tree, env),
 ) {
   // Optimistic reads go through all existing layers
   //  And those layers may be affected by incoming results too, so we actually need to diff all other layers too
@@ -234,7 +280,7 @@ function appendAffectedOperationsFromOtherLayers(
     }
     resolveAffectedOperations(
       layer,
-      diffTree(layer, incomingResult, env),
+      diff(layer, incomingResult),
       affectedForestOperationsMutable,
     );
   }

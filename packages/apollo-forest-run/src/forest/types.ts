@@ -37,6 +37,7 @@ import {
   NodeDifferenceMap,
 } from "../diff/types";
 import { HistoryConfig } from "../cache/types";
+import type { DeferredIndex } from "./deferred";
 
 export type IndexedTree = {
   operation: OperationDescriptor;
@@ -60,8 +61,22 @@ export type IndexedTree = {
   // Tree changes
   history: CircularBuffer<HistoryChange>;
 
+  // Response coordinates belong to a delivery, not to the latest list layout.
+  pendingDeferred?: Map<AbortSignal, DeferredExecution>;
+
   // ApolloCompat
   danglingReferences?: Set<NodeKey>;
+};
+
+export type DeferredExecution = {
+  index: DeferredIndex;
+  dispose: () => void;
+};
+
+export type DeferredWrite = {
+  owner: OperationId;
+  index: DeferredIndex;
+  target?: ObjectChunk;
 };
 
 export type HistoryFieldChange =

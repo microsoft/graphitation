@@ -169,6 +169,7 @@ export function evictOldData(
 }
 
 function canEvict(env: CacheEnv, store: Store, resultTree: DataTree) {
+  if (resultTree.pendingDeferred?.size) return false;
   if (store.watches.has(resultTree.operation)) {
     return false;
   }
@@ -489,6 +490,13 @@ function removeDataTree(
 export function resetStore(store: Store): void {
   const { dataForest, optimisticReadResults, optimisticLayers, operations } =
     store;
+  for (const forest of [dataForest, ...optimisticLayers]) {
+    for (const tree of forest.trees.values()) {
+      for (const execution of tree.pendingDeferred?.values() ?? EMPTY_ARRAY) {
+        execution.dispose();
+      }
+    }
+  }
   dataForest.trees.clear();
   dataForest.extraRootIds.clear();
   dataForest.operationsByNodes.clear();

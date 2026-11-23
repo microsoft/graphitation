@@ -23,6 +23,7 @@ import type {
   PossibleSelections,
 } from "../descriptor/types";
 import type { ForestEnv, IndexedTree } from "./types";
+import { DeliveryScope, indexDeferred } from "./deferred";
 import { ValueKind } from "../values/types";
 import {
   getFieldName,
@@ -76,19 +77,21 @@ export function indexTree(
   result: OperationResult,
   knownMissingFields?: MissingFieldsMap,
   previousTreeState: IndexedTree | null = null,
+  delivery?: DeliveryScope,
 ): IndexedTree {
   let rootNodeKey;
   try {
-    rootNodeKey =
-      env.objectKey(
-        result.data,
-        resolveSelection(
+    rootNodeKey = delivery?.rootOwner
+      ? operation.rootNodeKey
+      : env.objectKey(
+          result.data,
+          resolveSelection(
+            operation,
+            operation.possibleSelections,
+            operation.rootType,
+          ),
           operation,
-          operation.possibleSelections,
-          operation.rootType,
-        ),
-        operation,
-      ) || operation.rootNodeKey;
+        ) || operation.rootNodeKey;
   } catch (e) {
     rootNodeKey = operation.rootNodeKey;
   }
@@ -104,7 +107,7 @@ export function indexTree(
     indexedSources: 0,
     incompleteChunks: new Set(),
     rootNodeKey,
-    recycleTree: previousTreeState,
+    recycleTree: delivery ? null : previousTreeState,
     findParent: createParentLocator(dataMap),
   };
   const rootRef: RootChunkReference = {
@@ -132,10 +135,12 @@ export function indexTree(
   };
   // Every composite occurrence is counted, but dataMap keeps only unique sources.
   // This detects sharing without an additional map lookup or allocation per chunk.
-  if (context.indexedSources === dataMap.size) {
-    return tree;
-  }
-  return reindexSharedTree(env, tree, rootRef.value);
+  const indexed =
+    context.indexedSources === dataMap.size
+      ? tree
+      : reindexSharedTree(env, tree, rootRef.value);
+  if (delivery) indexDeferred(indexed, delivery);
+  return indexed;
 }
 
 // Matches ObjectChunkReference structure with additional fields
