@@ -89,8 +89,9 @@ This requires the client to pass raw payloads through `cache.write` with the
 abort signal. Cache writes without that option keep their existing behavior.
 Pending deliveries do not prevent eviction. If the owning tree is evicted,
 its placeholders are released and later patches from that execution are ignored.
-Completion, abort, and cache reset also release pending placeholders; they are not
-part of serialized cache data. This protocol covers deferred object fragments,
+Completion, abort, and cache reset also release pending placeholders. Removing
+an optimistic layer releases its deliveries before any higher layers are replayed.
+Placeholders are not part of serialized cache data. This protocol covers deferred object fragments,
 not streamed list items.
 
 ### 1. Indexing operation result

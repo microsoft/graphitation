@@ -57,6 +57,8 @@ export function writeIncremental(
 ): WriteResult | undefined {
   if (request.aborted) return;
   const forest = getActiveForest(store, transaction);
+  const initial = isSourceObject(payload.data);
+  if (!initial && !forest.activeDeliveries.has(request)) return;
   const operation = resolveOperationDescriptor(
     env,
     store,
@@ -69,7 +71,7 @@ export function writeIncremental(
   let tree = forest.trees.get(owner.id);
   let execution = tree?.pendingDeferred?.get(request);
 
-  if (isSourceObject(payload.data) && !execution) {
+  if (initial && !execution) {
     const index = new DeferredIndex();
     result = write(env, store, transaction, options, {
       index,
@@ -81,14 +83,14 @@ export function writeIncremental(
     if (tree && index.hasPending) {
       const pending = (tree.pendingDeferred ??= new Map());
       const dispose = () => {
-        store.activeDeliveries.delete(dispose);
+        forest.activeDeliveries.delete(request);
         request.removeEventListener("abort", dispose);
         index.clear();
         pending.delete(request);
       };
       execution = { index, dispose };
       pending.set(request, execution);
-      store.activeDeliveries.add(dispose);
+      forest.activeDeliveries.set(request, dispose);
       request.addEventListener("abort", dispose, { once: true });
     }
   }
