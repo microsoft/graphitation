@@ -1,18 +1,9 @@
 import { Cache } from "@apollo/client";
-import {
-  FieldInfo,
-  OperationDescriptor,
-  PossibleSelections,
-} from "../descriptor/types";
-import { accumulate, accumulateMany } from "../jsutils/map";
+import { accumulateMany } from "../jsutils/map";
 import { diffObject } from "../diff/diffObject";
 import { diffNodes } from "../diff/diffTree";
 import * as Difference from "../diff/difference";
-import {
-  resolveSelection,
-  resolveNormalizedField,
-} from "../descriptor/resolvedSelection";
-import { fieldToStringKey } from "./keys";
+import { resolveSelection } from "../descriptor/resolvedSelection";
 import { addDirtyChunkDifference } from "../forest/transformTree";
 import { indexTree } from "../forest/indexTree";
 import { DeferredIndex, DeferredPlaceholder } from "../forest/deferred";
@@ -29,7 +20,6 @@ import {
   NodeMap,
   ObjectChunk,
   SourceObject,
-  SourceValue,
 } from "../values/types";
 import {
   resolveOperationDescriptor,
@@ -105,32 +95,76 @@ export function writeIncremental(
   if (!tree || !execution) return result;
   const { index, dispose } = execution;
   try {
-    const groups = new Map<string | SourceObject, MatchedPatch[]>();
-    for (const { path, label, data } of payload.incremental ?? []) {
-      if (!path) continue;
-      const site = index.matchPatch(operation, path, label, data);
-      if (!site || !isSourceObject(data) || Array.isArray(data)) continue;
-      accumulate(groups, site.chunk.key || site.chunk.data, { site, data });
-    }
-    if (!groups.size) return result;
-    const layers = getEffectiveReadLayers(store, forest, false);
+    const parts = payload.incremental;
+    if (!parts?.length) return result;
+    const seen = new Set<string>();
+    const independent =
+      parts.length > 1 &&
+      parts.every(({ path, label, data }) => {
+        const site = path && index.peekUnique(path, label);
+        if (
+          !site ||
+          !site.chunk.key ||
+          seen.has(site.chunk.key) ||
+          !isSourceObject(data) ||
+          Array.isArray(data)
+        )
+          return false;
+        seen.add(site.chunk.key);
+        const policies =
+          site.chunk.type && env.mergePolicies.get(site.chunk.type);
+        return (
+          resolveSelection(
+            operation,
+            site.selection,
+            site.chunk.type || null,
+          ).fieldQueue.every(
+            (field) =>
+              !Object.prototype.hasOwnProperty.call(data, field.dataKey) ||
+              (!field.selection &&
+                !isSourceObject(data[field.dataKey]) &&
+                !(policies && policies.has(field.name))),
+          ) && !!findTarget(forest, tree, site)
+        );
+      });
+    if (independent) writeParts(parts);
+    else
+      for (const part of parts) {
+        if (request.aborted) break;
+        writeParts([part]);
+      }
+  } finally {
+    if (payload.hasNext === false || !index.hasPending) dispose();
+  }
+  return result;
+
+  function writeParts(parts: readonly Patch[]) {
+    const ownerTree = forest.trees.get(owner.id);
+    if (!ownerTree) return;
     const nodes: NodeMap = new Map();
     const embedded: [Target, ObjectChunk][] = [];
     let incoming: IndexedTree | undefined;
-    for (const group of groups.values()) {
-      const { site } = group[0];
+    for (const { path, label, data: source } of parts) {
+      if (!path) continue;
+      const site = index.matchPatch(operation, path, label, source);
+      if (!site || !isSourceObject(source) || Array.isArray(source)) continue;
       const { chunk } = site;
-      const target = findTarget(forest, tree, site);
+      const target = findTarget(forest, ownerTree, site);
       if (!target) continue;
-      const { data, selection } = prepareFragment(env, operation, group);
+      const selection = site.selection;
+      const data: SourceObject = Object.create(null);
+      if (chunk.type) data.__typename = chunk.type;
+      for (const { dataKey } of resolveSelection(
+        operation,
+        selection,
+        chunk.type || null,
+      ).fieldQueue)
+        if (Object.prototype.hasOwnProperty.call(source, dataKey))
+          data[dataKey] = source[dataKey];
       const model = indexTree(
         env,
         {
           ...operation,
-          selections:
-            selection === site.selection
-              ? operation.selections
-              : new Map(operation.selections),
           possibleSelections: selection,
           rootNodeKey: chunk.key || operation.rootNodeKey,
           rootType: chunk.type || "",
@@ -142,7 +176,7 @@ export function writeIncremental(
       );
       const merged = applyMergePolicies(
         env,
-        layers,
+        getEffectiveReadLayers(store, forest, false),
         env.mergePolicies,
         model,
         options.overwrite ?? false,
@@ -159,7 +193,7 @@ export function writeIncremental(
         for (const [source, ref] of merged.dataMap)
           incoming.dataMap.set(source, ref);
     }
-    if (!incoming) return result;
+    if (!incoming) return;
     result = writeIndexedTree(env, store, forest, options, incoming, {
       kind: "patch",
       delivery: {
@@ -184,147 +218,10 @@ export function writeIncremental(
       },
     });
     transaction.changelog.push(result);
-  } finally {
-    if (payload.hasNext === false || !index.hasPending) dispose();
   }
-  return result;
 }
 
 type Target = { tree: IndexedTree; chunk: ObjectChunk };
-
-// Only combine fields within the same logical object. In particular a list
-// position is not an identity, and a shorter incoming list replaces its tail.
-function stageComposite(
-  env: CacheEnv,
-  operation: OperationDescriptor,
-  selection: PossibleSelections,
-  previous: SourceValue | undefined,
-  incoming: SourceValue | undefined,
-): SourceValue | undefined {
-  if (!isSourceObject(incoming)) return incoming;
-  if (Array.isArray(incoming)) {
-    const prior = Array.isArray(previous) ? previous : [];
-    const keyOf = (item: SourceValue) =>
-      isSourceObject(item) &&
-      !Array.isArray(item) &&
-      env.objectKey(
-        item,
-        resolveSelection(operation, selection, item.__typename ?? null),
-        operation,
-      );
-    const keyed = new Map(prior.map((item) => [keyOf(item), item]));
-    return incoming.map((item, i) => {
-      const key = keyOf(item);
-      return stageComposite(
-        env,
-        operation,
-        selection,
-        key ? keyed.get(key) : prior[i],
-        item,
-      );
-    }) as typeof incoming;
-  }
-  const resolved = resolveSelection(
-    operation,
-    selection,
-    incoming.__typename ?? null,
-  );
-  const prior =
-    isSourceObject(previous) && !Array.isArray(previous) ? previous : undefined;
-  const same =
-    prior &&
-    prior.__typename === incoming.__typename &&
-    env.objectKey(prior, resolved, operation) ===
-      env.objectKey(incoming, resolved, operation);
-  const out: SourceObject = same ? prior : Object.create(null);
-  // Preserve even unselected key fields for cache implementations with custom IDs.
-  for (const key of Object.keys(incoming)) {
-    const child = resolved.fieldQueue.find((f) => f.dataKey === key)?.selection;
-    out[key] = child
-      ? stageComposite(env, operation, child, out[key], incoming[key])
-      : incoming[key];
-  }
-  return out;
-}
-type MatchedPatch = { site: DeferredPlaceholder; data: SourceObject };
-
-function prepareFragment(
-  env: CacheEnv,
-  operation: OperationDescriptor,
-  patches: MatchedPatch[],
-) {
-  const data: SourceObject = Object.create(null);
-  const { chunk, selection } = patches[0].site;
-  if (chunk.type) data.__typename = chunk.type;
-  if (patches.length === 1) {
-    const source = patches[0].data;
-    for (const { dataKey } of resolveSelection(
-      operation,
-      selection,
-      chunk.type || null,
-    ).fieldQueue)
-      if (Object.prototype.hasOwnProperty.call(source, dataKey))
-        data[dataKey] = source[dataKey];
-    return { data, selection };
-  }
-
-  const aliases = new Map<string, string>();
-  const byKey = new Map<string, FieldInfo>();
-  for (const { site, data: source } of patches) {
-    const resolved = resolveSelection(
-      operation,
-      site.selection,
-      site.chunk.type || null,
-    );
-    for (const field of resolved.fieldQueue) {
-      if (!Object.prototype.hasOwnProperty.call(source, field.dataKey))
-        continue;
-      const name = fieldToStringKey(resolveNormalizedField(resolved, field));
-      const dataKey =
-        aliases.get(name) ??
-        (byKey.has(field.dataKey) ? `$${byKey.size}` : field.dataKey);
-      aliases.set(name, dataKey);
-      const value = source[field.dataKey];
-      data[dataKey] = field.selection
-        ? stageComposite(env, operation, field.selection, data[dataKey], value)
-        : value;
-      const previous = byKey.get(dataKey);
-      const info =
-        previous?.selection && previous !== field
-          ? site.chunk.selection.fields
-              .get(field.name)
-              ?.find((f) => f.dataKey === field.dataKey) ?? field
-          : field;
-      byKey.set(
-        dataKey,
-        dataKey === info.dataKey ? info : { ...info, dataKey },
-      );
-    }
-  }
-  if (patches.every((p) => p.site.selection === selection))
-    return { data, selection };
-  const fields = new Map<string, FieldInfo[]>();
-  const fieldQueue = [...byKey.values()];
-  for (const field of fieldQueue) accumulate(fields, field.name, field);
-  return {
-    data,
-    selection: new Map([
-      [
-        null,
-        {
-          depth: 0,
-          fields,
-          fieldQueue,
-          fieldsToNormalize: fieldQueue,
-          fieldsWithSelections: fieldQueue
-            .filter((f) => f.selection)
-            .map((f) => f.name),
-          structuralHash: 0,
-        },
-      ],
-    ]) as PossibleSelections,
-  };
-}
 
 function findTarget(
   forest: IndexedForest,

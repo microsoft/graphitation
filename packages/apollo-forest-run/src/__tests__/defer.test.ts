@@ -1,5 +1,6 @@
 import { gql } from "@apollo/client";
 import { ForestRun } from "../ForestRun";
+import * as writes from "../cache/write";
 import { incrementalDelivery, WriteOptions } from "../cache/incremental";
 import { DocumentNode } from "graphql";
 
@@ -43,7 +44,97 @@ const namePart = (name: string) => ({
   data: { name },
 });
 
-test("one payload applies a field policy once to the final value for each original message", () => {
+test("independent scalar patches match ordered writes but update the forest only once", () => {
+  const cache = new ForestRun();
+  const reference = new ForestRun();
+  const delivery = execution(cache, list);
+  const ordered = execution(reference, list);
+  const initial = {
+    data: { messages: [message("1"), message("2")] },
+    hasNext: true,
+  };
+  delivery.send(initial);
+  ordered.send(initial);
+  const parts = [
+    { path: ["messages", 1], data: { name: "two" } },
+    { path: ["messages", 0], data: { name: null } },
+  ];
+  const write = jest.spyOn(writes, "writeIndexedTree");
+  try {
+    delivery.send({ incremental: parts, hasNext: false });
+    expect(write).toHaveBeenCalledTimes(1);
+    reference.batch({
+      update() {
+        ordered.send({ incremental: [parts[0]], hasNext: true });
+        ordered.send({ incremental: [parts[1]], hasNext: false });
+      },
+    });
+    expect(cache.readQuery({ query: list })).toEqual(
+      reference.readQuery({ query: list }),
+    );
+    expect(cache.readQuery({ query: list })).toMatchObject({
+      messages: [
+        { id: "1", name: null },
+        { id: "2", name: "two" },
+      ],
+    });
+  } finally {
+    write.mockRestore();
+  }
+});
+
+test("composite patches to distinct parents update their shared child in wire order", () => {
+  const cache = new ForestRun({
+    typePolicies: {
+      User: {
+        fields: {
+          name: {
+            merge(existing, incoming) {
+              return existing ? `${existing}|${incoming}` : incoming;
+            },
+          },
+        },
+      },
+    },
+  });
+  const query = gql`
+    query {
+      messages {
+        id
+        ... @defer {
+          author {
+            id
+            name
+          }
+        }
+      }
+    }
+  `;
+  const delivery = execution(cache, query);
+  delivery.send({
+    data: { messages: [message("1"), message("2")] },
+    hasNext: true,
+  });
+  const callback = jest.fn();
+  const stop = cache.watch({ query, optimistic: false, callback });
+  delivery.send({
+    incremental: ["Ann", "Bea"].map((name, i) => ({
+      path: ["messages", i],
+      data: { author: { __typename: "User", id: "A", name } },
+    })),
+    hasNext: false,
+  });
+  stop();
+  expect(callback).toHaveBeenCalledTimes(1);
+  expect(cache.readQuery({ query })).toMatchObject({
+    messages: [
+      { author: { name: "Ann|Bea" } },
+      { author: { name: "Ann|Bea" } },
+    ],
+  });
+});
+
+test("policies see patch writes in wire order and duplicate deliveries are ignored", () => {
   const merge = jest.fn((_existing, incoming) => incoming);
   const cache = new ForestRun({
     typePolicies: { Message: { fields: { name: { merge } } } },
@@ -87,7 +178,11 @@ test("one payload applies a field policy once to the final value for each origin
     ],
     hasNext: false,
   });
-  expect(merge.mock.calls.map((call) => call[1])).toEqual(["new", "two"]);
+  expect(merge.mock.calls).toMatchObject([
+    [undefined, "old", expect.anything()],
+    [undefined, "two", expect.anything()],
+    ["old", "new", expect.anything()],
+  ]);
   expect(cache.readQuery({ query: q })).toMatchObject({
     messages: [
       { id: "1", name: "new", text: "keep" },
@@ -399,8 +494,13 @@ test("a deferred embedded owner survives a write to its normalized child", () =>
   const query = gql`
     query {
       info {
-        item { id text }
-        ... @defer { name }
+        item {
+          id
+          text
+        }
+        ... @defer {
+          name
+        }
       }
     }
   `;
@@ -411,7 +511,11 @@ test("a deferred embedded owner survives a write to its normalized child", () =>
   });
   cache.writeFragment({
     id: "Message:1",
-    fragment: gql`fragment Edit on Message { text }`,
+    fragment: gql`
+      fragment Edit on Message {
+        text
+      }
+    `,
     data: { __typename: "Message", text: "edited" },
   });
   delivery.send({

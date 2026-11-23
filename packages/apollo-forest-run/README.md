@@ -74,12 +74,11 @@ an ordinary cache write does not recalculate them from a newer list or relations
 Only the initial result registers placeholders. A single `@defer` can target an
 object deep in that result, but nested delivery sites introduced by a patch
 are not supported. A consumed placeholder is not reused for duplicate entries.
-Changes to the same target
-are combined before field merge policies run; ForestRun applies the resulting
-node differences to each affected tree once, without replaying the root list.
-Overlapping object fields combine only when their ForestRun identities agree.
-A later list supplies the order and length; earlier fields on keyed items
-follow the item, not its old index.
+ForestRun applies patches in delivery order within one cache transaction. A
+merge policy sees the result of preceding patches, and watchers see the final
+transaction result. If every patch writes only scalar fields without merge
+policies to a distinct, reachable cache ID, ForestRun updates the affected
+trees once for the whole payload instead.
 If the original entity is no longer reachable, ForestRun consumes the placeholder
 without restoring the entity or writing to its replacement. For an embedded
 object without a cache key it requires the original source or a tracked copy;

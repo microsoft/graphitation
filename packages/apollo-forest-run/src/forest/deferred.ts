@@ -44,6 +44,11 @@ export class DeferredIndex {
     if (chunk.key === false) accumulate(this.embedded, chunk.data, site);
   }
 
+  peekUnique(path: Path, label?: string): DeferredPlaceholder | undefined {
+    const sites = this.byPath.get(deferredPathKey(path, label));
+    return sites?.length === 1 ? sites[0] : undefined;
+  }
+
   matchPatch(
     operation: OperationDescriptor,
     path: Path,
