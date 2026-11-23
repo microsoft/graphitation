@@ -1,4 +1,4 @@
-import { accumulate } from "../jsutils/map";
+import { accumulate, accumulateMany, deleteAccumulated } from "../jsutils/map";
 import { ObjectChunk, SourceObject } from "../values/types";
 import { OperationDescriptor, PossibleSelections } from "../descriptor/types";
 import { resolveSelection } from "../descriptor/resolvedSelection";
@@ -17,7 +17,7 @@ export type DeferredPlaceholder = {
  * scanning every other pending object in the response. */
 export class DeferredIndex {
   private readonly byPath = new Map<string, DeferredPlaceholder[]>();
-  private readonly embedded = new Map<SourceObject, Set<DeferredPlaceholder>>();
+  private readonly embedded = new Map<SourceObject, DeferredPlaceholder[]>();
 
   get hasPending() {
     return this.byPath.size !== 0;
@@ -41,11 +41,7 @@ export class DeferredIndex {
       return;
     const site = { chunk, selection };
     accumulate(this.byPath, key, site);
-    if (chunk.key === false) {
-      const sites = this.embedded.get(chunk.data) ?? new Set();
-      sites.add(site);
-      this.embedded.set(chunk.data, sites);
-    }
+    if (chunk.key === false) accumulate(this.embedded, chunk.data, site);
   }
 
   matchPatch(
@@ -61,29 +57,19 @@ export class DeferredIndex {
       candidates.length === 1
         ? candidates
         : candidates.filter(
-            (site) =>
+            ({ chunk, selection }) =>
               isSourceObject(data) &&
-              acceptsPayload(
-                operation,
-                site.selection,
-                site.chunk.type || null,
-                data,
-              ),
+              acceptsPayload(operation, selection, data, chunk.type || null),
           );
     const site = matches[0];
     // An unlabeled patch containing only shared fields can be applied once,
     // but cannot tell us which of the matching sites has been delivered.
-    if (matches.length === 1) this.consume(key, site);
+    if (matches.length === 1) {
+      deleteAccumulated(this.byPath, key, site);
+      if (site.chunk.key === false)
+        deleteAccumulated(this.embedded, site.chunk.data, site);
+    }
     return site;
-  }
-
-  private consume(key: string, site: DeferredPlaceholder) {
-    const sites = this.byPath.get(key)!;
-    sites.splice(sites.indexOf(site), 1);
-    if (!sites.length) this.byPath.delete(key);
-    const embedded = this.embedded.get(site.chunk.data);
-    if (embedded?.delete(site) && !embedded.size)
-      this.embedded.delete(site.chunk.data);
   }
 
   rebind(source: SourceObject, chunk: ObjectChunk) {
@@ -91,9 +77,7 @@ export class DeferredIndex {
     if (!sites || source === chunk.data) return;
     this.embedded.delete(source);
     for (const site of sites) site.chunk = chunk;
-    const existing = this.embedded.get(chunk.data);
-    if (existing) for (const site of sites) existing.add(site);
-    else this.embedded.set(chunk.data, sites);
+    accumulateMany(this.embedded, chunk.data, sites, false);
   }
 }
 
@@ -106,30 +90,23 @@ export type DeliveryScope = {
 function acceptsPayload(
   operation: OperationDescriptor,
   selections: PossibleSelections,
-  type: string | null,
-  data: SourceObject,
+  data: unknown,
+  type?: string | null,
 ): boolean {
+  if (!isSourceObject(data)) return true;
   if (Array.isArray(data))
-    return data.every(
-      (item) =>
-        !isSourceObject(item) ||
-        acceptsPayload(operation, selections, item.__typename ?? null, item),
-    );
-  const fields = resolveSelection(operation, selections, type).fieldQueue;
+    return data.every((item) => acceptsPayload(operation, selections, item));
+  const fields = resolveSelection(
+    operation,
+    selections,
+    type === undefined ? data.__typename ?? null : type,
+  ).fieldQueue;
   return Object.keys(data).every((key) => {
     if (key === "__typename") return true;
     const field = fields.find((f) => f.dataKey === key);
     if (!field) return false;
-    const value = data[key];
     return (
-      !field.selection ||
-      !isSourceObject(value) ||
-      acceptsPayload(
-        operation,
-        field.selection,
-        value.__typename ?? null,
-        value,
-      )
+      !field.selection || acceptsPayload(operation, field.selection, data[key])
     );
   });
 }
