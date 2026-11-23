@@ -62,7 +62,7 @@ export function updateTree(
     );
   }
   const rootChunk = rootChunks[0];
-  const materialized = delivery?.index.embedded.size
+  const materialized = delivery?.index.hasEmbedded
     ? new Map<SourceObject, SourceObject>()
     : undefined;
   const context: UpdateTreeContext = {

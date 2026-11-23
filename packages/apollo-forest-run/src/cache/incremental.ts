@@ -3,20 +3,12 @@ import { diffObject } from "../diff/diffObject";
 import { diffNodes } from "../diff/diffTree";
 import * as Difference from "../diff/difference";
 import { ValueDifference } from "../diff/types";
-import type {
-  OperationDescriptor,
-  PossibleSelections,
-} from "../descriptor/types";
 import {
   resolveNormalizedField,
   resolveSelection,
 } from "../descriptor/resolvedSelection";
 import { indexTree } from "../forest/indexTree";
-import {
-  DeferredIndex,
-  DeferredPlaceholder,
-  deferredPathKey,
-} from "../forest/deferred";
+import { DeferredIndex, DeferredPlaceholder } from "../forest/deferred";
 import { IndexedForest, IndexedTree } from "../forest/types";
 import { assert } from "../jsutils/assert";
 import {
@@ -74,15 +66,17 @@ export function writeIncremental(
 
   if (isSourceObject(payload.data) && !execution) {
     const index = new DeferredIndex();
-    result = write(env, store, transaction, options, index);
+    result = write(env, store, transaction, options, {
+      index,
+      owner: owner.id,
+    });
     transaction.changelog.push(result);
     const tree = forest.trees.get(owner.id);
-    if (tree && index.byPath.size) {
+    if (tree && index.hasPending) {
       const pending = (tree.pendingDeferred ??= new Map());
       const dispose = () => {
         request.removeEventListener("abort", dispose);
-        index.byPath.clear();
-        index.embedded.clear();
+        index.clear();
         pending.delete(request);
       };
       execution = { index, dispose };
@@ -95,116 +89,55 @@ export function writeIncremental(
   try {
     for (const { path, label, data } of payload.incremental ?? []) {
       if (!path) continue;
-      const key = deferredPathKey(path, label);
-      const candidates = index.byPath.get(key);
-      if (!candidates) continue;
+      const site = index.matchPatch(operation, path, label, data);
+      if (!site || !isSourceObject(data) || Array.isArray(data)) continue;
+      const { chunk, selection } = site;
+      const fields = resolveSelection(
+        operation,
+        selection,
+        chunk.type || null,
+      ).fieldQueue;
+      const tree = forest.trees.get(owner.id);
+      if (!tree) continue;
+      const target = findTarget(forest, tree, site);
+      if (!target) continue;
 
-      // Each 20220824 entry delivers one fragment. Two sites can share a
-      // response key, even a composite field with different subselections.
-      const matches =
-        candidates.length === 1
-          ? candidates
-          : candidates.filter(
-              (site) =>
-                isSourceObject(data) &&
-                acceptsPayload(
-                  operation,
-                  site.selection,
-                  site.chunk.type || null,
-                  data,
-                ),
-            );
-      const site = matches[0];
-      if (site) {
-        const { chunk, selection } = site;
-        const fields = resolveSelection(
-          operation,
-          selection,
-          chunk.type || null,
-        ).fieldQueue;
-        // If the payload contains only shared fields the wire format can't
-        // identify the site. Write it once and retain the candidates until
-        // a distinguishing payload or the end of this execution.
-        if (matches.length === 1) index.consume(key, site);
-        if (!isSourceObject(data) || Array.isArray(data)) continue;
-        const tree = forest.trees.get(owner.id);
-        if (!tree) continue;
-        const target = findTarget(forest, tree, site);
-        if (!target) continue;
-
-        // Normalize just the delivered fragment. In particular, don't run a
-        // parent relationship or list's merge policy on a later patch.
-        const rootData = Object.create(null) as SourceObject;
-        for (const { dataKey } of fields) {
-          if (Object.prototype.hasOwnProperty.call(data, dataKey))
-            rootData[dataKey] = data[dataKey];
-        }
-        if (chunk.type) rootData.__typename = chunk.type;
-        const rootNodeKey = chunk.key || operation.rootNodeKey;
-        const incoming = indexTree(
-          env,
-          {
-            ...operation,
-            possibleSelections: selection,
-            rootNodeKey,
-            rootType: chunk.type || "",
-          },
-          { data: rootData },
-          undefined,
-          null,
-          { index, path, rootOwner: chunk },
-        );
-        result = writeIndexedTree(
-          env,
-          store,
-          forest,
-          options,
-          incoming,
-          undefined,
-          (layer, model) => diffFragment(env, layer, target, model),
-          { index, owner: owner.id, target: target.chunk },
-        );
-        transaction.changelog.push(result);
+      // Normalize just the delivered fragment. In particular, don't run a
+      // parent relationship or list's merge policy on a later patch.
+      const rootData = Object.create(null) as SourceObject;
+      for (const { dataKey } of fields) {
+        if (Object.prototype.hasOwnProperty.call(data, dataKey))
+          rootData[dataKey] = data[dataKey];
       }
+      if (chunk.type) rootData.__typename = chunk.type;
+      const rootNodeKey = chunk.key || operation.rootNodeKey;
+      const incoming = indexTree(
+        env,
+        {
+          ...operation,
+          possibleSelections: selection,
+          rootNodeKey,
+          rootType: chunk.type || "",
+        },
+        { data: rootData },
+        undefined,
+        null,
+        { index, path, rootOwner: chunk },
+      );
+      result = writeIndexedTree(env, store, forest, options, incoming, {
+        kind: "patch",
+        diff: (layer, model) => diffFragment(env, layer, target, model),
+        delivery: { index, owner: owner.id, target: target.chunk },
+      });
+      transaction.changelog.push(result);
     }
   } finally {
-    if (payload.hasNext === false || !index.byPath.size) dispose();
+    if (payload.hasNext === false || !index.hasPending) dispose();
   }
   return result;
 }
 
 type Target = { tree: IndexedTree; chunk: ObjectChunk };
-
-function acceptsPayload(
-  operation: OperationDescriptor,
-  selections: PossibleSelections,
-  type: string | null,
-  data: SourceObject,
-): boolean {
-  if (Array.isArray(data))
-    return data.every(
-      (item) =>
-        !isSourceObject(item) ||
-        acceptsPayload(operation, selections, item.__typename ?? null, item),
-    );
-  const fields = resolveSelection(operation, selections, type).fieldQueue;
-  return Object.keys(data).every((key) => {
-    if (key === "__typename") return true;
-    const field = fields.find((f) => f.dataKey === key);
-    if (!field) return false;
-    const value = data[key];
-    return (
-      !field.selection ||
-      !isSourceObject(value) ||
-      acceptsPayload(
-        operation,
-        field.selection,
-        value.__typename ?? null,
-        value,
-      )
-    );
-  });
-}
 
 function findTarget(
   forest: IndexedForest,

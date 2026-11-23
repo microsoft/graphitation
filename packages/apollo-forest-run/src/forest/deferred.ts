@@ -1,6 +1,8 @@
 import { accumulate } from "../jsutils/map";
 import { ObjectChunk, SourceObject } from "../values/types";
-import { PossibleSelections } from "../descriptor/types";
+import { OperationDescriptor, PossibleSelections } from "../descriptor/types";
+import { resolveSelection } from "../descriptor/resolvedSelection";
+import { isSourceObject } from "../values/predicates";
 
 type Path = readonly (string | number)[];
 export const deferredPathKey = (path: Path, label?: string) =>
@@ -14,8 +16,21 @@ export type DeferredPlaceholder = {
  * index lets an update rebind an embedded chunk it materialized without
  * scanning every other pending object in the response. */
 export class DeferredIndex {
-  readonly byPath = new Map<string, DeferredPlaceholder[]>();
-  readonly embedded = new Map<SourceObject, Set<DeferredPlaceholder>>();
+  private readonly byPath = new Map<string, DeferredPlaceholder[]>();
+  private readonly embedded = new Map<SourceObject, Set<DeferredPlaceholder>>();
+
+  get hasPending() {
+    return this.byPath.size !== 0;
+  }
+
+  get hasEmbedded() {
+    return this.embedded.size !== 0;
+  }
+
+  clear() {
+    this.byPath.clear();
+    this.embedded.clear();
+  }
 
   add(key: string, chunk: ObjectChunk, selection: PossibleSelections) {
     if (
@@ -33,7 +48,36 @@ export class DeferredIndex {
     }
   }
 
-  consume(key: string, site: DeferredPlaceholder) {
+  matchPatch(
+    operation: OperationDescriptor,
+    path: Path,
+    label: string | undefined,
+    data: unknown,
+  ): DeferredPlaceholder | undefined {
+    const key = deferredPathKey(path, label);
+    const candidates = this.byPath.get(key);
+    if (!candidates) return;
+    const matches =
+      candidates.length === 1
+        ? candidates
+        : candidates.filter(
+            (site) =>
+              isSourceObject(data) &&
+              acceptsPayload(
+                operation,
+                site.selection,
+                site.chunk.type || null,
+                data,
+              ),
+          );
+    const site = matches[0];
+    // An unlabeled patch containing only shared fields can be applied once,
+    // but cannot tell us which of the matching sites has been delivered.
+    if (matches.length === 1) this.consume(key, site);
+    return site;
+  }
+
+  private consume(key: string, site: DeferredPlaceholder) {
     const sites = this.byPath.get(key)!;
     sites.splice(sites.indexOf(site), 1);
     if (!sites.length) this.byPath.delete(key);
@@ -58,3 +102,34 @@ export type DeliveryScope = {
   path: Path;
   rootOwner?: ObjectChunk;
 };
+
+function acceptsPayload(
+  operation: OperationDescriptor,
+  selections: PossibleSelections,
+  type: string | null,
+  data: SourceObject,
+): boolean {
+  if (Array.isArray(data))
+    return data.every(
+      (item) =>
+        !isSourceObject(item) ||
+        acceptsPayload(operation, selections, item.__typename ?? null, item),
+    );
+  const fields = resolveSelection(operation, selections, type).fieldQueue;
+  return Object.keys(data).every((key) => {
+    if (key === "__typename") return true;
+    const field = fields.find((f) => f.dataKey === key);
+    if (!field) return false;
+    const value = data[key];
+    return (
+      !field.selection ||
+      !isSourceObject(value) ||
+      acceptsPayload(
+        operation,
+        field.selection,
+        value.__typename ?? null,
+        value,
+      )
+    );
+  });
+}
