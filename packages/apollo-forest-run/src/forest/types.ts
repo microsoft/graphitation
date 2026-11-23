@@ -76,7 +76,7 @@ export type DeferredExecution = {
 export type DeferredWrite = {
   owner: OperationId;
   index: DeferredIndex;
-  targets?: Iterable<ObjectChunk>;
+  target?: ObjectChunk;
 };
 
 export type HistoryFieldChange =

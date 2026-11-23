@@ -192,11 +192,9 @@ export function updateTree(
     base,
   );
   if (delivery && materialized) {
-    if (delivery.targets)
-      for (const target of delivery.targets) {
-        const draft = drafts.get(target.data);
-        if (isSourceObject(draft)) materialized.set(target.data, draft);
-      }
+    const target = delivery.target;
+    const draft = target && drafts.get(target.data);
+    if (target && isSourceObject(draft)) materialized.set(target.data, draft);
     for (const [source, data] of materialized) {
       const copy = updatedTree.dataMap.get(data)?.value;
       if (copy && isObjectValue(copy)) delivery.index.rebind(source, copy);
