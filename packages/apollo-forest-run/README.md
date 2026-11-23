@@ -71,7 +71,10 @@ As the indexer descends through the payload, it tracks field aliases and list
 indices on one path stack. Only a deferred fragment needs a saved path, which
 binds its label to the original chunk. These bindings belong to the indexed tree and the individual execution;
 an ordinary cache write does not recalculate them from a newer list or relationship.
-A patch writes just the bound fragment and can introduce nested delivery sites.
+Entries in one incremental payload are matched in wire order, so a parent can
+introduce a nested delivery site for a later entry. Changes to the same target
+are combined before field merge policies run; ForestRun applies the resulting
+node differences to each affected tree once, without replaying the root list.
 If the original entity is no longer reachable, ForestRun consumes the placeholder
 without restoring the entity or writing to its replacement. For an embedded
 object without a cache key it requires the original source or a tracked copy;

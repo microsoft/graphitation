@@ -43,6 +43,90 @@ const namePart = (name: string) => ({
   data: { name },
 });
 
+test("one payload applies a field policy once to the final value for each original message", () => {
+  const merge = jest.fn((_existing, incoming) => incoming);
+  const cache = new ForestRun({
+    typePolicies: { Message: { fields: { name: { merge } } } },
+  });
+  const q = gql`
+    query {
+      messages {
+        id
+        ... @defer(label: "a") {
+          name
+          text
+        }
+        ... @defer(label: "b") {
+          name
+        }
+      }
+    }
+  `;
+  const delivery = execution(cache, q);
+  delivery.send({
+    data: {
+      messages: ["1", "2"].map((id) => ({ id, __typename: "Message" })),
+    },
+    hasNext: true,
+  });
+  merge.mockClear();
+  delivery.send({
+    incremental: [
+      {
+        path: ["messages", 0],
+        label: "a",
+        data: { name: "old", text: "keep" },
+      },
+      {
+        path: ["messages", 1],
+        label: "a",
+        data: { name: "two", text: "second" },
+      },
+      { path: ["messages", 0], label: "b", data: { name: "new" } },
+    ],
+    hasNext: false,
+  });
+  expect(merge.mock.calls.map((call) => call[1])).toEqual(["new", "two"]);
+  expect(cache.readQuery({ query: q })).toMatchObject({
+    messages: [
+      { id: "1", name: "new", text: "keep" },
+      { id: "2", name: "two", text: "second" },
+    ],
+  });
+});
+
+test("a parent and its new embedded target can arrive in the same payload", () => {
+  const cache = new ForestRun();
+  const q = gql`
+    query {
+      messages {
+        id
+        ... @defer(label: "a") {
+          author {
+            text
+            ... @defer(label: "b") {
+              name
+            }
+          }
+        }
+      }
+    }
+  `;
+  const delivery = execution(cache, q);
+  delivery.send({ data: { messages: [message("1")] }, hasNext: true });
+  const author = Object.freeze({ __typename: "Author", text: "keep" });
+  delivery.send({
+    incremental: [
+      { path: ["messages", 0], label: "a", data: { author } },
+      { path: ["messages", 0, "author"], label: "b", data: { name: "Ada" } },
+    ],
+    hasNext: false,
+  });
+  expect(cache.readQuery({ query: q })).toMatchObject({
+    messages: [{ id: "1", author: { text: "keep", name: "Ada" } }],
+  });
+  expect(author).not.toHaveProperty("name");
+});
 test("a deferred fragment follows its original entity across a cache.modify prepend", () => {
   const cache = new ForestRun();
   const delivery = execution(cache, list);
