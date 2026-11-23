@@ -164,6 +164,10 @@ export interface InitialIncrementalExecutionResult<
   TExtensions = ObjMap<unknown>,
 > extends TotalExecutionResult<TData, TExtensions> {
   hasNext: boolean;
+  pending?: ReadonlyArray<{
+    path: ReadonlyArray<string | number>;
+    label?: string;
+  }>;
   incremental?: ReadonlyArray<IncrementalResult<TData, TExtensions>>;
   extensions?: TExtensions;
 }
@@ -173,6 +177,10 @@ export interface FormattedInitialIncrementalExecutionResult<
   TExtensions = ObjMap<unknown>,
 > extends FormattedTotalExecutionResult<TData, TExtensions> {
   hasNext: boolean;
+  pending?: ReadonlyArray<{
+    path: ReadonlyArray<string | number>;
+    label?: string;
+  }>;
   incremental?: ReadonlyArray<FormattedIncrementalResult<TData, TExtensions>>;
   extensions?: TExtensions;
 }

@@ -65,6 +65,13 @@ However, APIs and response format _will_ change, expect breaking changes.
 
 #### Incremental delivery flags
 
+Initial deferred responses also include `pending: [{ path, label? }]`, identifying
+objects in the initial response that will receive deferred data. Clients can bind
+these paths to cache identities before concurrent writes change relationships.
+Patch `path` values remain absolute. This is an additive extension of the existing
+wire format, not a migration to the newer `id` / `subPath` / `completed` draft.
+New nested targets introduced by subsequent patches are not announced yet.
+
 The following optional execution arguments tune how deferred/streamed payloads are executed and delivered.
 
 - **`enableEarlyExecution`** (`boolean`, default `false`) — When enabled, deferred fragments (`@defer`

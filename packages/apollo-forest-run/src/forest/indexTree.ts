@@ -65,6 +65,7 @@ type Context = {
   incompleteChunks: Set<ObjectChunk>;
   recycleTree: IndexedTree | null;
   findParent: ParentLocator;
+  deferred?: boolean;
 };
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -76,6 +77,7 @@ export function indexTree(
   result: OperationResult,
   knownMissingFields?: MissingFieldsMap,
   previousTreeState: IndexedTree | null = null,
+  deferred = false,
 ): IndexedTree {
   let rootNodeKey;
   try {
@@ -104,8 +106,9 @@ export function indexTree(
     indexedSources: 0,
     incompleteChunks: new Set(),
     rootNodeKey,
-    recycleTree: previousTreeState,
+    recycleTree: deferred ? null : previousTreeState,
     findParent: createParentLocator(dataMap),
+    deferred,
   };
   const rootRef: RootChunkReference = {
     value: null,
@@ -135,7 +138,7 @@ export function indexTree(
   if (context.indexedSources === dataMap.size) {
     return tree;
   }
-  return reindexSharedTree(env, tree, rootRef.value);
+  return reindexSharedTree(env, tree, rootRef.value, deferred);
 }
 
 // Matches ObjectChunkReference structure with additional fields
@@ -223,6 +226,7 @@ function reindexSharedTree(
   env: ForestEnv,
   tree: IndexedTree,
   root: ObjectChunk,
+  deferred: boolean,
 ): IndexedTree {
   const repaired = cloneSharedReferences(env, root);
   // Malformed, out-of-range list chunks may overcount without sharing actual data.
@@ -234,6 +238,8 @@ function reindexSharedTree(
     tree.operation,
     { ...tree.result, data: repaired.data },
     repaired.missingFields,
+    null,
+    deferred,
   );
   repairedTree.prev = tree.prev;
   repairedTree.history = tree.history;
@@ -296,13 +302,23 @@ function indexSourceObject(
     key,
     missingFields,
   );
-
+  if (context.deferred) {
+    // Fields of pending fragments are absent until their patches arrive.
+    for (const field of selection.fieldQueue) {
+      if (
+        source[field.dataKey] === undefined &&
+        !selection.skippedFields?.has(field)
+      ) {
+        (chunk.missingFields ??= new Set()).add(field);
+      }
+    }
+  }
   if (parent) {
     dataMap.set(source, parent);
     context.indexedSources++;
   }
 
-  if (missingFields?.size) {
+  if (chunk.missingFields?.size) {
     markAsPartial(context, parent);
     context.incompleteChunks.add(chunk);
   }

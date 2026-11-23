@@ -12,12 +12,16 @@ import type {
   CacheEnv,
   DataForest,
   HistoryPartitions,
+  IncrementalWriteOptions,
+  InitialWriteOptions,
   OptimisticLayer,
   SerializedCache,
   SerializedOperationInfo,
   Store,
   Transaction,
+  WriteOptions,
 } from "./cache/types";
+import type { DeferredPlaceholders } from "./forest/types";
 import { ApolloCache } from "@apollo/client";
 import { assert } from "./jsutils/assert";
 import { accumulate, deleteAccumulated } from "./jsutils/map";
@@ -113,6 +117,7 @@ export class ForestRun<
 
   protected invalidatedDiffs = new WeakSet<Cache.DiffResult<any>>();
   protected extractedObjects = new WeakMap<any, SerializedOperationInfo>();
+  private deferredWrites = new WeakMap<object, DeferredPlaceholders>();
 
   public constructor(public config?: CacheConfig<TPartitions>) {
     super();
@@ -200,17 +205,61 @@ export class ForestRun<
   }
 
   public write(options: Cache.WriteOptions): Reference | undefined {
-    return this.transactionStack.length
-      ? this.runWrite(options)
-      : this.runTransaction({
-          update: () => this.runWrite(options),
-        });
+    return this.withWriteTransaction(() => this.runWrite(options));
   }
 
-  private runWrite(options: Cache.WriteOptions): Reference | undefined {
+  public writeInitialData({
+    token,
+    data,
+    pending,
+    ...options
+  }: InitialWriteOptions): void {
+    this.withWriteTransaction(() => {
+      const targets: DeferredPlaceholders = new Map();
+      this.runWrite({
+        ...options,
+        result: data,
+        register: pending.length ? { pending, targets } : undefined,
+      });
+      this.deferredWrites.set(token, targets);
+    });
+  }
+
+  public writeIncrementalData({
+    token,
+    patches,
+    ...options
+  }: IncrementalWriteOptions): void {
+    const targets = this.deferredWrites.get(token);
+    if (!targets) return; // Released or reset execution.
+    this.withWriteTransaction(() => {
+      for (const { path, data } of patches) {
+        if (data === null) continue; // Failed deferred fragment.
+        const placeholder = targets.get(path.join("."));
+        assert(
+          placeholder,
+          "Deferred path does not identify an original target",
+        );
+        this.runWrite({ ...options, result: data, placeholder });
+      }
+    });
+  }
+
+  private withWriteTransaction<T>(update: () => T): T {
+    return this.transactionStack.length
+      ? update()
+      : this.runTransaction({ update });
+  }
+
+  public releaseIncremental(token: object): void {
+    this.deferredWrites.delete(token);
+  }
+
+  private runWrite(options: WriteOptions): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
     const result = write(this.env, this.store, transaction, options);
+    if (!result) return;
     transaction.changelog.push(result);
 
     const incoming = result.incoming;
@@ -492,6 +541,7 @@ export class ForestRun<
   }
 
   public reset(options?: Cache.ResetOptions): Promise<void> {
+    this.deferredWrites = new WeakMap();
     resetStore(this.store);
 
     if (options?.discardWatches) {
