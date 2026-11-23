@@ -394,6 +394,29 @@ test("a site in the initial result uses original paths, aliases and variables", 
   });
 });
 
+test("aborting in an initial merge policy does not register a delivery", () => {
+  const cache = new ForestRun({
+    typePolicies: {
+      Message: {
+        fields: {
+          text: {
+            merge(_existing, incoming) {
+              delivery.controller.abort();
+              return incoming;
+            },
+          },
+        },
+      },
+    },
+  });
+  const delivery = execution(cache, list);
+  const { signal } = delivery.controller;
+  const addListener = jest.spyOn(signal, "addEventListener");
+  delivery.send({ data: { messages: [message("1")] }, hasNext: true });
+  expect(signal.aborted).toBe(true);
+  expect(addListener).not.toHaveBeenCalled();
+});
+
 test("executions are isolated and their indexes are disposed on receipt, abort or empty final delivery", () => {
   class InspectableCache extends ForestRun {
     pending() {

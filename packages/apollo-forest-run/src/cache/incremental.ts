@@ -76,7 +76,8 @@ export function writeIncremental(
   );
   const owner = resolveResultDescriptor(env, store, operation);
   let result: WriteResult | undefined;
-  let execution = forest.trees.get(owner.id)?.pendingDeferred?.get(request);
+  let tree = forest.trees.get(owner.id);
+  let execution = tree?.pendingDeferred?.get(request);
 
   if (isSourceObject(payload.data) && !execution) {
     const index = new DeferredIndex();
@@ -85,7 +86,8 @@ export function writeIncremental(
       owner: owner.id,
     });
     transaction.changelog.push(result);
-    const tree = forest.trees.get(owner.id);
+    if (request.aborted) return result;
+    tree = forest.trees.get(owner.id);
     if (tree && index.hasPending) {
       const pending = (tree.pendingDeferred ??= new Map());
       const dispose = () => {
@@ -100,11 +102,9 @@ export function writeIncremental(
       request.addEventListener("abort", dispose, { once: true });
     }
   }
-  if (!execution) return result;
+  if (!tree || !execution) return result;
   const { index, dispose } = execution;
   try {
-    const tree = forest.trees.get(owner.id);
-    if (!tree) return result;
     const groups = new Map<string | SourceObject, MatchedPatch[]>();
     for (const { path, label, data } of payload.incremental ?? []) {
       if (!path) continue;
