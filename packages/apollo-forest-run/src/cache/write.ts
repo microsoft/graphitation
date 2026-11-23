@@ -4,7 +4,7 @@ import type {
   IndexedTree,
   UpdateTreeResult,
 } from "../forest/types";
-import type { ObjectChunk, OperationResult } from "../values/types";
+import type { OperationResult } from "../values/types";
 import type {
   CacheEnv,
   DataForest,
@@ -48,7 +48,7 @@ type IndexedWrite =
   | { kind: "full"; existingResult?: DataTree; delivery?: InitialDelivery }
   | {
       kind: "patch";
-      delivery: DeferredWrite & { target: ObjectChunk };
+      delivery: DeferredWrite;
       diff: (forest: IndexedForest, tree: IndexedTree) => GraphDifference;
     };
 
@@ -153,11 +153,20 @@ export function write(
     incomingResult.rootNodeKey = options.dataId;
   }
 
-  return writeIndexedTree(env, store, targetForest, options, incomingResult, {
+  const merged = applyMergePolicies(
+    env,
+    getEffectiveReadLayers(store, targetForest, false),
+    env.mergePolicies,
+    incomingResult,
+    options.overwrite ?? false,
+  );
+  const result = writeIndexedTree(env, store, targetForest, options, merged, {
     kind: "full",
     existingResult,
     delivery,
   });
+  incomingResult.prev = null;
+  return result;
 }
 
 export function writeIndexedTree(
@@ -165,7 +174,7 @@ export function writeIndexedTree(
   store: Store,
   targetForest: DataForest | OptimisticLayer,
   options: Cache.WriteOptions,
-  incomingResult: IndexedTree,
+  modifiedIncomingResult: IndexedTree,
   context: IndexedWrite,
 ): WriteResult {
   let existingResult =
@@ -175,15 +184,7 @@ export function writeIndexedTree(
       ? context.diff
       : (forest: IndexedForest, tree: IndexedTree) =>
           diffTree(forest, tree, env);
-  const operationDescriptor = incomingResult.operation;
-  const modifiedIncomingResult = applyMergePolicies(
-    env,
-    getEffectiveReadLayers(store, targetForest, false),
-    env.mergePolicies,
-    incomingResult,
-    options.overwrite ?? false,
-    context.kind === "patch" ? context.delivery.target : undefined,
-  );
+  const operationDescriptor = modifiedIncomingResult.operation;
 
   const difference = diff(targetForest, modifiedIncomingResult);
 
@@ -251,7 +252,6 @@ export function writeIndexedTree(
     affectedOperations,
     modifiedIncomingResult,
   );
-  incomingResult.prev = null;
   modifiedIncomingResult.prev = null;
 
   return {
