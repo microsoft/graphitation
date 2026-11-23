@@ -394,6 +394,35 @@ test("a site in the initial result uses original paths, aliases and variables", 
   });
 });
 
+test("a deferred embedded owner survives a write to its normalized child", () => {
+  const cache = new ForestRun();
+  const query = gql`
+    query {
+      info {
+        item { id text }
+        ... @defer { name }
+      }
+    }
+  `;
+  const delivery = execution(cache, query);
+  delivery.send({
+    data: { info: { __typename: "Info", item: message("1") } },
+    hasNext: true,
+  });
+  cache.writeFragment({
+    id: "Message:1",
+    fragment: gql`fragment Edit on Message { text }`,
+    data: { __typename: "Message", text: "edited" },
+  });
+  delivery.send({
+    incremental: [{ path: ["info"], data: { name: "delivered" } }],
+    hasNext: false,
+  });
+  expect(cache.readQuery({ query })).toMatchObject({
+    info: { item: { text: "edited" }, name: "delivered" },
+  });
+});
+
 test("aborting in an initial merge policy does not register a delivery", () => {
   const cache = new ForestRun({
     typePolicies: {

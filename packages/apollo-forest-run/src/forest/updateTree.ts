@@ -13,10 +13,10 @@ import type {
   ObjectDraft,
   SourceObject,
 } from "../values/types";
+import type { DeferredIndex } from "./deferred";
 import type { NodeDifferenceMap } from "../diff/types";
 import type {
   Draft,
-  DeferredWrite,
   ForestEnv,
   IndexedTree,
   UpdateTreeContext,
@@ -50,7 +50,7 @@ export function updateTree(
   base: IndexedTree,
   differenceMap: NodeDifferenceMap,
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
-  delivery?: DeferredWrite,
+  indexes?: readonly DeferredIndex[],
 ): UpdateTreeResult {
   const rootChunks = base.nodes.get(base.rootNodeKey);
   if (rootChunks?.length !== 1) {
@@ -62,10 +62,11 @@ export function updateTree(
     );
   }
   const rootChunk = rootChunks[0];
-  const materialized = delivery?.index.hasEmbedded
+  const materialized = indexes?.length
     ? new Map<SourceObject, SourceObject>()
     : undefined;
   const context: UpdateTreeContext = {
+    embeddedCopies: materialized,
     operation: base.operation,
     drafts: new Map(),
     changes: new Map(),
@@ -191,15 +192,11 @@ export function updateTree(
     missingFields,
     base,
   );
-  if (delivery && materialized) {
-    if (delivery.targets)
-      for (const target of delivery.targets) {
-        const draft = drafts.get(target.data);
-        if (isSourceObject(draft)) materialized.set(target.data, draft);
-      }
+  if (indexes && materialized) {
     for (const [source, data] of materialized) {
       const copy = updatedTree.dataMap.get(data)?.value;
-      if (copy && isObjectValue(copy)) delivery.index.rebind(source, copy);
+      if (copy && isObjectValue(copy))
+        for (const index of indexes) index.rebind(source, copy);
     }
   }
   if (env.apolloCompat_keepOrphanNodes) {
@@ -370,6 +367,8 @@ function createSourceCopiesUpToRoot(
   if (!draft) {
     draft = (Array.isArray(value) ? [...value] : { ...value }) as Draft;
     drafts.set(value, draft);
+    if (isObjectValue(from) && from.key === false && isSourceObject(draft))
+      context.embeddedCopies?.set(from.data, draft);
   }
   (parentDraft as any)[dataKey] = draft;
   return value;

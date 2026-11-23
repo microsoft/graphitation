@@ -76,7 +76,6 @@ export type DeferredExecution = {
 export type DeferredWrite = {
   owner: OperationId;
   index: DeferredIndex;
-  targets?: Iterable<ObjectChunk>;
 };
 
 export type HistoryFieldChange =
@@ -196,6 +195,7 @@ export type ChangedChunksMap = Map<
 > &
   Map<ObjectChunk, (FillerEntry | ReplacementEntry)[]>;
 export type UpdateTreeContext = {
+  embeddedCopies?: Map<SourceObject, SourceObject>;
   operation: OperationDescriptor;
   drafts: Map<Source, Draft>;
   missingFields: MissingFieldsMap;

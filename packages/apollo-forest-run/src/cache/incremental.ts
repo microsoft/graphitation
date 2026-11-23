@@ -165,7 +165,6 @@ export function writeIncremental(
       delivery: {
         index,
         owner: owner.id,
-        targets: embedded.map(([target]) => target.chunk),
       },
       diff: (layer) => {
         const graph = diffNodes(layer, nodes, env);

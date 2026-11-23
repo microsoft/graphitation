@@ -124,6 +124,7 @@ function updateObjectValue(
       if (!copy) {
         copy = { ...base.data };
         context.drafts.set(base.data, copy);
+        if (base.key === false) context.embeddedCopies?.set(base.data, copy);
       }
       context.statsLogger?.fieldMutation();
       copy[fieldInfo.dataKey] = updated;

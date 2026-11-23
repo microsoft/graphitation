@@ -18,6 +18,7 @@ import type {
 } from "./types";
 import { DataForest, OptimisticLayer } from "../cache/types";
 import { replaceTree } from "./addTree";
+import type { DeferredIndex } from "./deferred";
 import { NodeChunk } from "../values/types";
 import { createRegularHistoryEntry } from "../values/history";
 
@@ -41,12 +42,23 @@ export function updateAffectedTrees(
   for (const [operation, difference] of affectedOperations.entries()) {
     const currentTreeState = forest.trees.get(operation.id);
     assert(currentTreeState);
+    let indexes: DeferredIndex[] | undefined;
+    if (currentTreeState.pendingDeferred?.size)
+      for (const { index } of currentTreeState.pendingDeferred.values())
+        if (index.hasEmbedded) (indexes ??= []).push(index);
+    if (
+      delivery?.owner === operation.id &&
+      delivery.index.hasEmbedded &&
+      !indexes?.includes(delivery.index)
+    ) {
+      (indexes ??= []).push(delivery.index);
+    }
     const result = updateTree(
       env,
       currentTreeState,
       difference,
       getNodeChunks,
-      operation.id === delivery?.owner ? delivery : undefined,
+      indexes,
     );
     if (result.updatedTree === currentTreeState) {
       // nodeDifference may not be overlapping with selections of this tree.
