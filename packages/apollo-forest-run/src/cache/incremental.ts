@@ -2,16 +2,14 @@ import { Cache } from "@apollo/client";
 import { diffObject } from "../diff/diffObject";
 import { diffNodes } from "../diff/diffTree";
 import * as Difference from "../diff/difference";
-import { ValueDifference } from "../diff/types";
-import {
-  resolveNormalizedField,
-  resolveSelection,
-} from "../descriptor/resolvedSelection";
+import { resolveSelection } from "../descriptor/resolvedSelection";
+import { addDirtyChunkDifference } from "../forest/transformTree";
 import { indexTree } from "../forest/indexTree";
 import { DeferredIndex, DeferredPlaceholder } from "../forest/deferred";
 import { IndexedForest, IndexedTree } from "../forest/types";
 import { assert } from "../jsutils/assert";
 import {
+  createParentLocator,
   isObjectValue,
   isParentListRef,
   isRootRef,
@@ -188,31 +186,14 @@ function diffFragment(
   const graph = diffNodes(forest, children, env);
   const root = model.nodes.get(model.rootNodeKey)?.[0];
   assert(root);
-  let diff: ValueDifference | undefined = diffObject(
-    target.chunk,
-    root,
-    env,
-  ).difference;
-  if (!diff || !Difference.isDirty(diff)) return graph;
-  let ref = target.tree.dataMap.get(target.chunk.data);
-  while (ref?.parent) {
-    if (isParentListRef(ref)) {
-      const parent = Difference.createCompositeListDifference();
-      Difference.addListItemDifference(parent, ref.index, diff);
-      Difference.addDirtyListItem(parent, ref.index);
-      diff = parent;
-    } else {
-      const field = resolveNormalizedField(ref.parent.selection, ref.field);
-      const parent = Difference.createObjectDifference();
-      Difference.addFieldDifference(parent, field, diff);
-      Difference.addDirtyField(parent, field);
-      diff = parent;
-      if (ref.parent.key !== false) {
-        graph.nodeDifference.set(ref.parent.key, diff);
-        break;
-      }
-    }
-    ref = target.tree.dataMap.get(ref.parent.data);
+  const diff = diffObject(target.chunk, root, env).difference;
+  if (diff && Difference.isDirty(diff)) {
+    const findParent = createParentLocator(target.tree.dataMap);
+    addDirtyChunkDifference(
+      { findParent, nodeDifference: graph.nodeDifference },
+      target.chunk,
+      diff,
+    );
   }
   return graph;
 }
