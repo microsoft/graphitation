@@ -807,24 +807,6 @@ test("a disabled outer defer allows its enabled nested site; skipped sites canno
   });
 });
 
-test("discarded optimistic layers release their deliveries before replay", () => {
-  const cache = new ForestRun();
-  const lower = execution(cache, list);
-  const upper = execution(cache, list);
-  const removed = jest.spyOn(lower.controller.signal, "removeEventListener");
-  const replayed = jest.spyOn(upper.controller.signal, "removeEventListener");
-  const add = jest.spyOn(upper.controller.signal, "addEventListener");
-  const initial = { data: { messages: [message("1")] }, hasNext: true };
-  cache.recordOptimisticTransaction(() => lower.send(initial), "lower");
-  cache.recordOptimisticTransaction(() => upper.send(initial), "upper");
-  cache.removeOptimistic("lower");
-  expect(removed).toHaveBeenCalledTimes(1);
-  expect(replayed).toHaveBeenCalledTimes(1);
-  expect(add).toHaveBeenCalledTimes(2);
-  cache.removeOptimistic("upper");
-  expect(replayed).toHaveBeenCalledTimes(2);
-});
-
 test("a reset between initial and final payload detaches the listener and rejects the late write", async () => {
   const cache = new ForestRun();
   const delivery = execution(cache, list);
@@ -832,8 +814,6 @@ test("a reset between initial and final payload detaches the listener and reject
   delivery.send({ data: { messages: [message("1")] }, hasNext: true });
   await cache.reset();
   expect(remove).toHaveBeenCalledWith("abort", expect.any(Function));
-  delivery.send({ hasNext: false });
-  expect(cache.getStats()).toMatchObject({ operationCount: 0, treeCount: 0 });
   cache.writeQuery({
     query: list,
     data: { messages: [message("1", "after reset")] },

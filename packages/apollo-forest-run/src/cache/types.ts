@@ -93,7 +93,6 @@ export type TransformedResult = {
 };
 
 export type ExtendedForest = IndexedForest & {
-  activeDeliveries: Map<AbortSignal, () => void>;
   // Derived trees resulted from applying read policies
   readResults: Map<OperationDescriptor, TransformedResult>;
   mutations: Set<OperationDescriptor>;
@@ -113,6 +112,7 @@ export type OptimisticLayer = ExtendedForest & {
 export type CacheKey = string;
 
 export type Store = {
+  activeDeliveries: Set<() => void>;
   operations: Map<DocumentNode, Map<CacheKey, OperationDescriptor>>;
   dataForest: DataForest;
   optimisticLayers: OptimisticLayer[];

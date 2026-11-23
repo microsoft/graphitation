@@ -24,7 +24,6 @@ const DEFAULT_PARTITION: DefaultPartition = "__default__";
 
 export function createStore(_: CacheEnv): Store {
   const dataForest: DataForest = {
-    activeDeliveries: new Map(),
     trees: new Map(),
     operationsByNodes: new Map<NodeKey, Set<OperationId>>(),
     operationsByName: new Map(),
@@ -47,6 +46,7 @@ export function createStore(_: CacheEnv): Store {
   const partialReadResults = new Set<OperationDescriptor>();
   const optimisticLayers: OptimisticLayer[] = [];
   const store: Store = {
+    activeDeliveries: new Set(),
     operations: new Map(),
     dataForest,
     optimisticLayers,
@@ -286,7 +286,6 @@ export function createOptimisticLayer(
 ): OptimisticLayer {
   return {
     layerTag,
-    activeDeliveries: new Map(),
     trees: new Map(),
     operationsByNodes: new Map(),
     operationsWithErrors: new Set(),
@@ -358,12 +357,11 @@ export function removeOptimisticLayers<T>(
   // and essentially re-creates them.
 
   const lowestUnaffectedLayerIndex = optimisticLayers.indexOf(deletedLayers[0]);
-  const discardedLayers = optimisticLayers.splice(lowestUnaffectedLayerIndex);
-  for (const layer of discardedLayers) {
-    for (const dispose of layer.activeDeliveries.values()) dispose();
-  }
+  const oldLayers = [...optimisticLayers];
+  optimisticLayers.splice(lowestUnaffectedLayerIndex);
 
-  for (const layer of discardedLayers) {
+  for (let i = lowestUnaffectedLayerIndex; i < oldLayers.length; i++) {
+    const layer = oldLayers[i];
     if (!deletedLayers.includes(layer)) {
       layer.replay(cache);
     }
@@ -496,9 +494,7 @@ function removeDataTree(
 export function resetStore(store: Store): void {
   const { dataForest, optimisticReadResults, optimisticLayers, operations } =
     store;
-  for (const forest of [dataForest, ...optimisticLayers]) {
-    for (const dispose of forest.activeDeliveries.values()) dispose();
-  }
+  for (const dispose of store.activeDeliveries) dispose();
   dataForest.trees.clear();
   dataForest.extraRootIds.clear();
   dataForest.operationsByNodes.clear();
