@@ -531,9 +531,13 @@ test("unlabeled fragments can be distinguished by nested response keys", () => {
   });
 });
 
-test("gc neither removes nor reports a pending tree, then releases it after delivery", () => {
+test("gc evicts a pending tree and its late patch cannot write to a new execution", () => {
   const cache = new ForestRun({ maxOperationCount: 1, autoEvict: false });
   const delivery = execution(cache, list);
+  const removeListener = jest.spyOn(
+    delivery.controller.signal,
+    "removeEventListener",
+  );
   delivery.send({ data: { messages: [message("1")] }, hasNext: true });
   cache.writeQuery({
     query: gql`
@@ -543,21 +547,20 @@ test("gc neither removes nor reports a pending tree, then releases it after deli
     `,
     data: { x: 1 },
   });
-  expect(cache.gc()).toEqual([]);
-  delivery.send({ incremental: [namePart("one")], hasNext: false });
-  expect(cache.readQuery({ query: list })).toEqual({
-    messages: [message("1", "one")],
-  });
-  cache.writeQuery({
-    query: gql`
-      query Newest {
-        y
-      }
-    `,
-    data: { y: 2 },
-  });
-  expect(cache.gc()).toHaveLength(2);
+  expect(cache.gc()).toHaveLength(1);
+  expect(removeListener).toHaveBeenCalledWith("abort", expect.any(Function));
+  delivery.send({ incremental: [namePart("late")], hasNext: true });
   expect(cache.getStats().treeCount).toBe(1);
+  const next = execution(cache, list);
+  next.send({ data: { messages: [message("2")] }, hasNext: true });
+  delivery.send({ incremental: [namePart("stale")], hasNext: false });
+  expect(cache.readQuery({ query: list, returnPartialData: true })).toEqual({
+    messages: [message("2")],
+  });
+  next.send({ incremental: [namePart("two")], hasNext: false });
+  expect(cache.readQuery({ query: list })).toEqual({
+    messages: [message("2", "two")],
+  });
 });
 
 test("removing an optimistic prepend reveals the patched original entity", () => {

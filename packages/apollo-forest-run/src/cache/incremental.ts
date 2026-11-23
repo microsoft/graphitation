@@ -89,12 +89,14 @@ export function writeIncremental(
     if (tree && index.hasPending) {
       const pending = (tree.pendingDeferred ??= new Map());
       const dispose = () => {
+        store.activeDeliveries.delete(dispose);
         request.removeEventListener("abort", dispose);
         index.clear();
         pending.delete(request);
       };
       execution = { index, dispose };
       pending.set(request, execution);
+      store.activeDeliveries.add(dispose);
       request.addEventListener("abort", dispose, { once: true });
     }
   }

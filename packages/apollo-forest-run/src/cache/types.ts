@@ -112,6 +112,7 @@ export type OptimisticLayer = ExtendedForest & {
 export type CacheKey = string;
 
 export type Store = {
+  activeDeliveries: Set<() => void>;
   operations: Map<DocumentNode, Map<CacheKey, OperationDescriptor>>;
   dataForest: DataForest;
   optimisticLayers: OptimisticLayer[];

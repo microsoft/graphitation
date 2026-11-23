@@ -88,7 +88,9 @@ it does not guess which list item a replaced source represents.
 This requires the client to pass raw payloads through `cache.write` with the
 `Symbol.for("apollo.cache.incrementalDelivery.v1")` option and a per-execution
 abort signal. Cache writes without that option keep their existing behavior.
-Completion, abort, and cache reset release pending placeholders; they are not
+Pending deliveries do not prevent eviction. If the owning tree is evicted,
+its placeholders are released and later patches from that execution are ignored.
+Completion, abort, and cache reset also release pending placeholders; they are not
 part of serialized cache data. This protocol covers deferred object fragments,
 not streamed list items.
 

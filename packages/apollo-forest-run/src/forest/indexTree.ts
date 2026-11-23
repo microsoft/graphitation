@@ -381,21 +381,23 @@ function indexSourceObject(
       };
       assert(fieldInfo.selection && isSourceCompositeValue(value, fieldInfo));
       let fieldValue: CompositeValueChunk;
-      if (isArray(value) || isSourceObject(value)) {
+      if (isArray(value)) {
         context.delivery?.path.push(fieldInfo.dataKey);
-        fieldValue = isArray(value)
-          ? indexSourceList(
-              context,
-              value,
-              fieldInfo.selection,
-              entryParentInfo,
-            )
-          : indexSourceObject(
-              context,
-              value,
-              fieldInfo.selection,
-              entryParentInfo,
-            );
+        fieldValue = indexSourceList(
+          context,
+          value,
+          fieldInfo.selection,
+          entryParentInfo,
+        );
+        context.delivery?.path.pop();
+      } else if (isSourceObject(value)) {
+        context.delivery?.path.push(fieldInfo.dataKey);
+        fieldValue = indexSourceObject(
+          context,
+          value,
+          fieldInfo.selection,
+          entryParentInfo,
+        );
         context.delivery?.path.pop();
       } else if (value === null) {
         fieldValue = createCompositeNullChunk(

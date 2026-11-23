@@ -46,6 +46,7 @@ export function createStore(_: CacheEnv): Store {
   const partialReadResults = new Set<OperationDescriptor>();
   const optimisticLayers: OptimisticLayer[] = [];
   const store: Store = {
+    activeDeliveries: new Set(),
     operations: new Map(),
     dataForest,
     optimisticLayers,
@@ -160,15 +161,15 @@ export function evictOldData(
         continue; // Skip non-evictable operations entirely
       }
       removeDataTree(store, tree, partition);
-      evictedIds.push(opId);
     }
+
+    evictedIds.push(...evictableOperationIds);
   }
 
   return evictedIds;
 }
 
 function canEvict(env: CacheEnv, store: Store, resultTree: DataTree) {
-  if (resultTree.pendingDeferred?.size) return false;
   if (store.watches.has(resultTree.operation)) {
     return false;
   }
@@ -464,10 +465,14 @@ function removeDataTree(
     watches,
     atime,
   }: Store,
-  { operation }: ResultTree,
+  tree: ResultTree,
   partition: string,
 ) {
+  const { operation } = tree;
   assert(!watches.has(operation));
+  for (const execution of tree.pendingDeferred?.values() ?? EMPTY_ARRAY) {
+    execution.dispose();
+  }
   dataForest.trees.delete(operation.id);
   dataForest.readResults.delete(operation);
   dataForest.operationsWithErrors.delete(operation);
@@ -489,13 +494,7 @@ function removeDataTree(
 export function resetStore(store: Store): void {
   const { dataForest, optimisticReadResults, optimisticLayers, operations } =
     store;
-  for (const forest of [dataForest, ...optimisticLayers]) {
-    for (const tree of forest.trees.values()) {
-      for (const execution of tree.pendingDeferred?.values() ?? EMPTY_ARRAY) {
-        execution.dispose();
-      }
-    }
-  }
+  for (const dispose of store.activeDeliveries) dispose();
   dataForest.trees.clear();
   dataForest.extraRootIds.clear();
   dataForest.operationsByNodes.clear();
