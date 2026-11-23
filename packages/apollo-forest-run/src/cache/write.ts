@@ -49,7 +49,7 @@ type IndexedWrite =
   | {
       kind: "patch";
       delivery: DeferredWrite;
-      diff: (forest: IndexedForest, tree: IndexedTree) => GraphDifference;
+      diff: (forest: IndexedForest) => GraphDifference;
     };
 
 export function write(
@@ -182,11 +182,10 @@ export function writeIndexedTree(
   const diff =
     context.kind === "patch"
       ? context.diff
-      : (forest: IndexedForest, tree: IndexedTree) =>
-          diffTree(forest, tree, env);
+      : (forest: IndexedForest) => diffTree(forest, modifiedIncomingResult, env);
   const operationDescriptor = modifiedIncomingResult.operation;
 
-  const difference = diff(targetForest, modifiedIncomingResult);
+  const difference = diff(targetForest);
 
   if (difference.errors.length) {
     processDiffErrors(targetForest, modifiedIncomingResult, difference);
@@ -240,7 +239,6 @@ export function writeIndexedTree(
     store,
     affectedOperations,
     targetForest,
-    modifiedIncomingResult,
     diff,
   );
 
@@ -268,8 +266,7 @@ function appendAffectedOperationsFromOtherLayers(
   store: Store,
   affectedForestOperationsMutable: Map<OperationDescriptor, NodeDifferenceMap>,
   targetForest: DataForest | OptimisticLayer,
-  incomingResult: IndexedTree,
-  diff: (forest: IndexedForest, tree: IndexedTree) => GraphDifference,
+  diff: (forest: IndexedForest) => GraphDifference,
 ) {
   // Optimistic reads go through all existing layers
   //  And those layers may be affected by incoming results too, so we actually need to diff all other layers too
@@ -280,7 +277,7 @@ function appendAffectedOperationsFromOtherLayers(
     }
     resolveAffectedOperations(
       layer,
-      diff(layer, incomingResult),
+      diff(layer),
       affectedForestOperationsMutable,
     );
   }

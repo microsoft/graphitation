@@ -167,8 +167,8 @@ export function writeIncremental(
         owner: owner.id,
         targets: embedded.map(([target]) => target.chunk),
       },
-      diff: (layer, model) => {
-        const graph = diffNodes(layer, model.nodes, env);
+      diff: (layer) => {
+        const graph = diffNodes(layer, nodes, env);
         for (const [target, root] of embedded) {
           const diff = diffObject(target.chunk, root, env).difference;
           if (diff && Difference.isDirty(diff))
