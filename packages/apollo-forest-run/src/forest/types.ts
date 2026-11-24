@@ -37,6 +37,7 @@ import {
   NodeDifferenceMap,
 } from "../diff/types";
 import { HistoryConfig } from "../cache/types";
+import type { CollectedDeferTarget } from "./deferTargets";
 
 export type IndexedTree = {
   operation: OperationDescriptor;
@@ -59,6 +60,9 @@ export type IndexedTree = {
 
   // Tree changes
   history: CircularBuffer<HistoryChange>;
+
+  // Targets of deferred fragments found in an incremental result (set by indexing, consumed by the write)
+  deferTargets?: CollectedDeferTarget[];
 
   // ApolloCompat
   danglingReferences?: Set<NodeKey>;

@@ -30,7 +30,8 @@ import type {
   FieldReadFunction,
 } from "@apollo/client/cache/inmemory/policies";
 import type { TelemetryEvent } from "../telemetry/types";
-import type { DeferTargets } from "../forest/deferTargets";
+import type { DeferTargets, ResponsePath } from "../forest/deferTargets";
+import type { FormattedError } from "../descriptor/types";
 import { ExtendedLogger, Logger } from "../jsutils/logger";
 import { GraphDifference, GraphDiffError } from "../diff/diffTree";
 import { ObjectDifference } from "../diff/types";
@@ -129,7 +130,8 @@ export type Store = {
   // Pending scheduled auto-eviction
   pendingEviction: ScheduledEvictionHandle | null;
   // Pending @defer targets by incremental execution
-  deferTargets: WeakMap<object, DeferTargets>;
+  // State of incremental executions (by execution key)
+  incrementalExecutions: WeakMap<object, IncrementalExecution>;
 };
 
 export type Transaction = {
@@ -147,7 +149,7 @@ export type Transaction = {
 };
 
 export type WriteResult = {
-  options: Cache.WriteOptions;
+  options: WriteOptions;
   incoming: DataTree;
   affected: Iterable<OperationDescriptor>;
   affectedNodes: Set<NodeKey>; // contains directly updated nodes + parent nodes indirectly affected by nested node update
@@ -333,3 +335,79 @@ export type SerializedCache = Record<
   SerializedOperationKey,
   SerializedOperationInfo
 >;
+
+export type IncrementalExecution = {
+  targets: DeferTargets;
+  // Pending results of the latest incremental delivery format by id
+  pending: Map<string, PendingResult>;
+};
+
+// Results of incremental delivery: GraphQL incremental delivery format (`id`, `subPath`, `completed`)
+//   and the earlier draft (deferred fragments addressed by `path` and `label`).
+export type PendingResult = {
+  id?: string;
+  path: ResponsePath;
+  label?: string;
+};
+
+export type IncrementalDeferResult = {
+  data?: Record<string, unknown> | null;
+  errors?: ReadonlyArray<FormattedError>;
+  extensions?: Record<string, unknown>;
+  // Latest format
+  id?: string;
+  subPath?: ResponsePath;
+  // Earlier draft
+  path?: ResponsePath;
+  label?: string;
+};
+
+export type IncrementalStreamResult = {
+  items?: ReadonlyArray<unknown> | null;
+  errors?: ReadonlyArray<FormattedError>;
+  extensions?: Record<string, unknown>;
+  id?: string;
+  path?: ResponsePath;
+  label?: string;
+};
+
+export type CompletedResult = {
+  id: string;
+  errors?: ReadonlyArray<FormattedError>;
+};
+
+export type CompleteExecutionResult = {
+  data: Record<string, unknown>;
+  errors?: ReadonlyArray<FormattedError>;
+  extensions?: Record<string, unknown>;
+};
+
+export type InitialIncrementalExecutionResult = CompleteExecutionResult & {
+  pending?: ReadonlyArray<PendingResult>;
+  hasNext: boolean;
+};
+
+export type SubsequentIncrementalExecutionResult = {
+  pending?: ReadonlyArray<PendingResult>;
+  incremental?: ReadonlyArray<IncrementalDeferResult | IncrementalStreamResult>;
+  completed?: ReadonlyArray<CompletedResult>;
+  hasNext: boolean;
+  extensions?: Record<string, unknown>;
+};
+
+/**
+ * Anything that can be written to the cache: a complete result, or results of incremental delivery.
+ *
+ * `key` identifies an incremental execution (defaults to the operation, i.e. a single execution at a time).
+ */
+export type ExecutionResult = (
+  | CompleteExecutionResult
+  | InitialIncrementalExecutionResult
+  | SubsequentIncrementalExecutionResult
+) & { key?: object };
+
+export type WriteOptions = Omit<Cache.WriteOptions, "result"> & {
+  /** @deprecated Use `execution` (the result data is written as a complete result) */
+  result?: Cache.WriteOptions["result"];
+  execution?: ExecutionResult;
+};

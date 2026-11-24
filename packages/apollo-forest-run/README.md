@@ -241,22 +241,25 @@ No unnecessary allocations, structured sharing is guaranteed.
 
 Response paths of deferred fragments refer to the initial server response, not to the current cache state
 (e.g. after a list prepend `["messages", 0]` points to another message). So deferred fragments are written to
-the objects they were deferred on in the initial result:
+the objects they were deferred on in the initial result.
+
+Results of incremental delivery are written via `execution` (`result` is deprecated, and is written as a complete result):
 
 ```ts
-// Initial result: a regular write which also remembers targets of pending deferred fragments
-cache.writeInitialData({ query, variables, data, pending, token });
+// Initial result: a regular write, which also remembers targets of deferred fragments
+cache.write({ query, variables, execution: { data, pending, hasNext: true, key } });
 
-// Subsequent payload: every patch is a fragment write of the deferred selection to its target
-cache.writeIncrementalData({ query, variables, patches: [{ path, label, data }], token });
+// Subsequent result: every deferred fragment is written to its target as a fragment
+cache.write({ query, variables, execution: { pending, incremental, completed, hasNext, key } });
 ```
 
-- A target is an object key, plus a sub-path for objects embedded into their closest keyed ancestor.
-  Embedded objects are addressed by position (like client IDs in Relay).
+- Both the GraphQL incremental delivery format (`id`, `subPath`, `completed`) and its earlier draft
+  (deferred fragments with `path` and `label`) are supported. `@stream` is not supported.
+- A target is an object key, plus a path for objects embedded into their closest keyed ancestor
+  (embedded objects are addressed by position, like client IDs in Relay).
 - Fragments are written even if the operation doesn't reach the target anymore (missing objects are not created).
-- `token` identifies the execution: its targets are released together with it.
+- `key` identifies an execution (by default, the operation: a single execution at a time).
 - `label` may be omitted when a path has a single deferred fragment.
-
 ## Aggregated Entity Views
 
 In ForestRun, state of individual entity is spread across multiple GraphQL operation results.

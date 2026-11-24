@@ -238,11 +238,16 @@ function collectDeferSite(
   for (const ancestor of [...ancestors, node]) {
     for (const directive of ancestor.directives ?? EMPTY_ARRAY) {
       const name = directive.name.value;
-      if (name !== "defer" && name !== "include" && name !== "skip") continue;
-      // A nested site is first reached in its parent's delivery, unless
-      // that parent is included eagerly (@defer(if: false)).
-      const expected =
-        name === "include" || (name === "defer" && ancestor === node);
+      // A site is registered whenever its object is indexed, regardless of enclosing deferred fragments
+      //   (e.g. its object may be delivered before the enclosing fragment, in the initial result)
+      if (
+        name !== "include" &&
+        name !== "skip" &&
+        (name !== "defer" || ancestor !== node)
+      ) {
+        continue;
+      }
+      const expected = name !== "skip";
       const condition = findArgument(directive, "if")?.value;
       if (condition?.kind === "Variable") {
         conditions.push({

@@ -1,6 +1,10 @@
-import type { Cache } from "@apollo/client";
 import type { IndexedTree, UpdateTreeResult } from "../forest/types";
-import type { ObjectChunk, OperationResult } from "../values/types";
+import type {
+  GraphValue,
+  ObjectChunk,
+  OperationResult,
+  SourceObject,
+} from "../values/types";
 import type {
   CacheEnv,
   DataForest,
@@ -10,10 +14,17 @@ import type {
   Store,
   Transaction,
   WriteResult,
+  ExecutionResult,
+  IncrementalDeferResult,
+  IncrementalExecution,
+  PendingResult,
+  SubsequentIncrementalExecutionResult,
+  WriteOptions,
 } from "./types";
 import type { NodeKey, OperationDescriptor } from "../descriptor/types";
 import { assert } from "../jsutils/assert";
 import {
+  getFragmentDescriptor,
   isFragmentDocument,
   resolveResultDescriptor,
   resolveOperationDescriptor,
@@ -33,92 +44,347 @@ import {
   resolveAffectedOperations,
   updateAffectedTrees,
 } from "../forest/updateForest";
-import { DeferIndexing, indexTree } from "../forest/indexTree";
+import { indexTree } from "../forest/indexTree";
+import {
+  addDeferTarget,
+  DeferTarget,
+  deleteDeferTarget,
+  EmbeddedPath,
+  getDeferTarget,
+  resolveObjectAddress,
+  ResponsePath,
+} from "../forest/deferTargets";
+import {
+  resolveNormalizedField,
+  resolveSelection,
+} from "../descriptor/resolvedSelection";
 import { addDirtyChunkDifference } from "../forest/transformTree";
-import { createParentLocator, markAsPartial, TraverseEnv } from "../values";
+import {
+  createParentLocator,
+  isCompositeListValue,
+  isObjectValue,
+  isSourceObject,
+  markAsPartial,
+  resolveFieldValue,
+  resolveListItemChunk,
+  TraverseEnv,
+} from "../values";
 import { NodeDifferenceMap } from "../forest/updateTree";
 import { getNodeChunks } from "./draftHelpers";
 import { replaceTree } from "../forest/addTree";
 import { invalidateReadResults } from "./invalidate";
 import { IndexedForest } from "../forest/types";
 
-/**
- * Internal fragment write of a (non-registered) fragment descriptor to an existing object.
- * The result is never retained as a separate tree.
- */
-export type FragmentWrite = {
-  operation: OperationDescriptor;
-  dataId: NodeKey;
-  // Object embedded into `dataId` at some sub-path (data is diffed against it)
-  embedded?: { tree: IndexedTree; chunk: ObjectChunk };
+type ResultWrite = {
+  // Key of the written object (when it is not the root node of the operation)
+  rootNodeKey?: NodeKey;
+  // Object embedded into its closest node, which the result is written to
+  embedded?: EmbeddedObject;
+  // Collects targets of deferred fragments found in the result
+  defer?: {
+    execution: IncrementalExecution;
+    path: ResponsePath;
+    // Address of the root of an embedded result
+    root?: { dataId: NodeKey; subPath: EmbeddedPath };
+  };
 };
 
-// Root key of a fragment written to an embedded object (never leaves the incoming tree)
-const EMBEDDED_ROOT_KEY = "__FOREST_RUN_EMBEDDED_FRAGMENT__";
+type EmbeddedObject = { tree: IndexedTree; chunk: ObjectChunk };
 
+// Root key of a result written to an embedded object (never leaves the incoming tree)
+const EMBEDDED_ROOT_KEY = "__FOREST_RUN_EMBEDDED_OBJECT__";
+
+/**
+ * Writes a complete result, or results of incremental delivery (see `ExecutionResult`).
+ *
+ * An initial result is written as a complete result, additionally remembering targets of its deferred fragments.
+ * Each deferred fragment of a subsequent result is written to its target as a fragment.
+ */
 export function write(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
-  options: Cache.WriteOptions,
-  fragment?: FragmentWrite,
-  deferIndexing?: DeferIndexing,
-): WriteResult {
-  const { mergePolicies, objectKey, addTypename, keyMap } = env;
-  const targetForest = getActiveForest(store, activeTransaction);
-
+  options: WriteOptions,
+): WriteResult[] {
+  const { objectKey, keyMap } = env;
+  const execution: ExecutionResult = options.execution ?? {
+    data:
+      typeof options.result === "object" && options.result !== null
+        ? options.result
+        : {},
+  };
   const writeData =
-    typeof options.result === "object" && options.result !== null
-      ? options.result
-      : {};
-  const rootNodeKey = fragment
-    ? fragment.dataId
-    : options.dataId ?? objectKey(writeData);
+    "data" in execution ? ((execution.data ?? {}) as SourceObject) : undefined;
+  const rootNodeKey =
+    options.dataId ?? (writeData ? objectKey(writeData) : undefined);
   assert(rootNodeKey !== false);
 
   // ApolloCompat (apollo allows writing fragments without proper id in the data)
-  if (rootNodeKey !== undefined && options.dataId) {
+  if (writeData && rootNodeKey !== undefined && options.dataId) {
     keyMap?.set(writeData, rootNodeKey);
   }
-  const operationDescriptor =
-    fragment?.operation ??
-    resolveOperationDescriptor(
-      env,
-      store,
-      options.query,
-      options.variables,
-      rootNodeKey,
-    );
-  if (!fragment) {
-    touchOperation(env, store, operationDescriptor);
-  }
-  if (!operationDescriptor.cache && !fragment) {
+  const operationDescriptor = resolveOperationDescriptor(
+    env,
+    store,
+    options.query,
+    options.variables,
+    rootNodeKey,
+  );
+  touchOperation(env, store, operationDescriptor);
+  if (!operationDescriptor.cache) {
     // Results of this operation are never stored, so nothing will ever evict its descriptor.
     // Remember it, so that the outermost transaction can release it on completion.
     // (the set only exists when `env.cleanupNonCacheableOperations` is enabled)
     activeTransaction.nonCacheableOperations?.add(operationDescriptor);
   }
-  const operationResult: OperationResult = { data: writeData };
-
+  if (!writeData) {
+    return writeIncremental(
+      env,
+      store,
+      activeTransaction,
+      operationDescriptor,
+      options,
+      execution as SubsequentIncrementalExecutionResult & { key?: object },
+    );
+  }
   if (
     !ROOT_TYPES.includes(operationDescriptor.rootType) &&
     rootNodeKey === undefined
   ) {
     throw new Error(`Could not identify object ${inspect(writeData)}`);
   }
+  if (!("hasNext" in execution) || !execution.hasNext) {
+    return [
+      writeResult(env, store, activeTransaction, operationDescriptor, options, {
+        data: writeData,
+      }),
+    ];
+  }
+  // Initial result of an incremental execution
+  const incremental: IncrementalExecution = {
+    targets: new Map(),
+    pending: new Map(),
+  };
+  addPendingResults(incremental, execution.pending);
+  store.incrementalExecutions.set(
+    execution.key ?? resolveResultDescriptor(env, store, operationDescriptor),
+    incremental,
+  );
+  return [
+    writeResult(
+      env,
+      store,
+      activeTransaction,
+      operationDescriptor,
+      options,
+      { data: writeData, hasNext: true } as OperationResult,
+      { defer: { execution: incremental, path: [] } },
+    ),
+  ];
+}
 
-  let existingResult = getExistingResult(
+function writeIncremental(
+  env: CacheEnv,
+  store: Store,
+  activeTransaction: Transaction,
+  operation: OperationDescriptor,
+  options: WriteOptions,
+  execution: SubsequentIncrementalExecutionResult & { key?: object },
+): WriteResult[] {
+  const key = execution.key ?? resolveResultDescriptor(env, store, operation);
+  const incremental = store.incrementalExecutions.get(key);
+  if (!incremental) {
+    return [];
+  }
+  addPendingResults(incremental, execution.pending);
+
+  const results: WriteResult[] = [];
+  for (const entry of execution.incremental ?? EMPTY_ARRAY) {
+    // Note: streamed list items (`items`) are not supported
+    if (!("data" in entry) || !isSourceObject(entry.data)) {
+      continue;
+    }
+    const pending =
+      entry.id !== undefined ? incremental.pending.get(entry.id) : entry;
+    const target =
+      pending?.path &&
+      getDeferTarget(incremental.targets, pending.path, pending.label);
+    if (!target) {
+      continue;
+    }
+    if (entry.id === undefined) {
+      // Earlier draft: every deferred fragment is delivered in a single payload
+      deleteDeferTarget(incremental.targets, target);
+    }
+    const result = writeDeferredFragment(
+      env,
+      store,
+      activeTransaction,
+      operation,
+      options,
+      incremental,
+      target,
+      entry as IncrementalDeferResult & { data: SourceObject },
+    );
+    if (result) {
+      results.push(result);
+    }
+  }
+  for (const { id } of execution.completed ?? EMPTY_ARRAY) {
+    const pending = incremental.pending.get(id);
+    const target =
+      pending &&
+      getDeferTarget(incremental.targets, pending.path, pending.label);
+    if (target) {
+      deleteDeferTarget(incremental.targets, target);
+    }
+    incremental.pending.delete(id);
+  }
+  if (!execution.hasNext) {
+    store.incrementalExecutions.delete(key);
+  }
+  return results;
+}
+
+/**
+ * Writes data of a deferred fragment (or of an object within it at `subPath`) to the object the fragment
+ * was deferred on, even if the operation doesn't reach that object anymore (missing objects are not created).
+ */
+function writeDeferredFragment(
+  env: CacheEnv,
+  store: Store,
+  activeTransaction: Transaction,
+  operation: OperationDescriptor,
+  options: WriteOptions,
+  incremental: IncrementalExecution,
+  target: DeferTarget,
+  entry: IncrementalDeferResult & { data: SourceObject },
+): WriteResult | undefined {
+  let { selection, typeName } = target;
+  const subPath = [...target.subPath];
+  for (const step of entry.subPath ?? EMPTY_ARRAY) {
+    if (typeof step === "number") {
+      subPath.push(step);
+      continue;
+    }
+    const resolved = resolveSelection(operation, selection, typeName ?? null);
+    const field = resolved.fieldQueue.find((field) => field.dataKey === step);
+    if (!field?.selection) {
+      return;
+    }
+    subPath.push(resolveNormalizedField(resolved, field));
+    selection = field.selection;
+    typeName = undefined;
+  }
+  const data = { ...entry.data };
+  typeName ??= data.__typename;
+  if (typeName) {
+    data.__typename ??= typeName;
+  }
+  const forest = getActiveForest(store, activeTransaction);
+  const object = resolveTargetObject(forest, target.dataId, subPath);
+  if (!object) {
+    return;
+  }
+  const path = entry.path ?? [
+    ...(incremental.pending.get(entry.id as string)?.path ?? EMPTY_ARRAY),
+    ...(entry.subPath ?? EMPTY_ARRAY),
+  ];
+  return writeResult(
     env,
     store,
-    targetForest,
-    operationDescriptor,
+    activeTransaction,
+    getFragmentDescriptor(env, operation, selection, typeName ?? ""),
+    { ...options, dataId: undefined },
+    { ...entry, data } as OperationResult,
+    {
+      rootNodeKey: object.embedded ? EMBEDDED_ROOT_KEY : object.dataId,
+      embedded: object.embedded,
+      defer: {
+        execution: incremental,
+        path,
+        root: object.embedded ? object : undefined,
+      },
+    },
   );
+}
+
+/**
+ * Resolves the target object of a deferred fragment in the cache (without creating anything).
+ */
+function resolveTargetObject(
+  forest: IndexedForest,
+  dataId: NodeKey,
+  subPath: EmbeddedPath,
+):
+  | { dataId: NodeKey; subPath: EmbeddedPath; embedded?: EmbeddedObject }
+  | undefined {
+  if (!subPath.length) {
+    return { dataId, subPath };
+  }
+  for (const operationId of forest.operationsByNodes.get(dataId) ?? []) {
+    const tree = forest.trees.get(operationId);
+    for (const node of tree?.nodes.get(dataId) ?? EMPTY_ARRAY) {
+      let value = node as GraphValue | undefined;
+      for (let i = 0; i < subPath.length && value; i++) {
+        const step = subPath[i];
+        if (typeof step === "number") {
+          value =
+            isCompositeListValue(value) && !value.isAggregate
+              ? resolveListItemChunk(value, step)
+              : undefined;
+        } else {
+          value =
+            isObjectValue(value) && !value.isAggregate
+              ? resolveFieldValue(value, step)
+              : undefined;
+        }
+        if (value && isObjectValue(value) && !value.isAggregate && value.key) {
+          // The path continues within another node
+          return resolveTargetObject(forest, value.key, subPath.slice(i + 1));
+        }
+      }
+      if (tree && value && isObjectValue(value) && !value.isAggregate) {
+        return { dataId, subPath, embedded: { tree, chunk: value } };
+      }
+    }
+  }
+  return undefined;
+}
+
+function addPendingResults(
+  incremental: IncrementalExecution,
+  pending: ReadonlyArray<PendingResult> | undefined,
+) {
+  for (const result of pending ?? EMPTY_ARRAY) {
+    if (result.id !== undefined) {
+      incremental.pending.set(result.id, result);
+    }
+  }
+}
+
+function writeResult(
+  env: CacheEnv,
+  store: Store,
+  activeTransaction: Transaction,
+  operationDescriptor: OperationDescriptor,
+  options: WriteOptions,
+  operationResult: OperationResult,
+  { rootNodeKey, embedded, defer }: ResultWrite = {},
+): WriteResult {
+  const { mergePolicies, addTypename } = env;
+  const targetForest = getActiveForest(store, activeTransaction);
+  const writeData = operationResult.data;
+
+  let existingResult = rootNodeKey
+    ? undefined
+    : getExistingResult(env, store, targetForest, operationDescriptor);
   const existingData = existingResult?.result.data;
 
   // Safeguard: make sure previous state doesn't leak outside write operation
   assert(!existingResult?.prev);
 
-  if (writeData === existingData && existingResult && !deferIndexing) {
+  if (writeData === existingData && existingResult && !defer) {
     return {
       options,
       incoming: existingResult,
@@ -129,7 +395,7 @@ export function write(
     };
   }
 
-  if (!ROOT_NODES.includes(operationDescriptor.rootNodeKey)) {
+  if (!rootNodeKey && !ROOT_NODES.includes(operationDescriptor.rootNodeKey)) {
     const typeName = resolveExtraRootNodeType(
       env,
       store,
@@ -152,9 +418,9 @@ export function write(
     operationResult,
     undefined,
     existingResult,
-    deferIndexing,
-    fragment && (fragment.embedded ? EMBEDDED_ROOT_KEY : fragment.dataId),
+    rootNodeKey,
   );
+  const incomingRootKey = incomingResult.rootNodeKey;
 
   // ApolloCompat: necessary for fragment writes with custom ids
   if (options.dataId && incomingResult.rootNodeKey !== options.dataId) {
@@ -171,10 +437,17 @@ export function write(
     mergePolicies,
     incomingResult,
     options.overwrite ?? false,
-    fragment?.embedded?.chunk,
+    embedded?.chunk,
   );
+  if (defer) {
+    addDeferTargets(
+      defer,
+      incomingResult,
+      modifiedIncomingResult,
+      incomingRootKey,
+    );
+  }
 
-  const embedded = fragment?.embedded;
   const diff = (forest: IndexedForest) =>
     embedded
       ? diffEmbedded(env, forest, modifiedIncomingResult, embedded)
@@ -214,9 +487,10 @@ export function write(
     modifiedIncomingResult,
   );
 
+  // Results written to a specific object (deferred fragments) are not stored
   if (
     !existingResult &&
-    !fragment &&
+    !rootNodeKey &&
     shouldCache(targetForest, operationDescriptor)
   ) {
     affectedOperations.set(operationDescriptor, difference.nodeDifference);
@@ -254,6 +528,44 @@ export function write(
   };
 }
 
+/**
+ * Registers targets of deferred fragments found while indexing a result.
+ * Merge policies may move embedded objects (e.g. append a page to existing list items),
+ * so their addresses are resolved in the final result.
+ */
+function addDeferTargets(
+  { execution, path, root }: NonNullable<ResultWrite["defer"]>,
+  indexed: IndexedTree,
+  merged: IndexedTree,
+  rootKey: NodeKey,
+) {
+  const findParent = createParentLocator(merged.dataMap);
+  for (const { target, source } of indexed.deferTargets ?? EMPTY_ARRAY) {
+    let { dataId, subPath } = target;
+    if (subPath.length && merged !== indexed) {
+      const chunk = merged.dataMap.get(source)?.value;
+      const address =
+        chunk && isObjectValue(chunk) && !chunk.isAggregate
+          ? resolveObjectAddress(findParent, chunk, rootKey)
+          : undefined;
+      if (!address) {
+        continue;
+      }
+      ({ dataId, subPath } = address);
+    }
+    if (root && dataId === rootKey) {
+      dataId = root.dataId;
+      subPath = [...root.subPath, ...subPath];
+    }
+    addDeferTarget(execution.targets, {
+      ...target,
+      path: [...path, ...target.path],
+      dataId,
+      subPath,
+    });
+  }
+  indexed.deferTargets = undefined;
+}
 function appendAffectedOperationsFromOtherLayers(
   store: Store,
   affectedForestOperationsMutable: Map<OperationDescriptor, NodeDifferenceMap>,
@@ -283,7 +595,7 @@ function diffEmbedded(
   env: CacheEnv,
   forest: IndexedForest,
   incoming: IndexedTree,
-  target: NonNullable<FragmentWrite["embedded"]>,
+  target: EmbeddedObject,
 ): GraphDifference {
   const nodes = new Map(incoming.nodes);
   const [root] = nodes.get(incoming.rootNodeKey) ?? EMPTY_ARRAY;

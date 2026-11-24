@@ -72,6 +72,8 @@ export function getFragmentDescriptor(
       id: env.genId?.() ?? 0,
       possibleSelections: selection,
       rootType,
+      // The object to write to is chosen per write
+      rootNodeKey: "",
       selections: new Map(),
       keyVariables: null,
       covers: [],

@@ -10,9 +10,12 @@ export type {
 } from "./telemetry/types";
 export type { ForestRunAdditionalConfig } from "./cache/types";
 export type {
-  InitialWriteOptions,
-  IncrementalWriteOptions,
-} from "./cache/incremental";
+  CompleteExecutionResult,
+  ExecutionResult,
+  InitialIncrementalExecutionResult,
+  SubsequentIncrementalExecutionResult,
+  WriteOptions,
+} from "./cache/types";
 
 export { OPERATION_HISTORY_SYMBOL } from "./descriptor/operation";
 

@@ -56,7 +56,7 @@ export function createStore(_: CacheEnv): Store {
     atime: new Map(),
     partitions: new WeakMap(),
     pendingEviction: null,
-    deferTargets: new WeakMap(),
+    incrementalExecutions: new WeakMap(),
   };
   return store;
 }
@@ -501,7 +501,7 @@ export function resetStore(store: Store): void {
   operations.clear();
   optimisticReadResults.clear();
   optimisticLayers.length = 0;
-  store.deferTargets = new WeakMap();
+  store.incrementalExecutions = new WeakMap();
 }
 
 const getRootNode = (result: IndexedTree): NodeChunk | undefined =>

@@ -17,7 +17,7 @@ import type {
   SerializedOperationInfo,
   Store,
   Transaction,
-  WriteResult,
+  WriteOptions,
 } from "./cache/types";
 import { ApolloCache } from "@apollo/client";
 import { assert } from "./jsutils/assert";
@@ -42,12 +42,6 @@ import {
   transformDocument,
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
-import {
-  IncrementalWriteOptions,
-  InitialWriteOptions,
-  writeIncrementalData,
-  writeInitialData,
-} from "./cache/incremental";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -206,7 +200,10 @@ export class ForestRun<
     return result.dirty;
   }
 
-  public write(options: Cache.WriteOptions): Reference | undefined {
+  /**
+   * Writes a complete result, or results of incremental delivery (`@defer`) via `options.execution`.
+   */
+  public write(options: WriteOptions): Reference | undefined {
     return this.transactionStack.length
       ? this.runWrite(options)
       : this.runTransaction({
@@ -214,43 +211,18 @@ export class ForestRun<
         });
   }
 
-  /**
-   * Writes the initial result of an incremental (`@defer`) execution.
-   * Its deferred fragments are written later by `writeIncrementalData` with the same `token`.
-   */
-  public writeInitialData(options: InitialWriteOptions): void {
-    this.runWrites((transaction) => [
-      writeInitialData(this.env, this.store, transaction, options),
-    ]);
-  }
-
-  public writeIncrementalData(options: IncrementalWriteOptions): void {
-    this.runWrites((transaction) =>
-      writeIncrementalData(this.env, this.store, transaction, options),
-    );
-  }
-
-  private runWrites(writes: (transaction: Transaction) => WriteResult[]) {
-    const run = () => {
-      const transaction = peek(this.transactionStack);
-      assert(transaction);
-      transaction.changelog.push(...writes(transaction));
-    };
-    return this.transactionStack.length
-      ? run()
-      : this.runTransaction({ update: run });
-  }
-
-  private runWrite(options: Cache.WriteOptions): Reference | undefined {
+  private runWrite(options: WriteOptions): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
-    const result = write(this.env, this.store, transaction, options);
-    transaction.changelog.push(result);
+    const results = write(this.env, this.store, transaction, options);
+    transaction.changelog.push(...results);
 
-    const incoming = result.incoming;
+    if (options.execution && !("data" in options.execution)) {
+      return undefined;
+    }
+    const incoming = results[0].incoming;
     return incoming.nodes.size ? getRef(incoming.rootNodeKey) : undefined;
   }
-
   private collectAffectedOperationsAndNodes(transaction: Transaction) {
     transaction.affectedOperations ??= new Set();
     transaction.affectedNodes ??= new Set();
