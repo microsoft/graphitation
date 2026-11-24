@@ -31,8 +31,6 @@ export function replaceTree(
   tree: IndexedTree,
 ) {
   const { trees } = forest;
-  const pending = trees.get(tree.operation.id)?.pendingDeferred;
-  if (pending?.size) tree.pendingDeferred = pending;
   trees.set(tree.operation.id, tree);
 
   trackTreeNodes(forest, tree);

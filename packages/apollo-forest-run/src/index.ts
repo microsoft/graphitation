@@ -10,6 +10,14 @@ export type {
 } from "./telemetry/types";
 export type { ForestRunAdditionalConfig } from "./cache/types";
 
+export { handleIncrementalSymbol } from "./cache/incremental";
+export type {
+  DiffIncrementalInfo,
+  IncrementalPatch,
+  WriteIncrementalInfo,
+  WriteOptions,
+} from "./cache/incremental";
+
 export { OPERATION_HISTORY_SYMBOL } from "./descriptor/operation";
 
 // Exports for the devtools

@@ -46,7 +46,6 @@ export function createStore(_: CacheEnv): Store {
   const partialReadResults = new Set<OperationDescriptor>();
   const optimisticLayers: OptimisticLayer[] = [];
   const store: Store = {
-    activeDeliveries: new Set(),
     operations: new Map(),
     dataForest,
     optimisticLayers,
@@ -57,6 +56,7 @@ export function createStore(_: CacheEnv): Store {
     atime: new Map(),
     partitions: new WeakMap(),
     pendingEviction: null,
+    deferIndexes: new WeakMap(),
   };
   return store;
 }
@@ -465,14 +465,10 @@ function removeDataTree(
     watches,
     atime,
   }: Store,
-  tree: ResultTree,
+  { operation }: ResultTree,
   partition: string,
 ) {
-  const { operation } = tree;
   assert(!watches.has(operation));
-  for (const execution of tree.pendingDeferred?.values() ?? EMPTY_ARRAY) {
-    execution.dispose();
-  }
   dataForest.trees.delete(operation.id);
   dataForest.readResults.delete(operation);
   dataForest.operationsWithErrors.delete(operation);
@@ -494,7 +490,6 @@ function removeDataTree(
 export function resetStore(store: Store): void {
   const { dataForest, optimisticReadResults, optimisticLayers, operations } =
     store;
-  for (const dispose of store.activeDeliveries) dispose();
   dataForest.trees.clear();
   dataForest.extraRootIds.clear();
   dataForest.operationsByNodes.clear();
@@ -506,6 +501,7 @@ export function resetStore(store: Store): void {
   operations.clear();
   optimisticReadResults.clear();
   optimisticLayers.length = 0;
+  store.deferIndexes = new WeakMap();
 }
 
 const getRootNode = (result: IndexedTree): NodeChunk | undefined =>

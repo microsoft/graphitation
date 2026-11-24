@@ -74,6 +74,7 @@ export type DocumentDescriptor = {
 export type ResultTreeDescriptor = {
   possibleSelections: PossibleSelections;
   fieldsWithArgs: FieldInfo[]; // aggregated from all levels
+  hasDeferSites: boolean;
 };
 
 // Selection with additional information based on operation variables (resolved at runtime)
@@ -95,6 +96,7 @@ export type OperationDescriptor = {
   definition: OperationDefinitionNode;
   hasDefaultValues: boolean;
   possibleSelections: PossibleSelections;
+  hasDeferSites: boolean;
   variables: VariableValues;
   variablesWithDefaults: VariableValues;
   variablesKey: string; // Stringified, normalized variables

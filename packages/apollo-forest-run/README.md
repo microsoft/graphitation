@@ -63,36 +63,6 @@ capture history of every GraphQL result.
 
 Let's briefly walk through every step individually.
 
-### Incremental `@defer` delivery
-
-For clients supplying raw `deferSpec=20220824` query payloads, ForestRun compiles
-each `@defer` site into the document descriptor alongside the usual field selections.
-As the indexer descends through the payload, it tracks field aliases and list
-indices on one path stack. Only a deferred fragment needs a saved path, which
-binds its label to the original chunk. These bindings belong to the indexed tree and the individual execution;
-an ordinary cache write does not recalculate them from a newer list or relationship.
-Only the initial result registers placeholders. A single `@defer` can target an
-object deep in that result, but nested delivery sites introduced by a patch
-are not supported. A consumed placeholder is not reused for duplicate entries.
-ForestRun applies patches in delivery order within one cache transaction. A
-merge policy sees the result of preceding patches, and watchers see the final
-transaction result. If every patch writes only scalar fields without merge
-policies to a distinct, reachable cache ID, ForestRun updates the affected
-trees once for the whole payload instead.
-If the original entity is no longer reachable, ForestRun consumes the placeholder
-without restoring the entity or writing to its replacement. For an embedded
-object without a cache key it requires the original source or a tracked copy;
-it does not guess which list item a replaced source represents.
-
-This requires the client to pass raw payloads through `cache.write` with the
-`Symbol.for("apollo.cache.incrementalDelivery.v1")` option and a per-execution
-abort signal. Cache writes without that option keep their existing behavior.
-Pending deliveries do not prevent eviction. If the owning tree is evicted,
-its placeholders are released and later patches from that execution are ignored.
-Completion, abort, and cache reset also release pending placeholders; they are not
-part of serialized cache data. This protocol covers deferred object fragments,
-not streamed list items.
-
 ### 1. Indexing operation result
 
 Indexing is a process of remembering positions of individual nodes (objects having identity) inside operation result.
@@ -267,6 +237,55 @@ Objects and lists that didn't change are recycled.
 
 No unnecessary allocations, structured sharing is guaranteed.
 
+## Incremental delivery (`@defer`)
+
+Response paths of deferred fragments refer to the original server response, not to the current cache state.
+E.g. after a list prepend, `["messages", 0]` points to another message. So ForestRun writes deferred fragments
+to the cache objects they were deferred on in the initial result instead:
+
+1. The initial result is a regular write. In addition, indexing records a cache address of every pending
+   deferred fragment: the object key, or for an embedded object, the path from its closest keyed ancestor.
+   These targets belong to the result tree of the operation and survive its updates.
+2. Every deferred fragment of a subsequent payload is written as a fragment write of the deferred selection
+   to its target object (in payload order, within a single transaction). Merge policies, optimistic layers
+   and watches work as for any other write. Nested deferred fragments of a patch are registered the same way.
+
+A fragment is written to its original entity even if the operation doesn't reach it anymore (deleted or evicted
+entities are not re-created). Embedded objects are addressed by their position within the closest entity.
+For operations without a stored result (e.g. mutations), targets are kept for the lifetime of the execution
+and only entity targets are written.
+
+Clients opt in via the `handleIncrementalSymbol` write option of `@apollo/client` 4
+(`Symbol.for("apollo.cache.handleIncremental")`), with an extension for subsequent payloads:
+
+```ts
+// Initial result
+cache.write({
+  query,
+  variables,
+  result,
+  [handleIncrementalSymbol]: { isDeferPending },
+});
+
+// Subsequent payload: patches are applied instead of `result`
+cache.write({
+  query,
+  variables,
+  result: {},
+  [handleIncrementalSymbol]: {
+    isDeferPending,
+    incremental: [{ path, label, data }],
+    hasNext,
+  },
+});
+```
+
+- `isDeferPending` must be the same function for all writes of an execution (patches of other executions are ignored).
+  A new initial result replaces targets of the previous execution. The final payload (`hasNext: false`) releases them.
+- Deferred fragments are identified by `path` and `label`. Unlabeled fragments sharing a path are ambiguous and
+  are not written (label every `@defer`, e.g. with a document transform).
+- `@stream` is not supported.
+
 ## Aggregated Entity Views
 
 In ForestRun, state of individual entity is spread across multiple GraphQL operation results.
@@ -280,7 +299,6 @@ This is achieved through aggregated entity views.
 It is basically a short-living object that is created on demand (e.g. for diffing phase). This object is fed
 with different chunks of the same entity found in different GraphQL results (via indexing) and so is a convenience tool
 to represent single entity state from multiple chunks.
-
 
 [1]: ./docs/normalization-pitfalls.md
 [2]: https://medium.com/open-graphql/graphql-subscriptions-vs-live-queries-e38302c7ab8e

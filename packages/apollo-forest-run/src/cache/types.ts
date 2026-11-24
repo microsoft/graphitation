@@ -30,6 +30,7 @@ import type {
   FieldReadFunction,
 } from "@apollo/client/cache/inmemory/policies";
 import type { TelemetryEvent } from "../telemetry/types";
+import type { DeferIndex } from "../forest/deferIndex";
 import { ExtendedLogger, Logger } from "../jsutils/logger";
 import { GraphDifference, GraphDiffError } from "../diff/diffTree";
 import { ObjectDifference } from "../diff/types";
@@ -112,7 +113,6 @@ export type OptimisticLayer = ExtendedForest & {
 export type CacheKey = string;
 
 export type Store = {
-  activeDeliveries: Set<() => void>;
   operations: Map<DocumentNode, Map<CacheKey, OperationDescriptor>>;
   dataForest: DataForest;
   optimisticLayers: OptimisticLayer[];
@@ -128,6 +128,8 @@ export type Store = {
   partitions: WeakMap<IndexedTree, ResolvedPartition>;
   // Pending scheduled auto-eviction
   pendingEviction: ScheduledEvictionHandle | null;
+  // @defer targets of executions whose result trees are not stored (e.g. mutations), by execution
+  deferIndexes: WeakMap<object, DeferIndex>;
 };
 
 export type Transaction = {

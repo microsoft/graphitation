@@ -42,7 +42,7 @@ import {
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
 import {
-  incrementalDelivery,
+  handleIncrementalSymbol,
   WriteOptions,
   writeIncremental,
 } from "./cache/incremental";
@@ -100,7 +100,6 @@ const getRef = (ref: string) => REFS_POOL.get(ref) ?? { __ref: ref };
 export class ForestRun<
   TPartitions extends HistoryPartitions = any,
 > extends ApolloCache<SerializedCache> {
-  public readonly [incrementalDelivery] = true;
   public rawConfig: InMemoryCacheConfig;
   protected env: CacheEnv<TPartitions>;
   protected store: Store;
@@ -216,18 +215,28 @@ export class ForestRun<
   private runWrite(options: WriteOptions): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
-    const delivery = options[incrementalDelivery];
-    if (delivery) {
-      const result = writeIncremental(
+    const incrementalInfo = options[handleIncrementalSymbol];
+    if (incrementalInfo?.incremental) {
+      const results = writeIncremental(
         this.env,
         this.store,
         transaction,
         options,
-        delivery,
+        incrementalInfo,
       );
-      return result && getRef(options.dataId ?? "ROOT_QUERY");
+      transaction.changelog.push(...results);
+      return getRef(options.dataId ?? "ROOT_QUERY");
     }
-    const result = write(this.env, this.store, transaction, options);
+    const result = write(
+      this.env,
+      this.store,
+      transaction,
+      options,
+      incrementalInfo && {
+        execution: incrementalInfo.isDeferPending,
+        isDeferPending: incrementalInfo.isDeferPending,
+      },
+    );
     transaction.changelog.push(result);
 
     const incoming = result.incoming;

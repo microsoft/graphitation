@@ -7,7 +7,9 @@ import type { CacheEnv, CacheKey, Store } from "./types";
 import type {
   DocumentDescriptor,
   OperationDescriptor,
+  PossibleSelections,
   ResultTreeDescriptor,
+  TypeName,
 } from "../descriptor/types";
 import { equal } from "@wry/equality";
 import { describeDocument } from "../descriptor/document";
@@ -35,6 +37,50 @@ const definitionsCache = new WeakMap<DefinitionNode, DefinitionNode>();
 const documentDescriptors = new WeakMap<DocumentNode, DocumentDescriptor>();
 const resultTreeDescriptors = new WeakMap<DocumentNode, ResultTreeDescriptor>();
 const diffDescriptors = new WeakMap<Cache.DiffOptions, OperationDescriptor>();
+const fragmentDescriptors = new WeakMap<
+  OperationDescriptor,
+  Map<PossibleSelections, Map<TypeName, OperationDescriptor>>
+>();
+
+/**
+ * Describes a fragment of an operation as a standalone operation, e.g. to write its data
+ * to an arbitrary cache object (pass the object key as `dataId` to the write).
+ *
+ * Derived descriptors are not registered in the store and their results are never retained.
+ */
+export function getFragmentDescriptor(
+  env: CacheEnv,
+  operation: OperationDescriptor,
+  selection: PossibleSelections,
+  rootType: TypeName,
+): OperationDescriptor {
+  let bySelection = fragmentDescriptors.get(operation);
+  if (!bySelection) {
+    bySelection = new Map();
+    fragmentDescriptors.set(operation, bySelection);
+  }
+  let byType = bySelection.get(selection);
+  if (!byType) {
+    byType = new Map();
+    bySelection.set(selection, byType);
+  }
+  let descriptor = byType.get(rootType);
+  if (!descriptor) {
+    descriptor = {
+      ...operation,
+      id: env.genId?.() ?? 0,
+      possibleSelections: selection,
+      rootType,
+      selections: new Map(),
+      keyVariables: null,
+      covers: [],
+      historySize: 0,
+      cache: false,
+    };
+    byType.set(rootType, descriptor);
+  }
+  return descriptor;
+}
 
 export function resolveOperationDescriptor(
   env: CacheEnv,

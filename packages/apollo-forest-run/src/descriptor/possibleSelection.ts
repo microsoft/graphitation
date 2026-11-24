@@ -65,12 +65,14 @@ export function describeResultTree(
     fragmentSelections: new Map(),
   };
 
+  const possibleSelections = collectPossibleSelections(
+    context,
+    doc.definition.selectionSet,
+  );
   return {
-    possibleSelections: collectPossibleSelections(
-      context,
-      doc.definition.selectionSet,
-    ),
+    possibleSelections,
     fieldsWithArgs: context.fieldsWithArgs,
+    hasDeferSites: context.fragmentSelections.size > 0,
   };
 }
 

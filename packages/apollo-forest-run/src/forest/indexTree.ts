@@ -18,12 +18,20 @@ import type {
   ParentLocator,
 } from "../values/types";
 import type {
+  NodeKey,
   NormalizedFieldEntry,
   OperationDescriptor,
   PossibleSelections,
+  ResolvedSelection,
+  TypeName,
 } from "../descriptor/types";
 import type { ForestEnv, IndexedTree } from "./types";
-import { DeferredIndex, deferredPathKey, DeliveryScope } from "./deferred";
+import {
+  addDeferTarget,
+  createDeferIndex,
+  DeferIndex,
+  ResponsePath,
+} from "./deferIndex";
 import { ValueKind } from "../values/types";
 import {
   getFieldName,
@@ -66,10 +74,31 @@ type Context = {
   incompleteChunks: Set<ObjectChunk>;
   recycleTree: IndexedTree | null;
   findParent: ParentLocator;
-  delivery?: {
-    path: (string | number)[];
-    index: DeferredIndex;
-  };
+  defer: DeferContext | undefined;
+};
+
+/**
+ * Collects @defer targets of an incremental execution while indexing its result.
+ */
+export type DeferIndexing = {
+  // Index to add targets to (a new one is created when omitted)
+  index?: DeferIndex;
+  // Opaque execution identity stored in a newly created index
+  execution?: unknown;
+  // Response path of the indexed result root
+  path?: ResponsePath;
+  // Cache address of the result root (defaults to the root node of the tree)
+  anchor?: { nodeKey: NodeKey; path: ResponsePath };
+  isDeferPending?: (path: ResponsePath, label: string | undefined) => boolean;
+};
+
+type DeferContext = {
+  index: DeferIndex;
+  path: (string | number)[];
+  anchorKey: NodeKey;
+  anchorDepth: number;
+  anchorPath: ResponsePath;
+  isDeferPending: DeferIndexing["isDeferPending"];
 };
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -81,13 +110,13 @@ export function indexTree(
   result: OperationResult,
   knownMissingFields?: MissingFieldsMap,
   previousTreeState: IndexedTree | null = null,
-  delivery?: DeliveryScope,
+  deferIndexing?: DeferIndexing,
+  explicitRootNodeKey?: NodeKey,
 ): IndexedTree {
-  let rootNodeKey;
+  let rootNodeKey = explicitRootNodeKey;
   try {
-    rootNodeKey =
-      delivery?.rootNodeKey ??
-      (env.objectKey(
+    rootNodeKey ??=
+      env.objectKey(
         result.data,
         resolveSelection(
           operation,
@@ -95,11 +124,14 @@ export function indexTree(
           operation.rootType,
         ),
         operation,
-      ) ||
-        operation.rootNodeKey);
+      ) || operation.rootNodeKey;
   } catch (e) {
     rootNodeKey = operation.rootNodeKey;
   }
+  const defer =
+    deferIndexing && operation.hasDeferSites
+      ? createDeferContext(deferIndexing, rootNodeKey)
+      : undefined;
   const dataMap = new Map();
   const context: Context = {
     env: env,
@@ -112,9 +144,10 @@ export function indexTree(
     indexedSources: 0,
     incompleteChunks: new Set(),
     rootNodeKey,
-    recycleTree: delivery ? null : previousTreeState,
-    delivery: delivery?.index && { path: [], index: delivery.index },
+    // Recycled chunks are not traversed, so their defer targets would be missed
+    recycleTree: defer ? null : previousTreeState,
     findParent: createParentLocator(dataMap),
+    defer,
   };
   const rootRef: RootChunkReference = {
     value: null,
@@ -139,12 +172,34 @@ export function indexTree(
     history:
       previousTreeState?.history ?? new CircularBuffer(operation.historySize),
   };
+  // Response paths belong to the execution, so targets are never re-indexed from the current data
+  const deferIndex = deferIndexing
+    ? defer?.index
+    : previousTreeState?.deferIndex;
+  if (deferIndex) {
+    tree.deferIndex = deferIndex;
+  }
   // Every composite occurrence is counted, but dataMap keeps only unique sources.
   // This detects sharing without an additional map lookup or allocation per chunk.
   if (context.indexedSources === dataMap.size) {
     return tree;
   }
-  return reindexSharedTree(env, tree, rootRef.value, delivery);
+  return reindexSharedTree(env, tree, rootRef.value);
+}
+
+function createDeferContext(
+  { index, execution, path, anchor, isDeferPending }: DeferIndexing,
+  rootNodeKey: NodeKey,
+): DeferContext {
+  const responsePath = path ? [...path] : [];
+  return {
+    index: index ?? createDeferIndex(execution),
+    path: responsePath,
+    anchorKey: anchor?.nodeKey ?? rootNodeKey,
+    anchorDepth: responsePath.length,
+    anchorPath: anchor?.path ?? EMPTY_ARRAY,
+    isDeferPending,
+  };
 }
 
 // Matches ObjectChunkReference structure with additional fields
@@ -189,6 +244,7 @@ export function indexObject(
     rootNodeKey,
     recycleTree: null,
     findParent: createParentLocator(dataMap),
+    defer: undefined,
   };
   const result = {
     value: null as unknown,
@@ -232,25 +288,24 @@ function reindexSharedTree(
   env: ForestEnv,
   tree: IndexedTree,
   root: ObjectChunk,
-  delivery?: DeliveryScope,
 ): IndexedTree {
   const repaired = cloneSharedReferences(env, root);
   // Malformed, out-of-range list chunks may overcount without sharing actual data.
   if (repaired.data === tree.result.data) {
     return tree;
   }
-  // The placeholders from this initial write must point to the rebuilt chunks.
-  delivery?.index?.clear();
   const repairedTree = indexTree(
     env,
     tree.operation,
     { ...tree.result, data: repaired.data },
     repaired.missingFields,
-    null,
-    delivery,
   );
   repairedTree.prev = tree.prev;
   repairedTree.history = tree.history;
+  // Targets are addresses, so the ones collected from the shared data remain valid
+  if (tree.deferIndex) {
+    repairedTree.deferIndex = tree.deferIndex;
+  }
   return repairedTree;
 }
 
@@ -316,10 +371,16 @@ function indexSourceObject(
     context.indexedSources++;
   }
 
-  if (context.delivery && chunk.selection.deferredFragments) {
-    const { path, index } = context.delivery;
-    for (const { label, selection } of chunk.selection.deferredFragments) {
-      index.add(deferredPathKey(path, label), chunk, selection);
+  const defer = context.defer;
+  if (defer) {
+    if (key !== false && !isRoot) {
+      // Restored by the caller (see indexNested)
+      defer.anchorKey = key;
+      defer.anchorDepth = defer.path.length;
+      defer.anchorPath = EMPTY_ARRAY;
+    }
+    if (selection.deferredFragments) {
+      addDeferTargets(defer, typeName, selection.deferredFragments);
     }
   }
   if (missingFields?.size) {
@@ -362,23 +423,23 @@ function indexSourceObject(
       assert(fieldInfo.selection && isSourceCompositeValue(value, fieldInfo));
       let fieldValue: CompositeValueChunk;
       if (isArray(value)) {
-        context.delivery?.path.push(fieldInfo.dataKey);
-        fieldValue = indexSourceList(
+        fieldValue = indexNested(
           context,
+          indexSourceList,
           value,
           fieldInfo.selection,
           entryParentInfo,
+          fieldInfo.dataKey,
         );
-        context.delivery?.path.pop();
       } else if (isSourceObject(value)) {
-        context.delivery?.path.push(fieldInfo.dataKey);
-        fieldValue = indexSourceObject(
+        fieldValue = indexNested(
           context,
+          indexSourceObject,
           value,
           fieldInfo.selection,
           entryParentInfo,
+          fieldInfo.dataKey,
         );
-        context.delivery?.path.pop();
       } else if (value === null) {
         fieldValue = createCompositeNullChunk(
           context.operation,
@@ -433,11 +494,24 @@ function indexSourceList(
       index,
     };
     let item;
-    context.delivery?.path.push(index);
     if (Array.isArray(value)) {
-      item = indexSourceList(context, value, selection, itemParent);
+      item = indexNested(
+        context,
+        indexSourceList,
+        value,
+        selection,
+        itemParent,
+        index,
+      );
     } else if (isSourceObject(value)) {
-      item = indexSourceObject(context, value, selection, itemParent);
+      item = indexNested(
+        context,
+        indexSourceObject,
+        value,
+        selection,
+        itemParent,
+        index,
+      );
     } else if (value === null) {
       item = createCompositeNullChunk(operation, selection);
     } else {
@@ -453,10 +527,62 @@ function indexSourceList(
       context.incompleteChunks.add(item);
     }
     itemParent.value = item;
-    context.delivery?.path.pop();
     chunk.itemChunks[index] = itemParent;
   }
   return chunk;
+}
+
+function indexNested<
+  T extends SourceObject | SourceCompositeList,
+  R extends CompositeValueChunk,
+>(
+  context: Context,
+  indexValue: (
+    context: Context,
+    value: T,
+    selection: PossibleSelections,
+    parent: GraphChunkReference,
+  ) => R,
+  value: T,
+  selection: PossibleSelections,
+  parent: GraphChunkReference,
+  pathSegment: string | number,
+): R {
+  const defer = context.defer;
+  if (!defer) {
+    return indexValue(context, value, selection, parent);
+  }
+  const { anchorKey, anchorDepth, anchorPath } = defer;
+  defer.path.push(pathSegment);
+  const chunk = indexValue(context, value, selection, parent);
+  defer.path.pop();
+  defer.anchorKey = anchorKey;
+  defer.anchorDepth = anchorDepth;
+  defer.anchorPath = anchorPath;
+  return chunk;
+}
+
+function addDeferTargets(
+  defer: DeferContext,
+  typeName: TypeName | undefined,
+  fragments: NonNullable<ResolvedSelection["deferredFragments"]>,
+) {
+  const { index, path, anchorKey, anchorDepth, anchorPath, isDeferPending } =
+    defer;
+  for (const { label, selection } of fragments) {
+    if (isDeferPending && !isDeferPending(path, label)) {
+      continue;
+    }
+    addDeferTarget(index, [...path], label, {
+      nodeKey: anchorKey,
+      path:
+        anchorDepth === path.length && !anchorPath.length
+          ? EMPTY_ARRAY
+          : [...anchorPath, ...path.slice(anchorDepth)],
+      typeName,
+      selection,
+    });
+  }
 }
 
 function reIndexObject(
