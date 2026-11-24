@@ -23,6 +23,7 @@ import type {
   FragmentMap,
   SpreadInfo,
   WatchBoundary,
+  DeferLabel,
   DeferSite,
 } from "./types";
 import { accumulate, getOrCreate } from "../jsutils/map";
@@ -270,9 +271,15 @@ function collectDeferSite(
   const target = getOrCreate(selections, type ?? null, createEmptySelection);
   (target.deferSites ??= []).push({
     selection,
-    label: findArgument(defer, "label")?.value,
+    label: getStaticLabel(defer),
     conditions,
   });
+}
+
+// Labels must be static strings (GraphQL spec: "Defer And Stream Directive Labels Are Unique")
+function getStaticLabel(defer: DirectiveNode): DeferLabel | undefined {
+  const label = findArgument(defer, "label")?.value;
+  return label?.kind === "StringValue" ? label.value : undefined;
 }
 
 /**

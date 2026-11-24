@@ -122,7 +122,7 @@ export function resolveSelection(
         return [];
       return [
         {
-          label: site.label && valueFromASTUntyped(site.label, variables),
+          label: site.label,
           selection: site.selection,
         },
       ];

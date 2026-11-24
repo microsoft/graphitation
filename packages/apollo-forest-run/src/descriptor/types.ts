@@ -168,7 +168,7 @@ export type PossibleSelection = {
 // the selection that can be written by its incremental payload.
 export type DeferSite = {
   selection: PossibleSelections;
-  label?: ValueNode;
+  label?: DeferLabel;
   conditions: { variable: VariableName; expected: boolean; defer: boolean }[];
 };
 
