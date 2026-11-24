@@ -24,8 +24,6 @@ import type {
   PossibleSelections,
 } from "../descriptor/types";
 import type { ForestEnv, IndexedTree } from "./types";
-import type { CollectedDeferTarget } from "./types";
-import { resolveObjectAddress } from "./deferTargets";
 import { ValueKind } from "../values/types";
 import {
   getFieldName,
@@ -68,7 +66,7 @@ type Context = {
   incompleteChunks: Set<ObjectChunk>;
   recycleTree: IndexedTree | null;
   findParent: ParentLocator;
-  deferTargets: CollectedDeferTarget[] | undefined;
+  deferredChunks: ObjectChunk[] | undefined;
 };
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -78,7 +76,7 @@ const isArray = Array.isArray;
  * Indexes an operation result.
  *
  * For results of incremental delivery (the initial result or a deferred fragment), additionally collects
- * targets of the deferred fragments it contains (relative to the result root).
+ * objects with deferred fragments (see IndexedTree.deferredChunks).
  */
 export function indexTree(
   env: ForestEnv,
@@ -108,9 +106,9 @@ export function indexTree(
   } catch (e) {
     rootNodeKey = operation.rootNodeKey;
   }
-  const deferTargets =
+  const deferredChunks =
     operation.hasDeferSites && isIncrementalResult(result)
-      ? ([] as CollectedDeferTarget[])
+      ? ([] as ObjectChunk[])
       : undefined;
   const dataMap = new Map();
   const context: Context = {
@@ -125,9 +123,9 @@ export function indexTree(
     incompleteChunks: new Set(),
     rootNodeKey,
     // Recycled objects are not visited (recycling doesn't apply to incremental results anyways)
-    recycleTree: deferTargets ? null : previousTreeState,
+    recycleTree: deferredChunks ? null : previousTreeState,
     findParent: createParentLocator(dataMap),
-    deferTargets,
+    deferredChunks,
   };
   const rootRef: RootChunkReference = {
     value: null,
@@ -152,8 +150,8 @@ export function indexTree(
     history:
       previousTreeState?.history ?? new CircularBuffer(operation.historySize),
   };
-  if (deferTargets?.length) {
-    tree.deferTargets = deferTargets;
+  if (deferredChunks?.length) {
+    tree.deferredChunks = deferredChunks;
   }
   // Every composite occurrence is counted, but dataMap keeps only unique sources.
   // This detects sharing without an additional map lookup or allocation per chunk.
@@ -210,7 +208,7 @@ export function indexObject(
     rootNodeKey,
     recycleTree: null,
     findParent: createParentLocator(dataMap),
-    deferTargets: undefined,
+    deferredChunks: undefined,
   };
   const result = {
     value: null as unknown,
@@ -335,8 +333,8 @@ function indexSourceObject(
     context.indexedSources++;
   }
 
-  if (context.deferTargets && selection.deferredFragments) {
-    collectDeferTargets(context, context.deferTargets, chunk);
+  if (context.deferredChunks && selection.deferredFragments) {
+    context.deferredChunks.push(chunk);
   }
   if (missingFields?.size) {
     markAsPartial(context, parent);
@@ -469,35 +467,6 @@ function indexSourceList(
   return chunk;
 }
 
-function collectDeferTargets(
-  context: Context,
-  deferTargets: CollectedDeferTarget[],
-  chunk: ObjectChunk,
-) {
-  const address = resolveObjectAddress(
-    context.findParent,
-    chunk,
-    context.rootNodeKey,
-  );
-  if (!address) {
-    return;
-  }
-  const path = getDataPathForDebugging(context, chunk);
-  for (const { label, selection } of chunk.selection.deferredFragments ??
-    EMPTY_ARRAY) {
-    deferTargets.push({
-      target: {
-        label,
-        path,
-        dataId: address.dataId,
-        subPath: address.subPath,
-        typeName: chunk.type || undefined,
-        selection,
-      },
-      source: chunk.data,
-    });
-  }
-}
 function reIndexObject(
   context: Context,
   recyclable: ObjectChunk,

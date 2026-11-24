@@ -60,6 +60,7 @@ import {
 import { addDirtyChunkDifference } from "../forest/transformTree";
 import {
   createParentLocator,
+  getDataPathForDebugging,
   isCompositeListValue,
   isObjectValue,
   isSourceObject,
@@ -528,8 +529,9 @@ function writeResult(
 
 /**
  * Registers targets of deferred fragments found while indexing a result.
- * Merge policies may move embedded objects (e.g. append a page to existing list items),
- * so their addresses are resolved in the final result.
+ *
+ * Response paths come from the indexed result. Merge policies may move embedded objects
+ * (e.g. append a page to existing list items), so cache addresses are resolved in the merged result.
  */
 function addDeferTargets(
   { execution, path, root }: NonNullable<ResultWrite["defer"]>,
@@ -537,32 +539,39 @@ function addDeferTargets(
   merged: IndexedTree,
   rootKey: NodeKey,
 ) {
-  const findParent = createParentLocator(merged.dataMap);
-  for (const { target, source } of indexed.deferTargets ?? EMPTY_ARRAY) {
-    let { dataId, subPath } = target;
-    if (subPath.length && merged !== indexed) {
-      const chunk = merged.dataMap.get(source)?.value;
-      const address =
-        chunk && isObjectValue(chunk) && !chunk.isAggregate
-          ? resolveObjectAddress(findParent, chunk, rootKey)
-          : undefined;
-      if (!address) {
-        continue;
-      }
-      ({ dataId, subPath } = address);
+  const findIndexedParent = createParentLocator(indexed.dataMap);
+  const findMergedParent = createParentLocator(merged.dataMap);
+  for (const chunk of indexed.deferredChunks ?? EMPTY_ARRAY) {
+    const mergedChunk = merged.dataMap.get(chunk.data)?.value;
+    const address =
+      mergedChunk && isObjectValue(mergedChunk) && !mergedChunk.isAggregate
+        ? resolveObjectAddress(findMergedParent, mergedChunk, rootKey)
+        : undefined;
+    if (!address) {
+      continue;
     }
+    let { dataId, subPath } = address;
     if (root && dataId === rootKey) {
       dataId = root.dataId;
       subPath = [...root.subPath, ...subPath];
     }
-    addDeferTarget(execution.targets, {
-      ...target,
-      path: [...path, ...target.path],
-      dataId,
-      subPath,
-    });
+    const responsePath = [
+      ...path,
+      ...getDataPathForDebugging({ findParent: findIndexedParent }, chunk),
+    ];
+    for (const { label, selection } of chunk.selection.deferredFragments ??
+      EMPTY_ARRAY) {
+      addDeferTarget(execution.targets, {
+        label,
+        path: responsePath,
+        dataId,
+        subPath,
+        typeName: chunk.type || undefined,
+        selection,
+      });
+    }
   }
-  indexed.deferTargets = undefined;
+  indexed.deferredChunks = undefined;
 }
 function appendAffectedOperationsFromOtherLayers(
   store: Store,

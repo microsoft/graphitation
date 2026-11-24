@@ -62,8 +62,8 @@ export type IndexedTree = {
   // Tree changes
   history: CircularBuffer<HistoryChange>;
 
-  // Targets of deferred fragments found in an incremental result (set by indexing, consumed by the write)
-  deferTargets?: CollectedDeferTarget[];
+  // Objects with deferred fragments found in an incremental result (set by indexing, consumed by the write)
+  deferredChunks?: ObjectChunk[];
 
   // ApolloCompat
   danglingReferences?: Set<NodeKey>;
@@ -269,12 +269,6 @@ export type DeferTarget = {
   subPath: EmbeddedPath;
   typeName: TypeName | undefined;
   selection: PossibleSelections;
-};
-
-// A target found while indexing a result (addressed relative to the result root)
-export type CollectedDeferTarget = {
-  target: DeferTarget;
-  source: SourceObject;
 };
 
 // Response path and label of a deferred fragment
