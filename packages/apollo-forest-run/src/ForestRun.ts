@@ -214,13 +214,11 @@ export class ForestRun<
   private runWrite(options: WriteOptions): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
-    const results = write(this.env, this.store, transaction, options);
-    transaction.changelog.push(...results);
-
-    if (options.execution && !("data" in options.execution)) {
+    const result = write(this.env, this.store, transaction, options);
+    if (!result) {
       return undefined;
     }
-    const incoming = results[0].incoming;
+    const incoming = result.incoming;
     return incoming.nodes.size ? getRef(incoming.rootNodeKey) : undefined;
   }
   private collectAffectedOperationsAndNodes(transaction: Transaction) {

@@ -15,7 +15,6 @@ import type {
   Transaction,
   WriteResult,
   ExecutionKey,
-  ExecutionResult,
   IncrementalDeferResult,
   IncrementalExecution,
   PendingResult,
@@ -103,22 +102,25 @@ const EMBEDDED_ROOT_KEY = "__FOREST_RUN_EMBEDDED_OBJECT__";
  *
  * An initial result is written as a complete result, additionally remembering targets of its deferred fragments.
  * Each deferred fragment of a subsequent result is written to its target as a fragment.
+ *
+ * Results are appended to the transaction changelog. Returns the result of a complete or an initial result.
  */
 export function write(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
   options: WriteOptions,
-): WriteResult[] {
+): WriteResult | undefined {
   const { objectKey, keyMap } = env;
-  const execution: ExecutionResult = options.execution ?? {
-    data:
-      typeof options.result === "object" && options.result !== null
+  const execution = options.execution;
+  // Note: the common path (complete results) must not allocate anything for incremental delivery
+  const writeData = !execution
+    ? ((typeof options.result === "object" && options.result !== null
         ? options.result
-        : {},
-  };
-  const writeData =
-    "data" in execution ? ((execution.data ?? {}) as SourceObject) : undefined;
+        : {}) as SourceObject)
+    : "data" in execution
+    ? ((execution.data ?? {}) as SourceObject)
+    : undefined;
   const rootNodeKey =
     options.dataId ?? (writeData ? objectKey(writeData) : undefined);
   assert(rootNodeKey !== false);
@@ -142,7 +144,8 @@ export function write(
     activeTransaction.nonCacheableOperations?.add(operationDescriptor);
   }
   if (!writeData) {
-    return writeIncremental(
+    // Subsequent results of incremental delivery
+    for (const result of writeIncremental(
       env,
       store,
       activeTransaction,
@@ -151,7 +154,10 @@ export function write(
       execution as SubsequentIncrementalExecutionResult & {
         key?: ExecutionKey;
       },
-    );
+    )) {
+      activeTransaction.changelog.push(result);
+    }
+    return undefined;
   }
   if (
     !ROOT_TYPES.includes(operationDescriptor.rootType) &&
@@ -159,12 +165,17 @@ export function write(
   ) {
     throw new Error(`Could not identify object ${inspect(writeData)}`);
   }
-  if (!("hasNext" in execution) || !execution.hasNext) {
-    return [
-      writeResult(env, store, activeTransaction, operationDescriptor, options, {
-        data: writeData,
-      }),
-    ];
+  if (!execution || !("hasNext" in execution) || !execution.hasNext) {
+    const result = writeResult(
+      env,
+      store,
+      activeTransaction,
+      operationDescriptor,
+      options,
+      { data: writeData },
+    );
+    activeTransaction.changelog.push(result);
+    return result;
   }
   // Initial result of an incremental execution
   const incremental: IncrementalExecution = {
@@ -174,17 +185,17 @@ export function write(
   };
   addPendingResults(incremental, execution.pending);
   store.incrementalExecutions.set(operationDescriptor, incremental);
-  return [
-    writeResult(
-      env,
-      store,
-      activeTransaction,
-      operationDescriptor,
-      options,
-      { data: writeData, hasNext: true } as OperationResult,
-      { defer: { execution: incremental, path: [], isFragment: false } },
-    ),
-  ];
+  const result = writeResult(
+    env,
+    store,
+    activeTransaction,
+    operationDescriptor,
+    options,
+    { data: writeData, hasNext: true } as OperationResult,
+    { defer: { execution: incremental, path: [], isFragment: false } },
+  );
+  activeTransaction.changelog.push(result);
+  return result;
 }
 
 function writeIncremental(
@@ -378,8 +389,11 @@ function writeResult(
   operationDescriptor: OperationDescriptor,
   options: WriteOptions,
   operationResult: OperationResult,
-  { rootNodeKey, embedded, defer }: ResultWrite = {},
+  resultWrite?: ResultWrite,
 ): WriteResult {
+  const rootNodeKey = resultWrite?.rootNodeKey;
+  const embedded = resultWrite?.embedded;
+  const defer = resultWrite?.defer;
   const { mergePolicies, addTypename } = env;
   const targetForest = getActiveForest(store, activeTransaction);
   const writeData = operationResult.data;
@@ -456,11 +470,9 @@ function writeResult(
     );
   }
 
-  const diff = (forest: IndexedForest) =>
-    embedded
-      ? diffEmbedded(env, forest, modifiedIncomingResult, embedded)
-      : diffTree(forest, modifiedIncomingResult, env);
-  const difference = diff(targetForest);
+  const difference = embedded
+    ? diffEmbedded(env, targetForest, modifiedIncomingResult, embedded)
+    : diffTree(targetForest, modifiedIncomingResult, env);
 
   if (difference.errors.length) {
     processDiffErrors(targetForest, modifiedIncomingResult, difference);
@@ -509,10 +521,12 @@ function writeResult(
   }
 
   appendAffectedOperationsFromOtherLayers(
+    env,
     store,
     affectedOperations,
     targetForest,
-    diff,
+    modifiedIncomingResult,
+    embedded,
   );
 
   invalidateReadResults(
@@ -644,10 +658,12 @@ function targetKey(path: ResponsePath): DeferTargetKey {
   return JSON.stringify(path);
 }
 function appendAffectedOperationsFromOtherLayers(
+  env: CacheEnv,
   store: Store,
   affectedForestOperationsMutable: Map<OperationDescriptor, NodeDifferenceMap>,
   targetForest: DataForest | OptimisticLayer,
-  diff: (forest: IndexedForest) => GraphDifference,
+  incomingResult: IndexedTree,
+  embedded: EmbeddedObject | undefined,
 ) {
   // Optimistic reads go through all existing layers
   //  And those layers may be affected by incoming results too, so we actually need to diff all other layers too
@@ -658,7 +674,9 @@ function appendAffectedOperationsFromOtherLayers(
     }
     resolveAffectedOperations(
       layer,
-      diff(layer),
+      embedded
+        ? diffEmbedded(env, layer, incomingResult, embedded)
+        : diffTree(layer, incomingResult, env),
       affectedForestOperationsMutable,
     );
   }
