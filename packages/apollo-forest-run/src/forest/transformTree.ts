@@ -57,6 +57,10 @@ export type Transformer = {
   ): ValueDifference | undefined;
 };
 
+type TransformOptions = {
+  skipIncompatibleDifferences?: boolean;
+};
+
 const enum DirtyState {
   Clean,
   Dirty,
@@ -68,6 +72,7 @@ type TreeState = {
   nodeDifference: NodeDifferenceMap;
   intermediateTree: IndexedTree;
   findParent: ParentLocator;
+  skipIncompatibleDifferences: boolean;
 };
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -98,12 +103,14 @@ export function transformTree(
   direction: "ASCEND" | "DESCEND",
   chunkFilter: ChunkFilter,
   transformer: Transformer,
+  options: TransformOptions = {},
 ): IndexedTree {
   const treeState: TreeState = {
     dirty: DirtyState.Clean,
     nodeDifference: new Map(),
     intermediateTree: tree,
     findParent: createParentLocator(tree.dataMap),
+    skipIncompatibleDifferences: options.skipIncompatibleDifferences ?? false,
   };
   let level = 0; // For "DESCEND" mode level 0 points to root chunk. For "ASCEND" mode - to the deepest chunks
   let chunks = collectChunks(tree, direction, chunkFilter);
@@ -197,6 +204,7 @@ function transformChunkFields(
         fieldDifference?.state,
       );
       if (valueDifference && Difference.isDirty(valueDifference)) {
+        markTransformDifference(treeState, valueDifference);
         chunkDiff ??= addDifference(
           treeState,
           parentNode,
@@ -337,6 +345,7 @@ function addDifference(
   chunk: ObjectChunk,
   chunkDifference: ObjectDifference,
 ): ObjectDifference {
+  markTransformDifference(treeState, chunkDifference);
   const { nodeDifference } = treeState;
   let nodeDiff = nodeDifference.get(parentNode.key);
   if (chunk === parentNode) {
@@ -345,7 +354,10 @@ function addDifference(
     return chunkDifference;
   }
   if (!nodeDiff) {
-    nodeDiff = Difference.createObjectDifference();
+    nodeDiff = markTransformDifference(
+      treeState,
+      Difference.createObjectDifference(),
+    );
     nodeDifference.set(parentNode.key, nodeDiff);
   }
   addEmbeddedChunkDifference(
@@ -430,7 +442,9 @@ function addEmbeddedChunkDifference(
         Difference.addFieldDifference(
           parentDiff,
           field,
-          value === chunk ? chunkDifference : createValueDifference(value),
+          value === chunk
+            ? chunkDifference
+            : createValueDifference(treeState, value),
         );
       valueDifference = fieldDifference.state;
     } else {
@@ -443,7 +457,9 @@ function addEmbeddedChunkDifference(
         Difference.addListItemDifference(
           parentDiff,
           step,
-          value === chunk ? chunkDifference : createValueDifference(value),
+          value === chunk
+            ? chunkDifference
+            : createValueDifference(treeState, value),
         );
     }
     assert(
@@ -492,13 +508,34 @@ function markParentNodeDirty(
 }
 
 function createValueDifference(
+  treeState: TreeState,
   chunk: ObjectChunk | CompositeListChunk,
 ): ObjectDifference | CompositeListDifference {
   if (isObjectValue(chunk)) {
-    return Difference.createObjectDifference();
+    return markTransformDifference(
+      treeState,
+      Difference.createObjectDifference(),
+    );
   }
   if (isCompositeListValue(chunk)) {
-    return Difference.createCompositeListDifference();
+    return markTransformDifference(
+      treeState,
+      Difference.createCompositeListDifference(),
+    );
   }
   assertNever(chunk);
+}
+
+function markTransformDifference<T extends ValueDifference>(
+  treeState: TreeState,
+  difference: T,
+): T {
+  if (
+    treeState.skipIncompatibleDifferences &&
+    (Difference.isObjectDifference(difference) ||
+      Difference.isCompositeListDifference(difference))
+  ) {
+    difference.skipIfIncompatible = true;
+  }
+  return difference;
 }

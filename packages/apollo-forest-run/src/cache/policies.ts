@@ -170,6 +170,7 @@ export function applyReadPolicies(
         return diffValue(env, fieldValue, transformedValue, fieldDiff);
       },
     },
+    { skipIncompatibleDifferences: env.reconcileDivergentChunks },
   );
   if (conversionContext.danglingReferences.size) {
     updatedTree.danglingReferences = conversionContext.danglingReferences;
@@ -297,6 +298,7 @@ export function applyMergePolicies(
         return diffValue(diffEnv, fieldValue, value);
       },
     },
+    { skipIncompatibleDifferences: env.reconcileDivergentChunks },
   );
 }
 
