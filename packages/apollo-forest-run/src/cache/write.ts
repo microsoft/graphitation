@@ -21,10 +21,13 @@ import type {
   SubsequentIncrementalExecutionResult,
   WriteOptions,
 } from "./types";
-import type { NodeKey, OperationDescriptor } from "../descriptor/types";
+import type {
+  NodeKey,
+  OperationDescriptor,
+  PossibleSelections,
+} from "../descriptor/types";
 import { assert } from "../jsutils/assert";
 import {
-  getFragmentDescriptor,
   isFragmentDocument,
   resolveResultDescriptor,
   resolveOperationDescriptor,
@@ -44,7 +47,7 @@ import {
   resolveAffectedOperations,
   updateAffectedTrees,
 } from "../forest/updateForest";
-import { indexTree } from "../forest/indexTree";
+import { indexDetachedTree, indexTree } from "../forest/indexTree";
 import type {
   DeferLabel,
   DeferTarget,
@@ -79,6 +82,8 @@ import { IndexedForest } from "../forest/types";
 type ResultWrite = {
   // Key of the written object (when it is not the root node of the operation)
   rootNodeKey?: NodeKey;
+  // Selection of the written object (with `rootNodeKey`)
+  selection?: PossibleSelections;
   // Object embedded into its closest node, which the result is written to
   embedded?: EmbeddedObject;
   // Collects targets of deferred fragments found in the result
@@ -312,11 +317,12 @@ function writeDeferredFragment(
     env,
     store,
     activeTransaction,
-    getFragmentDescriptor(env, operation, selection, typeName ?? ""),
+    operation,
     { ...options, dataId: undefined },
     { ...entry, data } as OperationResult,
     {
       rootNodeKey: object.embedded ? EMBEDDED_ROOT_KEY : object.dataId,
+      selection,
       embedded: object.embedded,
       defer: {
         execution: incremental,
@@ -392,6 +398,8 @@ function writeResult(
   resultWrite?: ResultWrite,
 ): WriteResult {
   const rootNodeKey = resultWrite?.rootNodeKey;
+  const selection = resultWrite?.selection;
+  assert(!rootNodeKey === !selection);
   const embedded = resultWrite?.embedded;
   const defer = resultWrite?.defer;
   const { mergePolicies, addTypename } = env;
@@ -434,14 +442,22 @@ function writeResult(
     operationDescriptor.rootType = typeName ?? "";
   }
 
-  const incomingResult = indexTree(
-    env,
-    operationDescriptor,
-    operationResult,
-    undefined,
-    existingResult,
-    rootNodeKey,
-  );
+  const incomingResult =
+    rootNodeKey && selection
+      ? indexDetachedTree(
+          env,
+          operationDescriptor,
+          operationResult,
+          selection,
+          rootNodeKey,
+        )
+      : indexTree(
+          env,
+          operationDescriptor,
+          operationResult,
+          undefined,
+          existingResult,
+        );
   const incomingRootKey = incomingResult.rootNodeKey;
 
   // ApolloCompat: necessary for fragment writes with custom ids
@@ -470,8 +486,11 @@ function writeResult(
     );
   }
 
+  // Results written to a specific object are not trees of the operation, so they are diffed as standalone nodes
   const difference = embedded
     ? diffEmbedded(env, targetForest, modifiedIncomingResult, embedded)
+    : rootNodeKey
+    ? diffNodes(targetForest, modifiedIncomingResult.nodes, env)
     : diffTree(targetForest, modifiedIncomingResult, env);
 
   if (difference.errors.length) {
@@ -527,6 +546,7 @@ function writeResult(
     targetForest,
     modifiedIncomingResult,
     embedded,
+    rootNodeKey !== undefined,
   );
 
   invalidateReadResults(
@@ -664,6 +684,7 @@ function appendAffectedOperationsFromOtherLayers(
   targetForest: DataForest | OptimisticLayer,
   incomingResult: IndexedTree,
   embedded: EmbeddedObject | undefined,
+  isFragment: boolean,
 ) {
   // Optimistic reads go through all existing layers
   //  And those layers may be affected by incoming results too, so we actually need to diff all other layers too
@@ -676,6 +697,8 @@ function appendAffectedOperationsFromOtherLayers(
       layer,
       embedded
         ? diffEmbedded(env, layer, incomingResult, embedded)
+        : isFragment
+        ? diffNodes(layer, incomingResult.nodes, env)
         : diffTree(layer, incomingResult, env),
       affectedForestOperationsMutable,
     );

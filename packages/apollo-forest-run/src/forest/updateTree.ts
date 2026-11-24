@@ -22,7 +22,7 @@ import type {
   UpdateTreeResult,
 } from "./types";
 import { assert } from "../jsutils/assert";
-import { indexTree } from "./indexTree";
+import { indexDetachedTree, indexTree } from "./indexTree";
 import { isDirty } from "../diff/difference";
 import {
   createDraft,
@@ -135,7 +135,7 @@ export function updateTree(
     const chunkRef = base.dataMap.get(chunk.data);
     assert(chunkRef);
 
-    if (chunkRef.parent === null && chunkRef.detached) {
+    if (chunkRef.parent === null && chunkRef.detached && chunk !== rootChunk) {
       Object.assign(chunk, {
         source: result.draft,
         missingFields: result?.missingFields?.get(result.draft),
@@ -173,14 +173,26 @@ export function updateTree(
       env.keyMap?.set(draft, key);
     }
   }
-  const updatedTree = indexTree(
-    env,
-    base.operation,
-    { data: rootDraft },
-    missingFields,
-    base,
-    base.operation.rootNodeKey ? undefined : base.rootNodeKey,
-  );
+  const updatedTree =
+    rootChunk.possibleSelections === base.operation.possibleSelections
+      ? indexTree(
+          env,
+          base.operation,
+          { data: rootDraft },
+          missingFields,
+          base,
+          base.operation.rootNodeKey ? undefined : base.rootNodeKey,
+        )
+      : // A tree of a result written to an object within the operation (e.g. a deferred fragment)
+        indexDetachedTree(
+          env,
+          base.operation,
+          { data: rootDraft },
+          rootChunk.possibleSelections,
+          base.rootNodeKey,
+          missingFields,
+          base,
+        );
   if (env.apolloCompat_keepOrphanNodes) {
     apolloBackwardsCompatibility_saveOrphanNodes(base, updatedTree);
   }

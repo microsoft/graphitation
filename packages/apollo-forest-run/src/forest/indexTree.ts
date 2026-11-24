@@ -62,6 +62,8 @@ type Context = {
   dataMap: DataMap;
   indexedSources: number;
   rootNodeKey: string;
+  // Key of a detached root object, when it is known upfront (see indexObject)
+  detachedRootKey: NodeKey | undefined;
   knownMissingFields: MissingFieldsMap | undefined;
   incompleteChunks: Set<ObjectChunk>;
   recycleTree: IndexedTree | null;
@@ -75,8 +77,8 @@ const isArray = Array.isArray;
 /**
  * Indexes an operation result.
  *
- * For results of incremental delivery (the initial result or a deferred fragment), additionally collects
- * objects with deferred fragments (see IndexedTree.chunksWithDeferredFragments).
+ * For the initial result of incremental delivery, additionally collects objects with deferred fragments
+ * (see IndexedTree.chunksWithDeferredFragments). Deferred fragments themselves are indexed with `indexObject`.
  */
 export function indexTree(
   env: ForestEnv,
@@ -122,6 +124,7 @@ export function indexTree(
     indexedSources: 0,
     incompleteChunks: new Set(),
     rootNodeKey,
+    detachedRootKey: undefined,
     // Recycled objects are not visited (recycling doesn't apply to incremental results anyways)
     recycleTree: chunksWithDeferredFragments ? null : previousTreeState,
     findParent: createParentLocator(dataMap),
@@ -162,8 +165,7 @@ export function indexTree(
 }
 
 function isIncrementalResult(result: OperationResult) {
-  // Initial result (`hasNext`) or a deferred fragment (`id` or `path`)
-  return "hasNext" in result || "id" in result || "path" in result;
+  return "hasNext" in result;
 }
 
 // Matches ObjectChunkReference structure with additional fields
@@ -173,8 +175,18 @@ export type IndexedObject = {
   detached: boolean;
   dataMap: DataMap;
   nodes: NodeMap;
+  typeMap: TypeMap;
+  incompleteChunks: Set<ObjectChunk>;
+  chunksWithDeferredFragments?: ObjectChunk[];
 };
 
+/**
+ * Indexes an object of the operation with the given selection.
+ *
+ * When `rootKey` is passed, the object is indexed as a node with this key (e.g. data of a deferred fragment
+ * written to a known cache object), additionally collecting objects with deferred fragments
+ * (see IndexedTree.chunksWithDeferredFragments).
+ */
 export function indexObject(
   env: ForestEnv,
   operation: OperationDescriptor,
@@ -182,18 +194,21 @@ export function indexObject(
   selection: PossibleSelections,
   knownMissingFields?: MissingFieldsMap,
   dataMap: DataMap = new Map(),
+  rootKey?: NodeKey,
 ): IndexedObject {
   const initialDataMapSize = dataMap.size;
   const isRoot = operation.possibleSelections === selection;
   const rootNodeKey =
-    env.objectKey(
+    rootKey ??
+    (env.objectKey(
       source,
       resolveSelection(
         operation,
         operation.possibleSelections,
         source.__typename || null,
       ),
-    ) || (isRoot ? operation.rootNodeKey : "");
+    ) ||
+      (isRoot ? operation.rootNodeKey : ""));
 
   const context: Context = {
     env: env,
@@ -206,16 +221,20 @@ export function indexObject(
     indexedSources: initialDataMapSize,
     incompleteChunks: new Set(),
     rootNodeKey,
+    detachedRootKey: rootKey,
     recycleTree: null,
     findParent: createParentLocator(dataMap),
-    chunksWithDeferredFragments: undefined,
+    chunksWithDeferredFragments:
+      rootKey !== undefined && operation.hasDeferSites ? [] : undefined,
   };
-  const result = {
-    value: null as unknown,
+  const result: Omit<IndexedObject, "value"> & { value: unknown } = {
+    value: null,
     parent: null,
     detached: !isRoot,
     nodes: context.nodes,
     dataMap: context.dataMap,
+    typeMap: context.typeMap,
+    incompleteChunks: context.incompleteChunks,
   };
   const rootChunk = indexSourceObject(
     context,
@@ -234,6 +253,8 @@ export function indexObject(
         repaired.data,
         selection,
         repaired.missingFields,
+        undefined,
+        rootKey,
       );
       if (initialDataMapSize === 0) {
         dataMap.clear();
@@ -245,7 +266,52 @@ export function indexObject(
       return repairedObject;
     }
   }
+  if (context.chunksWithDeferredFragments?.length) {
+    result.chunksWithDeferredFragments = context.chunksWithDeferredFragments;
+  }
   return result as IndexedObject;
+}
+
+/**
+ * Indexes a result written to a known object (with `rootKey`) as a tree, using the selection of that object
+ * in the operation (e.g. a deferred fragment written to its target object).
+ */
+export function indexDetachedTree(
+  env: ForestEnv,
+  operation: OperationDescriptor,
+  result: OperationResult,
+  selection: PossibleSelections,
+  rootKey: NodeKey,
+  knownMissingFields?: MissingFieldsMap,
+  previousTreeState: IndexedTree | null = null,
+): IndexedTree {
+  const indexed = indexObject(
+    env,
+    operation,
+    result.data,
+    selection,
+    knownMissingFields,
+    undefined,
+    rootKey,
+  );
+  const data = indexed.value.data;
+  const tree: IndexedTree = {
+    operation,
+    // Data is copied when shared references are repaired
+    result: data === result.data ? result : { ...result, data },
+    rootNodeKey: rootKey,
+    nodes: indexed.nodes,
+    typeMap: indexed.typeMap,
+    dataMap: indexed.dataMap,
+    incompleteChunks: indexed.incompleteChunks,
+    prev: previousTreeState,
+    // Such trees are never stored
+    history: previousTreeState?.history ?? new CircularBuffer(0),
+  };
+  if (indexed.chunksWithDeferredFragments) {
+    tree.chunksWithDeferredFragments = indexed.chunksWithDeferredFragments;
+  }
+  return tree;
 }
 
 function reindexSharedTree(
@@ -314,6 +380,8 @@ function indexSourceObject(
   const selection = resolveSelection(op, possibleSelections, typeName || null);
   const objectKeyResult = isRoot
     ? context.rootNodeKey
+    : context.detachedRootKey !== undefined && isRootRef(parent)
+    ? context.detachedRootKey
     : env.objectKey(source, selection, context.operation);
 
   const key = typeof objectKeyResult === "string" ? objectKeyResult : false;
