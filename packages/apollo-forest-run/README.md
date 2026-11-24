@@ -258,7 +258,7 @@ cache.write({ query, variables, execution: { pending, incremental, completed, ha
 - A target is an object key, plus a path for objects embedded into their closest keyed ancestor
   (embedded objects are addressed by position, like client IDs in Relay).
 - Fragments are written even if the operation doesn't reach the target anymore (missing objects are not created).
-- `key` identifies an execution (by default, the operation: a single execution at a time).
+- State of incremental delivery is kept per operation (pages merged into one result with `@cache(keyVars)` stream`n  independently). A new execution of the same operation replaces the previous one. Pass `key` to ignore late results of`n  a superseded execution.
 - `label` may be omitted when a path has a single deferred fragment.
 ## Aggregated Entity Views
 

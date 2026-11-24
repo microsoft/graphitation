@@ -2,11 +2,18 @@ import { gql } from "@apollo/client";
 import { DocumentNode } from "graphql";
 import { ForestRun } from "../ForestRun";
 import { assert } from "../jsutils/assert";
+import { resolveOperationDescriptor } from "../cache/descriptor";
 
 class InspectableCache extends ForestRun {
-  deferTargetCount(key: object): number {
+  deferTargetCount(query: DocumentNode, variables = {}): number {
+    const operation = resolveOperationDescriptor(
+      this.env,
+      this.store,
+      query,
+      variables,
+    );
     const targets =
-      this.store.incrementalExecutions.get(key)?.targets.values() ?? [];
+      this.store.incrementalExecutions.get(operation)?.targets.values() ?? [];
     return new Set([...targets].filter(Boolean)).size;
   }
 }
@@ -22,8 +29,13 @@ type Format = "draft" | "latest";
 //   or in the latest GraphQL incremental delivery format (`pending` with ids, `completed`)
 let format: Format = "draft";
 
-function execution(cache: ForestRun, query: DocumentNode, variables = {}) {
-  const key = {};
+// key is only needed to tell apart overlapping executions of the same operation
+function execution(
+  cache: ForestRun,
+  query: DocumentNode,
+  variables = {},
+  key?: object,
+) {
   let nextId = 0;
   const announce = (path: Patch["path"], label?: string) => ({
     id: String(nextId++),
@@ -66,7 +78,7 @@ function execution(cache: ForestRun, query: DocumentNode, variables = {}) {
     },
     pendingTargets() {
       assert(cache instanceof InspectableCache);
-      return cache.deferTargetCount(key);
+      return cache.deferTargetCount(query, variables);
     },
   };
 }
@@ -544,41 +556,46 @@ describe.each(["draft", "latest"] as const)("@defer (%s format)", (f) => {
     });
   });
 
-  test("patches of a non-retained operation (mutation) update entities of other operations", () => {
-    const cache = new ForestRun();
-    const messages = gql`
-      query {
-        messages {
-          id
-          text
+  test.each([false, true])(
+    "patches of a non-retained operation (mutation) update entities of other operations (cleanupNonCacheableOperations: %s)",
+    (cleanupNonCacheableOperations) => {
+      const cache = new ForestRun({ cleanupNonCacheableOperations });
+      const messages = gql`
+        query {
+          messages {
+            id
+            text
+            name
+          }
+        }
+      `;
+      cache.writeQuery({
+        query: messages,
+        data: { messages: [message("1", "old")] },
+      });
+      const mutation = gql`
+        mutation Send {
+          send {
+            id
+            text
+            ...MessageName @defer(label: "name")
+          }
+        }
+        fragment MessageName on Message {
           name
         }
-      }
-    `;
-    cache.writeQuery({
-      query: messages,
-      data: { messages: [message("1", "old")] },
-    });
-    const mutation = gql`
-      mutation Send {
-        send {
-          id
-          text
-          ...MessageName @defer(label: "name")
-        }
-      }
-      fragment MessageName on Message {
-        name
-      }
-    `;
-    const delivery = execution(cache, mutation);
-    delivery.initial({ send: { ...message("1"), text: "edited" } });
-    delivery.patch([{ path: ["send"], label: "name", data: { name: "new" } }]);
+      `;
+      const delivery = execution(cache, mutation);
+      delivery.initial({ send: { ...message("1"), text: "edited" } });
+      delivery.patch([
+        { path: ["send"], label: "name", data: { name: "new" } },
+      ]);
 
-    expect(cache.readQuery({ query: messages })).toEqual({
-      messages: [{ ...message("1", "new"), text: "edited" }],
-    });
-  });
+      expect(cache.readQuery({ query: messages })).toEqual({
+        messages: [{ ...message("1", "new"), text: "edited" }],
+      });
+    },
+  );
 
   test("watches are notified once per payload and patch writes are not retained", () => {
     const cache = new ForestRun();
@@ -622,25 +639,22 @@ describe.each(["draft", "latest"] as const)("@defer (%s format)", (f) => {
     ).not.toMatchObject({ message: { text: "hi" } });
   });
 
-  test("overlapping executions keep their own targets", () => {
+  test("a new execution of an operation replaces the previous one", () => {
     const cache = new InspectableCache();
-    const first = execution(cache, list);
-    const second = execution(cache, list);
+    const first = execution(cache, list, {}, {});
+    const second = execution(cache, list, {}, {});
     first.initial({ messages: [message("1")] });
     second.initial({ messages: [message("2"), message("1")] });
 
-    first.patch([namePatch("one")], false);
-    expect(first.pendingTargets()).toBe(0);
+    // Late results of the superseded execution are ignored (their paths refer to its response)
+    first.patch([namePatch("stale")], false);
     expect(second.pendingTargets()).toBe(2);
-    second.patch([namePatch("two")]);
-    expect(second.pendingTargets()).toBe(1);
-    second.patch([], false);
+    second.patch([namePatch("two"), namePatch("one", 1)], false);
     expect(second.pendingTargets()).toBe(0);
-    expect(cache.readQuery({ query: list, returnPartialData: true })).toEqual({
+    expect(cache.readQuery({ query: list })).toEqual({
       messages: [message("2", "two"), message("1", "one")],
     });
   });
-
   test("regular writes keep the targets of the pending execution", () => {
     const cache = new InspectableCache();
     const delivery = execution(cache, list);
@@ -678,8 +692,8 @@ describe.each(["draft", "latest"] as const)("@defer (%s format)", (f) => {
 
   test("patches of unknown executions are ignored", () => {
     const cache = new ForestRun();
-    execution(cache, list).initial({ messages: [message("1")] });
-    execution(cache, list).patch([namePatch("unknown")]);
+    execution(cache, list, {}, {}).initial({ messages: [message("1")] });
+    execution(cache, list, {}, {}).patch([namePatch("unknown")]);
 
     expect(cache.readQuery({ query: list, returnPartialData: true })).toEqual({
       messages: [message("1")],
@@ -688,7 +702,7 @@ describe.each(["draft", "latest"] as const)("@defer (%s format)", (f) => {
 
   test("patches are ignored after their tree is evicted", () => {
     const cache = new ForestRun({ maxOperationCount: 1, autoEvict: false });
-    const delivery = execution(cache, list);
+    const delivery = execution(cache, list, {}, {});
     delivery.initial({ messages: [message("1")] });
     cache.writeQuery({
       query: gql`
@@ -702,7 +716,7 @@ describe.each(["draft", "latest"] as const)("@defer (%s format)", (f) => {
     delivery.patch([namePatch("late")]);
     expect(cache.getStats().treeCount).toBe(1);
 
-    const next = execution(cache, list);
+    const next = execution(cache, list, {}, {});
     next.initial({ messages: [message("2")] });
     delivery.patch([namePatch("stale")], false);
     next.patch([namePatch("two")], false);

@@ -130,8 +130,8 @@ export type Store = {
   // Pending scheduled auto-eviction
   pendingEviction: ScheduledEvictionHandle | null;
   // Pending @defer targets by incremental execution
-  // State of incremental executions (by execution key)
-  incrementalExecutions: WeakMap<ExecutionKey, IncrementalExecution>;
+  // State of the latest incremental execution of an operation
+  incrementalExecutions: WeakMap<OperationDescriptor, IncrementalExecution>;
 };
 
 export type Transaction = {
@@ -336,13 +336,16 @@ export type SerializedCache = Record<
   SerializedOperationInfo
 >;
 
-// Identifies an incremental execution (an opaque object provided by the client, or the operation itself)
+// Identifies an incremental execution (an opaque object provided by the client).
+//   Only needed to tell apart overlapping executions of the same operation (with the same variables)
 export type ExecutionKey = object;
 
 // Identifies a pending result within an incremental execution (the latest format)
 export type PendingId = string;
 
 export type IncrementalExecution = {
+  // A new execution of the operation replaces the previous one (its results are ignored)
+  key: ExecutionKey | undefined;
   targets: DeferTargets;
   // Pending results of the latest incremental delivery format by id
   pending: Map<PendingId, PendingResult>;

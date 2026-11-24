@@ -165,14 +165,12 @@ export function write(
   }
   // Initial result of an incremental execution
   const incremental: IncrementalExecution = {
+    key: execution.key,
     targets: new Map(),
     pending: new Map(),
   };
   addPendingResults(incremental, execution.pending);
-  store.incrementalExecutions.set(
-    execution.key ?? resolveResultDescriptor(env, store, operationDescriptor),
-    incremental,
-  );
+  store.incrementalExecutions.set(operationDescriptor, incremental);
   return [
     writeResult(
       env,
@@ -194,9 +192,8 @@ function writeIncremental(
   options: WriteOptions,
   execution: SubsequentIncrementalExecutionResult & { key?: ExecutionKey },
 ): WriteResult[] {
-  const key = execution.key ?? resolveResultDescriptor(env, store, operation);
-  const incremental = store.incrementalExecutions.get(key);
-  if (!incremental) {
+  const incremental = store.incrementalExecutions.get(operation);
+  if (!incremental || incremental.key !== execution.key) {
     return [];
   }
   addPendingResults(incremental, execution.pending);
@@ -244,7 +241,7 @@ function writeIncremental(
     incremental.pending.delete(id);
   }
   if (!execution.hasNext) {
-    store.incrementalExecutions.delete(key);
+    store.incrementalExecutions.delete(operation);
   }
   return results;
 }
