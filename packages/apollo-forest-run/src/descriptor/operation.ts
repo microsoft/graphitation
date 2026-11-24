@@ -57,9 +57,15 @@ export function describeOperation(
     ? applyDefaultValues(variables, variableDefinitions)
     : variables;
 
+  // Note: an explicit literal (no spreads) keeps all properties in-object
   return {
-    ...documentDescriptor,
-    ...resultTreeDescriptor,
+    document: documentDescriptor.document,
+    fragmentMap: documentDescriptor.fragmentMap,
+    debugName: documentDescriptor.debugName,
+    definition: documentDescriptor.definition,
+    hasDefaultValues: documentDescriptor.hasDefaultValues,
+    possibleSelections: resultTreeDescriptor.possibleSelections,
+    hasDeferSites: resultTreeDescriptor.hasDeferSites,
     id: env.genId?.() ?? 0,
     name: documentDescriptor.definition.name?.value,
     env,

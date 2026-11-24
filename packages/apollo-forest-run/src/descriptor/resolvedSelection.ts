@@ -11,6 +11,7 @@ import type {
   ResolvedSelection,
   TypeName,
   VariableValues,
+  DeferSite,
 } from "./types";
 import type {
   ArgumentNode,
@@ -109,17 +110,11 @@ export function resolveSelection(
       ? selection.fieldQueue.filter((field) => !skippedFields.has(field))
       : selection.fieldQueue;
 
-    const variables = operation.variablesWithDefaults;
-    const enabledDeferSites = selection.deferSites?.filter(({ conditions }) =>
-      conditions.every(
-        ({ variable, expected, defer }) =>
-          (defer
-            ? variables[variable] !== false
-            : Boolean(variables[variable])) === expected,
-      ),
-    );
-    const deferredFragments = enabledDeferSites?.length
-      ? enabledDeferSites
+    const deferredFragments = selection.deferSites
+      ? resolveDeferredFragments(
+          selection.deferSites,
+          operation.variablesWithDefaults,
+        )
       : undefined;
 
     const hasLocalChanges =
@@ -300,6 +295,21 @@ function getResolvedHash(
   return hash;
 }
 
+// A separate function: a closure capturing variables in resolveSelection would allocate a context on every call
+function resolveDeferredFragments(
+  deferSites: DeferSite[],
+  variables: VariableValues,
+): DeferSite[] | undefined {
+  const enabled = deferSites.filter(({ conditions }) =>
+    conditions.every(
+      ({ variable, expected, defer }) =>
+        (defer
+          ? variables[variable] !== false
+          : Boolean(variables[variable])) === expected,
+    ),
+  );
+  return enabled.length ? enabled : undefined;
+}
 export function resolvedSelectionsAreEqual(
   a: ResolvedSelection,
   b: ResolvedSelection,
