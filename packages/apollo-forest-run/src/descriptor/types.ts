@@ -81,6 +81,7 @@ export type ResolvedSelection = PossibleSelection & {
   normalizedFields?: Map<FieldInfo, NormalizedFieldEntry>;
   skippedFields?: Set<FieldInfo>;
   skippedSpreads?: Set<SpreadInfo>;
+  deferredFragments?: { label?: DeferLabel; selection: PossibleSelections }[];
   resolvedHash?: number; // Structural hash + runtime-resolved state (args, skip/include)
 };
 
@@ -151,6 +152,7 @@ export type PossibleSelection = {
 
   spreads?: FragmentSpreadMap; // e.g. object with selection { foo, ...Bar, ... { ...Baz } } will have ["Bar", "Baz"] here
   spreadsWithDirectives?: SpreadInfo[];
+  deferSites?: DeferSite[];
 
   experimentalAlias?: FragmentAlias;
   experimentalAliasedFragments?: Map<FragmentAlias, PossibleSelection>;
@@ -158,6 +160,14 @@ export type PossibleSelection = {
   hasDescendantsToResolve?: boolean; // true if any descendant has fieldsToNormalize, fieldsWithDirectives, or spreadsWithDirectives
 
   structuralHash: number; // Order-independent hash of field structure (names, dataKeys, arg names, child hashes)
+};
+
+// Unlike the flattened fields used for reads, a delivery site keeps just
+// the selection that can be written by its incremental payload.
+export type DeferSite = {
+  selection: PossibleSelections;
+  label?: ValueNode;
+  conditions: { variable: VariableName; expected: boolean; defer: boolean }[];
 };
 
 export type ResolvedSelections = Map<

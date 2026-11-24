@@ -41,6 +41,11 @@ import {
   transformDocument,
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
+import {
+  incrementalDelivery,
+  WriteOptions,
+  writeIncremental,
+} from "./cache/incremental";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -95,6 +100,7 @@ const getRef = (ref: string) => REFS_POOL.get(ref) ?? { __ref: ref };
 export class ForestRun<
   TPartitions extends HistoryPartitions = any,
 > extends ApolloCache<SerializedCache> {
+  public readonly [incrementalDelivery] = true;
   public rawConfig: InMemoryCacheConfig;
   protected env: CacheEnv<TPartitions>;
   protected store: Store;
@@ -199,7 +205,7 @@ export class ForestRun<
     return result.dirty;
   }
 
-  public write(options: Cache.WriteOptions): Reference | undefined {
+  public write(options: WriteOptions): Reference | undefined {
     return this.transactionStack.length
       ? this.runWrite(options)
       : this.runTransaction({
@@ -207,9 +213,20 @@ export class ForestRun<
         });
   }
 
-  private runWrite(options: Cache.WriteOptions): Reference | undefined {
+  private runWrite(options: WriteOptions): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
+    const delivery = options[incrementalDelivery];
+    if (delivery) {
+      const result = writeIncremental(
+        this.env,
+        this.store,
+        transaction,
+        options,
+        delivery,
+      );
+      return result && getRef(options.dataId ?? "ROOT_QUERY");
+    }
     const result = write(this.env, this.store, transaction, options);
     transaction.changelog.push(result);
 

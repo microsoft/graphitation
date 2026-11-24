@@ -23,6 +23,7 @@ import type {
   PossibleSelections,
 } from "../descriptor/types";
 import type { ForestEnv, IndexedTree } from "./types";
+import { DeferredIndex, deferredPathKey, DeliveryScope } from "./deferred";
 import { ValueKind } from "../values/types";
 import {
   getFieldName,
@@ -65,6 +66,10 @@ type Context = {
   incompleteChunks: Set<ObjectChunk>;
   recycleTree: IndexedTree | null;
   findParent: ParentLocator;
+  delivery?: {
+    path: (string | number)[];
+    index: DeferredIndex;
+  };
 };
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -76,11 +81,13 @@ export function indexTree(
   result: OperationResult,
   knownMissingFields?: MissingFieldsMap,
   previousTreeState: IndexedTree | null = null,
+  delivery?: DeliveryScope,
 ): IndexedTree {
   let rootNodeKey;
   try {
     rootNodeKey =
-      env.objectKey(
+      delivery?.rootNodeKey ??
+      (env.objectKey(
         result.data,
         resolveSelection(
           operation,
@@ -88,7 +95,8 @@ export function indexTree(
           operation.rootType,
         ),
         operation,
-      ) || operation.rootNodeKey;
+      ) ||
+        operation.rootNodeKey);
   } catch (e) {
     rootNodeKey = operation.rootNodeKey;
   }
@@ -104,7 +112,8 @@ export function indexTree(
     indexedSources: 0,
     incompleteChunks: new Set(),
     rootNodeKey,
-    recycleTree: previousTreeState,
+    recycleTree: delivery ? null : previousTreeState,
+    delivery: delivery?.index && { path: [], index: delivery.index },
     findParent: createParentLocator(dataMap),
   };
   const rootRef: RootChunkReference = {
@@ -135,7 +144,7 @@ export function indexTree(
   if (context.indexedSources === dataMap.size) {
     return tree;
   }
-  return reindexSharedTree(env, tree, rootRef.value);
+  return reindexSharedTree(env, tree, rootRef.value, delivery);
 }
 
 // Matches ObjectChunkReference structure with additional fields
@@ -223,17 +232,22 @@ function reindexSharedTree(
   env: ForestEnv,
   tree: IndexedTree,
   root: ObjectChunk,
+  delivery?: DeliveryScope,
 ): IndexedTree {
   const repaired = cloneSharedReferences(env, root);
   // Malformed, out-of-range list chunks may overcount without sharing actual data.
   if (repaired.data === tree.result.data) {
     return tree;
   }
+  // The placeholders from this initial write must point to the rebuilt chunks.
+  delivery?.index?.clear();
   const repairedTree = indexTree(
     env,
     tree.operation,
     { ...tree.result, data: repaired.data },
     repaired.missingFields,
+    null,
+    delivery,
   );
   repairedTree.prev = tree.prev;
   repairedTree.history = tree.history;
@@ -302,6 +316,12 @@ function indexSourceObject(
     context.indexedSources++;
   }
 
+  if (context.delivery && chunk.selection.deferredFragments) {
+    const { path, index } = context.delivery;
+    for (const { label, selection } of chunk.selection.deferredFragments) {
+      index.add(deferredPathKey(path, label), chunk, selection);
+    }
+  }
   if (missingFields?.size) {
     markAsPartial(context, parent);
     context.incompleteChunks.add(chunk);
@@ -342,19 +362,23 @@ function indexSourceObject(
       assert(fieldInfo.selection && isSourceCompositeValue(value, fieldInfo));
       let fieldValue: CompositeValueChunk;
       if (isArray(value)) {
+        context.delivery?.path.push(fieldInfo.dataKey);
         fieldValue = indexSourceList(
           context,
           value,
           fieldInfo.selection,
           entryParentInfo,
         );
+        context.delivery?.path.pop();
       } else if (isSourceObject(value)) {
+        context.delivery?.path.push(fieldInfo.dataKey);
         fieldValue = indexSourceObject(
           context,
           value,
           fieldInfo.selection,
           entryParentInfo,
         );
+        context.delivery?.path.pop();
       } else if (value === null) {
         fieldValue = createCompositeNullChunk(
           context.operation,
@@ -409,6 +433,7 @@ function indexSourceList(
       index,
     };
     let item;
+    context.delivery?.path.push(index);
     if (Array.isArray(value)) {
       item = indexSourceList(context, value, selection, itemParent);
     } else if (isSourceObject(value)) {
@@ -428,6 +453,7 @@ function indexSourceList(
       context.incompleteChunks.add(item);
     }
     itemParent.value = item;
+    context.delivery?.path.pop();
     chunk.itemChunks[index] = itemParent;
   }
   return chunk;

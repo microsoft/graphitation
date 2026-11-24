@@ -331,8 +331,20 @@ function getDifference(
     : getEmbeddedChunkDifference(treeState, chunk, parentNode, nodeDiff);
 }
 
+type DifferenceContext = Pick<TreeState, "findParent" | "nodeDifference">;
+
+export function addDirtyChunkDifference(
+  treeState: DifferenceContext,
+  chunk: ObjectChunk,
+  difference: ObjectDifference,
+) {
+  const parent = findClosestNode(chunk, treeState.findParent);
+  addDifference(treeState, parent, chunk, difference);
+  markParentNodeDirty(treeState, parent, chunk);
+}
+
 function addDifference(
-  treeState: TreeState,
+  treeState: DifferenceContext,
   parentNode: NodeChunk,
   chunk: ObjectChunk,
   chunkDifference: ObjectDifference,
@@ -409,7 +421,7 @@ function getEmbeddedChunkDifference(
 }
 
 function addEmbeddedChunkDifference(
-  treeState: TreeState,
+  treeState: DifferenceContext,
   parentNode: NodeChunk,
   parentNodeDifference: ObjectDifference,
   chunk: ObjectChunk,
@@ -457,7 +469,7 @@ function addEmbeddedChunkDifference(
 }
 
 function markParentNodeDirty(
-  treeState: TreeState,
+  treeState: DifferenceContext,
   parentNode: NodeChunk,
   chunk: ObjectChunk,
 ) {

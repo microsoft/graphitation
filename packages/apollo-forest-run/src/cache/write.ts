@@ -1,5 +1,9 @@
 import type { Cache } from "@apollo/client";
-import type { IndexedTree, UpdateTreeResult } from "../forest/types";
+import type {
+  DeferredWrite,
+  IndexedTree,
+  UpdateTreeResult,
+} from "../forest/types";
 import type { OperationResult } from "../values/types";
 import type {
   CacheEnv,
@@ -39,13 +43,23 @@ import { replaceTree } from "../forest/addTree";
 import { invalidateReadResults } from "./invalidate";
 import { IndexedForest } from "../forest/types";
 
+type InitialDelivery = Pick<DeferredWrite, "owner" | "index">;
+type IndexedWrite =
+  | { kind: "full"; existingResult?: DataTree; delivery?: InitialDelivery }
+  | {
+      kind: "patch";
+      delivery: DeferredWrite;
+      diff: (forest: IndexedForest) => GraphDifference;
+    };
+
 export function write(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
   options: Cache.WriteOptions,
+  delivery?: InitialDelivery,
 ): WriteResult {
-  const { mergePolicies, objectKey, addTypename, keyMap } = env;
+  const { objectKey, addTypename, keyMap } = env;
   const targetForest = getActiveForest(store, activeTransaction);
 
   const writeData =
@@ -82,7 +96,7 @@ export function write(
     throw new Error(`Could not identify object ${inspect(writeData)}`);
   }
 
-  let existingResult = getExistingResult(
+  const existingResult = getExistingResult(
     env,
     store,
     targetForest,
@@ -93,7 +107,7 @@ export function write(
   // Safeguard: make sure previous state doesn't leak outside write operation
   assert(!existingResult?.prev);
 
-  if (writeData === existingData && existingResult) {
+  if (writeData === existingData && existingResult && !delivery) {
     return {
       options,
       incoming: existingResult,
@@ -127,6 +141,7 @@ export function write(
     operationResult,
     undefined,
     existingResult,
+    delivery,
   );
 
   // ApolloCompat: necessary for fragment writes with custom ids
@@ -138,15 +153,39 @@ export function write(
     incomingResult.rootNodeKey = options.dataId;
   }
 
-  const modifiedIncomingResult = applyMergePolicies(
+  const merged = applyMergePolicies(
     env,
     getEffectiveReadLayers(store, targetForest, false),
-    mergePolicies,
+    env.mergePolicies,
     incomingResult,
     options.overwrite ?? false,
   );
+  const result = writeIndexedTree(env, store, targetForest, options, merged, {
+    kind: "full",
+    existingResult,
+    delivery,
+  });
+  incomingResult.prev = null;
+  return result;
+}
 
-  const difference = diffTree(targetForest, modifiedIncomingResult, env);
+export function writeIndexedTree(
+  env: CacheEnv,
+  store: Store,
+  targetForest: DataForest | OptimisticLayer,
+  options: Cache.WriteOptions,
+  modifiedIncomingResult: IndexedTree,
+  context: IndexedWrite,
+): WriteResult {
+  let existingResult =
+    context.kind === "full" ? context.existingResult : undefined;
+  const diff =
+    context.kind === "patch"
+      ? context.diff
+      : (forest: IndexedForest) => diffTree(forest, modifiedIncomingResult, env);
+  const operationDescriptor = modifiedIncomingResult.operation;
+
+  const difference = diff(targetForest);
 
   if (difference.errors.length) {
     processDiffErrors(targetForest, modifiedIncomingResult, difference);
@@ -158,6 +197,8 @@ export function write(
     existingResult.incompleteChunks.size > 0
   ) {
     // Remove incomplete placeholder tree (saves unnecessary update)
+    if (existingResult.pendingDeferred)
+      modifiedIncomingResult.pendingDeferred = existingResult.pendingDeferred;
     targetForest.trees.delete(operationDescriptor.id);
     existingResult = undefined;
   }
@@ -179,9 +220,14 @@ export function write(
     affectedOperations,
     chunkProvider,
     modifiedIncomingResult,
+    context.delivery,
   );
 
-  if (!existingResult && shouldCache(targetForest, operationDescriptor)) {
+  if (
+    context.kind === "full" &&
+    !existingResult &&
+    shouldCache(targetForest, operationDescriptor)
+  ) {
     affectedOperations.set(operationDescriptor, difference.nodeDifference);
     // Note: even with existingResult === undefined the tree for this operation may still exist in the cache
     //   (when existingResult is resolved with a different key descriptor due to key variables)
@@ -190,11 +236,10 @@ export function write(
   }
 
   appendAffectedOperationsFromOtherLayers(
-    env,
     store,
     affectedOperations,
     targetForest,
-    modifiedIncomingResult,
+    diff,
   );
 
   invalidateReadResults(
@@ -205,7 +250,6 @@ export function write(
     affectedOperations,
     modifiedIncomingResult,
   );
-  incomingResult.prev = null;
   modifiedIncomingResult.prev = null;
 
   return {
@@ -219,11 +263,10 @@ export function write(
 }
 
 function appendAffectedOperationsFromOtherLayers(
-  env: CacheEnv,
   store: Store,
   affectedForestOperationsMutable: Map<OperationDescriptor, NodeDifferenceMap>,
   targetForest: DataForest | OptimisticLayer,
-  incomingResult: IndexedTree,
+  diff: (forest: IndexedForest) => GraphDifference,
 ) {
   // Optimistic reads go through all existing layers
   //  And those layers may be affected by incoming results too, so we actually need to diff all other layers too
@@ -234,7 +277,7 @@ function appendAffectedOperationsFromOtherLayers(
     }
     resolveAffectedOperations(
       layer,
-      diffTree(layer, incomingResult, env),
+      diff(layer),
       affectedForestOperationsMutable,
     );
   }

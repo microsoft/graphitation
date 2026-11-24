@@ -63,6 +63,36 @@ capture history of every GraphQL result.
 
 Let's briefly walk through every step individually.
 
+### Incremental `@defer` delivery
+
+For clients supplying raw `deferSpec=20220824` query payloads, ForestRun compiles
+each `@defer` site into the document descriptor alongside the usual field selections.
+As the indexer descends through the payload, it tracks field aliases and list
+indices on one path stack. Only a deferred fragment needs a saved path, which
+binds its label to the original chunk. These bindings belong to the indexed tree and the individual execution;
+an ordinary cache write does not recalculate them from a newer list or relationship.
+Only the initial result registers placeholders. A single `@defer` can target an
+object deep in that result, but nested delivery sites introduced by a patch
+are not supported. A consumed placeholder is not reused for duplicate entries.
+ForestRun applies patches in delivery order within one cache transaction. A
+merge policy sees the result of preceding patches, and watchers see the final
+transaction result. If every patch writes only scalar fields without merge
+policies to a distinct, reachable cache ID, ForestRun updates the affected
+trees once for the whole payload instead.
+If the original entity is no longer reachable, ForestRun consumes the placeholder
+without restoring the entity or writing to its replacement. For an embedded
+object without a cache key it requires the original source or a tracked copy;
+it does not guess which list item a replaced source represents.
+
+This requires the client to pass raw payloads through `cache.write` with the
+`Symbol.for("apollo.cache.incrementalDelivery.v1")` option and a per-execution
+abort signal. Cache writes without that option keep their existing behavior.
+Pending deliveries do not prevent eviction. If the owning tree is evicted,
+its placeholders are released and later patches from that execution are ignored.
+Completion, abort, and cache reset also release pending placeholders; they are not
+part of serialized cache data. This protocol covers deferred object fragments,
+not streamed list items.
+
 ### 1. Indexing operation result
 
 Indexing is a process of remembering positions of individual nodes (objects having identity) inside operation result.
