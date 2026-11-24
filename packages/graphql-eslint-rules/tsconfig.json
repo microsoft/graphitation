@@ -4,7 +4,11 @@
     "composite": true,
     "tsBuildInfoFile": ".tsbuildinfo",
     "rootDir": "src",
-    "outDir": "lib"
+    "outDir": "lib",
+    "paths": {
+      "graphql": ["./node_modules/graphql"],
+      "@graphql-tools/utils": ["../../node_modules/@graphql-tools/utils"]
+    }
   },
   "include": ["src"],
   "references": []
