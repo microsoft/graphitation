@@ -28,8 +28,9 @@ import type {
 import type { ForestEnv, IndexedTree } from "./types";
 import {
   addDeferTarget,
-  createDeferIndex,
   DeferIndex,
+  DeferTarget,
+  deferTargetKey,
   ResponsePath,
 } from "./deferIndex";
 import { ValueKind } from "../values/types";
@@ -81,15 +82,21 @@ type Context = {
  * Collects @defer targets of an incremental execution while indexing its result.
  */
 export type DeferIndexing = {
-  // Index to add targets to (a new one is created when omitted)
+  // Index to add targets to (a new one is created and assigned here when omitted)
   index?: DeferIndex;
-  // Opaque execution identity stored in a newly created index
-  execution?: unknown;
   // Response path of the indexed result root
   path?: ResponsePath;
   // Cache address of the result root (defaults to the root node of the tree)
   anchor?: { nodeKey: NodeKey; path: ResponsePath };
   isDeferPending?: (path: ResponsePath, label: string | undefined) => boolean;
+  // Output: targets addressed by position (their address may change when merge policies rearrange the result)
+  embeddedTargets?: EmbeddedDeferTarget[];
+};
+
+export type EmbeddedDeferTarget = {
+  key: string;
+  target: DeferTarget;
+  source: SourceObject;
 };
 
 type DeferContext = {
@@ -99,6 +106,7 @@ type DeferContext = {
   anchorDepth: number;
   anchorPath: ResponsePath;
   isDeferPending: DeferIndexing["isDeferPending"];
+  embeddedTargets: EmbeddedDeferTarget[];
 };
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -144,7 +152,8 @@ export function indexTree(
     indexedSources: 0,
     incompleteChunks: new Set(),
     rootNodeKey,
-    // Recycled chunks are not traversed, so their defer targets would be missed
+    // A result of a new execution is not recycled: indexing collects its targets from every object.
+    //   (recycling only pays off for writes of existing objects, which never start an execution)
     recycleTree: defer ? null : previousTreeState,
     findParent: createParentLocator(dataMap),
     defer,
@@ -172,12 +181,13 @@ export function indexTree(
     history:
       previousTreeState?.history ?? new CircularBuffer(operation.historySize),
   };
-  // Response paths belong to the execution, so targets are never re-indexed from the current data
-  const deferIndex = deferIndexing
-    ? defer?.index
-    : previousTreeState?.deferIndex;
-  if (deferIndex) {
-    tree.deferIndex = deferIndex;
+  // Targets belong to executions and are never re-indexed from the current data
+  if (previousTreeState?.deferIndexes) {
+    tree.deferIndexes = previousTreeState.deferIndexes;
+  }
+  if (defer && deferIndexing) {
+    deferIndexing.index = defer.index;
+    deferIndexing.embeddedTargets = defer.embeddedTargets;
   }
   // Every composite occurrence is counted, but dataMap keeps only unique sources.
   // This detects sharing without an additional map lookup or allocation per chunk.
@@ -188,16 +198,17 @@ export function indexTree(
 }
 
 function createDeferContext(
-  { index, execution, path, anchor, isDeferPending }: DeferIndexing,
+  { index, path, anchor, isDeferPending }: DeferIndexing,
   rootNodeKey: NodeKey,
 ): DeferContext {
   const responsePath = path ? [...path] : [];
   return {
-    index: index ?? createDeferIndex(execution),
+    index: index ?? new Map(),
     path: responsePath,
     anchorKey: anchor?.nodeKey ?? rootNodeKey,
     anchorDepth: responsePath.length,
     anchorPath: anchor?.path ?? EMPTY_ARRAY,
+    embeddedTargets: [],
     isDeferPending,
   };
 }
@@ -303,8 +314,8 @@ function reindexSharedTree(
   repairedTree.prev = tree.prev;
   repairedTree.history = tree.history;
   // Targets are addresses, so the ones collected from the shared data remain valid
-  if (tree.deferIndex) {
-    repairedTree.deferIndex = tree.deferIndex;
+  if (tree.deferIndexes) {
+    repairedTree.deferIndexes = tree.deferIndexes;
   }
   return repairedTree;
 }
@@ -380,7 +391,7 @@ function indexSourceObject(
       defer.anchorPath = EMPTY_ARRAY;
     }
     if (selection.deferredFragments) {
-      addDeferTargets(defer, typeName, selection.deferredFragments);
+      addDeferTargets(defer, chunk, typeName, selection.deferredFragments);
     }
   }
   if (missingFields?.size) {
@@ -564,6 +575,7 @@ function indexNested<
 
 function addDeferTargets(
   defer: DeferContext,
+  chunk: ObjectChunk,
   typeName: TypeName | undefined,
   fragments: NonNullable<ResolvedSelection["deferredFragments"]>,
 ) {
@@ -573,15 +585,20 @@ function addDeferTargets(
     if (isDeferPending && !isDeferPending(path, label)) {
       continue;
     }
-    addDeferTarget(index, [...path], label, {
+    const key = deferTargetKey(path, label);
+    const embedded = anchorDepth !== path.length || anchorPath.length > 0;
+    const target: DeferTarget = {
       nodeKey: anchorKey,
-      path:
-        anchorDepth === path.length && !anchorPath.length
-          ? EMPTY_ARRAY
-          : [...anchorPath, ...path.slice(anchorDepth)],
+      path: embedded
+        ? [...anchorPath, ...path.slice(anchorDepth)]
+        : EMPTY_ARRAY,
       typeName,
       selection,
-    });
+    };
+    addDeferTarget(index, key, target);
+    if (embedded) {
+      defer.embeddedTargets.push({ key, target, source: chunk.data });
+    }
   }
 }
 

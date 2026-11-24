@@ -61,8 +61,8 @@ export type IndexedTree = {
   // Tree changes
   history: CircularBuffer<HistoryChange>;
 
-  // Pending @defer targets of the latest incremental execution (carried over on tree updates)
-  deferIndex?: DeferIndex;
+  // Pending @defer targets by incremental execution (carried over on tree updates)
+  deferIndexes?: WeakMap<object, DeferIndex>;
 
   // ApolloCompat
   danglingReferences?: Set<NodeKey>;

@@ -50,6 +50,12 @@ import { addTree, trackTreeNodes } from "../forest/addTree";
 import { DirectiveNode, FragmentDefinitionNode } from "graphql";
 import { OPERATION_HISTORY_SYMBOL } from "../descriptor/operation";
 import { appendHistoryToData } from "../values/history";
+import {
+  DiffOptions,
+  getExecution,
+  handleIncrementalSymbol,
+  isMissingOnlyPendingFragments,
+} from "./incremental";
 
 export function read<TData>(
   env: CacheEnv,
@@ -78,6 +84,26 @@ export function read<TData>(
   // FIXME: this may break with optimistic layers - partialReadResults should be per layer?
   if (outputTree.incompleteChunks.size) {
     store.partialReadResults.add(outputTree.operation);
+    const incrementalInfo = (options as DiffOptions)[handleIncrementalSymbol];
+    if (
+      incrementalInfo &&
+      isMissingOnlyPendingFragments(
+        store,
+        getActiveForest(store, activeTransaction).trees.get(
+          outputTree.operation.id,
+        ),
+        getExecution(incrementalInfo),
+        outputTree,
+      )
+    ) {
+      // Same as Apollo 4: data is only missing within @defer boundaries that are still pending
+      return {
+        result: outputTree.result.data as TData,
+        complete: false as const,
+        missing: undefined,
+        dataState: "streaming",
+      } as Cache.DiffResult<TData>;
+    }
     let missing: MissingFieldError[] | undefined;
     return {
       result: outputTree.result.data as TData,

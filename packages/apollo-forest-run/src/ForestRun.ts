@@ -42,6 +42,7 @@ import {
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
 import {
+  getExecution,
   handleIncrementalSymbol,
   WriteOptions,
   writeIncremental,
@@ -233,8 +234,8 @@ export class ForestRun<
       transaction,
       options,
       incrementalInfo && {
-        execution: incrementalInfo.isDeferPending,
-        isDeferPending: incrementalInfo.isDeferPending,
+        execution: getExecution(incrementalInfo),
+        deferIndexing: { isDeferPending: incrementalInfo.isDeferPending },
       },
     );
     transaction.changelog.push(result);

@@ -251,7 +251,8 @@ to the cache objects they were deferred on in the initial result instead:
    and watches work as for any other write. Nested deferred fragments of a patch are registered the same way.
 
 A fragment is written to its original entity even if the operation doesn't reach it anymore (deleted or evicted
-entities are not re-created). Embedded objects are addressed by their position within the closest entity.
+entities are not re-created). Embedded objects are addressed by their position within the closest entity
+(resolved after merge policies, so items appended to an existing list by a merge policy keep their targets).
 For operations without a stored result (e.g. mutations), targets are kept for the lifetime of the execution
 and only entity targets are written.
 
@@ -278,12 +279,20 @@ cache.write({
     hasNext,
   },
 });
+
+// Read: data missing only within pending deferred fragments is reported as `dataState: "streaming"`
+cache.diff({ query, variables, [handleIncrementalSymbol]: { isDeferPending } });
 ```
 
-- `isDeferPending` must be the same function for all writes of an execution (patches of other executions are ignored).
-  A new initial result replaces targets of the previous execution. The final payload (`hasNext: false`) releases them.
+- `isDeferPending` identifies an execution and must be the same function for all of its writes. Every execution
+  keeps its own targets (e.g. pages merged into one result with `@cache(keyVars)` may stream concurrently).
+  The final payload (`hasNext: false`) releases them.
 - Deferred fragments are identified by `path` and `label`. Unlabeled fragments sharing a path are ambiguous and
   are not written (label every `@defer`, e.g. with a document transform).
+- Initial results must be written as received: merging them with the current cache data (as Apollo 3 does)
+  breaks list results (apollo-client#12250).
+- Pagination via `fetchMore` + `updateQuery`: the `fetchMore` result must be written to the cache (not `no-cache`)
+  for its patches to apply. Patches reach the merged query through entities, so paginated items need keys.
 - `@stream` is not supported.
 
 ## Aggregated Entity Views

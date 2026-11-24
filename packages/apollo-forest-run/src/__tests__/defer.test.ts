@@ -2,16 +2,18 @@ import { gql } from "@apollo/client";
 import { DocumentNode } from "graphql";
 import { ForestRun } from "../ForestRun";
 import {
+  DiffOptions,
   handleIncrementalSymbol,
   IncrementalPatch,
   WriteIncrementalInfo,
 } from "../cache/incremental";
+import { assert } from "../jsutils/assert";
 
 class InspectableCache extends ForestRun {
-  deferTargetCount(): number {
-    let count = 0;
+  deferTargetCount(execution: object): number {
+    let count = this.store.deferIndexes.get(execution)?.size ?? 0;
     for (const tree of this.store.dataForest.trees.values()) {
-      count += tree.deferIndex?.targets.size ?? 0;
+      count += tree.deferIndexes?.get(execution)?.size ?? 0;
     }
     return count;
   }
@@ -21,9 +23,11 @@ function execution(
   cache: ForestRun,
   query: DocumentNode,
   variables = {},
-  isDeferPending: WriteIncrementalInfo["isDeferPending"] = () => true,
+  isDeferPending: NonNullable<WriteIncrementalInfo["isDeferPending"]> = () =>
+    true,
 ) {
   return {
+    isDeferPending,
     initial(data: Record<string, unknown>) {
       cache.write({
         query,
@@ -39,6 +43,19 @@ function execution(
         result: {},
         [handleIncrementalSymbol]: { isDeferPending, incremental, hasNext },
       });
+    },
+    diff() {
+      return cache.diff({
+        query,
+        variables,
+        optimistic: false,
+        returnPartialData: false,
+        [handleIncrementalSymbol]: { isDeferPending },
+      } as DiffOptions);
+    },
+    pendingTargets() {
+      assert(cache instanceof InspectableCache);
+      return cache.deferTargetCount(isDeferPending);
     },
   };
 }
@@ -608,7 +625,7 @@ describe("@defer", () => {
     const cache = new InspectableCache();
     const delivery = execution(cache, list, {}, (path) => path[1] === 1);
     delivery.initial({ messages: [message("1"), message("2")] });
-    expect(cache.deferTargetCount()).toBe(1);
+    expect(delivery.pendingTargets()).toBe(1);
 
     delivery.patch([namePatch("one", 0), namePatch("two", 1)], false);
     expect(cache.readQuery({ query: list, returnPartialData: true })).toEqual({
@@ -616,21 +633,20 @@ describe("@defer", () => {
     });
   });
 
-  test("a new execution replaces targets of the previous one", () => {
+  test("overlapping executions keep their own targets", () => {
     const cache = new InspectableCache();
     const first = execution(cache, list);
     const second = execution(cache, list);
     first.initial({ messages: [message("1")] });
     second.initial({ messages: [message("2"), message("1")] });
-    first.patch([namePatch("stale")]);
-    expect(cache.readQuery({ query: list, returnPartialData: true })).toEqual({
-      messages: [message("2"), message("1")],
-    });
 
+    first.patch([namePatch("one")], false);
+    expect(first.pendingTargets()).toBe(0);
+    expect(second.pendingTargets()).toBe(2);
     second.patch([namePatch("two")], false);
-    expect(cache.deferTargetCount()).toBe(0);
+    expect(second.pendingTargets()).toBe(0);
     expect(cache.readQuery({ query: list, returnPartialData: true })).toEqual({
-      messages: [message("2", "two"), message("1")],
+      messages: [message("2", "two"), message("1", "one")],
     });
   });
 
@@ -638,14 +654,14 @@ describe("@defer", () => {
     const cache = new InspectableCache();
     const delivery = execution(cache, list);
     cache.writeQuery({ query: list, data: { messages: [message("3", "x")] } });
-    expect(cache.deferTargetCount()).toBe(0);
+    expect(delivery.pendingTargets()).toBe(0);
 
     delivery.initial({ messages: [message("1")] });
     cache.writeQuery({
       query: list,
       data: { messages: [message("2", "two"), message("1")] },
     });
-    expect(cache.deferTargetCount()).toBe(1);
+    expect(delivery.pendingTargets()).toBe(1);
 
     delivery.patch([namePatch("one")], false);
     expect(cache.readQuery({ query: list })).toEqual({
@@ -657,11 +673,11 @@ describe("@defer", () => {
     const cache = new InspectableCache();
     const delivery = execution(cache, list);
     delivery.initial({ messages: [message("1"), message("2")] });
-    expect(cache.deferTargetCount()).toBe(2);
+    expect(delivery.pendingTargets()).toBe(2);
     delivery.patch([namePatch("one")]);
-    expect(cache.deferTargetCount()).toBe(1);
+    expect(delivery.pendingTargets()).toBe(1);
     delivery.patch([], false);
-    expect(cache.deferTargetCount()).toBe(0);
+    expect(delivery.pendingTargets()).toBe(0);
   });
 
   test("patches are ignored after their tree is evicted", () => {
@@ -735,5 +751,298 @@ describe("@defer", () => {
     expect(cache.readQuery({ query: list })).toEqual({
       messages: [message("1", "one")],
     });
+  });
+});
+
+describe("@defer: reads", () => {
+  // Note: missing leaf fields are not detected on reads of the written result,
+  //   so incompleteness at @defer boundaries only matters for fields with selections
+  const query = gql`
+    query {
+      messages {
+        id
+        meta {
+          text
+        }
+        ... @defer(label: "author") {
+          author {
+            id
+            name
+          }
+        }
+      }
+    }
+  `;
+  const meta = { __typename: "Meta", text: "t" };
+  const item = (id: string, author?: string) => ({
+    __typename: "Message",
+    id,
+    meta,
+    ...(author && { author: { __typename: "User", id: author, name: author } }),
+  });
+  const authorPatch = (index: number, author: string | null) => ({
+    path: ["messages", index],
+    label: "author",
+    data: author === null ? {} : { author: item("_", author).author },
+  });
+
+  test("a result missing only pending fragments is streaming", () => {
+    const cache = new ForestRun();
+    const delivery = execution(cache, query);
+    delivery.initial({ messages: [item("1"), item("2")] });
+
+    expect(delivery.diff()).toEqual({
+      result: { messages: [item("1"), item("2")] },
+      complete: false,
+      missing: undefined,
+      dataState: "streaming",
+    });
+    // Regular reads are not affected
+    expect(
+      cache.diff({ query, optimistic: false, returnPartialData: true }),
+    ).toMatchObject({ complete: false, missing: [expect.anything()] });
+
+    delivery.patch([authorPatch(0, "A")]);
+    expect(delivery.diff()).toMatchObject({ dataState: "streaming" });
+
+    delivery.patch([authorPatch(1, "B")], false);
+    expect(delivery.diff()).toEqual({
+      result: { messages: [item("1", "A"), item("2", "B")] },
+      complete: true,
+    });
+  });
+
+  test("missing fields outside pending fragments are reported", () => {
+    const cache = new ForestRun();
+    const delivery = execution(cache, query);
+    delivery.initial({ messages: [{ __typename: "Message", id: "1" }] });
+
+    expect(() => delivery.diff()).toThrow(/meta/);
+  });
+
+  test("fields of a fragment are not pending after its delivery", () => {
+    const cache = new ForestRun();
+    const delivery = execution(cache, query);
+    delivery.initial({ messages: [item("1")] });
+    delivery.patch([authorPatch(0, null)]);
+
+    expect(() => delivery.diff()).toThrow(/author/);
+  });
+
+  test("an embedded target with a pending fragment is streaming", () => {
+    const cache = new ForestRun();
+    const query = gql`
+      query {
+        info {
+          id
+          meta {
+            text
+            ... @defer(label: "extra") {
+              extra {
+                value
+              }
+            }
+          }
+        }
+      }
+    `;
+    const delivery = execution(cache, query);
+    delivery.initial({
+      info: { __typename: "Info", id: "1", meta },
+    });
+
+    expect(delivery.diff()).toMatchObject({ dataState: "streaming" });
+  });
+});
+describe("@defer: pagination", () => {
+  const feedPolicies = {
+    typePolicies: {
+      Query: {
+        fields: {
+          feed: {
+            keyArgs: false as const,
+            merge: (existing: unknown[] = [], incoming: unknown[]) => [
+              ...existing,
+              ...incoming,
+            ],
+          },
+        },
+      },
+    },
+  };
+
+  test("pages merged into one result keep targets of every pending page", () => {
+    const cache = new ForestRun(feedPolicies);
+    const query = gql`
+      query Feed($after: Int) @cache(keyVars: []) {
+        feed(after: $after) @connection(key: "feed") {
+          id
+          text
+          ... @defer(label: "name") {
+            name
+          }
+        }
+      }
+    `;
+    const page1 = execution(cache, query, { after: 0 });
+    const page2 = execution(cache, query, { after: 2 });
+    page1.initial({ feed: [message("1"), message("2")] });
+    page2.initial({ feed: [message("3")] });
+
+    page1.patch([{ path: ["feed", 0], label: "name", data: { name: "one" } }]);
+    page2.patch(
+      [{ path: ["feed", 0], label: "name", data: { name: "three" } }],
+      false,
+    );
+    page1.patch(
+      [{ path: ["feed", 1], label: "name", data: { name: "two" } }],
+      false,
+    );
+
+    expect(cache.readQuery({ query, variables: { after: 2 } })).toEqual({
+      feed: [message("1", "one"), message("2", "two"), message("3", "three")],
+    });
+  });
+
+  test("embedded items keep their targets after a merge policy appends them", () => {
+    const cache = new ForestRun(feedPolicies);
+    const query = gql`
+      query Feed($after: Int) @cache(keyVars: []) {
+        feed(after: $after) @connection(key: "feed") {
+          text
+          ... @defer(label: "name") {
+            name
+          }
+        }
+      }
+    `;
+    const item = (text: string, name?: string) => ({
+      __typename: "Item",
+      text,
+      ...(name && { name }),
+    });
+    const page1 = execution(cache, query, { after: 0 });
+    const page2 = execution(cache, query, { after: 2 });
+    page1.initial({ feed: [item("a"), item("b")] });
+    page2.initial({ feed: [item("c")] });
+    page2.patch(
+      [{ path: ["feed", 0], label: "name", data: { name: "C" } }],
+      false,
+    );
+    page1.patch(
+      [
+        { path: ["feed", 0], label: "name", data: { name: "A" } },
+        { path: ["feed", 1], label: "name", data: { name: "B" } },
+      ],
+      false,
+    );
+
+    expect(cache.readQuery({ query, variables: { after: 2 } })).toEqual({
+      feed: [item("a", "A"), item("b", "B"), item("c", "C")],
+    });
+  });
+
+  test("fetchMore with updateQuery: patches reach entities of the merged query", () => {
+    const cache = new ForestRun();
+    const query = gql`
+      query Feed($after: Int) {
+        feed(after: $after) {
+          id
+          text
+          ... @defer(label: "name") {
+            name
+          }
+        }
+      }
+    `;
+    const main = execution(cache, query, { after: 0 });
+    main.initial({ feed: [message("1")] });
+    main.patch(
+      [{ path: ["feed", 0], label: "name", data: { name: "one" } }],
+      false,
+    );
+
+    const more = execution(cache, query, { after: 1 });
+    more.initial({ feed: [message("2")] });
+    cache.updateQuery(
+      { query, variables: { after: 0 }, returnPartialData: true },
+      (data: any) => ({ feed: [...data.feed, message("2")] }),
+    );
+    more.patch(
+      [{ path: ["feed", 0], label: "name", data: { name: "two" } }],
+      false,
+    );
+
+    expect(cache.readQuery({ query, variables: { after: 0 } })).toEqual({
+      feed: [message("1", "one"), message("2", "two")],
+    });
+  });
+});
+
+describe("@defer: upstream issues", () => {
+  test("refetch after a deletion does not duplicate items (apollo-client#12250)", () => {
+    const cache = new ForestRun();
+    const query = gql`
+      query Books {
+        books {
+          id
+          title
+          ... @defer(label: "info") {
+            info
+          }
+        }
+      }
+    `;
+    const book = (id: string, info?: string) => ({
+      __typename: "Book",
+      id,
+      title: `Book ${id}`,
+      ...(info && { info }),
+    });
+    const first = execution(cache, query);
+    first.initial({ books: [book("1"), book("2")] });
+    first.patch(
+      [
+        { path: ["books", 0], label: "info", data: { info: "i1" } },
+        { path: ["books", 1], label: "info", data: { info: "i2" } },
+      ],
+      false,
+    );
+
+    const refetch = execution(cache, query);
+    refetch.initial({ books: [book("2")] });
+    expect(refetch.diff()).toMatchObject({
+      result: { books: [book("2", "i2")] },
+    });
+    refetch.patch(
+      [{ path: ["books", 0], label: "info", data: { info: "i2*" } }],
+      false,
+    );
+
+    expect(cache.readQuery({ query })).toEqual({ books: [book("2", "i2*")] });
+  });
+
+  test("a patch keeps unchanged items referentially stable (apollo-client#11616)", () => {
+    const cache = new ForestRun();
+    const delivery = execution(cache, list);
+    delivery.initial({ messages: [message("1"), message("2")] });
+    const before = cache.diff<any>({
+      query: list,
+      optimistic: false,
+      returnPartialData: true,
+    }).result;
+    const callback = jest.fn();
+    cache.watch({ query: list, optimistic: false, callback });
+
+    delivery.patch([namePatch("one")]);
+    const after = cache.diff<any>({
+      query: list,
+      optimistic: false,
+      returnPartialData: true,
+    }).result;
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(after.messages[0]).toEqual(message("1", "one"));
+    expect(after.messages[1]).toBe(before.messages[1]);
   });
 });

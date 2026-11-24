@@ -37,9 +37,20 @@ import {
   resolveAffectedOperations,
   updateAffectedTrees,
 } from "../forest/updateForest";
-import { DeferIndexing, indexTree } from "../forest/indexTree";
+import {
+  DeferIndexing,
+  EmbeddedDeferTarget,
+  indexTree,
+} from "../forest/indexTree";
+import type { DeferIndex } from "../forest/deferIndex";
+import { resolveObjectAddress } from "../forest/deferIndex";
 import { addDirtyChunkDifference } from "../forest/transformTree";
-import { createParentLocator, markAsPartial, TraverseEnv } from "../values";
+import {
+  createParentLocator,
+  isObjectValue,
+  markAsPartial,
+  TraverseEnv,
+} from "../values";
 import { NodeDifferenceMap } from "../forest/updateTree";
 import { getNodeChunks } from "./draftHelpers";
 import { replaceTree } from "../forest/addTree";
@@ -52,6 +63,8 @@ export type WriteOperationOptions = {
   // Key of the written object (when it differs from the root node key of the operation)
   rootNodeKey?: NodeKey;
   deferIndexing?: DeferIndexing;
+  // Identity of an incremental execution started by this write (its targets are collected via `deferIndexing`)
+  newExecution?: object;
   // Object without a key of its own to write the data to (data is written to the closest node)
   embeddedTarget?: { tree: IndexedTree; chunk: ObjectChunk };
 };
@@ -61,7 +74,7 @@ export function write(
   store: Store,
   activeTransaction: Transaction,
   options: Cache.WriteOptions,
-  deferIndexing?: DeferIndexing,
+  incremental?: { execution: object; deferIndexing: DeferIndexing },
 ): WriteResult {
   const { objectKey, keyMap } = env;
 
@@ -104,7 +117,10 @@ export function write(
     operationDescriptor,
     writeData,
     options,
-    { deferIndexing },
+    {
+      deferIndexing: incremental?.deferIndexing,
+      newExecution: incremental?.execution,
+    },
   );
 }
 
@@ -123,6 +139,7 @@ export function writeOperation(
     retain,
     rootNodeKey,
     deferIndexing,
+    newExecution,
     embeddedTarget,
   }: WriteOperationOptions = {},
 ): WriteResult {
@@ -196,6 +213,18 @@ export function writeOperation(
     options.overwrite ?? false,
     embeddedTarget?.chunk,
   );
+  if (
+    deferIndexing?.index &&
+    deferIndexing.embeddedTargets?.length &&
+    modifiedIncomingResult !== incomingResult
+  ) {
+    relocateEmbeddedTargets(
+      deferIndexing.index,
+      deferIndexing.embeddedTargets,
+      modifiedIncomingResult,
+      deferIndexing.anchor,
+    );
+  }
 
   const diff = embeddedTarget
     ? (forest: IndexedForest) =>
@@ -247,17 +276,18 @@ export function writeOperation(
     // TODO: replace with addTree and add a proper check for keyVariables
     replaceTree(env, targetForest, modifiedIncomingResult);
   }
-  if (deferIndexing && !deferIndexing.index) {
-    // A new incremental execution replaces targets of the previous one (even when the incoming tree is not stored)
+  if (newExecution && deferIndexing?.index) {
+    // Targets are owned by the result tree; without one (e.g. a mutation) - by the execution itself
     const resultTree = targetForest.trees.get(
       resolveResultDescriptor(env, store, operationDescriptor).id,
     );
-    const { execution } = deferIndexing;
     if (resultTree) {
-      resultTree.deferIndex = incomingResult.deferIndex;
-    } else if (isObjectLike(execution) && incomingResult.deferIndex) {
-      // No result tree to own the targets (e.g. a mutation): keep them for the lifetime of the execution
-      store.deferIndexes.set(execution, incomingResult.deferIndex);
+      (resultTree.deferIndexes ??= new WeakMap()).set(
+        newExecution,
+        deferIndexing.index,
+      );
+    } else {
+      store.deferIndexes.set(newExecution, deferIndexing.index);
     }
   }
 
@@ -455,8 +485,31 @@ function resolveExtraRootNodeType(
 const inspect = JSON.stringify.bind(JSON);
 const EMPTY_ARRAY = Object.freeze([]);
 
-const isObjectLike = (value: unknown): value is object =>
-  (typeof value === "object" && value !== null) || typeof value === "function";
+/**
+ * Merge policies may rearrange the incoming result (e.g. append a page to existing list items),
+ * so positional addresses of embedded targets are resolved again in the final result.
+ * Targets whose objects did not survive the merge are dropped.
+ */
+function relocateEmbeddedTargets(
+  index: DeferIndex,
+  targets: EmbeddedDeferTarget[],
+  tree: IndexedTree,
+  anchor: DeferIndexing["anchor"],
+) {
+  for (const { key, target, source } of targets) {
+    const chunk = tree.dataMap.get(source)?.value;
+    const address =
+      chunk && isObjectValue(chunk)
+        ? resolveObjectAddress(tree, chunk, anchor)
+        : undefined;
+    if (address) {
+      target.nodeKey = address.nodeKey;
+      target.path = address.path;
+    } else if (index.get(key) === target) {
+      index.delete(key);
+    }
+  }
+}
 
 export function isWrite(op: WriteResult | ModifyResult): op is WriteResult {
   return "incoming" in op; // write has "incoming" tree

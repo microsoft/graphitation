@@ -3,6 +3,9 @@ import type {
   PossibleSelections,
   TypeName,
 } from "../descriptor/types";
+import type { ObjectChunk } from "../values/types";
+import type { IndexedTree } from "./types";
+import { isParentListRef, isRootRef } from "../values";
 
 export type ResponsePath = ReadonlyArray<string | number>;
 
@@ -20,30 +23,28 @@ export type DeferTarget = {
   selection: PossibleSelections;
 };
 
-export type DeferIndex = {
-  // Identifies the execution which produced this index (opaque, provided by the client)
-  execution: unknown;
-  // Keyed by response path and label; `null` when the key is ambiguous
-  targets: Map<string, DeferTarget | null>;
-};
+// Pending targets of a single incremental execution.
+//   Keyed by response path and label (`null` when the key is ambiguous)
+export type DeferIndex = Map<string, DeferTarget | null>;
 
-export function createDeferIndex(execution: unknown): DeferIndex {
-  return { execution, targets: new Map() };
+// Execution identity used when the client doesn't provide one
+export const DEFAULT_EXECUTION = Object.freeze({});
+
+export function deferTargetKey(path: ResponsePath, label: string | undefined) {
+  return JSON.stringify([label ?? null, path]);
 }
 
 export function addDeferTarget(
   index: DeferIndex,
-  path: ResponsePath,
-  label: string | undefined,
+  key: string,
   target: DeferTarget,
 ) {
-  const key = deferTargetKey(path, label);
-  const existing = index.targets.get(key);
+  const existing = index.get(key);
   if (existing === undefined) {
-    index.targets.set(key, target);
+    index.set(key, target);
   } else if (existing !== null && !isSameTarget(existing, target)) {
     // Unlabeled fragments sharing a path can't be told apart by their payloads
-    index.targets.set(key, null);
+    index.set(key, null);
   }
 }
 
@@ -53,13 +54,9 @@ export function takeDeferTarget(
   label: string | undefined,
 ): DeferTarget | undefined {
   const key = deferTargetKey(path, label);
-  const target = index.targets.get(key);
-  index.targets.delete(key);
+  const target = index.get(key);
+  index.delete(key);
   return target ?? undefined;
-}
-
-function deferTargetKey(path: ResponsePath, label: string | undefined) {
-  return JSON.stringify([label ?? null, path]);
 }
 
 function isSameTarget(a: DeferTarget, b: DeferTarget) {
@@ -69,4 +66,41 @@ function isSameTarget(a: DeferTarget, b: DeferTarget) {
     a.path.length === b.path.length &&
     a.path.every((segment, i) => segment === b.path[i])
   );
+}
+
+export function addressKey(nodeKey: NodeKey, path: ResponsePath) {
+  return path.length ? JSON.stringify([nodeKey, path]) : nodeKey;
+}
+
+/**
+ * Resolves a cache address of an object in a tree: its key, or for an embedded object,
+ * the closest keyed ancestor and the path from it.
+ *
+ * The root of the tree may be addressed explicitly (e.g. when the tree is a fragment of another result).
+ */
+export function resolveObjectAddress(
+  tree: IndexedTree,
+  object: ObjectChunk,
+  rootAddress?: { nodeKey: NodeKey; path: ResponsePath },
+): { nodeKey: NodeKey; path: ResponsePath } | undefined {
+  const path: (string | number)[] = [];
+  let chunk = object;
+  while (chunk.data !== tree.result.data) {
+    if (chunk.key !== false) {
+      return { nodeKey: chunk.key, path };
+    }
+    let ref = tree.dataMap.get(chunk.data);
+    while (ref && isParentListRef(ref)) {
+      path.unshift(ref.index);
+      ref = tree.dataMap.get(ref.parent.data);
+    }
+    if (!ref || isRootRef(ref)) {
+      return undefined;
+    }
+    path.unshift(ref.field.dataKey);
+    chunk = ref.parent;
+  }
+  return rootAddress
+    ? { nodeKey: rootAddress.nodeKey, path: [...rootAddress.path, ...path] }
+    : { nodeKey: tree.rootNodeKey, path };
 }

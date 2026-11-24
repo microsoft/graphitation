@@ -9,7 +9,14 @@ import type { IndexedTree } from "../forest/types";
 import type { GraphChunk, ObjectChunk, SourceObject } from "../values/types";
 import type { CacheEnv, Store, Transaction, WriteResult } from "./types";
 import type { DataForest, OptimisticLayer } from "./types";
-import { takeDeferTarget } from "../forest/deferIndex";
+import {
+  addressKey,
+  DEFAULT_EXECUTION,
+  resolveObjectAddress,
+  takeDeferTarget,
+} from "../forest/deferIndex";
+import { accumulate } from "../jsutils/map";
+import { resolveSelection } from "../descriptor/resolvedSelection";
 import { isCompositeListValue, isObjectValue, isSourceObject } from "../values";
 import {
   getFragmentDescriptor,
@@ -59,26 +66,46 @@ export type WriteOptions = Cache.WriteOptions & {
   [handleIncrementalSymbol]?: WriteIncrementalInfo;
 };
 
+export type DiffOptions = Cache.DiffOptions & {
+  [handleIncrementalSymbol]?: DiffIncrementalInfo;
+};
+
 // Root key of a patch for an embedded object (it never leaves the incoming tree)
 const EMBEDDED_TARGET_KEY = "__FOREST_RUN_EMBEDDED_DEFER_TARGET__";
 
-const isObjectLike = (value: unknown): value is object =>
-  (typeof value === "object" && value !== null) || typeof value === "function";
+export function getExecution({ isDeferPending }: DiffIncrementalInfo): object {
+  return isDeferPending ?? DEFAULT_EXECUTION;
+}
+
+/**
+ * Pending targets of an execution: owned by the operation result tree, or by the execution itself
+ * when the result is not stored (e.g. a mutation).
+ */
+export function getDeferIndex(
+  store: Store,
+  tree: IndexedTree | undefined,
+  execution: object,
+): DeferIndex | undefined {
+  return (
+    tree?.deferIndexes?.get(execution) ?? store.deferIndexes.get(execution)
+  );
+}
 
 /**
  * Writes deferred fragments of an incremental execution to the cache objects they were
  * deferred on in the initial result.
  *
  * Patches are applied in payload order, as fragment writes of deferred selections.
- * Patches of other executions, unknown or already applied fragments are ignored.
+ * Patches of unknown executions, unknown or already applied fragments are ignored.
  */
 export function writeIncremental(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
   options: WriteOptions,
-  { incremental = [], hasNext, isDeferPending }: WriteIncrementalInfo,
+  info: WriteIncrementalInfo,
 ): WriteResult[] {
+  const { incremental = [], hasNext } = info;
   const forest = getActiveForest(store, activeTransaction);
   const operation = resolveOperationDescriptor(
     env,
@@ -91,16 +118,12 @@ export function writeIncremental(
   if (!operation.cache) {
     activeTransaction.nonCacheableOperations?.add(operation);
   }
-  const execution = isObjectLike(isDeferPending) ? isDeferPending : undefined;
-  const getIndex = () => {
-    const index =
-      forest.trees.get(resultOperationId)?.deferIndex ??
-      (execution && store.deferIndexes.get(execution));
-    return index?.execution === isDeferPending ? index : undefined;
-  };
+  const execution = getExecution(info);
+  const getTree = () => forest.trees.get(resultOperationId);
+
   const results: WriteResult[] = [];
   for (const patch of incremental) {
-    const index = getIndex();
+    const index = getDeferIndex(store, getTree(), execution);
     if (!index) {
       break;
     }
@@ -114,7 +137,7 @@ export function writeIncremental(
       activeTransaction,
       forest,
       operation,
-      forest.trees.get(resultOperationId),
+      getTree(),
       index,
       target,
       patch.path,
@@ -125,13 +148,61 @@ export function writeIncremental(
       results.push(result);
     }
   }
-  if (hasNext === false && getIndex()) {
-    delete forest.trees.get(resultOperationId)?.deferIndex;
-    if (execution) {
-      store.deferIndexes.delete(execution);
-    }
+  if (hasNext === false) {
+    getTree()?.deferIndexes?.delete(execution);
+    store.deferIndexes.delete(execution);
   }
   return results;
+}
+
+/**
+ * Checks whether every missing field of a read result belongs to a deferred fragment
+ * the execution is still waiting for (i.e. the result is complete for the current state of the stream).
+ */
+export function isMissingOnlyPendingFragments(
+  store: Store,
+  tree: IndexedTree | undefined,
+  execution: object,
+  outputTree: IndexedTree,
+): boolean {
+  const index = getDeferIndex(store, tree, execution);
+  if (!index?.size) {
+    return false;
+  }
+  const targetsByAddress = new Map<string, DeferTarget[]>();
+  for (const target of index.values()) {
+    if (target) {
+      accumulate(
+        targetsByAddress,
+        addressKey(target.nodeKey, target.path),
+        target,
+      );
+    }
+  }
+  const { operation } = outputTree;
+  for (const chunk of outputTree.incompleteChunks) {
+    if (!isObjectValue(chunk) || !chunk.missingFields?.size) {
+      return false;
+    }
+    const address = resolveObjectAddress(outputTree, chunk);
+    const targets =
+      address &&
+      targetsByAddress.get(addressKey(address.nodeKey, address.path));
+    if (!targets) {
+      return false;
+    }
+    for (const field of chunk.missingFields) {
+      const isPending = targets.some(({ selection }) =>
+        resolveSelection(operation, selection, chunk.type || null).fields.has(
+          field.name,
+        ),
+      );
+      if (!isPending) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 function writePatch(
