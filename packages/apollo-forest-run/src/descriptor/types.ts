@@ -82,7 +82,7 @@ export type ResolvedSelection = PossibleSelection & {
   normalizedFields?: Map<FieldInfo, NormalizedFieldEntry>;
   skippedFields?: Set<FieldInfo>;
   skippedSpreads?: Set<SpreadInfo>;
-  deferredFragments?: DeferredFragment[];
+  deferredFragments?: DeferSite[]; // enabled for the operation variables
   resolvedHash?: number; // Structural hash + runtime-resolved state (args, skip/include)
 };
 
@@ -184,11 +184,6 @@ export type PossibleTypes = { [abstractType: TypeName]: TypeName[] };
 // e.g. { a: foo { bar }, { b: foo { baz } } -> same canonical name `foo` leads to multiple entries: `a { bar }` and `b { baz }`;
 export type FieldMap = Map<FieldName, FieldInfo[]>;
 export type FragmentSpreadMap = Map<FragmentName, SpreadInfo[]>;
-
-// A deferred fragment of an object (enabled for the operation variables)
-export type DeferredFragment = {
-  label?: DeferLabel;
-};
 
 // Response keys and list indices from the result root
 export type ResponsePath = ReadonlyArray<string | number>;

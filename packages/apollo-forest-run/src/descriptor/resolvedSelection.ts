@@ -109,23 +109,18 @@ export function resolveSelection(
       ? selection.fieldQueue.filter((field) => !skippedFields.has(field))
       : selection.fieldQueue;
 
-    const deferredFragments = selection.deferSites?.flatMap((site) => {
-      const variables = operation.variablesWithDefaults;
-      if (
-        site.conditions.some(
-          ({ variable, expected, defer }) =>
-            (defer
-              ? variables[variable] !== false
-              : Boolean(variables[variable])) !== expected,
-        )
-      )
-        return [];
-      return [
-        {
-          label: site.label,
-        },
-      ];
-    });
+    const variables = operation.variablesWithDefaults;
+    const enabledDeferSites = selection.deferSites?.filter(({ conditions }) =>
+      conditions.every(
+        ({ variable, expected, defer }) =>
+          (defer
+            ? variables[variable] !== false
+            : Boolean(variables[variable])) === expected,
+      ),
+    );
+    const deferredFragments = enabledDeferSites?.length
+      ? enabledDeferSites
+      : undefined;
 
     const hasLocalChanges =
       deferredFragments ||
