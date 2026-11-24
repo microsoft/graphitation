@@ -165,6 +165,10 @@ export type PossibleSelection = {
 };
 
 // A deferred fragment in the document (its data is written with the selection of the object it is deferred on)
+//
+// TODO: for defer-aware reads (`dataState: "streaming"`), add `deferBoundary` to `FieldInfo`: the closest enclosing
+//   `DeferSite` of a field (collected like `watchBoundaries`). A missing field is then pending if its boundary is
+//   a site still waiting for data on the object.
 export type DeferSite = {
   label?: DeferLabel;
   conditions: { variable: VariableName; expected: boolean; defer: boolean }[];
