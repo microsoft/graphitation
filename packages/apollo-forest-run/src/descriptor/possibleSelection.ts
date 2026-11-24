@@ -42,7 +42,7 @@ export type Context = Readonly<{
   fieldsWithArgs: FieldInfo[];
   mergeMemo: Map<PossibleSelection, Set<PossibleSelection>>;
   copyOnWrite: Set<PossibleSelection | FieldInfo | SpreadInfo>;
-  fragmentSelections: Map<SelectionSetNode, PossibleSelections>;
+  deferredFragmentSelections: Map<SelectionSetNode, PossibleSelections>;
 }>;
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -63,7 +63,7 @@ export function describeResultTree(
     fieldsWithArgs: [],
     mergeMemo: new Map(),
     copyOnWrite: new Set(),
-    fragmentSelections: new Map(),
+    deferredFragmentSelections: new Map(),
   };
 
   const possibleSelections = collectPossibleSelections(
@@ -73,7 +73,7 @@ export function describeResultTree(
   return {
     possibleSelections,
     fieldsWithArgs: context.fieldsWithArgs,
-    hasDeferSites: context.fragmentSelections.size > 0,
+    hasDeferSites: context.deferredFragmentSelections.size > 0,
   };
 }
 
@@ -264,7 +264,7 @@ function collectDeferSite(
     }
   }
   const selection = getOrCreate(
-    context.fragmentSelections,
+    context.deferredFragmentSelections,
     fragment.selectionSet,
     () => collectPossibleSelections(context, fragment.selectionSet),
   );
