@@ -12,7 +12,12 @@ import type {
   DataMap,
 } from "./types";
 import { ValueKind } from "./types";
-import type { FieldInfo, NormalizedFieldEntry } from "../descriptor/types";
+import type {
+  EmbeddedPath,
+  FieldInfo,
+  NodeKey,
+  NormalizedFieldEntry,
+} from "../descriptor/types";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import * as Predicates from "./predicates";
 import * as ResolveValue from "./resolve";
@@ -321,4 +326,37 @@ export function isNodeRef(ref: GraphValueReference): boolean {
   }
   const value = resolveGraphValueReference(ref[0]);
   return Predicates.isNodeValue(value);
+}
+
+/**
+ * Address of an object: its key, or for an embedded object - the closest keyed ancestor
+ * and the path from it. The root object is addressed by `rootKey`.
+ */
+export function resolveObjectAddress(
+  findParent: ParentLocator,
+  object: ObjectChunk,
+  rootKey: NodeKey,
+): { dataId: NodeKey; subPath: EmbeddedPath } | undefined {
+  const subPath: (NormalizedFieldEntry | number)[] = [];
+  let ref = findParent(object);
+  if (object.key !== false && !Predicates.isRootRef(ref)) {
+    return { dataId: object.key, subPath };
+  }
+  while (ref && !Predicates.isRootRef(ref)) {
+    if (Predicates.isParentListRef(ref)) {
+      subPath.unshift(ref.index);
+      ref = findParent(ref.parent);
+      continue;
+    }
+    const parent = ref.parent;
+    subPath.unshift(resolveNormalizedField(parent.selection, ref.field));
+    ref = findParent(parent);
+    if (ref && Predicates.isRootRef(ref)) {
+      return { dataId: rootKey, subPath };
+    }
+    if (parent.key !== false) {
+      return { dataId: parent.key, subPath };
+    }
+  }
+  return ref ? { dataId: rootKey, subPath } : undefined;
 }

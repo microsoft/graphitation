@@ -47,22 +47,21 @@ import {
 } from "../forest/updateForest";
 import { indexTree } from "../forest/indexTree";
 import type {
+  DeferLabel,
   DeferTarget,
+  DeferTargetKey,
+  DeferTargets,
   EmbeddedPath,
   ResponsePath,
 } from "../descriptor/types";
 import {
-  addDeferTarget,
-  deleteDeferTarget,
-  getDeferTarget,
-  resolveObjectAddress,
-} from "../forest/deferTargets";
-import {
+  fieldEntriesAreEqual,
   resolveNormalizedField,
   resolveSelection,
 } from "../descriptor/resolvedSelection";
 import { addDirtyChunkDifference } from "../forest/transformTree";
 import {
+  resolveObjectAddress,
   createParentLocator,
   getDataPathForDebugging,
   isCompositeListValue,
@@ -577,6 +576,70 @@ function addDeferTargets(
   }
   indexed.chunksWithDeferredFragments = undefined;
 }
+// Pending targets of deferred fragments
+
+function addDeferTarget(targets: DeferTargets, target: DeferTarget) {
+  addKey(targets, targetKey(target.path, target.label), target);
+  if (target.label !== undefined) {
+    // Allows payloads without labels (when the path is unambiguous)
+    addKey(targets, targetKey(target.path, undefined), target);
+  }
+}
+
+function getDeferTarget(
+  targets: DeferTargets,
+  path: ResponsePath,
+  label: DeferLabel | undefined,
+): DeferTarget | undefined {
+  return targets.get(targetKey(path, label)) ?? undefined;
+}
+
+function deleteDeferTarget(targets: DeferTargets, target: DeferTarget) {
+  const labeled = targetKey(target.path, target.label);
+  const unlabeled = targetKey(target.path, undefined);
+  if (targets.get(labeled) === target) {
+    targets.delete(labeled);
+  }
+  if (targets.get(unlabeled) === target) {
+    targets.delete(unlabeled);
+  }
+}
+
+function addKey(
+  targets: DeferTargets,
+  key: DeferTargetKey,
+  target: DeferTarget,
+) {
+  const existing = targets.get(key);
+  if (existing === undefined) {
+    targets.set(key, target);
+  } else if (existing !== null && !isSameTarget(existing, target)) {
+    targets.set(key, null);
+  }
+}
+
+function targetKey(
+  path: ResponsePath,
+  label: DeferLabel | undefined,
+): DeferTargetKey {
+  return JSON.stringify([label ?? null, path]);
+}
+
+function isSameTarget(a: DeferTarget, b: DeferTarget) {
+  return (
+    a.selection === b.selection &&
+    a.label === b.label &&
+    a.dataId === b.dataId &&
+    a.subPath.length === b.subPath.length &&
+    a.subPath.every((step, i) => {
+      const other = b.subPath[i];
+      return typeof step === "number" || typeof other === "number"
+        ? step === other
+        : fieldEntriesAreEqual(step, other);
+    })
+  );
+}
+
 function appendAffectedOperationsFromOtherLayers(
   store: Store,
   affectedForestOperationsMutable: Map<OperationDescriptor, NodeDifferenceMap>,
