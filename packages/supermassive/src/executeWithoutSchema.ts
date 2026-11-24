@@ -380,7 +380,6 @@ function executeOperation(
           undefined,
           exeContext.enableEarlyExecution ? patches : undefined,
         );
-        result = buildResponse(exeContext, result);
         break;
       case "mutation":
         result = executeFieldsSerially(
@@ -391,18 +390,16 @@ function executeOperation(
           groupedFieldSet,
           exeContext.enableEarlyExecution ? patches : undefined,
         );
-        result = buildResponse(exeContext, result);
         break;
       case "subscription": {
         const resultOrStreamOrPromise = createSourceEventStream(exeContext);
-        result = mapResultOrEventStreamOrPromise(
+        return mapResultOrEventStreamOrPromise(
           resultOrStreamOrPromise,
           exeContext,
           rootTypeName,
           path,
           groupedFieldSet,
         );
-        break;
       }
       default:
         invariant(
@@ -425,7 +422,7 @@ function executeOperation(
       }
     }
 
-    return result;
+    return buildResponse(exeContext, result);
   } catch (error) {
     exeContext.errors.push(error as GraphQLError);
     return buildResponse(exeContext, null);
@@ -461,6 +458,13 @@ function buildResponse(
         ...baseResult,
         hasNext: true,
       };
+      const pending = Array.from(exeContext.subsequentPayloads)
+        .filter((record) => record.type === "defer" && !record.parentContext)
+        .map(({ path, label }) => ({
+          path,
+          ...(label !== undefined ? { label } : {}),
+        }));
+      if (pending.length) initialResult.pending = pending;
       invokeAfterBuildResponseHook(exeContext, initialResult);
       return {
         initialResult,

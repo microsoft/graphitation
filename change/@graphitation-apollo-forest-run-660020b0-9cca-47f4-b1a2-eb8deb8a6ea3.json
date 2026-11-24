@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Bind deferred patches to the entities announced in pending paths",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "pavelglac@gmail.com",
+  "dependentChangeType": "patch"
+}

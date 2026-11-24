@@ -18,7 +18,8 @@
     "just": "monorepo-scripts"
   },
   "devDependencies": {
-    "@apollo/client": ">= 3.3.0 < 3.7.0",
+    "@apollo/client": "patch:@apollo/client@npm%3A3.14.0#~/.yarn/patches/@apollo-client-npm-3.14.0-ad9c6cfbc6.patch",
+    "@graphitation/supermassive": "*",
     "@types/jest": "^26.0.22",
     "graphql": "^15.0.0",
     "lodash": "^4.17.21",
@@ -46,7 +47,7 @@
     "CHANGELOG.md"
   ],
   "peerDependencies": {
-    "@apollo/client": ">= 3.6.0 < 3.7.0",
+    "@apollo/client": ">= 3.6.0 < 4.0.0",
     "graphql": "^15.0.0 || ^16.0.0 || ^17.0.0"
   }
 }

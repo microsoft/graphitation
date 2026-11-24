@@ -1,7 +1,45 @@
 # Forest Run
 
 **Experimental** custom cache for Apollo client using indexing and diffing for data syncing (instead of normalization).
-Aims to be a drop-in replacement* for Apollo InMemoryCache.
+Aims to be a drop-in replacement\* for Apollo InMemoryCache.
+
+## Deferred writes
+
+Deferred patches are bound to the objects they were announced for, so a list
+reorder or relationship change while a response is pending cannot redirect them
+to a different entity. Supermassive adds `pending: [{ path, label? }]` to the
+initial response; patches keep their existing absolute `path`.
+
+Patched Apollo Client 3.14.0 tracks deferred frames on the shared network
+request, so deduplicated watchers of the same query reuse one execution token
+and apply each frame to the cache once. The request keeps the frame history
+so a late cache-writing watcher can catch up. Apollo checks only for
+`cache.writeIncrementalData`. Caches that implement it also implement
+`writeInitialData`: the latter binds the initial `pending` paths, and the former
+applies each emission's patches using the same token, in one transaction.
+Ordinary `cache.write` and caches without this capability are unchanged.
+
+Yarn applies the Apollo 3.14.0 patch automatically for Forest Run development.
+Applications using deferred writes must apply the same patch or use an Apollo
+Client build that includes it.
+
+While indexing the initial result, Forest Run records a placeholder for every
+pending path: the nearest keyed object (the owner), its selection in the original
+operation and the path relative to it. A patch is written as a regular sparse
+write to that owner, so merge policies, watchers and other queries reading the
+same entity behave as for any other write. Positions inside an owner are
+resolved against its current data, as in Apollo. Patches for evicted owners are
+skipped. Placeholders are held weakly by token, so a watcher leaving cannot
+discard them while another watcher is still processing that request. A cache
+reset drops all bindings.
+
+Only object-data patches for paths announced in `pending` are supported. Objects
+re-selected inside a deferred fragment must select their key fields, as for any
+other write. Nested `@defer` targets introduced by patches and `@stream` are not
+implemented.
+
+See the [deferred-write maintainer handoff](./deferred-writes.md) for the
+reproduction, Apollo fork changes, rejected alternatives and open cases.
 
 # Motivation
 
@@ -250,7 +288,6 @@ This is achieved through aggregated entity views.
 It is basically a short-living object that is created on demand (e.g. for diffing phase). This object is fed
 with different chunks of the same entity found in different GraphQL results (via indexing) and so is a convenience tool
 to represent single entity state from multiple chunks.
-
 
 [1]: ./docs/normalization-pitfalls.md
 [2]: https://medium.com/open-graphql/graphql-subscriptions-vs-live-queries-e38302c7ab8e

@@ -1,0 +1,468 @@
+diff --git a/cache/core/cache.d.ts b/cache/core/cache.d.ts
+index 1b4decbcabf890c96b9d5716987125f2cfbef6fd..15795df333f125d89743fbf602a5bcb93166c330 100644
+--- a/cache/core/cache.d.ts
++++ b/cache/core/cache.d.ts
+@@ -71,6 +71,9 @@ export declare abstract class ApolloCache<TSerialized> implements DataProxy {
+     abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
+     abstract watch<TData = any, TVariables = any>(watch: Cache.WatchOptions<TData, TVariables>): () => void;
+     abstract reset(options?: Cache.ResetOptions): Promise<void>;
++    writeInitialData?(options: Cache.InitialWriteOptions): void;
++    /** Implement together with writeInitialData to opt into deferred writes. */
++    writeIncrementalData?(options: Cache.IncrementalWriteOptions): void;
+     abstract evict(options: Cache.EvictOptions): boolean;
+     /**
+      * Replaces existing state in the cache (if any) with the values expressed by
+diff --git a/cache/core/types/Cache.d.ts b/cache/core/types/Cache.d.ts
+index 9b5950b0a56b3b7884944021ae9ae655298c03e7..89e9b638e111f957b19408691afae8fbc20ed115 100644
+--- a/cache/core/types/Cache.d.ts
++++ b/cache/core/types/Cache.d.ts
+@@ -22,6 +22,13 @@ export declare namespace Cache {
+         dataId?: string;
+         result: Unmasked<TResult>;
+     }
++    type DeferredWrite = Pick<WriteOptions, "query" | "variables"> & { token: object };
++    type InitialWriteOptions = DeferredWrite & {
++        data: Record<string, unknown>; pending: ReadonlyArray<{ path: ReadonlyArray<string | number> }>; overwrite?: boolean;
++    };
++    type IncrementalWriteOptions = DeferredWrite & {
++        patches: ReadonlyArray<{ path: ReadonlyArray<string | number>; data: Record<string, unknown> | null }>;
++    };
+     interface DiffOptions<TData = any, TVariables = any> extends Omit<ReadOptions<TVariables, TData>, "rootId"> {
+     }
+     interface WatchOptions<TData = any, TVariables = any> extends DiffOptions<TData, TVariables> {
+diff --git a/core/QueryInfo.d.ts b/core/QueryInfo.d.ts
+index 9a04d5550a9db2e5d1aaef20af1d713262db9b89..17fb72e5b55f65e8609172ed0df2d1f2f844b281 100644
+--- a/core/QueryInfo.d.ts
++++ b/core/QueryInfo.d.ts
+@@ -3,6 +3,7 @@ import type { Cache } from "../cache/index.js";
+ import type { WatchQueryOptions, ErrorPolicy } from "./watchQueryOptions.js";
+ import type { ObservableQuery } from "./ObservableQuery.js";
+ import type { FetchResult } from "../link/core/index.js";
++import type { ExecutionPatchInitialResult } from "../link/core/types.js";
+ import { NetworkStatus } from "./networkStatus.js";
+ import type { ApolloError } from "../errors/index.js";
+ import type { QueryManager } from "./QueryManager.js";
+@@ -12,6 +13,14 @@ export declare const enum CacheWriteBehavior {
+     OVERWRITE = 1,
+     MERGE = 2
+ }
++interface DeferredFrame {
++    execution: {
++        writes: Map<string, { index: number }>;
++        results: [ExecutionPatchInitialResult, ...FetchResult[]];
++    };
++    data: any;
++    index: number;
++}
+ export declare class QueryInfo {
+     readonly queryId: string;
+     document: DocumentNode | null;
+@@ -46,7 +55,8 @@ export declare class QueryInfo {
+     private lastWrite?;
+     resetLastWrite(): void;
+     private shouldWrite;
+-    markResult<T>(result: FetchResult<T>, document: DocumentNode, options: Pick<WatchQueryOptions, "variables" | "fetchPolicy" | "errorPolicy">, cacheWriteBehavior: CacheWriteBehavior): void;
++    private incremental?;
++    markResult<T>(result: FetchResult<T>, document: DocumentNode, options: Pick<WatchQueryOptions, "variables" | "fetchPolicy" | "errorPolicy">, cacheWriteBehavior: CacheWriteBehavior, frame?: DeferredFrame): void;
+     markReady(): NetworkStatus;
+     markError(error: ApolloError): ApolloError;
+ }
+diff --git a/core/QueryInfo.js b/core/QueryInfo.js
+index d88c9676b5e15b4dc5a24cd32973ec5541cbe992..adb8154dea5a6bf0e3ffced198d8877743e4d65c 100644
+--- a/core/QueryInfo.js
++++ b/core/QueryInfo.js
+@@ -2,7 +2,7 @@ import { __assign } from "tslib";
+ import { equal } from "@wry/equality";
+ import { DeepMerger } from "../utilities/index.js";
+ import { mergeIncrementalData } from "../utilities/index.js";
+-import { isNonEmptyArray, graphQLResultHasError, canUseWeakMap, } from "../utilities/index.js";
++import { isNonEmptyArray, graphQLResultHasError, canUseWeakMap, print, } from "../utilities/index.js";
+ import { NetworkStatus } from "./networkStatus.js";
+ import { muteDeprecations } from "../utilities/deprecation/index.js";
+ var destructiveMethodCounts = new (canUseWeakMap ? WeakMap : Map)();
+@@ -157,6 +157,7 @@ var QueryInfo = /** @class */ (function () {
+         var _a;
+         if (!this.stopped) {
+             this.stopped = true;
++            this.incremental = void 0;
+             // Cancel the pending notify timeout
+             (_a = this.observableQuery) === null || _a === void 0 ? void 0 : _a["resetNotifications"]();
+             this.cancel();
+@@ -196,7 +197,7 @@ var QueryInfo = /** @class */ (function () {
+             equal(variables, lastWrite.variables) &&
+             equal(result.data, lastWrite.result.data));
+     };
+-    QueryInfo.prototype.markResult = function (result, document, options, cacheWriteBehavior) {
++    QueryInfo.prototype.markResult = function (result, document, options, cacheWriteBehavior, frame) {
+         var _this = this;
+         var _a;
+         var merger = new DeepMerger();
+@@ -204,7 +205,19 @@ var QueryInfo = /** @class */ (function () {
+         // Cancel the pending notify timeout (if it exists) to prevent extraneous network
+         // requests. To allow future notify timeouts, diff and dirty are reset as well.
+         (_a = this.observableQuery) === null || _a === void 0 ? void 0 : _a["resetNotifications"]();
+-        if ("incremental" in result && isNonEmptyArray(result.incremental)) {
++        var previous = this.incremental;
++        this.incremental = void 0;
++        if (frame) {
++            // Keep any local resolver values from this observer's initial result.
++            result.data = frame.index === 0 ? result.data
++                : previous && previous.data !== previous.frame.data &&
++                    previous.frame.execution === frame.execution && previous.frame.index + 1 === frame.index
++                    ? mergeIncrementalData(previous.data, result)
++                    : frame.data;
++            if (result.hasNext)
++                this.incremental = { frame: frame, data: result.data };
++        }
++        else if ("incremental" in result && isNonEmptyArray(result.incremental)) {
+             var mergedData = mergeIncrementalData(this.getDiff().result, result);
+             result.data = mergedData;
+             // Detect the first chunk of a deferred query and merge it with existing
+@@ -228,13 +241,44 @@ var QueryInfo = /** @class */ (function () {
+                 // of writeQuery, so we can store the new diff quietly and ignore
+                 // it when we receive it redundantly from the watch callback.
+                 this.cache.performTransaction(function (cache) {
+-                    if (_this.shouldWrite(result, options.variables)) {
+-                        cache.writeQuery({
+-                            query: document,
+-                            data: result.data,
+-                            variables: options.variables,
+-                            overwrite: cacheWriteBehavior === 1 /* CacheWriteBehavior.OVERWRITE */,
+-                        });
++                    // A shared server operation can have different client-side selections.
++                    var writeKey = frame && print(document);
++                    var write = frame && frame.execution.writes.get(writeKey);
++                    if (frame ? !write || write.index < frame.index
++                        : _this.shouldWrite(result, options.variables)) {
++                        if (frame) {
++                            if (!write) {
++                                var initial = frame.execution.results[0];
++                                write = { index: 0 };
++                                cache.writeInitialData({
++                                    query: document,
++                                    data: frame.index === 0 ? result.data : initial.data,
++                                    variables: options.variables,
++                                    overwrite: cacheWriteBehavior === 1 /* CacheWriteBehavior.OVERWRITE */,
++                                    token: write, pending: initial.pending,
++                                });
++                                frame.execution.writes.set(writeKey, write);
++                            }
++                            for (var index = write.index + 1; index <= frame.index; ++index) {
++                                var payload = frame.execution.results[index];
++                                if (index === frame.index || options.errorPolicy === "all" ||
++                                    options.errorPolicy === "ignore" || !graphQLResultHasError(payload)) {
++                                    cache.writeIncrementalData({
++                                        query: document, variables: options.variables,
++                                        token: write, patches: payload.incremental || [],
++                                    });
++                                }
++                                write.index = index;
++                            }
++                        }
++                        else {
++                            cache.writeQuery({
++                                query: document,
++                                data: result.data,
++                                variables: options.variables,
++                                overwrite: cacheWriteBehavior === 1 /* CacheWriteBehavior.OVERWRITE */,
++                            });
++                        }
+                         _this.lastWrite = {
+                             result: result,
+                             variables: options.variables,
+@@ -322,6 +366,7 @@ var QueryInfo = /** @class */ (function () {
+         var _a;
+         this.networkStatus = NetworkStatus.error;
+         this.lastWrite = void 0;
++        this.incremental = void 0;
+         (_a = this.observableQuery) === null || _a === void 0 ? void 0 : _a["resetNotifications"]();
+         if (error.graphQLErrors) {
+             this.graphQLErrors = error.graphQLErrors;
+diff --git a/core/QueryManager.js b/core/QueryManager.js
+index 3a6ed411ac2069c0c8d8b9d1bb701343c61e080c..e38702d127b68b6d11641f411b0d4ed673416140 100644
+--- a/core/QueryManager.js
++++ b/core/QueryManager.js
+@@ -14,6 +14,31 @@ import { PROTOCOL_ERRORS_SYMBOL } from "../errors/index.js";
+ import { print } from "../utilities/index.js";
+ var hasOwnProperty = Object.prototype.hasOwnProperty;
+ var IGNORE = Object.create(null);
++var deferredFrame = Symbol("deferredFrame");
++function trackDeferredFrames(source) {
++    var execution;
++    var data;
++    return source.map(function (result) {
++        if (result.pending && result.data) {
++            execution = { writes: new Map(), results: [] };
++            data = result.data;
++        }
++        else if ("pending" in result || !("hasNext" in result)) {
++            execution = void 0;
++        }
++        if (!execution)
++            return result;
++        data = mergeIncrementalData(data, result);
++        var index = execution.results.push(result) - 1;
++        // Concast replays only its latest frame, so that frame must carry the execution.
++        var framed = __assign({}, result);
++        framed[deferredFrame] = { execution: execution, data: data, index: index };
++        if (result.hasNext === false) {
++            execution = data = void 0;
++        }
++        return framed;
++    });
++}
+ import { Trie } from "@wry/trie";
+ import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
+ import { maskFragment, maskOperation } from "../masking/index.js";
+@@ -735,6 +760,11 @@ var QueryManager = /** @class */ (function () {
+                 extensions: extensions,
+             };
+             context = operation.context;
++            var executeRequest = function () {
++                var source = execute(link, operation);
++                var definition = typeof _this.cache.writeIncrementalData === "function" && getOperationDefinition(serverQuery);
++                return definition && definition.operation === "query" ? trackDeferredFrames(source) : source;
++            };
+             if (deduplication) {
+                 var printedServerQuery_1 = print(serverQuery);
+                 var varJson_1 = canonicalStringify(variables);
+@@ -742,7 +772,7 @@ var QueryManager = /** @class */ (function () {
+                 observable = entry.observable;
+                 if (!observable) {
+                     var concast_1 = new Concast([
+-                        execute(link, operation),
++                        executeRequest(),
+                     ]);
+                     observable = entry.observable = concast_1;
+                     concast_1.beforeNext(function cb(method, arg) {
+@@ -757,7 +787,7 @@ var QueryManager = /** @class */ (function () {
+             }
+             else {
+                 observable = new Concast([
+-                    execute(link, operation),
++                    executeRequest(),
+                 ]);
+             }
+         }
+@@ -784,12 +814,15 @@ var QueryManager = /** @class */ (function () {
+         // through the link chain.
+         var linkDocument = this.cache.transformForLink(options.query);
+         return asyncMap(this.getObservableFromLink(linkDocument, options.context, options.variables), function (result) {
++            var frame = result[deferredFrame];
++            if (frame)
++                result = __assign({}, result);
+             var graphQLErrors = getGraphQLErrorsFromResult(result);
+             var hasErrors = graphQLErrors.length > 0;
+             var errorPolicy = options.errorPolicy;
+             // If we interrupted this request by calling getResultsFromLink again
+             // with the same QueryInfo object, we ignore the old results.
+-            if (requestId >= queryInfo.lastRequestId) {
++            if (requestId >= queryInfo.lastRequestId && (!frame || !queryInfo.stopped)) {
+                 if (hasErrors && errorPolicy === "none") {
+                     // Throwing here effectively calls observer.error.
+                     throw queryInfo.markError(new ApolloError({
+@@ -799,7 +832,7 @@ var QueryManager = /** @class */ (function () {
+                 // Use linkDocument rather than queryInfo.document so the
+                 // operation/fragments used to write the result are the same as the
+                 // ones used to obtain it from the link.
+-                queryInfo.markResult(result, linkDocument, options, cacheWriteBehavior);
++                queryInfo.markResult(result, linkDocument, options, cacheWriteBehavior, frame);
+                 queryInfo.markReady();
+             }
+             var aqr = {
+diff --git a/core/core.cjs b/core/core.cjs
+index 7ada45cca56bc573ea2c9f7575cf506514659826..9a01d9632c34dca09e574794e0a0a14cc9ff1b01 100644
+--- a/core/core.cjs
++++ b/core/core.cjs
+@@ -1034,6 +1034,7 @@ var QueryInfo =  (function () {
+         var _a;
+         if (!this.stopped) {
+             this.stopped = true;
++            this.incremental = void 0;
+             (_a = this.observableQuery) === null || _a === void 0 ? void 0 : _a["resetNotifications"]();
+             this.cancel();
+             var oq = this.observableQuery;
+@@ -1069,13 +1070,24 @@ var QueryInfo =  (function () {
+             equal.equal(variables, lastWrite.variables) &&
+             equal.equal(result.data, lastWrite.result.data));
+     };
+-    QueryInfo.prototype.markResult = function (result, document, options, cacheWriteBehavior) {
++    QueryInfo.prototype.markResult = function (result, document, options, cacheWriteBehavior, frame) {
+         var _this = this;
+         var _a;
+         var merger = new utilities.DeepMerger();
+         var graphQLErrors = utilities.isNonEmptyArray(result.errors) ? result.errors.slice(0) : [];
+         (_a = this.observableQuery) === null || _a === void 0 ? void 0 : _a["resetNotifications"]();
+-        if ("incremental" in result && utilities.isNonEmptyArray(result.incremental)) {
++        var previous = this.incremental;
++        this.incremental = void 0;
++        if (frame) {
++            result.data = frame.index === 0 ? result.data
++                : previous && previous.data !== previous.frame.data &&
++                    previous.frame.execution === frame.execution && previous.frame.index + 1 === frame.index
++                    ? utilities.mergeIncrementalData(previous.data, result)
++                    : frame.data;
++            if (result.hasNext)
++                this.incremental = { frame: frame, data: result.data };
++        }
++        else if ("incremental" in result && utilities.isNonEmptyArray(result.incremental)) {
+             var mergedData = utilities.mergeIncrementalData(this.getDiff().result, result);
+             result.data = mergedData;
+         }
+@@ -1090,13 +1102,43 @@ var QueryInfo =  (function () {
+         else if (cacheWriteBehavior !== 0 ) {
+             if (shouldWriteResult(result, options.errorPolicy)) {
+                 this.cache.performTransaction(function (cache) {
+-                    if (_this.shouldWrite(result, options.variables)) {
+-                        cache.writeQuery({
+-                            query: document,
+-                            data: result.data,
+-                            variables: options.variables,
+-                            overwrite: cacheWriteBehavior === 1 ,
+-                        });
++                    var writeKey = frame && utilities.print(document);
++                    var write = frame && frame.execution.writes.get(writeKey);
++                    if (frame ? !write || write.index < frame.index
++                        : _this.shouldWrite(result, options.variables)) {
++                        if (frame) {
++                            if (!write) {
++                                var initial = frame.execution.results[0];
++                                write = { index: 0 };
++                                cache.writeInitialData({
++                                    query: document,
++                                    data: frame.index === 0 ? result.data : initial.data,
++                                    variables: options.variables,
++                                    overwrite: cacheWriteBehavior === 1 ,
++                                    token: write, pending: initial.pending,
++                                });
++                                frame.execution.writes.set(writeKey, write);
++                            }
++                            for (var index = write.index + 1; index <= frame.index; ++index) {
++                                var payload = frame.execution.results[index];
++                                if (index === frame.index || options.errorPolicy === "all" ||
++                                    options.errorPolicy === "ignore" || !utilities.graphQLResultHasError(payload)) {
++                                    cache.writeIncrementalData({
++                                        query: document, variables: options.variables,
++                                        token: write, patches: payload.incremental || [],
++                                    });
++                                }
++                                write.index = index;
++                            }
++                        }
++                        else {
++                            cache.writeQuery({
++                                query: document,
++                                data: result.data,
++                                variables: options.variables,
++                                overwrite: cacheWriteBehavior === 1 ,
++                            });
++                        }
+                         _this.lastWrite = {
+                             result: result,
+                             variables: options.variables,
+@@ -1135,6 +1177,7 @@ var QueryInfo =  (function () {
+         var _a;
+         this.networkStatus = exports.NetworkStatus.error;
+         this.lastWrite = void 0;
++        this.incremental = void 0;
+         (_a = this.observableQuery) === null || _a === void 0 ? void 0 : _a["resetNotifications"]();
+         if (error.graphQLErrors) {
+             this.graphQLErrors = error.graphQLErrors;
+@@ -1158,6 +1201,30 @@ function shouldWriteResult(result, errorPolicy) {
+ 
+ var hasOwnProperty = Object.prototype.hasOwnProperty;
+ var IGNORE = Object.create(null);
++var deferredFrame = Symbol("deferredFrame");
++function trackDeferredFrames(source) {
++    var execution;
++    var data;
++    return source.map(function (result) {
++        if (result.pending && result.data) {
++            execution = { writes: new Map(), results: [] };
++            data = result.data;
++        }
++        else if ("pending" in result || !("hasNext" in result)) {
++            execution = void 0;
++        }
++        if (!execution)
++            return result;
++        data = utilities.mergeIncrementalData(data, result);
++        var index = execution.results.push(result) - 1;
++        var framed = tslib.__assign({}, result);
++        framed[deferredFrame] = { execution: execution, data: data, index: index };
++        if (result.hasNext === false) {
++            execution = data = void 0;
++        }
++        return framed;
++    });
++}
+ var QueryManager =  (function () {
+     function QueryManager(options) {
+         var _this = this;
+@@ -1784,6 +1851,11 @@ var QueryManager =  (function () {
+                 extensions: extensions,
+             };
+             context = operation.context;
++            var executeRequest = function () {
++                var source = core.execute(link, operation);
++                var definition = typeof _this.cache.writeIncrementalData === "function" && utilities.getOperationDefinition(serverQuery);
++                return definition && definition.operation === "query" ? trackDeferredFrames(source) : source;
++            };
+             if (deduplication) {
+                 var printedServerQuery_1 = utilities.print(serverQuery);
+                 var varJson_1 = cache.canonicalStringify(variables);
+@@ -1791,7 +1863,7 @@ var QueryManager =  (function () {
+                 observable = entry.observable;
+                 if (!observable) {
+                     var concast_1 = new utilities.Concast([
+-                        core.execute(link, operation),
++                        executeRequest(),
+                     ]);
+                     observable = entry.observable = concast_1;
+                     concast_1.beforeNext(function cb(method, arg) {
+@@ -1806,7 +1878,7 @@ var QueryManager =  (function () {
+             }
+             else {
+                 observable = new utilities.Concast([
+-                    core.execute(link, operation),
++                    executeRequest(),
+                 ]);
+             }
+         }
+@@ -1830,16 +1902,19 @@ var QueryManager =  (function () {
+         var requestId = (queryInfo.lastRequestId = this.generateRequestId());
+         var linkDocument = this.cache.transformForLink(options.query);
+         return utilities.asyncMap(this.getObservableFromLink(linkDocument, options.context, options.variables), function (result) {
++            var frame = result[deferredFrame];
++            if (frame)
++                result = tslib.__assign({}, result);
+             var graphQLErrors = utilities.getGraphQLErrorsFromResult(result);
+             var hasErrors = graphQLErrors.length > 0;
+             var errorPolicy = options.errorPolicy;
+-            if (requestId >= queryInfo.lastRequestId) {
++            if (requestId >= queryInfo.lastRequestId && (!frame || !queryInfo.stopped)) {
+                 if (hasErrors && errorPolicy === "none") {
+                     throw queryInfo.markError(new errors.ApolloError({
+                         graphQLErrors: graphQLErrors,
+                     }));
+                 }
+-                queryInfo.markResult(result, linkDocument, options, cacheWriteBehavior);
++                queryInfo.markResult(result, linkDocument, options, cacheWriteBehavior, frame);
+                 queryInfo.markReady();
+             }
+             var aqr = {
+diff --git a/link/core/types.d.ts b/link/core/types.d.ts
+index 58252a6241e58569513e32ce6ff594382d3f0326..c04dd32fd55025c1c6f36c1fc3c5fe84a1585b93 100644
+--- a/link/core/types.d.ts
++++ b/link/core/types.d.ts
+@@ -18,6 +18,10 @@ interface ExecutionPatchResultBase {
+ export interface ExecutionPatchInitialResult<TData = Record<string, any>, TExtensions = Record<string, any>> extends ExecutionPatchResultBase {
+     data: TData | null | undefined;
+     incremental?: never;
++    pending?: ReadonlyArray<{
++        path: ReadonlyArray<string | number>;
++        label?: string;
++    }>;
+     errors?: ReadonlyArray<GraphQLFormattedError>;
+     extensions?: TExtensions;
+ }

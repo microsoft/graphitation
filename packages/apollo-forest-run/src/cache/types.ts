@@ -1,5 +1,7 @@
 import type { Cache, InMemoryCacheConfig, TypePolicies } from "@apollo/client";
 import type {
+  DeferredPlaceholder,
+  DeferredPlaceholders,
   IndexedForest,
   IndexedTree,
   UpdateForestStats,
@@ -150,6 +152,29 @@ export type WriteResult = {
   affectedNodes: Set<NodeKey>; // contains directly updated nodes + parent nodes indirectly affected by nested node update
   difference?: GraphDifference;
   updateStats?: UpdateForestStats;
+};
+
+type ResponsePath = readonly (string | number)[];
+type PendingPaths = readonly { path: ResponsePath }[];
+
+type DeferredWrite = Pick<Cache.WriteOptions, "query" | "variables"> & {
+  token: object;
+};
+export type InitialWriteOptions = DeferredWrite & {
+  data: Record<string, unknown>;
+  pending: PendingPaths;
+  overwrite?: boolean;
+};
+export type IncrementalWriteOptions = DeferredWrite & {
+  patches: readonly {
+    path: ResponsePath;
+    data: Record<string, unknown> | null;
+  }[];
+};
+
+export type WriteOptions = Cache.WriteOptions & {
+  placeholder?: DeferredPlaceholder;
+  register?: { pending: PendingPaths; targets: DeferredPlaceholders };
 };
 
 export type ModifiedNodeDifference = ObjectDifference & {

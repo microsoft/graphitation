@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Add pending paths to initial incremental results",
+  "packageName": "@graphitation/supermassive",
+  "email": "pavelglac@gmail.com",
+  "dependentChangeType": "patch"
+}

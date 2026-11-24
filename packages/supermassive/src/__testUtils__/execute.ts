@@ -142,6 +142,12 @@ export function createExecutionUtils(
     } else if ("subsequentResults" in result) {
       processedResult = {
         ...result,
+        // GraphQL.js alpha.2 has the same patches, but no pending-path extension.
+        initialResult: Object.fromEntries(
+          Object.entries(result.initialResult).filter(
+            ([key]) => key !== "pending",
+          ),
+        ),
         subsequentResults: await drainAsyncGeneratorToArray(
           result.subsequentResults,
         ),

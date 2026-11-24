@@ -15,6 +15,42 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@apollo/client@npm:3.14.0":
+  version: 3.14.0
+  resolution: "@apollo/client@npm:3.14.0"
+  dependencies:
+    "@graphql-typed-document-node/core": "npm:^3.1.1"
+    "@wry/caches": "npm:^1.0.0"
+    "@wry/equality": "npm:^0.5.6"
+    "@wry/trie": "npm:^0.5.0"
+    graphql-tag: "npm:^2.12.6"
+    hoist-non-react-statics: "npm:^3.3.2"
+    optimism: "npm:^0.18.0"
+    prop-types: "npm:^15.7.2"
+    rehackt: "npm:^0.1.0"
+    symbol-observable: "npm:^4.0.0"
+    ts-invariant: "npm:^0.10.3"
+    tslib: "npm:^2.3.0"
+    zen-observable-ts: "npm:^1.2.5"
+  peerDependencies:
+    graphql: ^15.0.0 || ^16.0.0
+    graphql-ws: ^5.5.5 || ^6.0.3
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0 || >=19.0.0-rc
+    react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || >=19.0.0-rc
+    subscriptions-transport-ws: ^0.9.0 || ^0.11.0
+  peerDependenciesMeta:
+    graphql-ws:
+      optional: true
+    react:
+      optional: true
+    react-dom:
+      optional: true
+    subscriptions-transport-ws:
+      optional: true
+  checksum: 10c0/38776832627def88f707131f9fe394e10b067c67ce84102664cd8f922229671fc5d61bcff702c0c403972f6a57998f243210c681bcda96c68b2b3c82dbb1c789
+  languageName: node
+  linkType: hard
+
 "@apollo/client@npm:>= 3.3.0 < 3.7.0, @apollo/client@npm:>=3.6.0 <3.13.9, @apollo/client@npm:~3.6.0":
   version: 3.6.10
   resolution: "@apollo/client@npm:3.6.10"
@@ -76,6 +112,42 @@ __metadata:
     subscriptions-transport-ws:
       optional: true
   checksum: 10c0/4cff402e5bd8ec04eddc6edfb35697a648f52520d65d74ffcd1837863f189e258c911af58b679858638cfd9a24480f431f69e4361493f4a439269a8f60877e3f
+  languageName: node
+  linkType: hard
+
+"@apollo/client@patch:@apollo/client@npm%3A3.14.0#~/.yarn/patches/@apollo-client-npm-3.14.0-ad9c6cfbc6.patch":
+  version: 3.14.0
+  resolution: "@apollo/client@patch:@apollo/client@npm%3A3.14.0#~/.yarn/patches/@apollo-client-npm-3.14.0-ad9c6cfbc6.patch::version=3.14.0&hash=4db716"
+  dependencies:
+    "@graphql-typed-document-node/core": "npm:^3.1.1"
+    "@wry/caches": "npm:^1.0.0"
+    "@wry/equality": "npm:^0.5.6"
+    "@wry/trie": "npm:^0.5.0"
+    graphql-tag: "npm:^2.12.6"
+    hoist-non-react-statics: "npm:^3.3.2"
+    optimism: "npm:^0.18.0"
+    prop-types: "npm:^15.7.2"
+    rehackt: "npm:^0.1.0"
+    symbol-observable: "npm:^4.0.0"
+    ts-invariant: "npm:^0.10.3"
+    tslib: "npm:^2.3.0"
+    zen-observable-ts: "npm:^1.2.5"
+  peerDependencies:
+    graphql: ^15.0.0 || ^16.0.0
+    graphql-ws: ^5.5.5 || ^6.0.3
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0 || >=19.0.0-rc
+    react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || >=19.0.0-rc
+    subscriptions-transport-ws: ^0.9.0 || ^0.11.0
+  peerDependenciesMeta:
+    graphql-ws:
+      optional: true
+    react:
+      optional: true
+    react-dom:
+      optional: true
+    subscriptions-transport-ws:
+      optional: true
+  checksum: 10c0/7fb011fd3aa512b914ebb7a3b8f908cd54062194d4cfc8da41218b7b069fe172359efa76ea02fc296b0e0ac2dc6d953683a7a357994c3493ebd845138ca2e9fd
   languageName: node
   linkType: hard
 
@@ -3065,7 +3137,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@graphitation/apollo-forest-run@workspace:packages/apollo-forest-run"
   dependencies:
-    "@apollo/client": "npm:>= 3.3.0 < 3.7.0"
+    "@apollo/client": "patch:@apollo/client@npm%3A3.14.0#~/.yarn/patches/@apollo-client-npm-3.14.0-ad9c6cfbc6.patch"
+    "@graphitation/supermassive": "npm:*"
     "@types/jest": "npm:^26.0.22"
     graphql: "npm:^15.0.0"
     lodash: "npm:^4.17.21"
@@ -3073,7 +3146,7 @@ __metadata:
     tslib: "npm:^2.4.0"
     typescript: "npm:^5.5.3"
   peerDependencies:
-    "@apollo/client": ">= 3.6.0 < 3.7.0"
+    "@apollo/client": ">= 3.6.0 < 4.0.0"
     graphql: ^15.0.0 || ^16.0.0 || ^17.0.0
   languageName: unknown
   linkType: soft
@@ -3407,7 +3480,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@graphitation/supermassive@npm:^5.0.2, @graphitation/supermassive@workspace:packages/supermassive":
+"@graphitation/supermassive@npm:*, @graphitation/supermassive@npm:^5.0.2, @graphitation/supermassive@workspace:packages/supermassive":
   version: 0.0.0-use.local
   resolution: "@graphitation/supermassive@workspace:packages/supermassive"
   dependencies:
@@ -6980,6 +7053,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@wry/caches@npm:^1.0.0":
+  version: 1.0.1
+  resolution: "@wry/caches@npm:1.0.1"
+  dependencies:
+    tslib: "npm:^2.3.0"
+  checksum: 10c0/a7bca3377f1131d3f1080f2e39d0692c9d1ca86bfd55734786f167f46aad28a4c8e772107324e8319843fb8068fdf98abcdea376d8a589316b1f0cdadf81f8b1
+  languageName: node
+  linkType: hard
+
 "@wry/context@npm:^0.6.0":
   version: 0.6.0
   resolution: "@wry/context@npm:0.6.0"
@@ -7007,12 +7089,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@wry/equality@npm:^0.5.6":
+  version: 0.5.7
+  resolution: "@wry/equality@npm:0.5.7"
+  dependencies:
+    tslib: "npm:^2.3.0"
+  checksum: 10c0/8503ff6d4eb80f303d1387e71e51da59ccfc2160fa6d464618be80946fe43a654ea73f0c5b90d659fc4dfc3e38cbbdd6650d595fe5865be476636e444470853e
+  languageName: node
+  linkType: hard
+
 "@wry/trie@npm:^0.3.0":
   version: 0.3.0
   resolution: "@wry/trie@npm:0.3.0"
   dependencies:
     tslib: "npm:^2.1.0"
   checksum: 10c0/184a456c7c96dcce996eda888c9bf6b717c14171f8238c5967c3ee1d4a896b8026734062a4cc1b644117e9feb5cc25028b79d743818d98c03b4f0ef87390256d
+  languageName: node
+  linkType: hard
+
+"@wry/trie@npm:^0.5.0":
+  version: 0.5.0
+  resolution: "@wry/trie@npm:0.5.0"
+  dependencies:
+    tslib: "npm:^2.3.0"
+  checksum: 10c0/8c8cfcac96ba4bc69dabf02740e19e613f501b398e80bacc32cd95e87228f75ecb41cd1a76a65abae9756c0f61ab3536e0da52de28857456f9381ffdf5995d3e
   languageName: node
   linkType: hard
 
@@ -14622,6 +14722,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"optimism@npm:^0.18.0":
+  version: 0.18.1
+  resolution: "optimism@npm:0.18.1"
+  dependencies:
+    "@wry/caches": "npm:^1.0.0"
+    "@wry/context": "npm:^0.7.0"
+    "@wry/trie": "npm:^0.5.0"
+    tslib: "npm:^2.3.0"
+  checksum: 10c0/1c1cd065d306de2220c6a2bdd8701cb7f9aadace36a9f16d6e02db2bee23b0291f15a1219b92cde5c66d816bd33dca876dfdcdbad04b4cf9b2a7fc5a1a221e77
+  languageName: node
+  linkType: hard
+
 "optionator@npm:^0.9.1":
   version: 0.9.1
   resolution: "optionator@npm:0.9.1"
@@ -15604,6 +15716,21 @@ __metadata:
   dependencies:
     rc: "npm:^1.2.8"
   checksum: 10c0/c2c455342b5836cbed5162092eba075c7a02c087d9ce0fde8aeb4dc87a8f4a34a542e58bf4d8ec2d4cb73f04408cb3148ceb1f76647f76b978cfec22047dc6d6
+  languageName: node
+  linkType: hard
+
+"rehackt@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "rehackt@npm:0.1.0"
+  peerDependencies:
+    "@types/react": "*"
+    react: "*"
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+    react:
+      optional: true
+  checksum: 10c0/3d838bfee84ec06c976f21027936f3b0fdb7660ab8a2d4d3f19c65e0daa78a268aa81352311352b8576b89a074714b36ae6cd5bdadb6e975eca079f2b342de73
   languageName: node
   linkType: hard
 
