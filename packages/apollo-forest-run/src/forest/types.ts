@@ -1,7 +1,5 @@
 import {
-  DeferLabel,
   FieldInfo,
-  NormalizedFieldEntry,
   OperationDescriptor,
   OperationId,
   PossibleSelection,
@@ -252,28 +250,3 @@ export type ForestEnv = {
 };
 
 export type DefaultPartition = "__default__";
-
-export type ResponsePath = ReadonlyArray<string | number>;
-
-// Normalized fields (name + arguments) and list indices from an object to an object embedded into it
-export type EmbeddedPath = ReadonlyArray<NormalizedFieldEntry | number>;
-
-/**
- * Where to write a deferred fragment: an object key, plus a path for objects embedded
- * into their closest keyed ancestor (similar to client ids of embedded records in Relay).
- */
-export type DeferTarget = {
-  label: DeferLabel | undefined;
-  path: ResponsePath; // response path of the deferred fragment
-  dataId: NodeKey;
-  subPath: EmbeddedPath;
-  typeName: TypeName | undefined;
-  selection: PossibleSelections;
-};
-
-// Response path and label of a deferred fragment
-export type DeferTargetKey = string;
-
-// Pending deferred fragments of an incremental execution by response path and label.
-//   `null` marks ambiguous keys: unlabeled fragments sharing a path can't be told apart.
-export type DeferTargets = Map<DeferTargetKey, DeferTarget | null>;

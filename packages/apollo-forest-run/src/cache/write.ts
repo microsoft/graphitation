@@ -46,7 +46,11 @@ import {
   updateAffectedTrees,
 } from "../forest/updateForest";
 import { indexTree } from "../forest/indexTree";
-import type { DeferTarget, EmbeddedPath, ResponsePath } from "../forest/types";
+import type {
+  DeferTarget,
+  EmbeddedPath,
+  ResponsePath,
+} from "../descriptor/types";
 import {
   addDeferTarget,
   deleteDeferTarget,

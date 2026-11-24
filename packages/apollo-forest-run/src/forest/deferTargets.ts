@@ -1,13 +1,14 @@
-import type { DeferLabel, NodeKey } from "../descriptor/types";
 import type { ObjectChunk, ParentLocator } from "../values/types";
 import type {
+  DeferLabel,
   DeferTarget,
   DeferTargetKey,
   DeferTargets,
   EmbeddedPath,
+  NodeKey,
+  NormalizedFieldEntry,
   ResponsePath,
-} from "./types";
-import type { NormalizedFieldEntry } from "../descriptor/types";
+} from "../descriptor/types";
 import {
   fieldEntriesAreEqual,
   resolveNormalizedField,

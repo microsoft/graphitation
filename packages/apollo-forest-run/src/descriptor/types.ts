@@ -82,7 +82,7 @@ export type ResolvedSelection = PossibleSelection & {
   normalizedFields?: Map<FieldInfo, NormalizedFieldEntry>;
   skippedFields?: Set<FieldInfo>;
   skippedSpreads?: Set<SpreadInfo>;
-  deferredFragments?: { label?: DeferLabel; selection: PossibleSelections }[];
+  deferredFragments?: DeferredFragment[];
   resolvedHash?: number; // Structural hash + runtime-resolved state (args, skip/include)
 };
 
@@ -182,3 +182,33 @@ export type PossibleTypes = { [abstractType: TypeName]: TypeName[] };
 // e.g. { a: foo { bar }, { b: foo { baz } } -> same canonical name `foo` leads to multiple entries: `a { bar }` and `b { baz }`;
 export type FieldMap = Map<FieldName, FieldInfo[]>;
 export type FragmentSpreadMap = Map<FragmentName, SpreadInfo[]>;
+
+// A deferred fragment of an object (enabled for the operation variables)
+export type DeferredFragment = {
+  label?: DeferLabel;
+  selection: PossibleSelections;
+};
+
+// Response keys and list indices from the result root
+export type ResponsePath = ReadonlyArray<string | number>;
+
+// Normalized fields (name + arguments) and list indices from an object to an object embedded into it
+export type EmbeddedPath = ReadonlyArray<NormalizedFieldEntry | number>;
+
+/**
+ * Where to write a deferred fragment of an incremental execution: an object key, plus a path for objects
+ * embedded into their closest keyed ancestor (similar to client ids of embedded records in Relay).
+ */
+export type DeferTarget = DeferredFragment & {
+  path: ResponsePath; // response path of the deferred fragment
+  dataId: NodeKey;
+  subPath: EmbeddedPath;
+  typeName: TypeName | undefined;
+};
+
+// Response path and label of a deferred fragment
+export type DeferTargetKey = string;
+
+// Pending deferred fragments of an incremental execution by response path and label.
+//   `null` marks ambiguous keys: unlabeled fragments sharing a path can't be told apart.
+export type DeferTargets = Map<DeferTargetKey, DeferTarget | null>;
