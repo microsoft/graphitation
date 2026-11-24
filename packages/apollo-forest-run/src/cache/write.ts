@@ -46,14 +46,12 @@ import {
   updateAffectedTrees,
 } from "../forest/updateForest";
 import { indexTree } from "../forest/indexTree";
+import type { DeferTarget, EmbeddedPath, ResponsePath } from "../forest/types";
 import {
   addDeferTarget,
-  DeferTarget,
   deleteDeferTarget,
-  EmbeddedPath,
   getDeferTarget,
   resolveObjectAddress,
-  ResponsePath,
 } from "../forest/deferTargets";
 import {
   resolveNormalizedField,

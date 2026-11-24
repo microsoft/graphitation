@@ -24,7 +24,8 @@ import type {
   PossibleSelections,
 } from "../descriptor/types";
 import type { ForestEnv, IndexedTree } from "./types";
-import { CollectedDeferTarget, resolveObjectAddress } from "./deferTargets";
+import type { CollectedDeferTarget } from "./types";
+import { resolveObjectAddress } from "./deferTargets";
 import { ValueKind } from "../values/types";
 import {
   getFieldName,

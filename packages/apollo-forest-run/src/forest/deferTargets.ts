@@ -1,48 +1,18 @@
+import type { DeferLabel, NodeKey } from "../descriptor/types";
+import type { ObjectChunk, ParentLocator } from "../values/types";
 import type {
-  DeferLabel,
-  NodeKey,
-  NormalizedFieldEntry,
-  PossibleSelections,
-  TypeName,
-} from "../descriptor/types";
-import type { ObjectChunk, ParentLocator, SourceObject } from "../values/types";
+  DeferTarget,
+  DeferTargetKey,
+  DeferTargets,
+  EmbeddedPath,
+  ResponsePath,
+} from "./types";
+import type { NormalizedFieldEntry } from "../descriptor/types";
 import {
   fieldEntriesAreEqual,
   resolveNormalizedField,
 } from "../descriptor/resolvedSelection";
 import { isParentListRef, isRootRef } from "../values";
-
-export type ResponsePath = ReadonlyArray<string | number>;
-
-// Normalized fields (name + arguments) and list indices from an object to an object embedded into it
-export type EmbeddedPath = ReadonlyArray<NormalizedFieldEntry | number>;
-
-/**
- * Where to write a deferred fragment: an object key, plus a path for objects embedded
- * into their closest keyed ancestor (similar to client ids of embedded records in Relay).
- */
-export type DeferTarget = {
-  label: DeferLabel | undefined;
-  path: ResponsePath; // response path of the deferred fragment
-  dataId: NodeKey;
-  subPath: EmbeddedPath;
-  typeName: TypeName | undefined;
-  selection: PossibleSelections;
-};
-
-// A target found while indexing a result (addressed relative to the result root)
-export type CollectedDeferTarget = {
-  target: DeferTarget;
-  source: SourceObject;
-};
-
-// Pending deferred fragments of an incremental execution by response path and label.
-//   `null` marks ambiguous keys: unlabeled fragments sharing a path can't be told apart.
-// Response path and label of a deferred fragment
-export type DeferTargetKey = string;
-
-export type DeferTargets = Map<DeferTargetKey, DeferTarget | null>;
-
 export function addDeferTarget(targets: DeferTargets, target: DeferTarget) {
   addKey(targets, targetKey(target.path, target.label), target);
   if (target.label !== undefined) {

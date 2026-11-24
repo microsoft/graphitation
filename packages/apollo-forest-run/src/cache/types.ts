@@ -30,7 +30,7 @@ import type {
   FieldReadFunction,
 } from "@apollo/client/cache/inmemory/policies";
 import type { TelemetryEvent } from "../telemetry/types";
-import type { DeferTargets, ResponsePath } from "../forest/deferTargets";
+import type { DeferTargets, ResponsePath } from "../forest/types";
 import type { DeferLabel, FormattedError } from "../descriptor/types";
 import { ExtendedLogger, Logger } from "../jsutils/logger";
 import { GraphDifference, GraphDiffError } from "../diff/diffTree";
