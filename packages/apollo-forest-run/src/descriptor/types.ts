@@ -164,10 +164,8 @@ export type PossibleSelection = {
   structuralHash: number; // Order-independent hash of field structure (names, dataKeys, arg names, child hashes)
 };
 
-// Unlike the flattened fields used for reads, a delivery site keeps just
-// the selection that can be written by its incremental payload.
+// A deferred fragment in the document (its data is written with the selection of the object it is deferred on)
 export type DeferSite = {
-  selection: PossibleSelections;
   label?: DeferLabel;
   conditions: { variable: VariableName; expected: boolean; defer: boolean }[];
 };
@@ -186,7 +184,6 @@ export type FragmentSpreadMap = Map<FragmentName, SpreadInfo[]>;
 // A deferred fragment of an object (enabled for the operation variables)
 export type DeferredFragment = {
   label?: DeferLabel;
-  selection: PossibleSelections;
 };
 
 // Response keys and list indices from the result root
@@ -199,16 +196,19 @@ export type EmbeddedPath = ReadonlyArray<NormalizedFieldEntry | number>;
  * Where to write a deferred fragment of an incremental execution: an object key, plus a path for objects
  * embedded into their closest keyed ancestor (similar to client ids of embedded records in Relay).
  */
-export type DeferTarget = DeferredFragment & {
-  path: ResponsePath; // response path of the deferred fragment
+export type DeferTarget = {
+  path: ResponsePath; // response path of the object
   dataId: NodeKey;
   subPath: EmbeddedPath;
   typeName: TypeName | undefined;
+  // Selection of the object in the operation (includes fields of all its deferred fragments)
+  selection: PossibleSelections;
+  // Labels of deferred fragments of the object that weren't delivered yet
+  pending: (DeferLabel | undefined)[];
 };
 
-// Response path and label of a deferred fragment
+// Response path of an object with deferred fragments
 export type DeferTargetKey = string;
 
-// Pending deferred fragments of an incremental execution by response path and label.
-//   `null` marks ambiguous keys: unlabeled fragments sharing a path can't be told apart.
-export type DeferTargets = Map<DeferTargetKey, DeferTarget | null>;
+// Objects with pending deferred fragments of an incremental execution
+export type DeferTargets = Map<DeferTargetKey, DeferTarget>;

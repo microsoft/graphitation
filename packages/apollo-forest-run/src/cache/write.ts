@@ -55,7 +55,6 @@ import type {
   ResponsePath,
 } from "../descriptor/types";
 import {
-  fieldEntriesAreEqual,
   resolveNormalizedField,
   resolveSelection,
 } from "../descriptor/resolvedSelection";
@@ -86,6 +85,8 @@ type ResultWrite = {
   // Collects targets of deferred fragments found in the result
   defer?: {
     execution: IncrementalExecution;
+    // Whether the result is a deferred fragment (vs the initial result)
+    isFragment: boolean;
     path: ResponsePath;
     // Address of the root of an embedded result
     root?: { dataId: NodeKey; subPath: EmbeddedPath };
@@ -181,7 +182,7 @@ export function write(
       operationDescriptor,
       options,
       { data: writeData, hasNext: true } as OperationResult,
-      { defer: { execution: incremental, path: [] } },
+      { defer: { execution: incremental, path: [], isFragment: false } },
     ),
   ];
 }
@@ -208,15 +209,18 @@ function writeIncremental(
     }
     const pending =
       entry.id !== undefined ? incremental.pending.get(entry.id) : entry;
-    const target =
-      pending?.path &&
-      getDeferTarget(incremental.targets, pending.path, pending.label);
+    const target = pending?.path
+      ? entry.id === undefined
+        ? // Earlier draft: every deferred fragment is delivered in a single payload
+          completeDeferredFragment(
+            incremental.targets,
+            pending.path,
+            pending.label,
+          )
+        : getPendingTarget(incremental.targets, pending.path, pending.label)
+      : undefined;
     if (!target) {
       continue;
-    }
-    if (entry.id === undefined) {
-      // Earlier draft: every deferred fragment is delivered in a single payload
-      deleteDeferTarget(incremental.targets, target);
     }
     const result = writeDeferredFragment(
       env,
@@ -234,11 +238,12 @@ function writeIncremental(
   }
   for (const { id } of execution.completed ?? EMPTY_ARRAY) {
     const pending = incremental.pending.get(id);
-    const target =
-      pending &&
-      getDeferTarget(incremental.targets, pending.path, pending.label);
-    if (target) {
-      deleteDeferTarget(incremental.targets, target);
+    if (pending) {
+      completeDeferredFragment(
+        incremental.targets,
+        pending.path,
+        pending.label,
+      );
     }
     incremental.pending.delete(id);
   }
@@ -304,6 +309,7 @@ function writeDeferredFragment(
       embedded: object.embedded,
       defer: {
         execution: incremental,
+        isFragment: true,
         path,
         root: object.embedded ? object : undefined,
       },
@@ -537,7 +543,7 @@ function writeResult(
  * (e.g. append a page to existing list items), so cache addresses are resolved in the merged result.
  */
 function addDeferTargets(
-  { execution, path, root }: NonNullable<ResultWrite["defer"]>,
+  { execution, path, root, isFragment }: NonNullable<ResultWrite["defer"]>,
   indexed: IndexedTree,
   merged: IndexedTree,
   rootKey: NodeKey,
@@ -545,6 +551,10 @@ function addDeferTargets(
   const findIndexedParent = createParentLocator(indexed.dataMap);
   const findMergedParent = createParentLocator(merged.dataMap);
   for (const chunk of indexed.chunksWithDeferredFragments ?? EMPTY_ARRAY) {
+    if (isFragment && chunk.data === indexed.result.data) {
+      // Fragments of the patched object were registered by the result which delivered the object
+      continue;
+    }
     const mergedChunk = merged.dataMap.get(chunk.data)?.value;
     const address =
       mergedChunk && isObjectValue(mergedChunk) && !mergedChunk.isAggregate
@@ -562,84 +572,77 @@ function addDeferTargets(
       ...path,
       ...getDataPathForDebugging({ findParent: findIndexedParent }, chunk),
     ];
-    for (const { label, selection } of chunk.selection.deferredFragments ??
-      EMPTY_ARRAY) {
-      addDeferTarget(execution.targets, {
-        label,
-        path: responsePath,
-        dataId,
-        subPath,
-        typeName: chunk.type || undefined,
-        selection,
-      });
-    }
+    const pending = (chunk.selection.deferredFragments ?? EMPTY_ARRAY).map(
+      ({ label }) => label,
+    );
+    addDeferTarget(execution.targets, {
+      path: responsePath,
+      dataId,
+      subPath,
+      typeName: chunk.type || undefined,
+      selection: chunk.possibleSelections,
+      pending,
+    });
   }
   indexed.chunksWithDeferredFragments = undefined;
 }
-// Pending targets of deferred fragments
-
 function addDeferTarget(targets: DeferTargets, target: DeferTarget) {
-  addKey(targets, targetKey(target.path, target.label), target);
-  if (target.label !== undefined) {
-    // Allows payloads without labels (when the path is unambiguous)
-    addKey(targets, targetKey(target.path, undefined), target);
+  const key = targetKey(target.path);
+  const existing = targets.get(key);
+  if (!existing) {
+    targets.set(key, target);
+    return;
+  }
+  // The same object may be indexed again (e.g. delivered by an enclosing deferred fragment)
+  for (const label of new Set(target.pending)) {
+    const count = target.pending.filter((other) => other === label).length;
+    while (existing.pending.filter((other) => other === label).length < count) {
+      existing.pending.push(label);
+    }
   }
 }
 
-function getDeferTarget(
+function getPendingTarget(
   targets: DeferTargets,
   path: ResponsePath,
   label: DeferLabel | undefined,
 ): DeferTarget | undefined {
-  return targets.get(targetKey(path, label)) ?? undefined;
+  const target = targets.get(targetKey(path));
+  return target && findPending(target, label) !== -1 ? target : undefined;
 }
 
-function deleteDeferTarget(targets: DeferTargets, target: DeferTarget) {
-  const labeled = targetKey(target.path, target.label);
-  const unlabeled = targetKey(target.path, undefined);
-  if (targets.get(labeled) === target) {
-    targets.delete(labeled);
-  }
-  if (targets.get(unlabeled) === target) {
-    targets.delete(unlabeled);
-  }
-}
-
-function addKey(
+/**
+ * Marks a deferred fragment as delivered. Returns the target if the fragment was pending.
+ */
+function completeDeferredFragment(
   targets: DeferTargets,
-  key: DeferTargetKey,
-  target: DeferTarget,
-) {
-  const existing = targets.get(key);
-  if (existing === undefined) {
-    targets.set(key, target);
-  } else if (existing !== null && !isSameTarget(existing, target)) {
-    targets.set(key, null);
-  }
-}
-
-function targetKey(
   path: ResponsePath,
   label: DeferLabel | undefined,
-): DeferTargetKey {
-  return JSON.stringify([label ?? null, path]);
+): DeferTarget | undefined {
+  const key = targetKey(path);
+  const target = targets.get(key);
+  const index = target ? findPending(target, label) : -1;
+  if (!target || index === -1) {
+    return undefined;
+  }
+  target.pending.splice(index, 1);
+  if (!target.pending.length) {
+    targets.delete(key);
+  }
+  return target;
 }
 
-function isSameTarget(a: DeferTarget, b: DeferTarget) {
-  return (
-    a.selection === b.selection &&
-    a.label === b.label &&
-    a.dataId === b.dataId &&
-    a.subPath.length === b.subPath.length &&
-    a.subPath.every((step, i) => {
-      const other = b.subPath[i];
-      return typeof step === "number" || typeof other === "number"
-        ? step === other
-        : fieldEntriesAreEqual(step, other);
-    })
-  );
+// Payloads without labels match any pending fragment of the object
+function findPending(target: DeferTarget, label: DeferLabel | undefined) {
+  const index = target.pending.indexOf(label);
+  return index === -1 && label === undefined && target.pending.length
+    ? 0
+    : index;
 }
 
+function targetKey(path: ResponsePath): DeferTargetKey {
+  return JSON.stringify(path);
+}
 function appendAffectedOperationsFromOtherLayers(
   store: Store,
   affectedForestOperationsMutable: Map<OperationDescriptor, NodeDifferenceMap>,

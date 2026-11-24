@@ -123,7 +123,6 @@ export function resolveSelection(
       return [
         {
           label: site.label,
-          selection: site.selection,
         },
       ];
     });

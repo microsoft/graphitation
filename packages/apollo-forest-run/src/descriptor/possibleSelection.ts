@@ -42,9 +42,7 @@ export type Context = Readonly<{
   fieldsWithArgs: FieldInfo[];
   mergeMemo: Map<PossibleSelection, Set<PossibleSelection>>;
   copyOnWrite: Set<PossibleSelection | FieldInfo | SpreadInfo>;
-  // Build-time only (never part of a descriptor): a deferred fragment reached via multiple spreads
-  //   must resolve to the same selection, otherwise its sites at the same path look ambiguous
-  deferredFragmentSelections: Map<SelectionSetNode, PossibleSelections>;
+  deferSites: DeferSite[];
 }>;
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -65,7 +63,7 @@ export function describeResultTree(
     fieldsWithArgs: [],
     mergeMemo: new Map(),
     copyOnWrite: new Set(),
-    deferredFragmentSelections: new Map(),
+    deferSites: [],
   };
 
   const possibleSelections = collectPossibleSelections(
@@ -75,7 +73,7 @@ export function describeResultTree(
   return {
     possibleSelections,
     fieldsWithArgs: context.fieldsWithArgs,
-    hasDeferSites: context.deferredFragmentSelections.size > 0,
+    hasDeferSites: context.deferSites.length > 0,
   };
 }
 
@@ -171,7 +169,6 @@ function collectFields(
         context,
         selectionsByType,
         node,
-        node,
         getTypeName(node) ?? typeCondition,
         ancestors,
       );
@@ -206,7 +203,6 @@ function collectFields(
         context,
         selectionsByType,
         node,
-        fragment,
         getTypeName(fragment),
         ancestors,
       );
@@ -231,7 +227,6 @@ function collectDeferSite(
   context: Context,
   selections: PossibleSelections,
   node: InlineFragmentNode | FragmentSpreadNode,
-  fragment: InlineFragmentNode | FragmentDefinitionNode,
   type: TypeName | null | undefined,
   ancestors: SelectionNode[],
 ) {
@@ -265,17 +260,10 @@ function collectDeferSite(
       }
     }
   }
-  const selection = getOrCreate(
-    context.deferredFragmentSelections,
-    fragment.selectionSet,
-    () => collectPossibleSelections(context, fragment.selectionSet),
-  );
+  const site: DeferSite = { label: getStaticLabel(defer), conditions };
+  context.deferSites.push(site);
   const target = getOrCreate(selections, type ?? null, createEmptySelection);
-  (target.deferSites ??= []).push({
-    selection,
-    label: getStaticLabel(defer),
-    conditions,
-  });
+  (target.deferSites ??= []).push(site);
 }
 
 // Labels must be static strings (GraphQL spec: "Defer And Stream Directive Labels Are Unique")
@@ -551,8 +539,11 @@ function mergeSelectionsImpl(
   if (mutableTarget !== target) {
     context.mergeMemo.set(mutableTarget, new Set([source]));
   }
-  if (source.deferSites) {
-    (mutableTarget.deferSites ??= []).push(...source.deferSites);
+  for (const site of source.deferSites ?? EMPTY_ARRAY) {
+    // The same site may be reached via multiple paths (e.g. spreads of the same fragment)
+    if (!mutableTarget.deferSites?.includes(site)) {
+      (mutableTarget.deferSites ??= []).push(site);
+    }
   }
 
   for (const [fieldName, sourceAliases] of source.fields.entries()) {

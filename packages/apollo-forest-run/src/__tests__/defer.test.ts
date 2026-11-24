@@ -615,8 +615,8 @@ describe.each(["draft", "latest"] as const)("@defer (%s format)", (f) => {
     });
   });
 
-  test("unlabeled fragments sharing a path are ambiguous and not written", () => {
-    const cache = new ForestRun();
+  test("unlabeled fragments sharing a path are written in any order", () => {
+    const cache = new InspectableCache();
     const query = gql`
       query {
         message {
@@ -632,11 +632,14 @@ describe.each(["draft", "latest"] as const)("@defer (%s format)", (f) => {
     `;
     const delivery = execution(cache, query);
     delivery.initial({ message: { __typename: "Message", id: "1" } });
-    delivery.patch([{ path: ["message"], data: { text: "hi" } }], false);
+    delivery.patch([{ path: ["message"], data: { name: "Ada" } }]);
+    expect(delivery.pendingTargets()).toBe(1);
+    delivery.patch([{ path: ["message"], data: { text: "hi" } }]);
+    expect(delivery.pendingTargets()).toBe(0);
 
-    expect(
-      cache.readQuery({ query, returnPartialData: true }),
-    ).not.toMatchObject({ message: { text: "hi" } });
+    expect(cache.readQuery({ query })).toEqual({
+      message: { __typename: "Message", id: "1", text: "hi", name: "Ada" },
+    });
   });
 
   test("a new execution of an operation replaces the previous one", () => {
