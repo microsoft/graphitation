@@ -336,9 +336,9 @@ export type SerializedCache = Record<
   SerializedOperationInfo
 >;
 
-// Identifies an incremental execution (an opaque object provided by the client).
-//   Only needed to tell apart overlapping executions of the same operation (with the same variables)
-export type ExecutionKey = object;
+// Identifies an incremental execution (e.g. a request id), compared by equality.
+//   Only needed to ignore late results of a superseded execution of the same operation (with the same variables)
+export type ExecutionKey = string | number | object;
 
 // Identifies a pending result within an incremental execution (the latest format)
 export type PendingId = string;
