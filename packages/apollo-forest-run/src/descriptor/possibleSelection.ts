@@ -42,6 +42,8 @@ export type Context = Readonly<{
   fieldsWithArgs: FieldInfo[];
   mergeMemo: Map<PossibleSelection, Set<PossibleSelection>>;
   copyOnWrite: Set<PossibleSelection | FieldInfo | SpreadInfo>;
+  // Build-time only (never part of a descriptor): a deferred fragment reached via multiple spreads
+  //   must resolve to the same selection, otherwise its sites at the same path look ambiguous
   deferredFragmentSelections: Map<SelectionSetNode, PossibleSelections>;
 }>;
 
