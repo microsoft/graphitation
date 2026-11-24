@@ -23,6 +23,7 @@ import type {
   FragmentMap,
   SpreadInfo,
   WatchBoundary,
+  DeferSite,
 } from "./types";
 import { accumulate, getOrCreate } from "../jsutils/map";
 import { assert, assertNever } from "../jsutils/assert";
@@ -40,6 +41,7 @@ export type Context = Readonly<{
   fieldsWithArgs: FieldInfo[];
   mergeMemo: Map<PossibleSelection, Set<PossibleSelection>>;
   copyOnWrite: Set<PossibleSelection | FieldInfo | SpreadInfo>;
+  fragmentSelections: Map<SelectionSetNode, PossibleSelections>;
 }>;
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -60,14 +62,17 @@ export function describeResultTree(
     fieldsWithArgs: [],
     mergeMemo: new Map(),
     copyOnWrite: new Set(),
+    fragmentSelections: new Map(),
   };
 
+  const possibleSelections = collectPossibleSelections(
+    context,
+    doc.definition.selectionSet,
+  );
   return {
-    possibleSelections: collectPossibleSelections(
-      context,
-      doc.definition.selectionSet,
-    ),
+    possibleSelections,
     fieldsWithArgs: context.fieldsWithArgs,
+    hasDeferSites: context.fragmentSelections.size > 0,
   };
 }
 
@@ -75,9 +80,8 @@ function collectPossibleSelections(
   context: Context,
   selectionSet: SelectionSetNode,
 ): PossibleSelections {
-  const commonSelection = createEmptySelection();
   const possibleSelections: PossibleSelections = new Map([
-    [null, commonSelection],
+    [null, createEmptySelection()],
   ]);
   collectFields(context, possibleSelections, selectionSet);
   mergeSubSelections(context, possibleSelections);
@@ -160,6 +164,14 @@ function collectFields(
       addFieldEntry(context, selection.fields, node, ancestors);
     } else if (node.kind === "InlineFragment") {
       inferPossibleType(context, typeCondition, getTypeName(node));
+      collectDeferSite(
+        context,
+        selectionsByType,
+        node,
+        node,
+        getTypeName(node) ?? typeCondition,
+        ancestors,
+      );
       ancestorStack.push(node);
       collectFields(
         context,
@@ -187,6 +199,14 @@ function collectFields(
         throw new Error(`No fragment named ${node.name.value}.`);
       }
       addSpreadEntry(context, selectionsByType, fragment, node, ancestors);
+      collectDeferSite(
+        context,
+        selectionsByType,
+        node,
+        fragment,
+        getTypeName(fragment),
+        ancestors,
+      );
       inferPossibleType(context, typeCondition, getTypeName(fragment));
       ancestorStack.push(node);
       collectFields(
@@ -202,6 +222,52 @@ function collectFields(
       assertNever(node);
     }
   }
+}
+
+function collectDeferSite(
+  context: Context,
+  selections: PossibleSelections,
+  node: InlineFragmentNode | FragmentSpreadNode,
+  fragment: InlineFragmentNode | FragmentDefinitionNode,
+  type: TypeName | null | undefined,
+  ancestors: SelectionNode[],
+) {
+  const defer = findDirective(node, "defer");
+  if (!defer) return;
+  const conditions: DeferSite["conditions"] = [];
+  for (const ancestor of [...ancestors, node]) {
+    for (const directive of ancestor.directives ?? EMPTY_ARRAY) {
+      const name = directive.name.value;
+      if (name !== "defer" && name !== "include" && name !== "skip") continue;
+      // A nested site is first reached in its parent's delivery, unless
+      // that parent is included eagerly (@defer(if: false)).
+      const expected =
+        name === "include" || (name === "defer" && ancestor === node);
+      const condition = findArgument(directive, "if")?.value;
+      if (condition?.kind === "Variable") {
+        conditions.push({
+          variable: condition.name.value,
+          expected,
+          defer: name === "defer",
+        });
+      } else if (
+        (condition ? valueFromASTUntyped(condition) : true) !== expected
+      ) {
+        return;
+      }
+    }
+  }
+  const selection = getOrCreate(
+    context.fragmentSelections,
+    fragment.selectionSet,
+    () => collectPossibleSelections(context, fragment.selectionSet),
+  );
+  const target = getOrCreate(selections, type ?? null, createEmptySelection);
+  (target.deferSites ??= []).push({
+    selection,
+    label: findArgument(defer, "label")?.value,
+    conditions,
+  });
 }
 
 /**
@@ -248,7 +314,7 @@ function appendUntypedSelection(
   possibleSelections: PossibleSelections,
   untypedSelection: PossibleSelection,
 ) {
-  if (!untypedSelection.fields.size) {
+  if (!untypedSelection.fields.size && !untypedSelection.deferSites?.length) {
     return;
   }
   for (const [typeName, selection] of possibleSelections.entries()) {
@@ -470,6 +536,9 @@ function mergeSelectionsImpl(
 
   if (mutableTarget !== target) {
     context.mergeMemo.set(mutableTarget, new Set([source]));
+  }
+  if (source.deferSites) {
+    (mutableTarget.deferSites ??= []).push(...source.deferSites);
   }
 
   for (const [fieldName, sourceAliases] of source.fields.entries()) {
@@ -745,6 +814,7 @@ function copySelection(
     depth: selection.depth,
     structuralHash: UNINITIALIZED_HASH,
   };
+  if (selection.deferSites) copy.deferSites = [...selection.deferSites];
   for (const [field, aliases] of selection.fields.entries()) {
     copy.fields.set(field, [...aliases]);
     for (const alias of aliases) {

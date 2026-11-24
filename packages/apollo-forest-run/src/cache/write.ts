@@ -1,6 +1,6 @@
 import type { Cache } from "@apollo/client";
 import type { IndexedTree, UpdateTreeResult } from "../forest/types";
-import type { OperationResult } from "../values/types";
+import type { ObjectChunk, OperationResult } from "../values/types";
 import type {
   CacheEnv,
   DataForest,
@@ -26,12 +26,15 @@ import {
   getEffectiveReadLayers,
   touchOperation,
 } from "./store";
-import { diffTree, GraphDifference } from "../diff/diffTree";
+import { diffNodes, diffTree, GraphDifference } from "../diff/diffTree";
+import { diffObject } from "../diff/diffObject";
+import * as Difference from "../diff/difference";
 import {
   resolveAffectedOperations,
   updateAffectedTrees,
 } from "../forest/updateForest";
-import { indexTree } from "../forest/indexTree";
+import { DeferIndexing, indexTree } from "../forest/indexTree";
+import { addDirtyChunkDifference } from "../forest/transformTree";
 import { createParentLocator, markAsPartial, TraverseEnv } from "../values";
 import { NodeDifferenceMap } from "../forest/updateTree";
 import { getNodeChunks } from "./draftHelpers";
@@ -39,11 +42,27 @@ import { replaceTree } from "../forest/addTree";
 import { invalidateReadResults } from "./invalidate";
 import { IndexedForest } from "../forest/types";
 
+/**
+ * Internal fragment write of a (non-registered) fragment descriptor to an existing object.
+ * The result is never retained as a separate tree.
+ */
+export type FragmentWrite = {
+  operation: OperationDescriptor;
+  dataId: NodeKey;
+  // Object embedded into `dataId` at some sub-path (data is diffed against it)
+  embedded?: { tree: IndexedTree; chunk: ObjectChunk };
+};
+
+// Root key of a fragment written to an embedded object (never leaves the incoming tree)
+const EMBEDDED_ROOT_KEY = "__FOREST_RUN_EMBEDDED_FRAGMENT__";
+
 export function write(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
   options: Cache.WriteOptions,
+  fragment?: FragmentWrite,
+  deferIndexing?: DeferIndexing,
 ): WriteResult {
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
   const targetForest = getActiveForest(store, activeTransaction);
@@ -52,22 +71,28 @@ export function write(
     typeof options.result === "object" && options.result !== null
       ? options.result
       : {};
-  const rootNodeKey = options.dataId ?? objectKey(writeData);
+  const rootNodeKey = fragment
+    ? fragment.dataId
+    : options.dataId ?? objectKey(writeData);
   assert(rootNodeKey !== false);
 
   // ApolloCompat (apollo allows writing fragments without proper id in the data)
   if (rootNodeKey !== undefined && options.dataId) {
     keyMap?.set(writeData, rootNodeKey);
   }
-  const operationDescriptor = resolveOperationDescriptor(
-    env,
-    store,
-    options.query,
-    options.variables,
-    rootNodeKey,
-  );
-  touchOperation(env, store, operationDescriptor);
-  if (!operationDescriptor.cache) {
+  const operationDescriptor =
+    fragment?.operation ??
+    resolveOperationDescriptor(
+      env,
+      store,
+      options.query,
+      options.variables,
+      rootNodeKey,
+    );
+  if (!fragment) {
+    touchOperation(env, store, operationDescriptor);
+  }
+  if (!operationDescriptor.cache && !fragment) {
     // Results of this operation are never stored, so nothing will ever evict its descriptor.
     // Remember it, so that the outermost transaction can release it on completion.
     // (the set only exists when `env.cleanupNonCacheableOperations` is enabled)
@@ -93,7 +118,7 @@ export function write(
   // Safeguard: make sure previous state doesn't leak outside write operation
   assert(!existingResult?.prev);
 
-  if (writeData === existingData && existingResult) {
+  if (writeData === existingData && existingResult && !deferIndexing) {
     return {
       options,
       incoming: existingResult,
@@ -127,6 +152,8 @@ export function write(
     operationResult,
     undefined,
     existingResult,
+    deferIndexing,
+    fragment && (fragment.embedded ? EMBEDDED_ROOT_KEY : fragment.dataId),
   );
 
   // ApolloCompat: necessary for fragment writes with custom ids
@@ -144,9 +171,15 @@ export function write(
     mergePolicies,
     incomingResult,
     options.overwrite ?? false,
+    fragment?.embedded?.chunk,
   );
 
-  const difference = diffTree(targetForest, modifiedIncomingResult, env);
+  const embedded = fragment?.embedded;
+  const diff = (forest: IndexedForest) =>
+    embedded
+      ? diffEmbedded(env, forest, modifiedIncomingResult, embedded)
+      : diffTree(forest, modifiedIncomingResult, env);
+  const difference = diff(targetForest);
 
   if (difference.errors.length) {
     processDiffErrors(targetForest, modifiedIncomingResult, difference);
@@ -181,7 +214,11 @@ export function write(
     modifiedIncomingResult,
   );
 
-  if (!existingResult && shouldCache(targetForest, operationDescriptor)) {
+  if (
+    !existingResult &&
+    !fragment &&
+    shouldCache(targetForest, operationDescriptor)
+  ) {
     affectedOperations.set(operationDescriptor, difference.nodeDifference);
     // Note: even with existingResult === undefined the tree for this operation may still exist in the cache
     //   (when existingResult is resolved with a different key descriptor due to key variables)
@@ -190,11 +227,10 @@ export function write(
   }
 
   appendAffectedOperationsFromOtherLayers(
-    env,
     store,
     affectedOperations,
     targetForest,
-    modifiedIncomingResult,
+    diff,
   );
 
   invalidateReadResults(
@@ -219,11 +255,10 @@ export function write(
 }
 
 function appendAffectedOperationsFromOtherLayers(
-  env: CacheEnv,
   store: Store,
   affectedForestOperationsMutable: Map<OperationDescriptor, NodeDifferenceMap>,
   targetForest: DataForest | OptimisticLayer,
-  incomingResult: IndexedTree,
+  diff: (forest: IndexedForest) => GraphDifference,
 ) {
   // Optimistic reads go through all existing layers
   //  And those layers may be affected by incoming results too, so we actually need to diff all other layers too
@@ -234,10 +269,40 @@ function appendAffectedOperationsFromOtherLayers(
     }
     resolveAffectedOperations(
       layer,
-      diffTree(layer, incomingResult, env),
+      diff(layer),
       affectedForestOperationsMutable,
     );
   }
+}
+
+/**
+ * An embedded object is not a node: its difference is recorded on the closest node
+ * (nested nodes of the incoming object are diffed as usual).
+ */
+function diffEmbedded(
+  env: CacheEnv,
+  forest: IndexedForest,
+  incoming: IndexedTree,
+  target: NonNullable<FragmentWrite["embedded"]>,
+): GraphDifference {
+  const nodes = new Map(incoming.nodes);
+  const [root] = nodes.get(incoming.rootNodeKey) ?? EMPTY_ARRAY;
+  nodes.delete(incoming.rootNodeKey);
+  assert(root);
+
+  const graphDifference = diffNodes(forest, nodes, env);
+  const { difference } = diffObject(target.chunk, root, env);
+  if (difference && Difference.isDirty(difference)) {
+    addDirtyChunkDifference(
+      {
+        findParent: createParentLocator(target.tree.dataMap),
+        nodeDifference: graphDifference.nodeDifference,
+      },
+      target.chunk,
+      difference,
+    );
+  }
+  return graphDifference;
 }
 
 function processDiffErrors(

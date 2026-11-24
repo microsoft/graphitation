@@ -44,6 +44,7 @@ import {
   isScalarValue,
   isSourceObject,
   resolveFieldChunk,
+  resolveMatchingFieldAliases,
   resolveFieldValue,
   retrieveEmbeddedChunk,
   TraverseEnv,
@@ -183,6 +184,8 @@ export function applyMergePolicies(
   mergePoliciesMap: Map<TypeName, Map<FieldName, FieldMergeFunction>>,
   incomingTree: IndexedTree,
   overwrite: boolean,
+  // Existing value of the incoming root, when it is an object without a key of its own
+  existingRoot?: ObjectChunk,
 ): IndexedTree {
   const findChunkInfo = (value: ApolloStoreValue | SourceObject) => {
     if (typeof value !== "object" || value === null) {
@@ -249,13 +252,20 @@ export function applyMergePolicies(
         let existingChunk: GraphChunk | undefined;
         if (!overwrite) {
           // Resolving "existing" value through parent, because field value may not have metadata, e.g. be a scalar
-          const existingParent =
-            findExistingChunk(pathEnv, incomingTree, parent) ??
-            findChunk(pathEnv, layers, parent);
-
-          existingChunk = existingParent
-            ? resolveFieldChunk(existingParent, field)
-            : materializeFromForest(env, pathEnv, layers, parent, field);
+          if (existingRoot && parent.data === incomingTree.result.data) {
+            const [alias] = resolveMatchingFieldAliases(
+              existingRoot,
+              resolveNormalizedField(parent.selection, field),
+            );
+            existingChunk = alias && resolveFieldChunk(existingRoot, alias);
+          } else {
+            const existingParent =
+              findExistingChunk(pathEnv, incomingTree, parent) ??
+              findChunk(pathEnv, layers, parent);
+            existingChunk = existingParent
+              ? resolveFieldChunk(existingParent, field)
+              : materializeFromForest(env, pathEnv, layers, parent, field);
+          }
 
           if (existingChunk !== undefined) {
             assert(isCompatibleValue(fieldValue, existingChunk));

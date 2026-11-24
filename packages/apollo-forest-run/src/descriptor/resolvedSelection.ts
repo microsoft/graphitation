@@ -109,7 +109,27 @@ export function resolveSelection(
       ? selection.fieldQueue.filter((field) => !skippedFields.has(field))
       : selection.fieldQueue;
 
+    const deferredFragments = selection.deferSites?.flatMap((site) => {
+      const variables = operation.variablesWithDefaults;
+      if (
+        site.conditions.some(
+          ({ variable, expected, defer }) =>
+            (defer
+              ? variables[variable] !== false
+              : Boolean(variables[variable])) !== expected,
+        )
+      )
+        return [];
+      return [
+        {
+          label: site.label && valueFromASTUntyped(site.label, variables),
+          selection: site.selection,
+        },
+      ];
+    });
+
     const hasLocalChanges =
+      deferredFragments ||
       normalizedFields ||
       skippedFields?.size ||
       skippedSpreads?.size ||
@@ -122,6 +142,7 @@ export function resolveSelection(
         normalizedFields,
         skippedFields,
         skippedSpreads,
+        deferredFragments,
         resolvedHash: UNINITIALIZED_HASH,
       };
       selectionOperations.set(resolvedSelection, operation);

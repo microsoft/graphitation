@@ -237,6 +237,26 @@ Objects and lists that didn't change are recycled.
 
 No unnecessary allocations, structured sharing is guaranteed.
 
+## Incremental delivery (`@defer`)
+
+Response paths of deferred fragments refer to the initial server response, not to the current cache state
+(e.g. after a list prepend `["messages", 0]` points to another message). So deferred fragments are written to
+the objects they were deferred on in the initial result:
+
+```ts
+// Initial result: a regular write which also remembers targets of pending deferred fragments
+cache.writeInitialData({ query, variables, data, pending, token });
+
+// Subsequent payload: every patch is a fragment write of the deferred selection to its target
+cache.writeIncrementalData({ query, variables, patches: [{ path, label, data }], token });
+```
+
+- A target is an object key, plus a sub-path for objects embedded into their closest keyed ancestor.
+  Embedded objects are addressed by position (like client IDs in Relay).
+- Fragments are written even if the operation doesn't reach the target anymore (missing objects are not created).
+- `token` identifies the execution: its targets are released together with it.
+- `label` may be omitted when a path has a single deferred fragment.
+
 ## Aggregated Entity Views
 
 In ForestRun, state of individual entity is spread across multiple GraphQL operation results.

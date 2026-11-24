@@ -30,6 +30,7 @@ import type {
   FieldReadFunction,
 } from "@apollo/client/cache/inmemory/policies";
 import type { TelemetryEvent } from "../telemetry/types";
+import type { DeferTargets } from "../forest/deferTargets";
 import { ExtendedLogger, Logger } from "../jsutils/logger";
 import { GraphDifference, GraphDiffError } from "../diff/diffTree";
 import { ObjectDifference } from "../diff/types";
@@ -127,6 +128,8 @@ export type Store = {
   partitions: WeakMap<IndexedTree, ResolvedPartition>;
   // Pending scheduled auto-eviction
   pendingEviction: ScheduledEvictionHandle | null;
+  // Pending @defer targets by incremental execution
+  deferTargets: WeakMap<object, DeferTargets>;
 };
 
 export type Transaction = {

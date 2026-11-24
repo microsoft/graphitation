@@ -179,6 +179,8 @@ export function updateTree(
     { data: rootDraft },
     missingFields,
     base,
+    undefined,
+    base.rootNodeKey,
   );
   if (env.apolloCompat_keepOrphanNodes) {
     apolloBackwardsCompatibility_saveOrphanNodes(base, updatedTree);

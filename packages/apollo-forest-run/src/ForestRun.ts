@@ -17,6 +17,7 @@ import type {
   SerializedOperationInfo,
   Store,
   Transaction,
+  WriteResult,
 } from "./cache/types";
 import { ApolloCache } from "@apollo/client";
 import { assert } from "./jsutils/assert";
@@ -41,6 +42,12 @@ import {
   transformDocument,
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
+import {
+  IncrementalWriteOptions,
+  InitialWriteOptions,
+  writeIncrementalData,
+  writeInitialData,
+} from "./cache/incremental";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -205,6 +212,33 @@ export class ForestRun<
       : this.runTransaction({
           update: () => this.runWrite(options),
         });
+  }
+
+  /**
+   * Writes the initial result of an incremental (`@defer`) execution.
+   * Its deferred fragments are written later by `writeIncrementalData` with the same `token`.
+   */
+  public writeInitialData(options: InitialWriteOptions): void {
+    this.runWrites((transaction) => [
+      writeInitialData(this.env, this.store, transaction, options),
+    ]);
+  }
+
+  public writeIncrementalData(options: IncrementalWriteOptions): void {
+    this.runWrites((transaction) =>
+      writeIncrementalData(this.env, this.store, transaction, options),
+    );
+  }
+
+  private runWrites(writes: (transaction: Transaction) => WriteResult[]) {
+    const run = () => {
+      const transaction = peek(this.transactionStack);
+      assert(transaction);
+      transaction.changelog.push(...writes(transaction));
+    };
+    return this.transactionStack.length
+      ? run()
+      : this.runTransaction({ update: run });
   }
 
   private runWrite(options: Cache.WriteOptions): Reference | undefined {

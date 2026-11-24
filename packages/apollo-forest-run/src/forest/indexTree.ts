@@ -18,11 +18,18 @@ import type {
   ParentLocator,
 } from "../values/types";
 import type {
+  NodeKey,
   NormalizedFieldEntry,
   OperationDescriptor,
   PossibleSelections,
 } from "../descriptor/types";
 import type { ForestEnv, IndexedTree } from "./types";
+import {
+  addDeferTarget,
+  DeferTargets,
+  EmbeddedDeferTarget,
+  ResponsePath,
+} from "./deferTargets";
 import { ValueKind } from "../values/types";
 import {
   getFieldName,
@@ -65,6 +72,20 @@ type Context = {
   incompleteChunks: Set<ObjectChunk>;
   recycleTree: IndexedTree | null;
   findParent: ParentLocator;
+  defer: (DeferIndexing & { collected: EmbeddedDeferTarget[] }) | undefined;
+};
+
+/**
+ * Collects targets of deferred fragments of an incremental execution.
+ */
+export type DeferIndexing = {
+  targets: DeferTargets;
+  // Response path and cache address of the indexed root (for nested fragments of a patch)
+  path?: ResponsePath;
+  root?: { dataId: NodeKey; subPath: ResponsePath };
+  isPending?: (path: ResponsePath, label: string | undefined) => boolean;
+  // Output: targets addressed by position (merge policies may move them)
+  embedded?: EmbeddedDeferTarget[];
 };
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -76,10 +97,12 @@ export function indexTree(
   result: OperationResult,
   knownMissingFields?: MissingFieldsMap,
   previousTreeState: IndexedTree | null = null,
+  deferIndexing?: DeferIndexing,
+  explicitRootNodeKey?: NodeKey,
 ): IndexedTree {
-  let rootNodeKey;
+  let rootNodeKey = explicitRootNodeKey;
   try {
-    rootNodeKey =
+    rootNodeKey ??=
       env.objectKey(
         result.data,
         resolveSelection(
@@ -92,6 +115,10 @@ export function indexTree(
   } catch (e) {
     rootNodeKey = operation.rootNodeKey;
   }
+  const defer =
+    deferIndexing && operation.hasDeferSites
+      ? { ...deferIndexing, collected: [] as EmbeddedDeferTarget[] }
+      : undefined;
   const dataMap = new Map();
   const context: Context = {
     env: env,
@@ -104,8 +131,10 @@ export function indexTree(
     indexedSources: 0,
     incompleteChunks: new Set(),
     rootNodeKey,
-    recycleTree: previousTreeState,
+    // Recycled objects are not visited (recycling never applies to results of a new execution anyways)
+    recycleTree: defer ? null : previousTreeState,
     findParent: createParentLocator(dataMap),
+    defer,
   };
   const rootRef: RootChunkReference = {
     value: null,
@@ -133,9 +162,18 @@ export function indexTree(
   // Every composite occurrence is counted, but dataMap keeps only unique sources.
   // This detects sharing without an additional map lookup or allocation per chunk.
   if (context.indexedSources === dataMap.size) {
+    if (defer) {
+      for (const entry of defer.collected) {
+        addDeferTarget(defer.targets, entry.target);
+        if (entry.target.subPath.length) {
+          defer.embedded?.push(entry);
+        }
+      }
+    }
     return tree;
   }
-  return reindexSharedTree(env, tree, rootRef.value);
+  // Paths of shared objects are ambiguous: targets are collected from the repaired tree
+  return reindexSharedTree(env, tree, rootRef.value, deferIndexing);
 }
 
 // Matches ObjectChunkReference structure with additional fields
@@ -180,6 +218,7 @@ export function indexObject(
     rootNodeKey,
     recycleTree: null,
     findParent: createParentLocator(dataMap),
+    defer: undefined,
   };
   const result = {
     value: null as unknown,
@@ -223,6 +262,7 @@ function reindexSharedTree(
   env: ForestEnv,
   tree: IndexedTree,
   root: ObjectChunk,
+  deferIndexing: DeferIndexing | undefined,
 ): IndexedTree {
   const repaired = cloneSharedReferences(env, root);
   // Malformed, out-of-range list chunks may overcount without sharing actual data.
@@ -234,6 +274,9 @@ function reindexSharedTree(
     tree.operation,
     { ...tree.result, data: repaired.data },
     repaired.missingFields,
+    null,
+    deferIndexing,
+    tree.rootNodeKey,
   );
   repairedTree.prev = tree.prev;
   repairedTree.history = tree.history;
@@ -302,6 +345,9 @@ function indexSourceObject(
     context.indexedSources++;
   }
 
+  if (context.defer && selection.deferredFragments) {
+    collectDeferTargets(context, context.defer, chunk, parent);
+  }
   if (missingFields?.size) {
     markAsPartial(context, parent);
     context.incompleteChunks.add(chunk);
@@ -431,6 +477,58 @@ function indexSourceList(
     chunk.itemChunks[index] = itemParent;
   }
   return chunk;
+}
+
+/**
+ * Deferred fragments of an object are written to its key, or for an embedded object -
+ * to its closest keyed ancestor at the sub-path from it.
+ */
+function collectDeferTargets(
+  context: Context,
+  defer: NonNullable<Context["defer"]>,
+  chunk: ObjectChunk,
+  ref: GraphChunkReference,
+) {
+  const path: (string | number)[] = [];
+  let address: { dataId: NodeKey; subPath: ResponsePath } | undefined =
+    chunk.key !== false && !isRootRef(ref)
+      ? { dataId: chunk.key, subPath: EMPTY_ARRAY }
+      : undefined;
+  while (!isRootRef(ref)) {
+    path.unshift(isParentListRef(ref) ? ref.index : ref.field.dataKey);
+    const parent = ref.parent;
+    ref = context.findParent(parent);
+    if (
+      !address &&
+      parent.kind === ValueKind.Object &&
+      parent.key !== false &&
+      !isRootRef(ref)
+    ) {
+      address = { dataId: parent.key, subPath: [...path] };
+    }
+  }
+  address ??= defer.root
+    ? { dataId: defer.root.dataId, subPath: [...defer.root.subPath, ...path] }
+    : { dataId: context.rootNodeKey, subPath: path };
+
+  const responsePath = defer.path ? [...defer.path, ...path] : path;
+  for (const { label, selection } of chunk.selection.deferredFragments ??
+    EMPTY_ARRAY) {
+    if (defer.isPending?.(responsePath, label) === false) {
+      continue;
+    }
+    defer.collected.push({
+      target: {
+        label,
+        path: responsePath,
+        dataId: address.dataId,
+        subPath: address.subPath,
+        typeName: chunk.type || undefined,
+        selection,
+      },
+      source: chunk.data,
+    });
+  }
 }
 
 function reIndexObject(
