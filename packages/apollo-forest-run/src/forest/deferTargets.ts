@@ -1,4 +1,5 @@
 import type {
+  DeferLabel,
   NodeKey,
   NormalizedFieldEntry,
   PossibleSelections,
@@ -21,7 +22,7 @@ export type EmbeddedPath = ReadonlyArray<NormalizedFieldEntry | number>;
  * into their closest keyed ancestor (similar to client ids of embedded records in Relay).
  */
 export type DeferTarget = {
-  label: string | undefined;
+  label: DeferLabel | undefined;
   path: ResponsePath; // response path of the deferred fragment
   dataId: NodeKey;
   subPath: EmbeddedPath;
@@ -37,7 +38,10 @@ export type CollectedDeferTarget = {
 
 // Pending deferred fragments of an incremental execution by response path and label.
 //   `null` marks ambiguous keys: unlabeled fragments sharing a path can't be told apart.
-export type DeferTargets = Map<string, DeferTarget | null>;
+// Response path and label of a deferred fragment
+export type DeferTargetKey = string;
+
+export type DeferTargets = Map<DeferTargetKey, DeferTarget | null>;
 
 export function addDeferTarget(targets: DeferTargets, target: DeferTarget) {
   addKey(targets, targetKey(target.path, target.label), target);
@@ -50,7 +54,7 @@ export function addDeferTarget(targets: DeferTargets, target: DeferTarget) {
 export function getDeferTarget(
   targets: DeferTargets,
   path: ResponsePath,
-  label: string | undefined,
+  label: DeferLabel | undefined,
 ): DeferTarget | undefined {
   return targets.get(targetKey(path, label)) ?? undefined;
 }
@@ -99,7 +103,11 @@ export function resolveObjectAddress(
   return ref ? { dataId: rootKey, subPath } : undefined;
 }
 
-function addKey(targets: DeferTargets, key: string, target: DeferTarget) {
+function addKey(
+  targets: DeferTargets,
+  key: DeferTargetKey,
+  target: DeferTarget,
+) {
   const existing = targets.get(key);
   if (existing === undefined) {
     targets.set(key, target);
@@ -108,7 +116,10 @@ function addKey(targets: DeferTargets, key: string, target: DeferTarget) {
   }
 }
 
-function targetKey(path: ResponsePath, label: string | undefined) {
+function targetKey(
+  path: ResponsePath,
+  label: DeferLabel | undefined,
+): DeferTargetKey {
   return JSON.stringify([label ?? null, path]);
 }
 

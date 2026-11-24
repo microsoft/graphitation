@@ -14,6 +14,7 @@ import type {
   Store,
   Transaction,
   WriteResult,
+  ExecutionKey,
   ExecutionResult,
   IncrementalDeferResult,
   IncrementalExecution,
@@ -144,7 +145,9 @@ export function write(
       activeTransaction,
       operationDescriptor,
       options,
-      execution as SubsequentIncrementalExecutionResult & { key?: object },
+      execution as SubsequentIncrementalExecutionResult & {
+        key?: ExecutionKey;
+      },
     );
   }
   if (
@@ -189,7 +192,7 @@ function writeIncremental(
   activeTransaction: Transaction,
   operation: OperationDescriptor,
   options: WriteOptions,
-  execution: SubsequentIncrementalExecutionResult & { key?: object },
+  execution: SubsequentIncrementalExecutionResult & { key?: ExecutionKey },
 ): WriteResult[] {
   const key = execution.key ?? resolveResultDescriptor(env, store, operation);
   const incremental = store.incrementalExecutions.get(key);

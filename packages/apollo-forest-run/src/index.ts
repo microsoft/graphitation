@@ -11,6 +11,7 @@ export type {
 export type { ForestRunAdditionalConfig } from "./cache/types";
 export type {
   CompleteExecutionResult,
+  ExecutionKey,
   ExecutionResult,
   InitialIncrementalExecutionResult,
   SubsequentIncrementalExecutionResult,
