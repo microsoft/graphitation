@@ -1109,3 +1109,212 @@ describe("@defer: incremental delivery format", () => {
     });
   });
 });
+
+describe("@defer: nested fragments", () => {
+  const query = gql`
+    query {
+      messages {
+        id
+        ... @defer(label: "l1") {
+          author {
+            id
+            ... @defer(label: "l2") {
+              friends {
+                id
+                ... @defer(label: "l3") {
+                  name
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+  const write = (cache: ForestRun, execution: any) =>
+    cache.write({ query, execution });
+
+  test("three levels in the earlier draft format, within lists", () => {
+    const cache = new ForestRun();
+    write(cache, {
+      data: { messages: [{ __typename: "M", id: "1" }] },
+      hasNext: true,
+    });
+    write(cache, {
+      incremental: [
+        {
+          path: ["messages", 0],
+          label: "l1",
+          data: { author: { __typename: "U", id: "a" } },
+        },
+      ],
+      hasNext: true,
+    });
+    write(cache, {
+      incremental: [
+        {
+          path: ["messages", 0, "author"],
+          label: "l2",
+          data: {
+            friends: [
+              { __typename: "U", id: "f1" },
+              { __typename: "U", id: "f2" },
+            ],
+          },
+        },
+      ],
+      hasNext: true,
+    });
+    write(cache, {
+      incremental: [
+        {
+          path: ["messages", 0, "author", "friends", 1],
+          label: "l3",
+          data: { name: "F2" },
+        },
+        {
+          path: ["messages", 0, "author", "friends", 0],
+          label: "l3",
+          data: { name: "F1" },
+        },
+      ],
+      hasNext: false,
+    });
+    expect(cache.readQuery({ query })).toEqual({
+      messages: [
+        {
+          __typename: "M",
+          id: "1",
+          author: {
+            __typename: "U",
+            id: "a",
+            friends: [
+              { __typename: "U", id: "f1", name: "F1" },
+              { __typename: "U", id: "f2", name: "F2" },
+            ],
+          },
+        },
+      ],
+    });
+  });
+
+  test("three levels in the latest format, announced by the enclosing fragments", () => {
+    const cache = new ForestRun();
+    write(cache, {
+      data: { messages: [{ __typename: "M", id: "1" }] },
+      pending: [{ id: "0", path: ["messages", 0], label: "l1" }],
+      hasNext: true,
+    });
+    write(cache, {
+      pending: [{ id: "1", path: ["messages", 0, "author"], label: "l2" }],
+      incremental: [
+        { id: "0", data: { author: { __typename: "U", id: "a" } } },
+      ],
+      completed: [{ id: "0" }],
+      hasNext: true,
+    });
+    write(cache, {
+      pending: [
+        { id: "2", path: ["messages", 0, "author", "friends", 0], label: "l3" },
+      ],
+      incremental: [
+        { id: "1", data: { friends: [{ __typename: "U", id: "f1" }] } },
+      ],
+      completed: [{ id: "1" }],
+      hasNext: true,
+    });
+    write(cache, {
+      incremental: [{ id: "2", data: { name: "F1" } }],
+      completed: [{ id: "2" }],
+      hasNext: false,
+    });
+    expect(cache.readQuery({ query })).toEqual({
+      messages: [
+        {
+          __typename: "M",
+          id: "1",
+          author: {
+            __typename: "U",
+            id: "a",
+            friends: [{ __typename: "U", id: "f1", name: "F1" }],
+          },
+        },
+      ],
+    });
+  });
+
+  test("a fragment deferred within a fragment on embedded objects", () => {
+    const q = gql`
+      query {
+        message {
+          id
+          ... @defer(label: "l1") {
+            meta {
+              tags {
+                text
+                ... @defer(label: "l2") {
+                  extra
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+    const cache = new ForestRun();
+    cache.write({
+      query: q,
+      execution: {
+        data: { message: { __typename: "M", id: "1" } },
+        hasNext: true,
+      },
+    });
+    cache.write({
+      query: q,
+      execution: {
+        incremental: [
+          {
+            path: ["message"],
+            label: "l1",
+            data: {
+              meta: {
+                __typename: "Meta",
+                tags: [
+                  { __typename: "T", text: "a" },
+                  { __typename: "T", text: "b" },
+                ],
+              },
+            },
+          },
+        ],
+        hasNext: true,
+      },
+    });
+    cache.write({
+      query: q,
+      execution: {
+        incremental: [
+          {
+            path: ["message", "meta", "tags", 1],
+            label: "l2",
+            data: { extra: "B" },
+          },
+        ],
+        hasNext: false,
+      },
+    });
+    expect(cache.readQuery({ query: q, returnPartialData: true })).toEqual({
+      message: {
+        __typename: "M",
+        id: "1",
+        meta: {
+          __typename: "Meta",
+          tags: [
+            { __typename: "T", text: "a" },
+            { __typename: "T", text: "b", extra: "B" },
+          ],
+        },
+      },
+    });
+  });
+});
