@@ -66,7 +66,7 @@ type Context = {
   incompleteChunks: Set<ObjectChunk>;
   recycleTree: IndexedTree | null;
   findParent: ParentLocator;
-  deferredChunks: ObjectChunk[] | undefined;
+  chunksWithDeferredFragments: ObjectChunk[] | undefined;
 };
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -76,7 +76,7 @@ const isArray = Array.isArray;
  * Indexes an operation result.
  *
  * For results of incremental delivery (the initial result or a deferred fragment), additionally collects
- * objects with deferred fragments (see IndexedTree.deferredChunks).
+ * objects with deferred fragments (see IndexedTree.chunksWithDeferredFragments).
  */
 export function indexTree(
   env: ForestEnv,
@@ -106,7 +106,7 @@ export function indexTree(
   } catch (e) {
     rootNodeKey = operation.rootNodeKey;
   }
-  const deferredChunks =
+  const chunksWithDeferredFragments =
     operation.hasDeferSites && isIncrementalResult(result)
       ? ([] as ObjectChunk[])
       : undefined;
@@ -123,9 +123,9 @@ export function indexTree(
     incompleteChunks: new Set(),
     rootNodeKey,
     // Recycled objects are not visited (recycling doesn't apply to incremental results anyways)
-    recycleTree: deferredChunks ? null : previousTreeState,
+    recycleTree: chunksWithDeferredFragments ? null : previousTreeState,
     findParent: createParentLocator(dataMap),
-    deferredChunks,
+    chunksWithDeferredFragments,
   };
   const rootRef: RootChunkReference = {
     value: null,
@@ -150,8 +150,8 @@ export function indexTree(
     history:
       previousTreeState?.history ?? new CircularBuffer(operation.historySize),
   };
-  if (deferredChunks?.length) {
-    tree.deferredChunks = deferredChunks;
+  if (chunksWithDeferredFragments?.length) {
+    tree.chunksWithDeferredFragments = chunksWithDeferredFragments;
   }
   // Every composite occurrence is counted, but dataMap keeps only unique sources.
   // This detects sharing without an additional map lookup or allocation per chunk.
@@ -208,7 +208,7 @@ export function indexObject(
     rootNodeKey,
     recycleTree: null,
     findParent: createParentLocator(dataMap),
-    deferredChunks: undefined,
+    chunksWithDeferredFragments: undefined,
   };
   const result = {
     value: null as unknown,
@@ -333,8 +333,8 @@ function indexSourceObject(
     context.indexedSources++;
   }
 
-  if (context.deferredChunks && selection.deferredFragments) {
-    context.deferredChunks.push(chunk);
+  if (context.chunksWithDeferredFragments && selection.deferredFragments) {
+    context.chunksWithDeferredFragments.push(chunk);
   }
   if (missingFields?.size) {
     markAsPartial(context, parent);

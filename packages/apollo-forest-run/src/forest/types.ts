@@ -61,7 +61,7 @@ export type IndexedTree = {
   history: CircularBuffer<HistoryChange>;
 
   // Objects with deferred fragments found in an incremental result (set by indexing, consumed by the write)
-  deferredChunks?: ObjectChunk[];
+  chunksWithDeferredFragments?: ObjectChunk[];
 
   // ApolloCompat
   danglingReferences?: Set<NodeKey>;

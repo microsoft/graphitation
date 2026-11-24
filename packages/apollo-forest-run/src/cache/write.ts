@@ -545,7 +545,7 @@ function addDeferTargets(
 ) {
   const findIndexedParent = createParentLocator(indexed.dataMap);
   const findMergedParent = createParentLocator(merged.dataMap);
-  for (const chunk of indexed.deferredChunks ?? EMPTY_ARRAY) {
+  for (const chunk of indexed.chunksWithDeferredFragments ?? EMPTY_ARRAY) {
     const mergedChunk = merged.dataMap.get(chunk.data)?.value;
     const address =
       mergedChunk && isObjectValue(mergedChunk) && !mergedChunk.isAggregate
@@ -575,7 +575,7 @@ function addDeferTargets(
       });
     }
   }
-  indexed.deferredChunks = undefined;
+  indexed.chunksWithDeferredFragments = undefined;
 }
 function appendAffectedOperationsFromOtherLayers(
   store: Store,
