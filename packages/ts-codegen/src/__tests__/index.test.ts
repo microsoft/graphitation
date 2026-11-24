@@ -2114,6 +2114,40 @@ describe(generateTS, () => {
     `);
   });
 
+  it("allows live resolver results without widening models or subscription sources", () => {
+    const document = graphql`
+      type User {
+        id: ID!
+        name: String
+      }
+      extend type Query {
+        users: [User!]!
+      }
+      extend type Subscription {
+        userChanged: User
+      }
+    `;
+    const baseline = runGenerateTest(document);
+    const generated = runGenerateTest(document, {
+      liveResolverReturnTypes: true,
+    });
+    expect(generated.models).toBe(baseline.models);
+    expect(generated.resolvers).toContain(
+      'import type { LiveResolverResult } from "@graphitation/supermassive"',
+    );
+    expect(generated.resolvers).toContain(
+      "=> LiveResolverResult<string | null | undefined>",
+    );
+    expect(generated.resolvers).toContain(
+      "=> LiveResolverResult<IterableOrAsyncIterable<Models.User>>",
+    );
+    expect(
+      generated.resolvers?.split("export declare namespace Subscription")[1],
+    ).toBe(
+      baseline.resolvers?.split("export declare namespace Subscription")[1],
+    );
+  });
+
   it("generateTS with mandatoryResolverTypes option", () => {
     const { resolvers } = runGenerateTest(
       graphql`

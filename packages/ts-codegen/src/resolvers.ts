@@ -58,18 +58,28 @@ const getResolverTypes = (context: TsCodegenContext): ResolverType[] => {
 interface Options {
   generateResolverMap: boolean;
   mandatoryResolverTypes: boolean;
+  liveResolverReturnTypes: boolean;
 }
 
 export function generateResolvers(
   context: TsCodegenContext,
   options: Options,
 ): GeneratedFile {
-  const { generateResolverMap, mandatoryResolverTypes } = options;
+  const {
+    generateResolverMap,
+    mandatoryResolverTypes,
+    liveResolverReturnTypes,
+  } = options;
   const statements: string[] = [];
   const resolverTypes = getResolverTypes(context);
   statements.push(
     ...resolverTypes.map((type) =>
-      createResolversForType(context, type, mandatoryResolverTypes),
+      createResolversForType(
+        context,
+        type,
+        mandatoryResolverTypes,
+        liveResolverReturnTypes,
+      ),
     ),
   );
 
@@ -79,7 +89,30 @@ export function generateResolvers(
   }
 
   const source = emit.createSourceFile(
-    [...generateImports(context), ...statements, ...extra],
+    [
+      ...generateImports(context),
+      ...(liveResolverReturnTypes
+        ? [
+            emit.createImportDeclaration(
+              undefined,
+              emit.createImportClause(
+                true,
+                undefined,
+                emit.createNamedImports([
+                  emit.createImportSpecifier(
+                    false,
+                    undefined,
+                    "LiveResolverResult",
+                  ),
+                ]),
+              ),
+              emit.createStringLiteral("@graphitation/supermassive"),
+            ),
+          ]
+        : []),
+      ...statements,
+      ...extra,
+    ],
     emit.createToken("EndOfFileToken"),
     undefined,
   );
@@ -250,11 +283,17 @@ function createResolversForType(
   context: TsCodegenContext,
   type: ResolverType,
   mandatoryResolverTypes: boolean,
+  liveResolverReturnTypes: boolean,
 ): string {
   const { kind } = type;
   switch (kind) {
     case "OBJECT": {
-      return createObjectTypeResolvers(context, type, mandatoryResolverTypes);
+      return createObjectTypeResolvers(
+        context,
+        type,
+        mandatoryResolverTypes,
+        liveResolverReturnTypes,
+      );
     }
     case "UNION": {
       return createUnionTypeResolvers(context, type);
@@ -270,9 +309,10 @@ function createObjectTypeResolvers(
   context: TsCodegenContext,
   type: ObjectType,
   mandatoryResolverTypes: boolean,
+  liveResolverReturnTypes: boolean,
 ): string {
   const members: string[] = type.fields.map((field) =>
-    createResolverField(context, type, field),
+    createResolverField(context, type, field, liveResolverReturnTypes),
   );
   const resolversObject = emit.createInterfaceDeclaration(
     [emit.createModifier("ExportKeyword")],
@@ -310,6 +350,7 @@ function createResolverField(
   context: TsCodegenContext,
   type: ResolverType,
   field: Field,
+  liveResolverReturnTypes: boolean,
 ): string {
   let modelIdentifier;
   if (isRootOperationType(type.name)) {
@@ -388,6 +429,7 @@ function createResolverField(
     getResolverReturnType(
       context.getTypeReferenceForFieldResolverResultFromTypeNode(field.type),
       resolverParametersDefinitions,
+      liveResolverReturnTypes,
     ),
   );
 }

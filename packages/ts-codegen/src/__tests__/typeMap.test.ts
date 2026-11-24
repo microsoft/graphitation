@@ -116,6 +116,41 @@ function expectCompiles(files: Map<string, string>, consumer: string) {
   ).toBe("");
 }
 
+it("typechecks source-valued resolver returns without widening their parent models", () => {
+  const files = generate(
+    `
+    type Counter { id: ID!, count: Int! }
+    type Query { counter: Counter }
+  `,
+    { liveResolverReturnTypes: true, legacyCompat: false },
+  );
+  expectCompiles(
+    files,
+    `
+    import { createLiveSource } from "@graphitation/supermassive";
+    import type { Counter, Query } from "./resolvers.interface";
+    import type * as Models from "./models.interface";
+    const source = createLiveSource({
+      read: () => 1,
+      subscribe: () => () => {},
+    });
+    const scalar: Counter.count = () => source;
+    const ordinary: Counter.count = () => 1;
+    const object: Query.counter = async () => createLiveSource({
+      read: () => ({ id: "counter", count: 1 }),
+      subscribe: () => () => {},
+    });
+    // @ts-expect-error Source handles are not parent-model values.
+    const invalidModel: Models.Counter["count"] = source;
+    // @ts-expect-error A String source is not an Int resolver result.
+    const invalidResolver: Counter.count = () => createLiveSource({
+      read: () => "wrong",
+      subscribe: () => () => {},
+    });
+  `,
+  );
+});
+
 describe("legacy TypeMap generation", () => {
   it.each([undefined, false])(
     "omits TypeMap unless explicitly enabled (generateTypeMap: %s)",

@@ -62,6 +62,8 @@ export interface GenerateTSOptions {
    * }
    */
   mandatoryResolverTypes?: boolean;
+  /** Allow native Supermassive live sources in field resolver return types. */
+  liveResolverReturnTypes?: boolean;
 }
 
 export function generateTS(
@@ -83,6 +85,7 @@ export function generateTS(
     contextTypeExtensions,
     generateResolverMap = false,
     mandatoryResolverTypes = false,
+    liveResolverReturnTypes = false,
   }: GenerateTSOptions,
 ): {
   files: GeneratedFile[];
@@ -134,6 +137,7 @@ export function generateTS(
           generateResolvers(context, {
             generateResolverMap,
             mandatoryResolverTypes,
+            liveResolverReturnTypes,
           }),
         );
       }

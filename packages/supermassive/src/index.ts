@@ -1,4 +1,7 @@
 export { executeWithSchema } from "./executeWithSchema";
+export { createLiveSource, isLiveSource } from "./liveSource";
+export type { ILiveSource, LiveResolverResult } from "./liveSource";
+export { GraphQLLiveDirective } from "./schema/directives";
 export {
   executeWithoutSchema,
   isIncrementalExecutionResult,
@@ -78,6 +81,7 @@ export type { ExtractMinimalViableSchemaResult } from "./utilities/extractMinima
 export type {
   EnumTypeResolver,
   ExecutionResult,
+  LiveExecutionResult,
   FunctionFieldResolver,
   IncrementalExecutionResult,
   IncrementalResult,

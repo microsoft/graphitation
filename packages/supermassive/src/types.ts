@@ -112,6 +112,7 @@ export type ExecutionResult<
   TExtensions = ObjMap<unknown>,
 > =
   | TotalExecutionResult<TData, TExtensions>
+  | LiveExecutionResult<TData, TExtensions>
   | SubscriptionExecutionResult<TData, TExtensions>
   | IncrementalExecutionResult<TData, TExtensions>;
 
@@ -137,6 +138,11 @@ export type SubscriptionExecutionResult<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
 > = AsyncGenerator<TotalExecutionResult<TData, TExtensions>>;
+
+export type LiveExecutionResult<
+  TData = ObjMap<unknown>,
+  TExtensions = ObjMap<unknown>,
+> = AsyncGenerator<TotalExecutionResult<TData, TExtensions>, void, unknown>;
 
 export interface FormattedTotalExecutionResult<
   TData = ObjMap<unknown>,

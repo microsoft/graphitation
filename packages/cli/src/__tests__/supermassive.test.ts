@@ -52,4 +52,23 @@ describe(supermassive, () => {
       ).toMatchSnapshot();
     }
   });
+
+  it("supports native live resolver return types", async () => {
+    await supermassive().parseAsync([
+      "node",
+      "supermassive",
+      "generate-interfaces",
+      path.join(__dirname, "fixtures/schema.graphql"),
+      "--output-dir=__generated__/live",
+      "--live-resolver-return-types",
+    ]);
+    const resolvers = await fs.readFile(
+      path.join(
+        __dirname,
+        "fixtures/__generated__/live/resolvers.interface.ts",
+      ),
+      "utf-8",
+    );
+    expect(resolvers).toContain("LiveResolverResult");
+  });
 });
