@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Write @defer patches to their original cache targets (fragment writes with sub-paths)",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
