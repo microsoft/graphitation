@@ -1,0 +1,7 @@
+{
+  "type": "none",
+  "comment": "Test native live-query snapshots and unchanged fragment render isolation",
+  "packageName": "@graphitation/apollo-react-relay-duct-tape",
+  "email": "mnovikov@microsoft.com_msteamsmdb",
+  "dependentChangeType": "none"
+}

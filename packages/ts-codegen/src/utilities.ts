@@ -204,13 +204,17 @@ export function getSubscriptionResolver(
 export function getResolverReturnType(
   typeNode: string,
   resolverParametersDefinitions: ResolverParametersDefinitions,
+  liveResolverReturnTypes = false,
 ) {
   const resolverParams = getResolverParameters(resolverParametersDefinitions);
 
   return emit.createFunctionTypeNode(
     undefined,
     resolverParams,
-    emit.createTypeReferenceNode("PromiseOrValue", [typeNode]),
+    emit.createTypeReferenceNode(
+      liveResolverReturnTypes ? "LiveResolverResult" : "PromiseOrValue",
+      [typeNode],
+    ),
   );
 }
 

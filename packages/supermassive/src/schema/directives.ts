@@ -78,6 +78,12 @@ export const GraphQLStreamDirective: DirectiveDefinitionTuple = [
   { if: ["Boolean!", true], label: "String", initialCount: ["Int", 0] },
 ];
 
+export const GraphQLLiveDirective: DirectiveDefinitionTuple = [
+  "live",
+  [DirectiveLocation.QUERY].map(encodeDirectiveLocation),
+  { if: ["Boolean", true] },
+];
+
 /**
  * The full list of specified directives.
  */
@@ -89,6 +95,7 @@ export const specifiedDirectives: ReadonlyArray<DirectiveDefinitionTuple> =
     GraphQLSpecifiedByDirective,
     GraphQLDeferDirective,
     GraphQLStreamDirective,
+    GraphQLLiveDirective,
   ]);
 export const SUPERMASSIVE_SCHEMA_DIRECTIVE_NAME = "schema";
 export const SUPERMASSIVE_SCHEMA_DIRECTIVE_DEFINITIONS_ARGUMENT_NAME =

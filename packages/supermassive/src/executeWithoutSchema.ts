@@ -71,6 +71,9 @@ import type { TypeReference } from "./schema/reference";
 import type { FieldDefinition } from "./schema/definition";
 import * as Definitions from "./schema/definition";
 import * as Resolvers from "./schema/resolvers";
+import { executeLive, isLiveOperation } from "./executeLive";
+import type { LiveSourceTracker } from "./executeLive";
+import { isLiveSource } from "./liveSource";
 
 /**
  * A memoized collection of relevant subfields with regard to the return
@@ -129,6 +132,7 @@ export interface ExecutionContext {
   subsequentPayloads: Set<IncrementalDataRecord>;
   enablePerEventContext: boolean;
   enableEarlyExecution: boolean;
+  liveSourceTracker?: LiveSourceTracker;
 }
 
 type VariableValues = { [variable: string]: unknown };
@@ -162,6 +166,28 @@ export function executeWithoutSchema(
   const handleCoersionResult = (coersionErrors: Array<GraphQLError> | void) => {
     if (Array.isArray(coersionErrors)) {
       return { errors: coersionErrors };
+    }
+    try {
+      if (isLiveOperation(exeContext)) {
+        return executeLive((liveSourceTracker) => {
+          const revisionContext: ExecutionContext = {
+            ...exeContext,
+            errors: [],
+            subsequentPayloads: new Set(),
+            liveSourceTracker,
+          };
+          const result = executeOperationWithBeforeHook(revisionContext);
+          const completeRevision = (result: ExecutionResult) => {
+            exeContext.schemaFragment = revisionContext.schemaFragment;
+            return result;
+          };
+          return isPromise(result)
+            ? result.then(completeRevision)
+            : completeRevision(result);
+        });
+      }
+    } catch (error) {
+      return { errors: [locatedError(error, exeContext.operation)] };
     }
     return executeOperationWithBeforeHook(exeContext);
   };
@@ -1286,6 +1312,11 @@ function resolveAndCompleteField(
     if (isPromise(result)) {
       completed = result
         .then((resolved) => {
+          if (isLiveSource(resolved)) {
+            resolved = exeContext.liveSourceTracker
+              ? exeContext.liveSourceTracker.read(resolved)
+              : resolved.read();
+          }
           if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
             hookContext = invokeAfterFieldResolveHook(
               info,
@@ -1327,6 +1358,11 @@ function resolveAndCompleteField(
           },
         );
     } else {
+      if (isLiveSource(result)) {
+        result = exeContext.liveSourceTracker
+          ? exeContext.liveSourceTracker.read(result)
+          : result.read();
+      }
       if (!isDefaultResolverUsed && hooks?.afterFieldResolve) {
         hookContext = invokeAfterFieldResolveHook(
           info,

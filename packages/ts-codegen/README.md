@@ -43,6 +43,18 @@ does not add types from imported modules that are absent from the document.
 References to such types retain their imported model shapes because their
 GraphQL fields are unavailable.
 
+## Native live resolver return types
+
+Set `liveResolverReturnTypes: true` (CLI: `--live-resolver-return-types`) to use
+`LiveResolverResult<T>` for non-subscription field resolver returns. This admits
+plain values, native Supermassive live sources, and promises of either, without
+widening parent models or client payload types. It is disabled by default and
+requires a runtime with native live-source support. Legacy resolver generation
+and subscription source types are unchanged.
+
+See [native live queries](../supermassive/docs/live-queries.md) for source and
+resolver examples.
+
 ## Parameters
 
 - `document` (DocumentNode): The GraphQL document consisting the schema definitions to generate TypeScript code from.
@@ -61,6 +73,7 @@ export interface GenerateTSOptions {
   enumsImport?: string | null;
   legacyCompat?: boolean;
   generateTypeMap?: boolean;
+  liveResolverReturnTypes?: boolean;
   useStringUnionsInsteadOfEnums?: boolean;
   legacyNoModelsForObjects?: boolean;
   modelScope?: string | null;

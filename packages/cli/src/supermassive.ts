@@ -24,6 +24,7 @@ type GenerateInterfacesOptions = {
   generateTypeMap?: boolean;
   generateResolverMap?: boolean;
   mandatoryResolverTypes?: boolean;
+  liveResolverReturnTypes?: boolean;
   scope?: string;
 };
 
@@ -86,6 +87,10 @@ export function supermassive(): Command {
     .option(
       "--mandatory-resolver-types",
       "Makes resolver types for type extensions mandatory to ensure that new resolvers are provided if module extends a type",
+    )
+    .option(
+      "--live-resolver-return-types",
+      "Allow native Supermassive live sources in field resolver return types",
     )
     .description("generate interfaces and models")
     .action(
@@ -226,6 +231,7 @@ async function generateInterfaces(
       generateTypeMap: !!options.generateTypeMap,
       generateResolverMap: !!options.generateResolverMap,
       mandatoryResolverTypes: !!options.mandatoryResolverTypes,
+      liveResolverReturnTypes: !!options.liveResolverReturnTypes,
       enumNamesToMigrate,
       enumNamesToKeep,
       contextTypeExtensions,

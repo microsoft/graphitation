@@ -72,6 +72,16 @@ The following optional execution arguments tune how deferred/streamed payloads a
   result has been resolved. This can reduce the overall latency of incremental payloads at the cost of doing
   more work up front.
 
+### Experimental native live queries
+
+`@live` queries can observe explicit `createLiveSource({ read, subscribe })`
+values returned by field resolvers. Supermassive owns full-query re-execution,
+dependency reconciliation, and cancellation; clients receive complete result
+snapshots. Ordinary queries read the same sources once without subscribing.
+
+See [live queries](docs/live-queries.md) for examples, lifecycle/error semantics,
+resolver generation, delivery-patch tradeoffs, and the staged integration plan.
+
 ### Possible future - pre-normalized executor
 
 In a scenario where executor is running close to the client (sometimes even in same process or at least in same browser), it might be worth exploring removing some of the requirements imposed by the usual GraphQL transport - for example serialization. Not only GraphQL executors do the JSON serialization, but also they return the data that is optimized for transport and that matches the query tree. This means clients need to perform often expensive normazilation. As traffic and message size might be less important in same process / same browser scenarios, it might be worthwhile exploring return pre-normalized data from supermassive. This offers massive speedups for some clients like Apollo ([see benchmarks](https://github.com/vladar/graphql-normalized)).

@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Add experimental native live-query sources, execution, and opt-in resolver generation",
+  "packageName": "@graphitation/supermassive",
+  "email": "mnovikov@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
