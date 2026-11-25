@@ -21,13 +21,6 @@ const completeData = {
   message: { ...initialData.message, details: "World" },
 };
 
-const createLogger = () => ({
-  debug: jest.fn(),
-  log: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-});
-
 describe("write with options.execution", () => {
   it("writes a complete result", () => {
     const cache = new ForestRun();
@@ -78,60 +71,6 @@ describe("write with options.execution", () => {
     expect(cache.diff({ query, optimistic: false })).toMatchObject({
       complete: true,
       result: completeData,
-    });
-  });
-
-  describe("subsequent results", () => {
-    const subsequentResults = {
-      latest: {
-        incremental: [{ id: "0", data: { details: "World" } }],
-        completed: [{ id: "0" }],
-        hasNext: false,
-      },
-      draft2022: {
-        incremental: [
-          { path: ["message"], label: "details", data: { details: "World" } },
-        ],
-        hasNext: false,
-      },
-    };
-
-    it.each(Object.entries(subsequentResults))(
-      "ignores subsequent results (%s format) without touching the cache",
-      (_, execution) => {
-        const logger = createLogger();
-        const cache = new ForestRun({ logger });
-        cache.write({ query, execution: { data: initialData, hasNext: true } });
-        const before = cache.extract();
-        const watch = jest.fn();
-        cache.watch({ query, optimistic: true, callback: watch });
-
-        const ref = cache.write({ query, execution });
-        cache.write({ query, execution });
-
-        expect(ref).toBeUndefined();
-        expect(watch).not.toHaveBeenCalled();
-        expect(cache.extract()).toEqual(before);
-        expect(logger.warn).toHaveBeenCalledTimes(1);
-      },
-    );
-
-    it("ignores subsequent results within a transaction", () => {
-      const cache = new ForestRun({ logger: createLogger() });
-      cache.write({ query, execution: { data: initialData, hasNext: true } });
-      const before = cache.extract();
-
-      cache.batch({
-        update: () => {
-          const ref = cache.write({
-            query,
-            execution: subsequentResults.latest,
-          });
-          expect(ref).toBeUndefined();
-        },
-      });
-
-      expect(cache.extract()).toEqual(before);
     });
   });
 });

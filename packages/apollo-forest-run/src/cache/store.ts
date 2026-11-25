@@ -56,6 +56,7 @@ export function createStore(_: CacheEnv): Store {
     atime: new Map(),
     partitions: new WeakMap(),
     pendingEviction: null,
+    incrementalExecutions: new WeakMap(),
   };
   return store;
 }
@@ -206,6 +207,7 @@ export function canReleaseOperationDescriptor(
     return false;
   }
   if (
+    store.incrementalExecutions.has(operation) ||
     store.watches.has(operation) ||
     store.optimisticReadResults.has(operation) ||
     store.partialReadResults.has(operation)

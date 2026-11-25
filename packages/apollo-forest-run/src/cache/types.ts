@@ -1,6 +1,7 @@
 import type { Cache, InMemoryCacheConfig, TypePolicies } from "@apollo/client";
 import type {
   IndexedForest,
+  IndexedOperationFragment,
   IndexedTree,
   UpdateForestStats,
 } from "../forest/types";
@@ -17,7 +18,9 @@ import type {
   NormalizedFieldEntry,
   VariableValues,
   DeferLabel,
+  FieldInfo,
   FormattedError,
+  PossibleSelections,
   ResponsePath,
 } from "../descriptor/types";
 import type { DocumentNode, OperationDefinitionNode } from "graphql";
@@ -130,6 +133,8 @@ export type Store = {
   partitions: WeakMap<IndexedTree, ResolvedPartition>;
   // Pending scheduled auto-eviction
   pendingEviction: ScheduledEvictionHandle | null;
+  // The latest incremental execution (`@defer`) of an operation, while it has pending results
+  incrementalExecutions: WeakMap<OperationDescriptor, IncrementalExecution>;
 };
 
 export type Transaction = {
@@ -146,9 +151,19 @@ export type Transaction = {
   nonCacheableOperations: Set<OperationDescriptor> | null;
 };
 
-export type WriteResult = {
-  options: WriteOptions;
+export type WriteResult = OperationWriteResult | OperationFragmentWriteResult;
+
+export type OperationWriteResult = WriteResultBase & {
   incoming: DataTree;
+};
+
+// Write of subsequent results of incremental delivery (`@defer`) to objects of a stored tree
+export type OperationFragmentWriteResult = WriteResultBase & {
+  incoming: IndexedOperationFragment;
+};
+
+type WriteResultBase = {
+  options: WriteOptions;
   affected: Iterable<OperationDescriptor>;
   affectedNodes: Set<NodeKey>; // contains directly updated nodes + parent nodes indirectly affected by nested node update
   difference?: GraphDifference;
@@ -354,6 +369,27 @@ export type ExecutionKey = string | number | object;
 
 // Identifies a pending result within an incremental execution (the latest format)
 export type PendingId = string;
+
+export type IncrementalExecution = {
+  // A new execution of the operation replaces the previous one (late results of the previous one are ignored)
+  key: ExecutionKey | undefined;
+  // Objects pending results are delivered to
+  pending: Map<PendingId, DeferTarget>;
+};
+
+/**
+ * Address of an object with a deferred fragment: its closest node and the path from that node.
+ * Resolved in the current stored tree when the fragment data arrives, so it stays valid when
+ * the result changes in the meantime (e.g. items are prepended to a list).
+ */
+export type DeferTarget = {
+  nodeKey: NodeKey;
+  nodeSelections: PossibleSelections;
+  path: DeferTargetPath;
+};
+
+// Fields and list indexes from the node to the target object
+export type DeferTargetPath = ReadonlyArray<FieldInfo | number>;
 
 export type ResultData = Record<string, unknown>;
 export type ResultExtensions = Record<string, unknown>;

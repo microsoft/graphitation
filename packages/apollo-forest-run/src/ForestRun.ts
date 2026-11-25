@@ -7,6 +7,7 @@ import type {
 import type { DocumentNode } from "graphql";
 import { equal } from "@wry/equality";
 import type { OperationDescriptor } from "./descriptor/types";
+import { resolveOperation } from "./descriptor/operation";
 import type {
   CacheConfig,
   CacheEnv,
@@ -41,7 +42,12 @@ import {
   isFragmentDocument,
   transformDocument,
 } from "./cache/descriptor";
-import { isSubsequentResult, isWrite, write } from "./cache/write";
+import {
+  isSubsequentResult,
+  isWrite,
+  write,
+  writeSubsequentResult,
+} from "./cache/write";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -201,19 +207,9 @@ export class ForestRun<
   }
 
   /**
-   * Writes a complete result, or the initial result of incremental delivery (`@defer`) via `options.execution`.
-   *
-   * Subsequent results of incremental delivery are not supported yet: they are ignored (with a warning).
+   * Writes a complete result, or results of incremental delivery (`@defer`) via `options.execution`.
    */
   public write(options: WriteOptions): Reference | undefined {
-    if (options.execution && isSubsequentResult(options.execution)) {
-      // TODO: write subsequent results (incremental writes)
-      this.env.logger?.warnOnce(
-        "subsequent_result_not_supported",
-        "Subsequent results of incremental delivery are not supported yet and are ignored",
-      );
-      return undefined;
-    }
     return this.transactionStack.length
       ? this.runWrite(options)
       : this.runTransaction({
@@ -224,6 +220,19 @@ export class ForestRun<
   private runWrite(options: WriteOptions): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
+    const { execution } = options;
+    if (execution && isSubsequentResult(execution)) {
+      transaction.changelog.push(
+        ...writeSubsequentResult(
+          this.env,
+          this.store,
+          transaction,
+          options,
+          execution,
+        ),
+      );
+      return undefined;
+    }
     const result = write(this.env, this.store, transaction, options);
     transaction.changelog.push(result);
 
@@ -245,7 +254,9 @@ export class ForestRun<
       }
       // Incoming operation may not have been updated, but let "watch" decide how to handle it
       if (isWrite(entry)) {
-        transaction.affectedOperations.add(entry.incoming.operation);
+        transaction.affectedOperations.add(
+          resolveOperation(entry.incoming.operation),
+        );
       }
 
       // Append affected nodes (speeds up fragment watch notifications later)

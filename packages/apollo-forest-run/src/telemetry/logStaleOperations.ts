@@ -3,6 +3,7 @@ import type { OperationDescriptor } from "../descriptor/types";
 import type { CacheEnv, Transaction } from "../cache/types";
 import type { UnexpectedRefetch } from "../telemetry/types";
 import { isWrite } from "../cache/write";
+import { resolveOperation } from "../descriptor/operation";
 
 export function logStaleOperations(
   env: CacheEnv,
@@ -22,7 +23,9 @@ export function logStaleOperations(
   }
   const event: UnexpectedRefetch = {
     kind: "UNEXPECTED_REFETCH",
-    causedBy: writes.map((write) => write.incoming.operation.debugName),
+    causedBy: writes.map(
+      (write) => resolveOperation(write.incoming.operation).debugName,
+    ),
     affected: stale.map((op) => {
       const missingFieldPath = op.diff.missing?.[0]?.path;
       return [

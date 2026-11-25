@@ -1,5 +1,6 @@
 import type { CacheEnv, WriteResult, ModifyResult } from "../../cache/types";
 import { isWrite } from "../../cache/write";
+import { resolveOperation } from "../../descriptor/operation";
 
 export function logUpdateStats(
   env: CacheEnv,
@@ -16,7 +17,7 @@ export function logUpdateStats(
     }
     env.notify?.({
       kind: "UPDATE_STATS",
-      causedBy: entry.incoming.operation.debugName,
+      causedBy: resolveOperation(entry.incoming.operation).debugName,
       watchersCount: watchers.size,
       updateStats: entry.updateStats as NonNullable<
         (typeof entry.updateStats)[number]
