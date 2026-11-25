@@ -30,7 +30,7 @@ import {
   resolveSelection,
 } from "../descriptor/resolvedSelection";
 import { accumulate } from "../jsutils/map";
-import { assert } from "../jsutils/assert";
+import { assert, assertNever } from "../jsutils/assert";
 import { CircularBuffer } from "../jsutils/circularBuffer";
 import { cloneSharedReferences } from "./cloneSharedReferences";
 import {
@@ -122,21 +122,43 @@ export function indexTree(
     operation.possibleSelections,
     rootRef,
   );
-  // Note: explicit literal with the same fields for all tree kinds (keeps a single object shape).
-  //   The cast is safe: tree kind is always taken from its operation kind
-  const tree = {
-    kind: operation.kind,
-    operation,
-    result,
-    rootNodeKey,
-    nodes: context.nodes,
-    typeMap: context.typeMap,
-    dataMap: context.dataMap,
-    incompleteChunks: context.incompleteChunks,
-    prev: previousTreeState,
-    history:
-      previousTreeState?.history ?? new CircularBuffer(operation.historySize),
-  } as IndexedTree;
+  const history =
+    previousTreeState?.history ?? new CircularBuffer(operation.historySize);
+
+  // Note: explicit literals with the same fields in the same order for all tree kinds (keeps a single object shape)
+  let tree: IndexedTree;
+  switch (operation.kind) {
+    case "Operation":
+      tree = {
+        kind: "Operation",
+        operation,
+        result,
+        rootNodeKey,
+        nodes: context.nodes,
+        typeMap: context.typeMap,
+        dataMap: context.dataMap,
+        incompleteChunks: context.incompleteChunks,
+        prev: previousTreeState,
+        history,
+      };
+      break;
+    case "DetachedFragment":
+      tree = {
+        kind: "DetachedFragment",
+        operation,
+        result,
+        rootNodeKey,
+        nodes: context.nodes,
+        typeMap: context.typeMap,
+        dataMap: context.dataMap,
+        incompleteChunks: context.incompleteChunks,
+        prev: previousTreeState,
+        history,
+      };
+      break;
+    default:
+      assertNever(operation);
+  }
   // Every composite occurrence is counted, but dataMap keeps only unique sources.
   // This detects sharing without an additional map lookup or allocation per chunk.
   if (context.indexedSources === dataMap.size) {
