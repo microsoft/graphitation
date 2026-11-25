@@ -175,7 +175,4 @@ export type ValueDifference =
   | Filler;
 
 export type NodeDifferenceMap = Map<string, ObjectDifference>;
-
-// Differences of a single tree: by node keys, plus `false` for an embedded tree root (see RootChunkReference.embeddedIn)
-export type TreeDifferenceMap = Map<string | false, ObjectDifference>;
 export { DifferenceKind, DiffErrorKind };

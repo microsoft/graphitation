@@ -720,10 +720,6 @@ function findExistingChunk(
   }
   assert(existingTree.operation.document === referenceChunk.operation.document);
   const nodeChunk = findClosestNode(referenceChunk, pathEnv.findParent);
-  if (nodeChunk.key === false) {
-    // Embedded roots have no previous tree states
-    return undefined;
-  }
 
   // FIXME: it should be enough to compare possibleSelections here,
   //  as we call resolvedSelectionsAreEqual in the end anyways?
