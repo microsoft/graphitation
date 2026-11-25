@@ -145,7 +145,11 @@ describe("OperationFragmentTree with embedded roots", () => {
 
   it("resolves roots in the stored tree (through aliases, arguments and lists)", () => {
     const { tree, stored, forest } = setup();
-    const findParent = createOperationFragmentParentLocator(tree);
+    const findParent = createOperationFragmentParentLocator(
+      tree.dataMap,
+      tree.roots,
+      tree.findStoredParent,
+    );
     const [, root] = getRoots(tree);
     const nested = getField(root, "nested");
     assert(isObjectValue(nested));
@@ -313,7 +317,11 @@ describe("OperationFragmentTree with node roots", () => {
 
   it("keeps node keys of targets and resolves roots as nodes", () => {
     const { tree } = setup();
-    const findParent = createOperationFragmentParentLocator(tree);
+    const findParent = createOperationFragmentParentLocator(
+      tree.dataMap,
+      tree.roots,
+      tree.findStoredParent,
+    );
     const roots = getRoots(tree);
     expect(roots.map((root) => root.key)).toEqual([
       "User:1",

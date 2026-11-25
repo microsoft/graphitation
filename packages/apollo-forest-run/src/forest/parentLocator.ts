@@ -4,7 +4,7 @@ import type {
   ObjectChunk,
   ParentLocator,
 } from "../values/types";
-import type { AnyIndexedTree, OperationFragmentTree } from "./types";
+import type { AnyIndexedTree, OperationFragmentRoot } from "./types";
 import {
   createParentLocator,
   isObjectValue,
@@ -16,7 +16,11 @@ import { assert } from "../jsutils/assert";
 // Parent locator of any tree kind
 export function createTreeParentLocator(tree: AnyIndexedTree): ParentLocator {
   return tree.kind === "OperationFragment"
-    ? createOperationFragmentParentLocator(tree)
+    ? createOperationFragmentParentLocator(
+        tree.dataMap,
+        tree.roots,
+        tree.findStoredParent,
+      )
     : createParentLocator(tree.dataMap);
 }
 
@@ -25,11 +29,12 @@ export function createTreeParentLocator(tree: AnyIndexedTree): ParentLocator {
  * of its target object in the stored tree, so ascending from a root continues in the stored tree.
  */
 export function createOperationFragmentParentLocator(
-  tree: OperationFragmentTree,
+  dataMap: DataMap,
+  roots: OperationFragmentRoot[],
+  findStoredParent: ParentLocator,
 ): ParentLocator {
-  const { dataMap, findStoredParent } = tree;
   const rootParents: DataMap = new Map();
-  for (const { data, target } of tree.roots) {
+  for (const { data, target } of roots) {
     const rootRef = dataMap.get(data);
     assert(rootRef && isObjectValue(rootRef.value));
     const value = rootRef.value;

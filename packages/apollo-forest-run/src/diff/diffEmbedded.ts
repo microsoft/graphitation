@@ -67,7 +67,11 @@ export function diffEmbeddedRoots(
   env: DiffEnv,
   onErrors: (root: ObjectChunk, errors: DiffError[]) => void,
 ): void {
-  const findParent = createOperationFragmentParentLocator(model);
+  const findParent = createOperationFragmentParentLocator(
+    model.dataMap,
+    model.roots,
+    model.findStoredParent,
+  );
   for (const { data } of model.roots) {
     const rootRef = model.dataMap.get(data);
     assert(rootRef && isObjectValue(rootRef.value));
