@@ -111,7 +111,7 @@ export type OperationFragmentTree = {
   readonly kind: "OperationFragment";
   operation: OperationFragmentDescriptor;
   result: OperationResult;
-  rootNodeKey: NodeKey;
+  rootNodeKey: NodeKey | false; // `false` when the root is embedded (see RootChunkReference.embeddedIn)
   nodes: NodeMap;
   typeMap: TypeMap;
 

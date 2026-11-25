@@ -5,6 +5,7 @@ import type {
   CompositeListValue,
   GraphValue,
   GraphValueReference,
+  EmbeddedRootChunk,
   NodeChunk,
   ObjectChunk,
   ParentInfo,
@@ -23,7 +24,6 @@ import {
   isNodeValue,
   isObjectValue,
   isCompositeNullValue,
-  EMBEDDED_ROOT_KEY,
   findClosestNode,
   resolveStoredNodeKey,
   getDataPathForDebugging,
@@ -45,14 +45,14 @@ export function getObjectChunks(
   layers: IndexedForest[],
   ref: GraphValueReference,
   includeDeleted = false,
-  parentNode?: NodeChunk,
+  parentNode?: NodeChunk | EmbeddedRootChunk,
 ): Iterable<ObjectChunk> {
   if (typeof ref === "string") {
     return getNodeChunks(layers, ref, includeDeleted);
   }
   const [chunkParentInfo, findParent] = ref;
   const value = resolveGraphValueReference(chunkParentInfo);
-  if (isNodeValue(value) && value.key !== EMBEDDED_ROOT_KEY) {
+  if (isNodeValue(value)) {
     return getNodeChunks(layers, value.key, includeDeleted);
   }
   assert(isObjectValue(value) || isCompositeListValue(value));

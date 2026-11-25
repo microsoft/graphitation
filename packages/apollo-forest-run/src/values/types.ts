@@ -101,7 +101,7 @@ export type RootChunkReference = {
   parent: null;
   detached: boolean;
   // Set for trees with the root embedded into a node of another tree (e.g. a deferred fragment written
-  //   to an embedded object). Such root is indexed as a node with a synthetic key (EMBEDDED_ROOT_KEY).
+  //   to an embedded object). Such root is a regular embedded object (key `false`), see EmbeddedRootChunk.
   embeddedIn: EmbeddedRootAddress | undefined;
 };
 
@@ -352,6 +352,8 @@ export type IncompleteObjects = Map<SourceObject, FieldInfo[]>;
 export type IncompleteValues = IncompleteObjects & IncompleteLists;
 
 export type NodeChunk = ObjectChunk & { key: NodeKey };
+// Root of a tree embedded into a node of another tree (has no key, see RootChunkReference.embeddedIn)
+export type EmbeddedRootChunk = ObjectChunk & { key: false };
 export type NodeAggregate = ObjectAggregate & { key: string };
 export type NodeValue = NodeChunk | NodeAggregate;
 

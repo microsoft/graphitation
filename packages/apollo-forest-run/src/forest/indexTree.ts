@@ -4,6 +4,7 @@ import type {
   CompositeUndefinedChunk,
   DataMap,
   EmbeddedRootAddress,
+  EmbeddedRootChunk,
   GraphChunkReference,
   MissingFieldsMap,
   NodeChunk,
@@ -50,7 +51,6 @@ import {
   createCompositeUndefinedChunk,
   createTypedObjectChunk,
   createParentLocator,
-  EMBEDDED_ROOT_KEY,
   findClosestNode,
   getDataPathForDebugging,
   isCompositeListValue,
@@ -72,7 +72,7 @@ type Context = {
   typeMap: TypeMap;
   dataMap: DataMap;
   indexedSources: number;
-  rootNodeKey: string;
+  rootNodeKey: NodeKey | false;
   rootType: TypeName | undefined;
   knownMissingFields: MissingFieldsMap | undefined;
   incompleteChunks: Set<ObjectChunk>;
@@ -95,10 +95,11 @@ export function indexTree(
   knownMissingFields?: MissingFieldsMap,
   previousTreeState: IndexedTree | null = null,
 ): IndexedTree {
+  const rootNodeKey = resolveRootNodeKey(env, operation, result);
   const context = createTreeContext(
     env,
     operation,
-    resolveRootNodeKey(env, operation, result),
+    rootNodeKey,
     operation.rootType,
     result,
     knownMissingFields,
@@ -112,7 +113,7 @@ export function indexTree(
     kind: operation.kind,
     operation,
     result,
-    rootNodeKey: context.rootNodeKey,
+    rootNodeKey,
     nodes: context.nodes,
     typeMap: context.typeMap,
     dataMap: context.dataMap,
@@ -147,8 +148,8 @@ export type OperationFragmentRoot = NodeKey | EmbeddedRootAddress;
  * (root type is resolved from the data for the same reason).
  *
  * The root is either a node (`tree.rootNodeKey` is its key), or an object embedded into a node: such root
- * is indexed as a node with a synthetic key (`tree.rootNodeKey` is EMBEDDED_ROOT_KEY) and its root reference
- * keeps the embedded address (`embeddedIn`) to resolve it in other trees.
+ * is a regular embedded object (`tree.rootNodeKey` is `false`) and its root reference keeps the embedded
+ * address (`embeddedIn`) to resolve it in other trees.
  */
 export function indexOperationFragmentTree(
   env: ForestEnv,
@@ -159,7 +160,7 @@ export function indexOperationFragmentTree(
   recycleTree: OperationFragmentTree | null = null, // Tree to recycle chunks from (e.g. on re-indexing)
 ): OperationFragmentTree {
   const embeddedIn = typeof root === "string" ? undefined : root;
-  const rootNodeKey = typeof root === "string" ? root : EMBEDDED_ROOT_KEY;
+  const rootNodeKey = typeof root === "string" ? root : false;
   const context = createTreeContext(
     env,
     fragment.operation,
@@ -258,7 +259,7 @@ function resolveRootNodeKey(
 function getOperationFragmentRoot(
   tree: OperationFragmentTree,
 ): OperationFragmentRoot {
-  if (tree.rootNodeKey !== EMBEDDED_ROOT_KEY) {
+  if (tree.rootNodeKey !== false) {
     return tree.rootNodeKey;
   }
   const rootRef = tree.dataMap.get(tree.result.data);
@@ -269,7 +270,7 @@ function getOperationFragmentRoot(
 function createTreeContext(
   env: ForestEnv,
   operation: OperationDescriptor,
-  rootNodeKey: NodeKey,
+  rootNodeKey: NodeKey | false,
   rootType: TypeName | undefined,
   result: OperationResult,
   knownMissingFields: MissingFieldsMap | undefined,
@@ -835,7 +836,7 @@ function findOccurrences(
   tree: AnyIndexedTree | null,
   type: ObjectChunk["type"] | undefined,
   fieldEntry: NormalizedFieldEntry | null,
-  node: NodeChunk | null,
+  node: NodeChunk | EmbeddedRootChunk | null,
   damaged: CompositeListChunk,
   findParent: ParentLocator,
 ): ListFieldOccurrence[] {

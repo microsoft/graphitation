@@ -13,7 +13,7 @@ import type {
   ObjectDraft,
   SourceObject,
 } from "../values/types";
-import type { NodeDifferenceMap } from "../diff/types";
+import type { NodeDifferenceMap, TreeDifferenceMap } from "../diff/types";
 import type {
   AnyIndexedTree,
   Draft,
@@ -50,20 +50,11 @@ export { NodeDifferenceMap }; // FIXME
 export function updateTree<TTree extends AnyIndexedTree = IndexedTree>(
   env: ForestEnv,
   base: TTree,
-  differenceMap: NodeDifferenceMap,
+  differenceMap: TreeDifferenceMap,
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
 ): UpdateTreeResult<TTree> {
   const baseOperation = resolveOperation(base.operation);
-  const rootChunks = base.nodes.get(base.rootNodeKey);
-  if (rootChunks?.length !== 1) {
-    assert(
-      false,
-      `Failed to update "${
-        baseOperation.debugName
-      }": expected a single root chunk, got ${rootChunks?.length ?? 0}`,
-    );
-  }
-  const rootChunk = rootChunks[0];
+  const rootChunk = getRootChunk(base, baseOperation);
   const context: UpdateTreeContext = {
     operation: baseOperation,
     drafts: new Map(),
@@ -111,11 +102,12 @@ export function updateTree<TTree extends AnyIndexedTree = IndexedTree>(
   // By executing updates from bottom to top we make sure that list updates happen after all nested objects
   //   are already updated (thus, we can safely change paths); and that all "dirty" child nodes
   //   (and their intermediate parent plain objects) already have their "drafts" by the time we update them.
-  const chunkQueue = resolveAffectedChunks(base, differenceMap);
+  const chunkQueue = resolveAffectedChunks(base, rootChunk, differenceMap);
   chunkQueue.sort((a, b) => b.selection.depth - a.selection.depth); // parent is missing for orphan nodes
 
+  let hasChanges = false;
   for (const chunk of chunkQueue) {
-    const difference = differenceMap.get(chunk.key as string);
+    const difference = differenceMap.get(chunk.key);
     if (!difference) {
       const at = debugPathClause(context, chunk);
       assert(
@@ -132,7 +124,10 @@ export function updateTree<TTree extends AnyIndexedTree = IndexedTree>(
       continue;
     }
     assert(result.draft === drafts.get(chunk.data));
-    changedNodes.add(chunk.key as string);
+    hasChanges = true;
+    if (chunk.key !== false) {
+      changedNodes.add(chunk.key);
+    }
 
     // ApolloCompat: orphan nodes are mutated in place
     // TODO: remove this together with orphan nodes
@@ -149,7 +144,7 @@ export function updateTree<TTree extends AnyIndexedTree = IndexedTree>(
     createSourceCopiesUpToRoot(context, base, chunk);
     statsLogger?.finishChunkUpdate();
   }
-  if (!changedNodes.size) {
+  if (!hasChanges) {
     return {
       updatedTree: base,
       changes,
@@ -197,13 +192,41 @@ export function updateTree<TTree extends AnyIndexedTree = IndexedTree>(
   };
 }
 
+function getRootChunk(
+  base: AnyIndexedTree,
+  operation: OperationDescriptor,
+): ObjectChunk {
+  if (base.rootNodeKey === false) {
+    // Embedded root (see RootChunkReference.embeddedIn)
+    const rootRef = base.dataMap.get(base.result.data);
+    assert(rootRef && isRootRef(rootRef) && isObjectValue(rootRef.value));
+    return rootRef.value;
+  }
+  const rootChunks = base.nodes.get(base.rootNodeKey);
+  if (rootChunks?.length !== 1) {
+    assert(
+      false,
+      `Failed to update "${
+        operation.debugName
+      }": expected a single root chunk, got ${rootChunks?.length ?? 0}`,
+    );
+  }
+  return rootChunks[0];
+}
+
 function resolveAffectedChunks(
   base: AnyIndexedTree,
-  differenceMap: NodeDifferenceMap,
+  rootChunk: ObjectChunk,
+  differenceMap: TreeDifferenceMap,
 ): ObjectChunk[] {
   const affectedChunks: ObjectChunk[] = [];
   for (const [objectKey, difference] of differenceMap.entries()) {
     if (!isDirty(difference)) {
+      continue;
+    }
+    if (objectKey === false) {
+      // Difference of an embedded root
+      affectedChunks.push(rootChunk);
       continue;
     }
     const chunks = base.nodes.get(objectKey);
