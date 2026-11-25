@@ -41,12 +41,11 @@ import {
   isFragmentDocument,
   transformDocument,
 } from "./cache/descriptor";
+import { isWrite, write } from "./cache/write";
 import {
   isSubsequentResult,
-  isWrite,
-  write,
-  writeSubsequentResult,
-} from "./cache/write";
+  spliceSubsequentResult,
+} from "./cache/incremental";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -221,15 +220,24 @@ export class ForestRun<
     assert(transaction);
     const { execution } = options;
     if (execution && isSubsequentResult(execution)) {
-      const result = writeSubsequentResult(
+      // Written as a regular result of the operation, with incremental results spliced in
+      const splice = spliceSubsequentResult(
         this.env,
         this.store,
         transaction,
         options,
         execution,
       );
-      if (result) {
-        transaction.changelog.push(result);
+      if (splice) {
+        transaction.changelog.push(
+          write(
+            this.env,
+            this.store,
+            transaction,
+            { ...options, result: splice.data, execution: undefined },
+            splice,
+          ),
+        );
       }
       return undefined;
     }

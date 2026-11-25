@@ -15,9 +15,9 @@ import {
   TypeName,
 } from "../descriptor/types";
 import { assert } from "../jsutils/assert";
-import { IndexedTree, DefaultPartition } from "../forest/types";
+import { IndexedTree, IndexedForest, DefaultPartition } from "../forest/types";
 import { NodeChunk } from "../values/types";
-import { operationCacheKey } from "./descriptor";
+import { operationCacheKey, resolveResultDescriptor } from "./descriptor";
 
 const EMPTY_ARRAY = Object.freeze([]);
 const DEFAULT_PARTITION: DefaultPartition = "__default__";
@@ -507,3 +507,24 @@ export function resetStore(store: Store): void {
 
 const getRootNode = (result: IndexedTree): NodeChunk | undefined =>
   result.nodes.get(result.rootNodeKey)?.[0];
+
+export function getExistingResult(
+  env: CacheEnv,
+  store: Store,
+  targetForest: IndexedForest,
+  operation: OperationDescriptor,
+): DataTree | undefined {
+  const op = resolveResultDescriptor(env, store, operation);
+  return targetForest.trees.get(op.id);
+}
+
+export function shouldCache(
+  targetForest: DataForest | OptimisticLayer,
+  operation: OperationDescriptor,
+) {
+  // Always cache results for optimistic layers (even if operation is not cacheable, e.g. it is a mutation)
+  if (targetForest.layerTag !== null) {
+    return true;
+  }
+  return operation.cache;
+}
