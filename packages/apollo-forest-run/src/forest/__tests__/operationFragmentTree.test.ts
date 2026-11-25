@@ -39,7 +39,7 @@ import { createTreeParentLocator } from "../parentLocator";
 import { transformTree } from "../transformTree";
 import { diffTree } from "../../diff/diffTree";
 import { createReplacement } from "../../diff/difference";
-import { getEmbeddedChunkDifference } from "../../diff/embedded";
+import { getEmbeddedChunkDifference } from "../../diff/diffEmbedded";
 import { assert } from "../../jsutils/assert";
 
 const env: ForestEnv = {

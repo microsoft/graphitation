@@ -42,7 +42,7 @@ import {
 } from "../values";
 import { updateObject } from "./updateObject";
 import { createTreeParentLocator } from "./parentLocator";
-import { getEmbeddedChunkDifference } from "../diff/embedded";
+import { getEmbeddedChunkDifference } from "../diff/diffEmbedded";
 import { createUpdateLogger } from "../telemetry/updateStats/updateLogger";
 
 type ComplexValue = SourceObject | NestedList<SourceObject>;
