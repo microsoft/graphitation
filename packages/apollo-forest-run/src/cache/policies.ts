@@ -268,14 +268,15 @@ export function applyMergePolicies(
 
           existingChunk = existingParent
             ? resolveFieldChunk(existingParent, field)
-            : materializeFromForest(env, pathEnv, layers, parent, field);
+            : undefined;
 
           if (
-            deliveredFields &&
-            existingChunk !== undefined &&
-            isMissingValue(existingChunk)
-          ) {
+            !existingParent ||
             // Delivered fields are usually missing in the stored result (deferred), but may exist in the forest
+            (deliveredFields &&
+              existingChunk !== undefined &&
+              isMissingValue(existingChunk))
+          ) {
             existingChunk = materializeFromForest(
               env,
               pathEnv,
