@@ -41,7 +41,7 @@ import {
 } from "../diff/types";
 import { HistoryConfig } from "../cache/types";
 
-// Note: all tree kinds must have the same set of fields (keeps the same object shape in hot paths)
+// Note: all stored tree kinds must have the same set of fields (keeps the same object shape in hot paths)
 export type OperationTree = {
   readonly kind: "Operation";
   operation: RegularOperationDescriptor;
@@ -105,7 +105,8 @@ export type UncheckedIndexedTree = Omit<IndexedTree, "kind" | "operation"> & {
   operation: OperationDescriptor;
 };
 
-// Transient tree of an operation sub-selection (e.g. a deferred fragment). Never stored in the forest.
+// Transient tree of an operation sub-selection (e.g. a deferred fragment). Never stored in the forest,
+//   so it has no previous states and history (other fields are the same as in stored trees)
 export type OperationFragmentTree = {
   readonly kind: "OperationFragment";
   operation: OperationFragmentDescriptor;
@@ -118,16 +119,8 @@ export type OperationFragmentTree = {
   //   This is necessary for efficient re-indexing of existing data and chunk recycling
   dataMap: DataMap;
 
-  // Previous state of this tree.
-  //   Useful for recycling chunks from multiple tree states, (e.g. with merge policies when final tree
-  //   should recycle chunks from both - incoming and existing trees).
-  prev: OperationFragmentTree | null;
-
   // Error states
   incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
-
-  // Tree changes
-  history: CircularBuffer<HistoryChange>;
 
   // ApolloCompat
   danglingReferences?: Set<NodeKey>;
