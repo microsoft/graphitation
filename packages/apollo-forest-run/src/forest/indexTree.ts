@@ -30,7 +30,9 @@ import type {
   ForestEnv,
   IndexedTree,
   OperationFragmentTree,
+  UncheckedIndexedTree,
 } from "./types";
+import { isIndexedTree, isSameTreeKind } from "./predicates";
 import { ValueKind } from "../values/types";
 import {
   getFieldName,
@@ -102,40 +104,20 @@ export function indexTree(
   const root = indexRoot(context, operation.possibleSelections);
   const history =
     previousTreeState?.history ?? new CircularBuffer(operation.historySize);
-  // Note: explicit literals with the same fields in the same order for all tree kinds (keeps a single object shape)
-  let tree: IndexedTree;
-  switch (operation.kind) {
-    case "Operation":
-      tree = {
-        kind: "Operation",
-        operation,
-        result,
-        rootNodeKey: context.rootNodeKey,
-        nodes: context.nodes,
-        typeMap: context.typeMap,
-        dataMap: context.dataMap,
-        incompleteChunks: context.incompleteChunks,
-        prev: previousTreeState,
-        history,
-      };
-      break;
-    case "DetachedFragment":
-      tree = {
-        kind: "DetachedFragment",
-        operation,
-        result,
-        rootNodeKey: context.rootNodeKey,
-        nodes: context.nodes,
-        typeMap: context.typeMap,
-        dataMap: context.dataMap,
-        incompleteChunks: context.incompleteChunks,
-        prev: previousTreeState,
-        history,
-      };
-      break;
-    default:
-      assertNever(operation);
-  }
+  // Note: explicit literal with the same fields for all tree kinds (keeps a single object shape)
+  const tree: UncheckedIndexedTree = {
+    kind: operation.kind,
+    operation,
+    result,
+    rootNodeKey: context.rootNodeKey,
+    nodes: context.nodes,
+    typeMap: context.typeMap,
+    dataMap: context.dataMap,
+    incompleteChunks: context.incompleteChunks,
+    prev: previousTreeState,
+    history,
+  };
+  assert(isIndexedTree(tree));
   const repaired = repairSharedReferences(env, context, root);
   if (!repaired) {
     return tree;
@@ -241,13 +223,8 @@ export function reindexTree<TTree extends AnyIndexedTree>(
     default:
       assertNever(base);
   }
-  // Safe: tree kind is always taken from its descriptor kind (TS doesn't narrow generic types by kind)
-  return reindexed as TTree;
-}
-
-// Narrows to trees which can be stored in the forest
-export function isStoredTree(tree: AnyIndexedTree): tree is IndexedTree {
-  return tree.kind !== "OperationFragment";
+  assert(isSameTreeKind(tree, reindexed));
+  return reindexed;
 }
 
 function resolveRootNodeKey(

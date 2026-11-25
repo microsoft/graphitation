@@ -21,11 +21,8 @@ import type {
   IndexedTree,
   OperationFragmentTree,
 } from "../types";
-import {
-  indexOperationFragmentTree,
-  indexTree,
-  isStoredTree,
-} from "../indexTree";
+import { indexOperationFragmentTree, indexTree } from "../indexTree";
+import { isStoredTree } from "../predicates";
 import { updateTree } from "../updateTree";
 import { transformTree } from "../transformTree";
 import { addTree } from "../addTree";
