@@ -686,36 +686,47 @@ describe("fragment watching", () => {
   });
 });
 
-test("fragment documents are stored as detached fragment trees", () => {
-  const cache = new ForestRunCompat();
-  const query = gql`
-    query {
-      foo {
-        id
+test.each([true, false])(
+  "fragment documents are stored as detached fragment trees (optimizeDescriptorShape: %s)",
+  (optimizeDescriptorShape) => {
+    const cache = new ForestRunCompat({ optimizeDescriptorShape });
+    const query = gql`
+      query {
+        foo {
+          id
+        }
       }
-    }
-  `;
-  const fragment = gql`
-    fragment FooFragment on Foo {
-      id
-      foo
-    }
-  `;
-  cache.writeQuery({ query, data: { foo: { __typename: "Foo", id: "1" } } });
-  cache.writeFragment({
-    fragment,
-    id: "Foo:1",
-    data: { __typename: "Foo", id: "1", foo: "foo" },
-  });
+    `;
+    const fragment = gql`
+      fragment FooFragment on Foo {
+        id
+        foo
+      }
+    `;
+    cache.writeQuery({ query, data: { foo: { __typename: "Foo", id: "1" } } });
+    cache.writeFragment({
+      fragment,
+      id: "Foo:1",
+      data: { __typename: "Foo", id: "1", foo: "foo" },
+    });
 
-  const trees = [...cache.frExtract().forest.values()];
-  expect(
-    trees.map((tree) => [tree.kind, tree.operation.kind, tree.rootNodeKey]),
-  ).toEqual([
-    ["Operation", "Operation", "ROOT_QUERY"],
-    ["DetachedFragment", "DetachedFragment", "Foo:1"],
-  ]);
-});
+    const trees = [...cache.frExtract().forest.values()];
+    expect(
+      trees.map((tree) => [tree.kind, tree.operation.kind, tree.rootNodeKey]),
+    ).toEqual([
+      ["Operation", "Operation", "ROOT_QUERY"],
+      ["DetachedFragment", "DetachedFragment", "Foo:1"],
+    ]);
+    expect(cache.readQuery({ query })).toEqual({
+      foo: { __typename: "Foo", id: "1" },
+    });
+    expect(cache.readFragment({ fragment, id: "Foo:1" })).toEqual({
+      __typename: "Foo",
+      id: "1",
+      foo: "foo",
+    });
+  },
+);
 
 function newForestRun() {
   return new ForestRun({ optimizeFragmentReads: true });
