@@ -270,6 +270,58 @@ describe("IndexedOperationFragment with embedded roots", () => {
     expect(nodeDifference.size).toBe(0);
     expect(updateTree(env, tree, nodeDifference).updatedTree).toBe(tree);
   });
+
+  it("doesn't keep ApolloCompat orphan nodes", () => {
+    const { tree: base, forest, index } = setup();
+    const incoming = index({
+      0: meta(0, { owner: null }),
+      2: meta(2, { owner: null }),
+    });
+    const { nodeDifference } = diffTree(forest, incoming, env);
+    const { updatedTree } = updateTree(
+      { ...env, apolloCompat_keepOrphanNodes: true },
+      base,
+      nodeDifference,
+    );
+    assert(updatedTree.kind === "OperationFragment");
+    expect(updatedTree.roots.map((root) => root.data.owner)).toEqual([
+      null,
+      null,
+    ]);
+    expect(updatedTree.nodes.has("User:1")).toBe(false);
+  });
+
+  it("repairs sources shared by different roots", () => {
+    const { index, stored } = setup();
+    const shared = createSourceObject({ c: "shared" });
+    const tree = index({
+      0: meta(0, { nested: shared }),
+      2: meta(2, { nested: shared }),
+    });
+    const [first, second] = tree.roots.map((root) => root.data.nested);
+    expect(first).toEqual(shared);
+    expect(second).toEqual(shared);
+    expect(first).not.toBe(second);
+
+    const findParent = createOperationFragmentParentLocator(
+      tree.dataMap,
+      tree.roots,
+      tree.findStoredParent,
+    );
+    const nested = getRoots(tree).map((root) => getField(root, "nested"));
+    expect(
+      nested.map((chunk) => {
+        assert(isObjectValue(chunk));
+        return getDataPathForDebugging({ findParent }, chunk);
+      }),
+    ).toEqual([
+      ["user", "list", 0, "meta", "nested"],
+      ["user", "list", 2, "meta", "nested"],
+    ]);
+    expect(findClosestNode(getRoots(tree)[1], findParent)).toBe(
+      getStoredUser(stored),
+    );
+  });
 });
 
 describe("IndexedOperationFragment with node roots", () => {
