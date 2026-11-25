@@ -863,6 +863,198 @@ describe(describeResultTree, () => {
       ]);
     });
 
+    describe("nested", () => {
+      it("collects sites of defer inside defer on the same object", () => {
+        const descriptor = testHelperV2(
+          `{ foo { ... @defer(label: "outer") { a ... @defer(label: "inner") { b } } } }`,
+        );
+        expect(printSites(descriptor.possibleSelections)).toEqual({
+          "foo:null": ["outer", "inner"],
+        });
+      });
+
+      it("collects sites on the objects they are deferred on", () => {
+        const descriptor = testHelperV2(
+          `{ foo { ... @defer(label: "outer") { bar { ... @defer(label: "inner") { b } } } } }`,
+        );
+        expect(printSites(descriptor.possibleSelections)).toEqual({
+          "foo:null": ["outer"],
+          "foo.bar:null": ["inner"],
+        });
+      });
+
+      it("collects sites of list items", () => {
+        const descriptor = testHelperV2(
+          `{ items { id ... @defer(label: "outer") { sub { ... @defer(label: "inner") { x } } } } }`,
+        );
+        expect(printSites(descriptor.possibleSelections)).toEqual({
+          "items:null": ["outer"],
+          "items.sub:null": ["inner"],
+        });
+      });
+
+      it("collects sites of deferred spreads inside deferred inline fragments", () => {
+        const descriptor = testHelperV2(
+          `{ foo { ... @defer(label: "outer") { ...A @defer(label: "a") } } }
+          fragment A on Foo { a }`,
+        );
+        expect(printSites(descriptor.possibleSelections)).toEqual({
+          "foo:null": ["outer"],
+          "foo:Foo": ["a", "outer"],
+        });
+      });
+
+      it("collects sites of deferred spreads inside deferred spreads", () => {
+        const descriptor = testHelperV2(
+          `{ foo { ...A @defer(label: "a") } }
+          fragment A on Foo { a ...B @defer(label: "b") }
+          fragment B on Foo { b }`,
+        );
+        expect(printSites(descriptor.possibleSelections)).toEqual({
+          "foo:Foo": ["a", "b"],
+        });
+      });
+
+      it("collects labeled and unlabeled sites at each level", () => {
+        const descriptor = testHelperV2(
+          `{ foo { ... @defer { a ... @defer(label: "inner") { b ... @defer { c } } } } }`,
+        );
+        expect(printSites(descriptor.possibleSelections)).toEqual({
+          "foo:null": ["-", "inner", "-"],
+        });
+      });
+
+      it("doesn't inherit `if` of enclosing deferred fragments (including `if: false`)", () => {
+        const descriptor = testHelperV2(
+          `query ($inner: Boolean) {
+            foo {
+              ... @defer(if: false, label: "outer") {
+                a
+                ... @defer(if: $inner, label: "inner") { b }
+              }
+            }
+          }`,
+        );
+        expect(printSites(descriptor.possibleSelections)).toEqual({
+          "foo:null": ["inner[defer:inner]"],
+        });
+      });
+
+      it("inherits @include / @skip of enclosing deferred fragments", () => {
+        const descriptor = testHelperV2(
+          `query ($include: Boolean, $skip: Boolean) {
+            foo {
+              ... @include(if: $include) @defer(label: "outer") {
+                a
+                ... @skip(if: $skip) @defer(label: "inner") { b }
+              }
+            }
+          }`,
+        );
+        expect(printSites(descriptor.possibleSelections)).toEqual({
+          "foo:null": [
+            "outer[include:include]",
+            "inner[include:include][skip:skip]",
+          ],
+        });
+      });
+
+      it("collects sites under abstract types", () => {
+        const descriptor = testHelperV2(
+          `{
+            node {
+              ... on User @defer(label: "user") {
+                friend { ... on Node @defer(label: "friend") { id } }
+              }
+              ... on Post {
+                author { ... @defer(label: "author") { name } }
+              }
+            }
+          }`,
+          { Node: ["User", "Post"] },
+        );
+        expect(printSites(descriptor.possibleSelections)).toEqual({
+          "node:User": ["user"],
+          "node.friend:Node": ["friend"],
+          "node.friend:User": ["friend"],
+          "node.friend:Post": ["friend"],
+          "node.author:null": ["author"],
+        });
+      });
+
+      it("collects separate sites for the same nested spread in different places", () => {
+        const descriptor = testHelperV2(
+          `{ foo { ...A } bar { ...A } }
+          fragment A on Foo { ... @defer(label: "a") { x } }`,
+        );
+        const sites = printSites(descriptor.possibleSelections);
+        expect(sites).toEqual({ "foo:Foo": ["a"], "bar:Foo": ["a"] });
+        const [fooSite] =
+          getSelection(descriptor, ["foo"], "Foo").deferSites ?? [];
+        const [barSite] =
+          getSelection(descriptor, ["bar"], "Foo").deferSites ?? [];
+        expect(fooSite).not.toBe(barSite);
+      });
+
+      it("has defer sites when @defer appears only in nested selections", () => {
+        const descriptor = testHelperV2(
+          `{ foo { bar { baz { ... @defer { x } } } } }`,
+        );
+        expect(descriptor.hasDeferSites).toBe(true);
+        expect(printSites(descriptor.possibleSelections)).toEqual({
+          "foo.bar.baz:null": ["-"],
+        });
+      });
+
+      // e.g. { "foo.bar:Type": ["label[defer:variable]"] }
+      function printSites(
+        possibleSelections: PossibleSelections,
+        path = "",
+        out: Record<string, string[]> = {},
+      ): Record<string, string[]> {
+        for (const [typeName, selection] of possibleSelections) {
+          if (selection.deferSites?.length) {
+            out[`${path}:${typeName}`] = selection.deferSites.map(
+              (site) =>
+                (site.label ?? "-") +
+                site.conditions
+                  .map(
+                    ({ variable, expected, defer }) =>
+                      `[${
+                        defer ? "defer" : expected ? "include" : "skip"
+                      }:${variable}]`,
+                  )
+                  .join(""),
+            );
+          }
+          for (const aliases of selection.fields.values()) {
+            for (const field of aliases) {
+              if (field.selection) {
+                const key = field.alias ?? field.name;
+                printSites(field.selection, path ? `${path}.${key}` : key, out);
+              }
+            }
+          }
+        }
+        return out;
+      }
+
+      function getSelection(
+        descriptor: ResultTreeDescriptor,
+        path: string[],
+        typeName: string | null,
+      ): PossibleSelection {
+        let selections: PossibleSelections | undefined =
+          descriptor.possibleSelections;
+        for (const step of path) {
+          selections = selections?.get(null)?.fields.get(step)?.[0].selection;
+        }
+        const selection = selections?.get(typeName);
+        assert(selection);
+        return selection;
+      }
+    });
+
     function collectDeferSites(
       possibleSelections: PossibleSelections,
       sites = new Set<DeferSite>(),
