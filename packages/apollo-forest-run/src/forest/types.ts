@@ -64,9 +64,6 @@ export type IndexedTreeBase<TOperation extends OperationDescriptor> = {
   // Tree changes
   history: CircularBuffer<HistoryChange>;
 
-  // Objects with deferred fragments found in an incremental result (set by indexing, consumed by the write)
-  chunksWithDeferredFragments?: ObjectChunk[];
-
   // ApolloCompat
   danglingReferences?: Set<NodeKey>;
 };

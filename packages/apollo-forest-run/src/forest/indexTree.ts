@@ -74,7 +74,6 @@ type Context = {
   incompleteChunks: Set<ObjectChunk>;
   recycleTree: IndexedTree | null;
   findParent: ParentLocator;
-  chunksWithDeferredFragments: ObjectChunk[] | undefined;
 };
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -82,9 +81,6 @@ const isArray = Array.isArray;
 
 /**
  * Entry point for indexing of all tree kinds: returns a tree of the same kind as the descriptor.
- *
- * For results of incremental delivery (the initial result or a deferred fragment), additionally collects
- * objects with deferred fragments (see IndexedTree.chunksWithDeferredFragments).
  */
 export function indexTree(
   env: ForestEnv,
@@ -163,10 +159,6 @@ function indexStoredTree<TOperation extends OperationDescriptor>(
   } catch (e) {
     rootNodeKey = operation.rootNodeKey;
   }
-  const chunksWithDeferredFragments =
-    operation.hasDeferSites && isIncrementalResult(result)
-      ? ([] as ObjectChunk[])
-      : undefined;
   const dataMap = new Map();
   const context: Context = {
     env: env,
@@ -179,10 +171,8 @@ function indexStoredTree<TOperation extends OperationDescriptor>(
     indexedSources: 0,
     incompleteChunks: new Set(),
     rootNodeKey,
-    // Recycled objects are not visited (recycling doesn't apply to incremental results anyways)
-    recycleTree: chunksWithDeferredFragments ? null : previousTreeState,
+    recycleTree: previousTreeState,
     findParent: createParentLocator(dataMap),
-    chunksWithDeferredFragments,
   };
   const rootRef: RootChunkReference = {
     value: null,
@@ -211,20 +201,12 @@ function indexStoredTree<TOperation extends OperationDescriptor>(
   };
   // Safe: tree kind is always taken from its operation kind
   const tree = typedTree as IndexedTree;
-  if (chunksWithDeferredFragments?.length) {
-    tree.chunksWithDeferredFragments = chunksWithDeferredFragments;
-  }
   // Every composite occurrence is counted, but dataMap keeps only unique sources.
   // This detects sharing without an additional map lookup or allocation per chunk.
   if (context.indexedSources === dataMap.size) {
     return tree;
   }
   return reindexSharedTree(env, tree, rootRef.value);
-}
-
-function isIncrementalResult(result: OperationResult) {
-  // Initial result (`hasNext`) or a deferred fragment (`id` or `path`)
-  return "hasNext" in result || "id" in result || "path" in result;
 }
 
 // Matches ObjectChunkReference structure with additional fields
@@ -269,7 +251,6 @@ export function indexObject(
     rootNodeKey,
     recycleTree: null,
     findParent: createParentLocator(dataMap),
-    chunksWithDeferredFragments: undefined,
   };
   const result = {
     value: null as unknown,
@@ -394,9 +375,6 @@ function indexSourceObject(
     context.indexedSources++;
   }
 
-  if (context.chunksWithDeferredFragments && selection.deferredFragments) {
-    context.chunksWithDeferredFragments.push(chunk);
-  }
   if (missingFields?.size) {
     markAsPartial(context, parent);
     context.incompleteChunks.add(chunk);

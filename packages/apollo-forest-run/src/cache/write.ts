@@ -190,7 +190,7 @@ export function write(
     activeTransaction,
     operationDescriptor,
     options,
-    { data: writeData, hasNext: true } as OperationResult,
+    { data: writeData },
     { defer: { execution: incremental, path: [], isFragment: false } },
   );
   activeTransaction.changelog.push(result);
@@ -313,7 +313,7 @@ function writeDeferredFragment(
     activeTransaction,
     getFragmentDescriptor(env, operation, selection, typeName ?? ""),
     { ...options, dataId: undefined },
-    { ...entry, data } as OperationResult,
+    { data },
     {
       rootNodeKey: object.embedded ? EMBEDDED_ROOT_KEY : object.dataId,
       embedded: object.embedded,
@@ -563,7 +563,10 @@ function addDeferTargets(
 ) {
   const findIndexedParent = createParentLocator(indexed.dataMap);
   const findMergedParent = createParentLocator(merged.dataMap);
-  for (const chunk of indexed.chunksWithDeferredFragments ?? EMPTY_ARRAY) {
+  for (const { value: chunk } of indexed.dataMap.values()) {
+    if (!isObjectValue(chunk) || !chunk.selection.deferredFragments) {
+      continue;
+    }
     if (isFragment && chunk.data === indexed.result.data) {
       // Fragments of the patched object were registered by the result which delivered the object
       continue;
@@ -597,7 +600,6 @@ function addDeferTargets(
       pending,
     });
   }
-  indexed.chunksWithDeferredFragments = undefined;
 }
 function addDeferTarget(targets: DeferTargets, target: DeferTarget) {
   const key = targetKey(target.path);
