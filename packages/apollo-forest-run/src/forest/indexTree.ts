@@ -242,8 +242,9 @@ function indexTreeImpl(
     descriptor.possibleSelections,
     rootRef,
   );
-  // Note: explicit literal with the same fields for all tree kinds (keeps a single object shape)
-  const typedTree = {
+  // Note: explicit literal with the same fields for all tree kinds (keeps a single object shape).
+  //   The cast is safe: tree kind is always taken from its descriptor kind
+  const tree = {
     kind: descriptor.kind,
     operation: descriptor,
     result,
@@ -254,9 +255,7 @@ function indexTreeImpl(
     incompleteChunks: context.incompleteChunks,
     prev: previousTreeState,
     history: previousTreeState?.history ?? new CircularBuffer(historySize),
-  };
-  // Safe: tree kind (and prev) is always taken from its descriptor kind
-  const tree = typedTree as AnyIndexedTree;
+  } as AnyIndexedTree;
   // Every composite occurrence is counted, but dataMap keeps only unique sources.
   // This detects sharing without an additional map lookup or allocation per chunk.
   if (context.indexedSources === dataMap.size) {

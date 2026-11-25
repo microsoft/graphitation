@@ -43,7 +43,6 @@ import { HistoryConfig } from "../cache/types";
 
 // Note: all tree kinds must have the same set of fields (keeps the same object shape in hot paths)
 export type OperationTree = {
-  // Same as operation.kind, duplicated to discriminate trees without extra indirection
   readonly kind: "Operation";
   operation: RegularOperationDescriptor;
   result: OperationResult;
@@ -70,7 +69,6 @@ export type OperationTree = {
   danglingReferences?: Set<NodeKey>;
 };
 
-// Same fields as OperationTree
 export type DetachedFragmentTree = {
   readonly kind: "DetachedFragment";
   operation: DetachedFragmentDescriptor;
@@ -78,10 +76,23 @@ export type DetachedFragmentTree = {
   rootNodeKey: NodeKey;
   nodes: NodeMap;
   typeMap: TypeMap;
+
+  // Inverse map from data to chunks
+  //   This is necessary for efficient re-indexing of existing data and chunk recycling
   dataMap: DataMap;
+
+  // Previous state of this tree.
+  //   Useful for recycling chunks from multiple tree states, (e.g. with merge policies when final tree
+  //   should recycle chunks from both - incoming and existing trees).
   prev: IndexedTree | null;
+
+  // Error states
   incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
+
+  // Tree changes
   history: CircularBuffer<HistoryChange>;
+
+  // ApolloCompat
   danglingReferences?: Set<NodeKey>;
 };
 
@@ -89,7 +100,6 @@ export type DetachedFragmentTree = {
 export type IndexedTree = OperationTree | DetachedFragmentTree;
 
 // Transient tree of an operation sub-selection (e.g. a deferred fragment). Never stored in the forest.
-// Same fields as OperationTree
 export type OperationFragmentTree = {
   readonly kind: "OperationFragment";
   operation: OperationFragmentDescriptor;
@@ -97,10 +107,23 @@ export type OperationFragmentTree = {
   rootNodeKey: NodeKey;
   nodes: NodeMap;
   typeMap: TypeMap;
+
+  // Inverse map from data to chunks
+  //   This is necessary for efficient re-indexing of existing data and chunk recycling
   dataMap: DataMap;
+
+  // Previous state of this tree.
+  //   Useful for recycling chunks from multiple tree states, (e.g. with merge policies when final tree
+  //   should recycle chunks from both - incoming and existing trees).
   prev: OperationFragmentTree | null;
+
+  // Error states
   incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
+
+  // Tree changes
   history: CircularBuffer<HistoryChange>;
+
+  // ApolloCompat
   danglingReferences?: Set<NodeKey>;
 };
 
@@ -262,8 +285,10 @@ export type ForestEnv = {
     fields?: PossibleSelection,
     operation?: OperationDescriptor,
   ) => ObjectKey | false | undefined;
+
   logger?: Logger;
   notify?: (event: TelemetryEvent) => void;
+
   // ApolloCompat:
   //   Apollo can track dirty entries in results of read operations even if some "key" fields are missing in selection
   //   by maintaining optimism dependency graph between main store and read results.
@@ -274,11 +299,14 @@ export type ForestEnv = {
   //   This is mostly needed for compatibility with Apollo tests - real world apps _shouldn't_ be affected
   keyMap?: WeakMap<SourceObject, string | false>;
   apolloCompat_keepOrphanNodes?: boolean;
+
   // Telemetry feature flags
   logUpdateStats?: boolean;
   logStaleOperations?: boolean;
+
   // History feature flags
   historyConfig?: HistoryConfig;
+
   partitionConfig?: {
     partitionKey: (operation: IndexedTree) => string | null;
   };
