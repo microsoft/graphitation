@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "OperationFragmentTree kind with embedded fragment roots; generic updateTree/transformTree/diffTree over tree kinds (foundations for @defer)",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}

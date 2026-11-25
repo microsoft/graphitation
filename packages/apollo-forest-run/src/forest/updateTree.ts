@@ -13,8 +13,9 @@ import type {
   ObjectDraft,
   SourceObject,
 } from "../values/types";
-import type { NodeDifferenceMap } from "../diff/types";
+import type { NodeDifferenceMap, TreeDifferenceMap } from "../diff/types";
 import type {
+  AnyIndexedTree,
   Draft,
   ForestEnv,
   IndexedTree,
@@ -22,7 +23,9 @@ import type {
   UpdateTreeResult,
 } from "./types";
 import { assert } from "../jsutils/assert";
-import { indexTree } from "./indexTree";
+import { reindexTree } from "./indexTree";
+import { isStoredTree } from "./predicates";
+import { resolveOperation } from "../descriptor/operation";
 import { isDirty } from "../diff/difference";
 import {
   createDraft,
@@ -44,24 +47,28 @@ type ComplexValue = SourceObject | NestedList<SourceObject>;
 
 export { NodeDifferenceMap }; // FIXME
 
-export function updateTree(
+export function updateTree<TTree extends AnyIndexedTree = IndexedTree>(
   env: ForestEnv,
-  base: IndexedTree,
-  differenceMap: NodeDifferenceMap,
+  base: TTree,
+  differenceMap: TreeDifferenceMap,
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
-): UpdateTreeResult {
-  const rootChunks = base.nodes.get(base.rootNodeKey);
+): UpdateTreeResult<TTree> {
+  const baseOperation = resolveOperation(base.operation);
+  const rootChunks =
+    base.rootNodeKey === false
+      ? [getEmbeddedRootChunk(base)]
+      : base.nodes.get(base.rootNodeKey);
   if (rootChunks?.length !== 1) {
     assert(
       false,
       `Failed to update "${
-        base.operation.debugName
+        baseOperation.debugName
       }": expected a single root chunk, got ${rootChunks?.length ?? 0}`,
     );
   }
   const rootChunk = rootChunks[0];
   const context: UpdateTreeContext = {
-    operation: base.operation,
+    operation: baseOperation,
     drafts: new Map(),
     changes: new Map(),
     changedNodes: new Set(),
@@ -110,14 +117,15 @@ export function updateTree(
   const chunkQueue = resolveAffectedChunks(base, differenceMap);
   chunkQueue.sort((a, b) => b.selection.depth - a.selection.depth); // parent is missing for orphan nodes
 
+  let hasChanges = false;
   for (const chunk of chunkQueue) {
-    const difference = differenceMap.get(chunk.key as string);
+    const difference = differenceMap.get(chunk.key);
     if (!difference) {
       const at = debugPathClause(context, chunk);
       assert(
         difference,
         `Failed to update "${
-          base.operation.debugName
+          baseOperation.debugName
         }"${at}: missing difference for ${chunk.type || "object"}`,
       );
     }
@@ -128,7 +136,10 @@ export function updateTree(
       continue;
     }
     assert(result.draft === drafts.get(chunk.data));
-    changedNodes.add(chunk.key as string);
+    hasChanges = true;
+    if (chunk.key !== false) {
+      changedNodes.add(chunk.key);
+    }
 
     // ApolloCompat: orphan nodes are mutated in place
     // TODO: remove this together with orphan nodes
@@ -145,7 +156,7 @@ export function updateTree(
     createSourceCopiesUpToRoot(context, base, chunk);
     statsLogger?.finishChunkUpdate();
   }
-  if (!changedNodes.size) {
+  if (!hasChanges) {
     return {
       updatedTree: base,
       changes,
@@ -173,14 +184,14 @@ export function updateTree(
       env.keyMap?.set(draft, key);
     }
   }
-  const updatedTree = indexTree(
+  const updatedTree = reindexTree(
     env,
-    base.operation,
+    base,
     { data: rootDraft },
     missingFields,
-    base,
   );
-  if (env.apolloCompat_keepOrphanNodes) {
+  // Transient trees never keep orphan nodes (thus, never have detached chunks updated in place)
+  if (env.apolloCompat_keepOrphanNodes && isStoredTree(base)) {
     apolloBackwardsCompatibility_saveOrphanNodes(base, updatedTree);
   }
   return {
@@ -193,16 +204,26 @@ export function updateTree(
   };
 }
 
+// Embedded root is not a node (see RootChunkReference.embeddedIn)
+function getEmbeddedRootChunk(base: AnyIndexedTree): ObjectChunk {
+  const rootRef = base.dataMap.get(base.result.data);
+  assert(rootRef && isRootRef(rootRef) && isObjectValue(rootRef.value));
+  return rootRef.value;
+}
+
 function resolveAffectedChunks(
-  base: IndexedTree,
-  differenceMap: NodeDifferenceMap,
+  base: AnyIndexedTree,
+  differenceMap: TreeDifferenceMap,
 ): ObjectChunk[] {
   const affectedChunks: ObjectChunk[] = [];
   for (const [objectKey, difference] of differenceMap.entries()) {
     if (!isDirty(difference)) {
       continue;
     }
-    const chunks = base.nodes.get(objectKey);
+    const chunks =
+      objectKey === false
+        ? [getEmbeddedRootChunk(base)]
+        : base.nodes.get(objectKey);
     if (chunks?.length) {
       affectedChunks.push(...chunks);
     }
@@ -226,7 +247,7 @@ function debugPathClause(
 
 function completeObject(
   env: ForestEnv,
-  base: IndexedTree,
+  base: AnyIndexedTree,
   getNodeChunks: ((key: NodeKey) => Iterable<NodeChunk>) | undefined,
   object: ObjectValue,
   possibleSelections: PossibleSelections,
@@ -285,7 +306,7 @@ function completeObject(
 
 function createSourceCopiesUpToRoot(
   context: UpdateTreeContext,
-  tree: IndexedTree,
+  tree: AnyIndexedTree,
   from: CompositeValueChunk,
   isRootCall = true,
   isIndirectlyAffected = false,
@@ -343,8 +364,8 @@ function createSourceCopiesUpToRoot(
 }
 
 function apolloBackwardsCompatibility_saveOrphanNodes(
-  current: IndexedTree,
-  next: IndexedTree,
+  current: AnyIndexedTree,
+  next: AnyIndexedTree,
 ) {
   const currentNodes = current.nodes;
   const nextNodes = next.nodes;
@@ -372,6 +393,7 @@ function apolloBackwardsCompatibility_saveOrphanNodes(
         value: chunk,
         parent: null,
         detached: true,
+        embeddedIn: undefined,
       });
     }
   }
