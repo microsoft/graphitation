@@ -7,7 +7,6 @@ import {
   PossibleSelection,
   PossibleSelections,
   RegularOperationDescriptor,
-  TreeDescriptor,
   TypeName,
   VariableValues,
 } from "../descriptor/types";
@@ -42,10 +41,10 @@ import {
 } from "../diff/types";
 import { HistoryConfig } from "../cache/types";
 
-export type IndexedTreeBase<TDescriptor extends TreeDescriptor, TPrevTree> = {
-  // Same as operation.kind, duplicated to discriminate trees without extra indirection
-  readonly kind: TDescriptor["kind"];
-  operation: TDescriptor;
+// Note: all tree kinds must have the same set of fields (keeps the same object shape in hot paths)
+export type OperationTree = {
+  readonly kind: "Operation";
+  operation: RegularOperationDescriptor;
   result: OperationResult;
   rootNodeKey: NodeKey;
   nodes: NodeMap;
@@ -58,7 +57,7 @@ export type IndexedTreeBase<TDescriptor extends TreeDescriptor, TPrevTree> = {
   // Previous state of this tree.
   //   Useful for recycling chunks from multiple tree states, (e.g. with merge policies when final tree
   //   should recycle chunks from both - incoming and existing trees).
-  prev: TPrevTree | null;
+  prev: IndexedTree | null;
 
   // Error states
   incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
@@ -70,21 +69,63 @@ export type IndexedTreeBase<TDescriptor extends TreeDescriptor, TPrevTree> = {
   danglingReferences?: Set<NodeKey>;
 };
 
-// Note: all tree kinds must have the same set of fields (keeps the same object shape in hot paths)
-// Note: interfaces (vs type aliases) allow trees to reference their own kinds (in `prev`)
-/* eslint-disable @typescript-eslint/no-empty-interface */
-export interface OperationTree
-  extends IndexedTreeBase<RegularOperationDescriptor, IndexedTree> {}
-export interface DetachedFragmentTree
-  extends IndexedTreeBase<DetachedFragmentDescriptor, IndexedTree> {}
+export type DetachedFragmentTree = {
+  readonly kind: "DetachedFragment";
+  operation: DetachedFragmentDescriptor;
+  result: OperationResult;
+  rootNodeKey: NodeKey;
+  nodes: NodeMap;
+  typeMap: TypeMap;
+
+  // Inverse map from data to chunks
+  //   This is necessary for efficient re-indexing of existing data and chunk recycling
+  dataMap: DataMap;
+
+  // Previous state of this tree.
+  //   Useful for recycling chunks from multiple tree states, (e.g. with merge policies when final tree
+  //   should recycle chunks from both - incoming and existing trees).
+  prev: IndexedTree | null;
+
+  // Error states
+  incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
+
+  // Tree changes
+  history: CircularBuffer<HistoryChange>;
+
+  // ApolloCompat
+  danglingReferences?: Set<NodeKey>;
+};
 
 // Any tree which can be stored in the forest
 export type IndexedTree = OperationTree | DetachedFragmentTree;
 
 // Transient tree of an operation sub-selection (e.g. a deferred fragment). Never stored in the forest.
-export interface OperationFragmentTree
-  extends IndexedTreeBase<OperationFragmentDescriptor, OperationFragmentTree> {}
-/* eslint-enable @typescript-eslint/no-empty-interface */
+export type OperationFragmentTree = {
+  readonly kind: "OperationFragment";
+  operation: OperationFragmentDescriptor;
+  result: OperationResult;
+  rootNodeKey: NodeKey;
+  nodes: NodeMap;
+  typeMap: TypeMap;
+
+  // Inverse map from data to chunks
+  //   This is necessary for efficient re-indexing of existing data and chunk recycling
+  dataMap: DataMap;
+
+  // Previous state of this tree.
+  //   Useful for recycling chunks from multiple tree states, (e.g. with merge policies when final tree
+  //   should recycle chunks from both - incoming and existing trees).
+  prev: OperationFragmentTree | null;
+
+  // Error states
+  incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
+
+  // Tree changes
+  history: CircularBuffer<HistoryChange>;
+
+  // ApolloCompat
+  danglingReferences?: Set<NodeKey>;
+};
 
 // Any tree, including transient trees
 export type AnyIndexedTree = IndexedTree | OperationFragmentTree;

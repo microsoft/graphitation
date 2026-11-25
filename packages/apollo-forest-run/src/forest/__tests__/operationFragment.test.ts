@@ -21,7 +21,11 @@ import type {
   IndexedTree,
   OperationFragmentTree,
 } from "../types";
-import { indexTree, isStoredTree } from "../indexTree";
+import {
+  indexOperationFragmentTree,
+  indexTree,
+  isStoredTree,
+} from "../indexTree";
 import { updateTree } from "../updateTree";
 import { transformTree } from "../transformTree";
 import { addTree } from "../addTree";
@@ -113,7 +117,7 @@ describe("OperationFragmentTree", () => {
   it("indexes a payload with the fragment selection in the operation context", () => {
     const { operation, fragment } = setup();
     const data = user("1", { bio: "a", friend: user("2") });
-    const tree = indexTree(env, fragment, { data }, undefined, null, "User:1");
+    const tree = indexOperationFragmentTree(env, fragment, "User:1", { data });
 
     expect(tree.kind).toBe("OperationFragment");
     expect(tree.operation).toBe(fragment);
@@ -136,22 +140,12 @@ describe("OperationFragmentTree", () => {
 
   it("indexes trees of different objects with the same descriptor", () => {
     const { fragment } = setup();
-    const first = indexTree(
-      env,
-      fragment,
-      { data: user("1", { bio: "a" }) },
-      undefined,
-      null,
-      "User:1",
-    );
-    const second = indexTree(
-      env,
-      fragment,
-      { data: user("2", { bio: "b" }) },
-      undefined,
-      null,
-      "User:2",
-    );
+    const first = indexOperationFragmentTree(env, fragment, "User:1", {
+      data: user("1", { bio: "a" }),
+    });
+    const second = indexOperationFragmentTree(env, fragment, "User:2", {
+      data: user("2", { bio: "b" }),
+    });
     expect(first.operation).toBe(second.operation);
     expect(first.rootNodeKey).toBe("User:1");
     expect(second.rootNodeKey).toBe("User:2");
@@ -160,27 +154,17 @@ describe("OperationFragmentTree", () => {
   it("uses the given root key for objects without own keys", () => {
     const { fragment } = setup();
     const data = createSourceObject({ bio: "a", friend: null });
-    const tree = indexTree(
-      env,
-      fragment,
-      { data },
-      undefined,
-      null,
-      "User:1.embedded",
-    );
+    const tree = indexOperationFragmentTree(env, fragment, "User:1.embedded", {
+      data,
+    });
     expect(getNode(tree, "User:1.embedded").data).toBe(data);
   });
 
   it("keeps the kind and root key when updated", () => {
     const { fragment } = setup();
-    const base = indexTree(
-      env,
-      fragment,
-      { data: user("1", { bio: "a", friend: user("2") }) },
-      undefined,
-      null,
-      "User:1",
-    );
+    const base = indexOperationFragmentTree(env, fragment, "User:1", {
+      data: user("1", { bio: "a", friend: user("2") }),
+    });
     const friend = getNode(base, "User:2");
     const { updatedTree } = updateTree(
       env,
@@ -208,14 +192,9 @@ describe("OperationFragmentTree", () => {
 
   it("is re-indexed by transforms (as with merge policies)", () => {
     const { fragment } = setup();
-    const base = indexTree(
-      env,
-      fragment,
-      { data: user("1", { bio: "a", friend: null }) },
-      undefined,
-      null,
-      "User:1",
-    );
+    const base = indexOperationFragmentTree(env, fragment, "User:1", {
+      data: user("1", { bio: "a", friend: null }),
+    });
     const transformed: OperationFragmentTree = transformTree(
       env,
       base,
@@ -244,14 +223,9 @@ describe("OperationFragmentTree", () => {
     const forest = createTestForest();
     addForestTree(forest, stored);
 
-    const incoming = indexTree(
-      env,
-      fragment,
-      { data: user("1", { bio: "b", friend: user("2", { name: "new" }) }) },
-      undefined,
-      null,
-      "User:1",
-    );
+    const incoming = indexOperationFragmentTree(env, fragment, "User:1", {
+      data: user("1", { bio: "b", friend: user("2", { name: "new" }) }),
+    });
     const difference = diffTree(forest, incoming, env);
     expect([...difference.nodeDifference.keys()].sort()).toEqual([
       "User:1",
@@ -267,14 +241,9 @@ describe("OperationFragmentTree", () => {
 
   it("can't be used where stored trees are expected (type-level check)", () => {
     const { fragment } = setup();
-    const tree = indexTree(
-      env,
-      fragment,
-      { data: user("1", { bio: "a" }) },
-      undefined,
-      null,
-      "User:1",
-    );
+    const tree = indexOperationFragmentTree(env, fragment, "User:1", {
+      data: user("1", { bio: "a" }),
+    });
     const forest = createTestForest();
     const anyTree: AnyIndexedTree = tree;
 
@@ -284,15 +253,14 @@ describe("OperationFragmentTree", () => {
     const operation: OperationDescriptor = fragment;
     // @ts-expect-error fragment trees can't be added to the forest
     const add = () => addTree(env, forest, tree);
-    expect(() =>
-      // @ts-expect-error root key is required for fragment trees
-      indexTree(env, fragment, { data: user("1") }),
-    ).toThrow();
+    // @ts-expect-error fragment descriptors can't be indexed as stored trees
+    const indexStored = () => indexTree(env, fragment, { data: user("1") });
 
     expect(isStoredTree(anyTree)).toBe(false);
     expect(stored).toBe(tree);
     expect(operation).toBe(fragment);
     expect(add).toBeInstanceOf(Function);
+    expect(indexStored).toBeInstanceOf(Function);
   });
 });
 
