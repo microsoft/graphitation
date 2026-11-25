@@ -8,9 +8,8 @@ import {
   ObjectDiffState,
 } from "./types";
 import {
-  addEmbeddedDifference,
-  createObjectDifference,
-  getEmbeddedDifference,
+  addChunkDifference,
+  getChunkDifference,
   isComplete,
   isDirty,
   isObjectDifference,
@@ -29,7 +28,7 @@ import { OperationId } from "../descriptor/types";
 import { resolveOperation } from "../descriptor/operation";
 import { AnyIndexedTree, IndexedForest, IndexedTree } from "../forest/types";
 import {
-  getEmbeddedChunkPath,
+  findClosestNode,
   getGraphValueReference,
   retrieveEmbeddedValue,
 } from "../values/traverse";
@@ -117,7 +116,7 @@ export function diffTree(
 
 /**
  * Diffs the embedded root against the same object in the forest.
- * The difference is recorded as a difference of the node containing the root (along the path to the root).
+ * The difference is recorded as a difference of the closest node of the root (along the path to the root).
  */
 function diffEmbeddedRoot(
   context: Context,
@@ -126,13 +125,15 @@ function diffEmbeddedRoot(
   nodeDifference: NodeDifferenceMap,
 ) {
   const env = { findParent };
-  const { node, path } = getEmbeddedChunkPath(env, root);
+  const node = findClosestNode(root, findParent);
   const ref = getGraphValueReference(env, root);
-  const existing = getEmbeddedDifference(nodeDifference.get(node.key), path);
+  const existing = getChunkDifference(nodeDifference, findParent, root);
   assert(!existing || isObjectDifference(existing));
 
   // Note: continues the difference of the same object within the node, when the node is in the tree too
-  const state: ObjectDiffState = { difference: existing, errors: [] };
+  nodeDiffState.errors.length = 0;
+  const state: ObjectDiffState = nodeDiffState;
+  state.difference = existing;
 
   for (const operation of resolveOperationsWithNode(context.forest, node)) {
     const baseChunks = context.forest.trees.get(operation)?.nodes.get(node.key);
@@ -155,12 +156,13 @@ function diffEmbeddedRoot(
   }
   const difference = state.difference;
   if (difference && isDirty(difference)) {
-    let diff = nodeDifference.get(node.key);
-    if (!diff) {
-      diff = createObjectDifference();
-      nodeDifference.set(node.key, diff);
-    }
-    addEmbeddedDifference(diff, path, difference);
+    const added = addChunkDifference(
+      nodeDifference,
+      findParent,
+      root,
+      difference,
+    );
+    assert(added === difference);
   }
   if (state.errors?.length) {
     accumulateDiffErrors(context, root, state.errors);

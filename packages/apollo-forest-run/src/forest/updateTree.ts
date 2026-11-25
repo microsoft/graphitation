@@ -27,14 +27,14 @@ import { indexOperationFragmentTree, indexTree } from "./indexTree";
 import { isSameTreeKind } from "./predicates";
 import { resolveOperation } from "../descriptor/operation";
 import {
-  getEmbeddedDifference,
+  getChunkDifference,
   isDirty,
   isObjectDifference,
 } from "../diff/difference";
 import {
   createDraft,
   getDataPathForDebugging,
-  getEmbeddedChunkPath,
+  findClosestNode,
   hydrateDraft,
   isNodeValue,
   isObjectValue,
@@ -166,8 +166,11 @@ export function updateTree<TTree extends AnyIndexedTree>(
     // The root is embedded into a node outside of the tree (see createTreeParentLocator),
     //   so its difference is a part of that node difference.
     //   Note: roots are updated last, as the shallowest chunks of the tree
-    const { node, path } = getEmbeddedChunkPath(context, rootChunk);
-    const difference = getEmbeddedDifference(differenceMap.get(node.key), path);
+    const difference = getChunkDifference(
+      differenceMap,
+      context.findParent,
+      rootChunk,
+    );
     // Other differences would replace the root itself, which is never the case for a tree
     if (!isObjectDifference(difference) || !isDirty(difference)) {
       continue;
@@ -178,7 +181,7 @@ export function updateTree<TTree extends AnyIndexedTree>(
       continue;
     }
     assert(result.draft === drafts.get(rootChunk.data));
-    changedNodes.add(node.key);
+    changedNodes.add(findClosestNode(rootChunk, context.findParent).key);
     createSourceCopiesUpToRoot(context, base, rootChunk);
     statsLogger?.finishChunkUpdate();
   }

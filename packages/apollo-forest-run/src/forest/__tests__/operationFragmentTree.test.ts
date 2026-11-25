@@ -38,12 +38,8 @@ import { updateTree } from "../updateTree";
 import { createTreeParentLocator } from "../parentLocator";
 import { transformTree } from "../transformTree";
 import { diffTree } from "../../diff/diffTree";
-import {
-  createReplacement,
-  getEmbeddedDifference,
-} from "../../diff/difference";
+import { createReplacement, getChunkDifference } from "../../diff/difference";
 import { assert } from "../../jsutils/assert";
-import { resolveNormalizedField } from "../../descriptor/resolvedSelection";
 
 const env: ForestEnv = {
   objectKey: (obj) =>
@@ -190,13 +186,14 @@ describe("OperationFragmentTree with embedded roots", () => {
     expect(errors).toEqual([]);
     expect([...nodeDifference.keys()]).toEqual(["User:1"]);
 
-    const user = getStoredUser(stored);
-    const items = user.selection.fields.get("items")?.[0];
-    assert(items);
+    const list = getField(getStoredUser(stored), "items");
+    assert(isCompositeListValue(list));
     const nodeDiff = nodeDifference.get("User:1");
-    const listDiff = getEmbeddedDifference(nodeDiff, [
-      resolveNormalizedField(user.selection, items),
-    ]);
+    const listDiff = getChunkDifference(
+      nodeDifference,
+      createTreeParentLocator(stored),
+      list,
+    );
     assert(listDiff && "dirtyItems" in listDiff);
     expect([...(listDiff.dirtyItems ?? [])]).toEqual([0]); // item 2 is not changed
     expect([...(nodeDiff?.dirtyFields ?? [])].sort()).toEqual([

@@ -10,8 +10,6 @@ import type {
   GraphChunkReference,
   ParentLocator,
   DataMap,
-  EmbeddedChunkPath,
-  NormalizedPath,
 } from "./types";
 import { ValueKind } from "./types";
 import type { FieldInfo, NormalizedFieldEntry } from "../descriptor/types";
@@ -189,26 +187,6 @@ export const getGraphValueReference = (
   Predicates.isNodeValue(chunk)
     ? chunk.key
     : [env.findParent(chunk), env.findParent];
-
-// Closest node of the chunk and the path from it to the chunk (the node may be outside of the chunk tree)
-export function getEmbeddedChunkPath(
-  env: TraverseEnv,
-  chunk: ObjectChunk | CompositeListChunk,
-): EmbeddedChunkPath {
-  const path: NormalizedPath = [];
-  let value = chunk;
-  while (!Predicates.isNodeValue(value)) {
-    const parentRef = env.findParent(value);
-    assert(!Predicates.isRootRef(parentRef));
-    path.push(
-      Predicates.isParentObjectRef(parentRef)
-        ? resolveNormalizedField(parentRef.parent.selection, parentRef.field)
-        : parentRef.index,
-    );
-    value = parentRef.parent;
-  }
-  return { node: value, path: path.reverse() };
-}
 
 export function getChunkFieldReference(
   env: TraverseEnv,

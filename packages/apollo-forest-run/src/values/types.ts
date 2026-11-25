@@ -8,7 +8,6 @@ import {
   DataKey,
   ResolvedSelection,
   ArgumentValues,
-  NormalizedFieldEntry,
 } from "../descriptor/types";
 import type { HistoryChangeSerialized } from "../forest/types";
 import * as ValueKind from "./valueKind";
@@ -362,10 +361,4 @@ export type ParentLocator = (
 
 export type GraphValueReference = NodeKey | EmbeddedValueReference;
 export type EmbeddedValueReference = [ParentInfo, ParentLocator];
-
-// Normalized fields (name + arguments) and list indices, top-down
-export type NormalizedPath = (NormalizedFieldEntry | number)[];
-
-// Embedded chunk position: its closest node and the path from that node to the chunk
-export type EmbeddedChunkPath = { node: NodeChunk; path: NormalizedPath };
 export { ValueKind };
