@@ -11,6 +11,7 @@ import type {
   ParentLocator,
   DataMap,
   EmbeddedRootAddress,
+  EmbeddedRootChunk,
   NodeKey,
 } from "./types";
 import { ValueKind } from "./types";
@@ -26,13 +27,6 @@ const normalizedStack: (NormalizedFieldEntry | number)[] = [];
 export type TraverseEnv = {
   findParent: ParentLocator;
 };
-
-/**
- * Synthetic key of a tree root embedded into a node of another tree (see RootChunkReference.embeddedIn).
- * Such root is indexed as a node, so that tree-local operations work as usual. The key never leaves its tree:
- * lookups in other trees are resolved via the embedded root address.
- */
-export const EMBEDDED_ROOT_KEY = "__EMBEDDED_ROOT__";
 
 export const createParentLocator =
   (map: DataMap): ParentLocator =>
@@ -74,15 +68,28 @@ function embeddedPathClause(env: TraverseEnv, source: NodeValue): string {
   }
 }
 
+/**
+ * Returns the closest node of the chunk. Differences of embedded chunks are recorded on this node.
+ *
+ * For trees with an embedded root (see RootChunkReference.embeddedIn) returns the root itself (key `false`)
+ * when there is no closer node.
+ */
 export function findClosestNode(
   chunk: ObjectChunk | CompositeListChunk,
   findParent: ParentLocator,
-): NodeChunk {
+): NodeChunk | EmbeddedRootChunk {
   if (Predicates.isNodeValue(chunk)) {
     return chunk;
   }
   const parentInfo = findParent(chunk);
-  assert(parentInfo.parent);
+  if (!parentInfo.parent) {
+    assert(
+      Predicates.isRootRef(parentInfo) &&
+        parentInfo.embeddedIn &&
+        Predicates.isObjectValue(chunk),
+    );
+    return chunk as EmbeddedRootChunk;
+  }
   return findClosestNode(parentInfo.parent, findParent);
 }
 
@@ -193,19 +200,18 @@ export const getGraphValueReference = (
   env: TraverseEnv,
   chunk: ObjectChunk | CompositeListChunk,
 ): GraphValueReference =>
-  Predicates.isNodeValue(chunk) && chunk.key !== EMBEDDED_ROOT_KEY
+  Predicates.isNodeValue(chunk)
     ? chunk.key
     : [env.findParent(chunk), env.findParent];
 
 /**
- * Key of the node in the store: for an embedded root - key of the node it is embedded into
- * (in this case, `node` itself is not in the store, embedded value must be retrieved by reference).
+ * Key of the closest node in the store: for an embedded root - key of the node it is embedded into.
  */
 export function resolveStoredNodeKey(
-  node: NodeChunk,
+  node: NodeChunk | EmbeddedRootChunk,
   findParent: ParentLocator,
 ): NodeKey {
-  if (node.key !== EMBEDDED_ROOT_KEY) {
+  if (node.key !== false) {
     return node.key;
   }
   const ref = findParent(node);

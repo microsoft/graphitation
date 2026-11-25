@@ -7,13 +7,14 @@ import type {
 import type {
   CompositeListChunk,
   GraphChunk,
+  EmbeddedRootChunk,
   NodeChunk,
   ObjectChunk,
   ParentLocator,
 } from "../values/types";
 import type {
   CompositeListDifference,
-  NodeDifferenceMap,
+  TreeDifferenceMap,
   ObjectDifference,
   ValueDifference,
 } from "../diff/types";
@@ -65,7 +66,7 @@ const enum DirtyState {
 
 type TreeState<TTree extends AnyIndexedTree = AnyIndexedTree> = {
   dirty: DirtyState;
-  nodeDifference: NodeDifferenceMap;
+  nodeDifference: TreeDifferenceMap;
   intermediateTree: TTree;
   findParent: ParentLocator;
 };
@@ -257,6 +258,12 @@ function collectChunks(
 ) {
   if (!filter.types && !filter.nodes) {
     const chunks: ObjectChunk[] = [];
+    if (tree.rootNodeKey === false) {
+      // Embedded root is not a node (see RootChunkReference.embeddedIn)
+      const rootRef = tree.dataMap.get(tree.result.data);
+      assert(rootRef && isObjectValue(rootRef.value));
+      chunks.push(rootRef.value);
+    }
     for (const nodeChunks of tree.nodes.values()) {
       pushAll(chunks, nodeChunks);
     }
@@ -325,7 +332,7 @@ function resolveLevelChunks(
 
 function getDifference(
   treeState: TreeState,
-  parentNode: NodeChunk,
+  parentNode: NodeChunk | EmbeddedRootChunk,
   chunk: ObjectChunk,
 ): ObjectDifference | undefined {
   const nodeDiff = treeState.nodeDifference.get(parentNode.key);
@@ -336,7 +343,7 @@ function getDifference(
 
 function addDifference(
   treeState: TreeState,
-  parentNode: NodeChunk,
+  parentNode: NodeChunk | EmbeddedRootChunk,
   chunk: ObjectChunk,
   chunkDifference: ObjectDifference,
 ): ObjectDifference {
@@ -364,7 +371,7 @@ function addDifference(
 function getEmbeddedChunkDifference(
   treeState: TreeState,
   chunk: ObjectChunk,
-  parentNode: NodeChunk,
+  parentNode: NodeChunk | EmbeddedRootChunk,
   parentNodeDifference: ObjectDifference | undefined,
 ): ObjectDifference | undefined {
   if (!parentNodeDifference) {
@@ -413,7 +420,7 @@ function getEmbeddedChunkDifference(
 
 function addEmbeddedChunkDifference(
   treeState: TreeState,
-  parentNode: NodeChunk,
+  parentNode: NodeChunk | EmbeddedRootChunk,
   parentNodeDifference: ObjectDifference,
   chunk: ObjectChunk,
   chunkDifference: ObjectDifference,
@@ -461,7 +468,7 @@ function addEmbeddedChunkDifference(
 
 function markParentNodeDirty(
   treeState: TreeState,
-  parentNode: NodeChunk,
+  parentNode: NodeChunk | EmbeddedRootChunk,
   chunk: ObjectChunk,
 ) {
   const parentNodeDifference = treeState.nodeDifference.get(parentNode.key);
