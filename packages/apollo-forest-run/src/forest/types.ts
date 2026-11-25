@@ -104,7 +104,7 @@ export type IndexedTree = OperationTree | DetachedFragmentTree;
  * with this fragment (e.g. all items of a list). Never stored in the forest, so it has no previous states and history.
  *
  * Each root takes the place of its target object in the stored tree: parents of roots are resolved in the stored
- * tree (see `createTreeParentLocator`). So a root embedded into a node of the stored tree is a regular embedded
+ * tree (see `createOperationFragmentParentLocator`). So a root embedded into a node of the stored tree is a regular embedded
  * object (key `false`): its differences are differences of that node (along the path from the node to the root).
  */
 export type OperationFragmentTree = {

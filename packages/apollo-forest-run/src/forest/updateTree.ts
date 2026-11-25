@@ -160,7 +160,7 @@ export function updateTree<TTree extends AnyIndexedTree>(
     if (rootChunk.key !== false) {
       continue;
     }
-    // The root is embedded into a node outside of the tree (see createTreeParentLocator),
+    // The root is embedded into a node outside of the tree (see createOperationFragmentParentLocator),
     //   so its difference is a part of that node difference.
     //   Note: roots are updated last, as the shallowest chunks of the tree
     const difference = getEmbeddedChunkDifference(

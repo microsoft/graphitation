@@ -35,7 +35,10 @@ import type {
 } from "../types";
 import { indexOperationFragmentTree, indexTree } from "../indexTree";
 import { updateTree } from "../updateTree";
-import { createTreeParentLocator } from "../parentLocator";
+import {
+  createOperationFragmentParentLocator,
+  createTreeParentLocator,
+} from "../parentLocator";
 import { transformTree } from "../transformTree";
 import { diffTree } from "../../diff/diffTree";
 import { createReplacement } from "../../diff/difference";
@@ -142,7 +145,7 @@ describe("OperationFragmentTree with embedded roots", () => {
 
   it("resolves roots in the stored tree (through aliases, arguments and lists)", () => {
     const { tree, stored, forest } = setup();
-    const findParent = createTreeParentLocator(tree);
+    const findParent = createOperationFragmentParentLocator(tree);
     const [, root] = getRoots(tree);
     const nested = getField(root, "nested");
     assert(isObjectValue(nested));
@@ -310,7 +313,7 @@ describe("OperationFragmentTree with node roots", () => {
 
   it("keeps node keys of targets and resolves roots as nodes", () => {
     const { tree } = setup();
-    const findParent = createTreeParentLocator(tree);
+    const findParent = createOperationFragmentParentLocator(tree);
     const roots = getRoots(tree);
     expect(roots.map((root) => root.key)).toEqual([
       "User:1",

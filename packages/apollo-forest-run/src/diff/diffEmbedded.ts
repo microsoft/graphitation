@@ -33,7 +33,7 @@ import {
   getGraphValueReference,
   retrieveEmbeddedValue,
 } from "../values/traverse";
-import { createTreeParentLocator } from "../forest/parentLocator";
+import { createOperationFragmentParentLocator } from "../forest/parentLocator";
 import { diffObject } from "./diffObject";
 import {
   addDirtyField,
@@ -57,7 +57,7 @@ const rootDiffState: ObjectDiffState = {
 };
 
 /**
- * Diffs roots of an operation fragment tree embedded into nodes outside of the tree (see createTreeParentLocator).
+ * Diffs roots of an operation fragment tree embedded into nodes outside of the tree (see createOperationFragmentParentLocator).
  * Differences are recorded as differences of the closest nodes of roots (along the path to each root).
  */
 export function diffEmbeddedRoots(
@@ -67,7 +67,7 @@ export function diffEmbeddedRoots(
   env: DiffEnv,
   onErrors: (root: ObjectChunk, errors: DiffError[]) => void,
 ): void {
-  const findParent = createTreeParentLocator(model);
+  const findParent = createOperationFragmentParentLocator(model);
   for (const { data } of model.roots) {
     const rootRef = model.dataMap.get(data);
     assert(rootRef && isObjectValue(rootRef.value));
