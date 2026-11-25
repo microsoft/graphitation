@@ -30,7 +30,6 @@ import type {
   AnyIndexedTree,
   ForestEnv,
   IndexedTree,
-  IndexedTreeBase,
   OperationFragmentTree,
 } from "./types";
 import { ValueKind } from "../values/types";
@@ -205,9 +204,9 @@ function resolveRootNodeKey(
   }
 }
 
-function indexTreeImpl<TDescriptor extends TreeDescriptor>(
+function indexTreeImpl(
   env: ForestEnv,
-  descriptor: TDescriptor,
+  descriptor: TreeDescriptor,
   operation: OperationDescriptor,
   rootNodeKey: NodeKey,
   rootType: TypeName | undefined,
@@ -244,7 +243,7 @@ function indexTreeImpl<TDescriptor extends TreeDescriptor>(
     rootRef,
   );
   // Note: explicit literal with the same fields for all tree kinds (keeps a single object shape)
-  const typedTree: IndexedTreeBase<TDescriptor, AnyIndexedTree> = {
+  const typedTree = {
     kind: descriptor.kind,
     operation: descriptor,
     result,
@@ -256,7 +255,7 @@ function indexTreeImpl<TDescriptor extends TreeDescriptor>(
     prev: previousTreeState,
     history: previousTreeState?.history ?? new CircularBuffer(historySize),
   };
-  // Safe: tree kind is always taken from its descriptor kind
+  // Safe: tree kind (and prev) is always taken from its descriptor kind
   const tree = typedTree as AnyIndexedTree;
   // Every composite occurrence is counted, but dataMap keeps only unique sources.
   // This detects sharing without an additional map lookup or allocation per chunk.

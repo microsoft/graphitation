@@ -7,7 +7,6 @@ import {
   PossibleSelection,
   PossibleSelections,
   RegularOperationDescriptor,
-  TreeDescriptor,
   TypeName,
   VariableValues,
 } from "../descriptor/types";
@@ -42,10 +41,11 @@ import {
 } from "../diff/types";
 import { HistoryConfig } from "../cache/types";
 
-export type IndexedTreeBase<TDescriptor extends TreeDescriptor, TPrevTree> = {
+// Note: all tree kinds must have the same set of fields (keeps the same object shape in hot paths)
+export type OperationTree = {
   // Same as operation.kind, duplicated to discriminate trees without extra indirection
-  readonly kind: TDescriptor["kind"];
-  operation: TDescriptor;
+  readonly kind: "Operation";
+  operation: RegularOperationDescriptor;
   result: OperationResult;
   rootNodeKey: NodeKey;
   nodes: NodeMap;
@@ -58,7 +58,7 @@ export type IndexedTreeBase<TDescriptor extends TreeDescriptor, TPrevTree> = {
   // Previous state of this tree.
   //   Useful for recycling chunks from multiple tree states, (e.g. with merge policies when final tree
   //   should recycle chunks from both - incoming and existing trees).
-  prev: TPrevTree | null;
+  prev: IndexedTree | null;
 
   // Error states
   incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
@@ -70,21 +70,39 @@ export type IndexedTreeBase<TDescriptor extends TreeDescriptor, TPrevTree> = {
   danglingReferences?: Set<NodeKey>;
 };
 
-// Note: all tree kinds must have the same set of fields (keeps the same object shape in hot paths)
-// Note: interfaces (vs type aliases) allow trees to reference their own kinds (in `prev`)
-/* eslint-disable @typescript-eslint/no-empty-interface */
-export interface OperationTree
-  extends IndexedTreeBase<RegularOperationDescriptor, IndexedTree> {}
-export interface DetachedFragmentTree
-  extends IndexedTreeBase<DetachedFragmentDescriptor, IndexedTree> {}
+// Same fields as OperationTree
+export type DetachedFragmentTree = {
+  readonly kind: "DetachedFragment";
+  operation: DetachedFragmentDescriptor;
+  result: OperationResult;
+  rootNodeKey: NodeKey;
+  nodes: NodeMap;
+  typeMap: TypeMap;
+  dataMap: DataMap;
+  prev: IndexedTree | null;
+  incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
+  history: CircularBuffer<HistoryChange>;
+  danglingReferences?: Set<NodeKey>;
+};
 
 // Any tree which can be stored in the forest
 export type IndexedTree = OperationTree | DetachedFragmentTree;
 
 // Transient tree of an operation sub-selection (e.g. a deferred fragment). Never stored in the forest.
-export interface OperationFragmentTree
-  extends IndexedTreeBase<OperationFragmentDescriptor, OperationFragmentTree> {}
-/* eslint-enable @typescript-eslint/no-empty-interface */
+// Same fields as OperationTree
+export type OperationFragmentTree = {
+  readonly kind: "OperationFragment";
+  operation: OperationFragmentDescriptor;
+  result: OperationResult;
+  rootNodeKey: NodeKey;
+  nodes: NodeMap;
+  typeMap: TypeMap;
+  dataMap: DataMap;
+  prev: OperationFragmentTree | null;
+  incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
+  history: CircularBuffer<HistoryChange>;
+  danglingReferences?: Set<NodeKey>;
+};
 
 // Any tree, including transient trees
 export type AnyIndexedTree = IndexedTree | OperationFragmentTree;
@@ -244,10 +262,8 @@ export type ForestEnv = {
     fields?: PossibleSelection,
     operation?: OperationDescriptor,
   ) => ObjectKey | false | undefined;
-
   logger?: Logger;
   notify?: (event: TelemetryEvent) => void;
-
   // ApolloCompat:
   //   Apollo can track dirty entries in results of read operations even if some "key" fields are missing in selection
   //   by maintaining optimism dependency graph between main store and read results.
@@ -258,14 +274,11 @@ export type ForestEnv = {
   //   This is mostly needed for compatibility with Apollo tests - real world apps _shouldn't_ be affected
   keyMap?: WeakMap<SourceObject, string | false>;
   apolloCompat_keepOrphanNodes?: boolean;
-
   // Telemetry feature flags
   logUpdateStats?: boolean;
   logStaleOperations?: boolean;
-
   // History feature flags
   historyConfig?: HistoryConfig;
-
   partitionConfig?: {
     partitionKey: (operation: IndexedTree) => string | null;
   };
