@@ -153,7 +153,8 @@ describe("OperationFragmentTree", () => {
     expect(tree.rootNodeKey).toBe("User:1");
     expect(tree.result.data).toBe(data);
     expect([...tree.nodes.keys()]).toEqual(["User:1", "User:2"]);
-    expect(tree.history.items).toEqual([]);
+    expect("prev" in tree).toBe(false);
+    expect("history" in tree).toBe(false);
     expect(isStoredTree(tree)).toBe(false);
 
     const root = getNode(tree, "User:1");
@@ -207,7 +208,7 @@ describe("OperationFragmentTree", () => {
     expect(fragmentTree.kind).toBe("OperationFragment");
     expect(fragmentTree.operation).toBe(fragment);
     expect(fragmentTree.rootNodeKey).toBe("User:1");
-    expect(fragmentTree.prev).toBe(base);
+    expect("prev" in fragmentTree).toBe(false);
     expect(fragmentTree.result.data).toEqual(
       user("1", { bio: "a", friend: user("2", { name: "updated" }) }),
     );

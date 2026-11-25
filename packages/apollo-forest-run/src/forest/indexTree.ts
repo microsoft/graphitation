@@ -32,7 +32,7 @@ import type {
   OperationFragmentTree,
   UncheckedIndexedTree,
 } from "./types";
-import { isIndexedTree, isSameTreeKind } from "./predicates";
+import { isIndexedTree, isSameTreeKind, isStoredTree } from "./predicates";
 import { ValueKind } from "../values/types";
 import {
   getFieldName,
@@ -75,6 +75,7 @@ type Context = {
   knownMissingFields: MissingFieldsMap | undefined;
   incompleteChunks: Set<ObjectChunk>;
   recycleTree: AnyIndexedTree | null;
+  recyclePrevTree: IndexedTree | null; // Previous state of the recycled tree (stored trees only)
   findParent: ParentLocator;
 };
 
@@ -146,7 +147,7 @@ export function indexOperationFragmentTree(
   rootNodeKey: NodeKey,
   result: OperationResult,
   knownMissingFields?: MissingFieldsMap,
-  previousTreeState: OperationFragmentTree | null = null,
+  recycleTree: OperationFragmentTree | null = null, // Tree to recycle chunks from (e.g. on re-indexing)
 ): OperationFragmentTree {
   const context = createTreeContext(
     env,
@@ -155,11 +156,10 @@ export function indexOperationFragmentTree(
     undefined,
     result,
     knownMissingFields,
-    previousTreeState,
+    recycleTree,
   );
   const root = indexRoot(context, fragment.possibleSelections);
-  const history = previousTreeState?.history ?? new CircularBuffer(0);
-  // Note: same fields in the same order as other tree kinds (see indexTree)
+  // Note: fragment trees are transient (never stored), so they don't keep previous states and history
   const tree: OperationFragmentTree = {
     kind: "OperationFragment",
     operation: fragment,
@@ -169,23 +169,18 @@ export function indexOperationFragmentTree(
     typeMap: context.typeMap,
     dataMap: context.dataMap,
     incompleteChunks: context.incompleteChunks,
-    prev: previousTreeState,
-    history,
   };
   const repaired = repairSharedReferences(env, context, root);
   if (!repaired) {
     return tree;
   }
-  const repairedTree = indexOperationFragmentTree(
+  return indexOperationFragmentTree(
     env,
     fragment,
     rootNodeKey,
     { ...result, data: repaired.data },
     repaired.missingFields,
   );
-  repairedTree.prev = previousTreeState;
-  repairedTree.history = history;
-  return repairedTree;
 }
 
 /**
@@ -272,6 +267,10 @@ function createTreeContext(
     rootNodeKey,
     rootType,
     recycleTree: previousTreeState,
+    recyclePrevTree:
+      previousTreeState && isStoredTree(previousTreeState)
+        ? previousTreeState.prev
+        : null,
     findParent: createParentLocator(dataMap),
   };
 }
@@ -352,6 +351,7 @@ export function indexObject(
     rootNodeKey,
     rootType: operation.rootType,
     recycleTree: null,
+    recyclePrevTree: null,
     findParent: createParentLocator(dataMap),
   };
   const result = {
@@ -413,7 +413,8 @@ function indexSourceObject(
 ) {
   const recycleTree = context.recycleTree;
   const recyclable =
-    recycleTree?.dataMap.get(source) ?? recycleTree?.prev?.dataMap.get(source);
+    recycleTree?.dataMap.get(source) ??
+    context.recyclePrevTree?.dataMap.get(source);
 
   if (recyclable) {
     return reIndexObject(context, recyclable.value as ObjectChunk, parent);
@@ -543,7 +544,8 @@ function indexSourceList(
 ) {
   const recycleTree = context.recycleTree;
   const recyclable =
-    recycleTree?.dataMap.get(list) ?? recycleTree?.prev?.dataMap.get(list);
+    recycleTree?.dataMap.get(list) ??
+    context.recyclePrevTree?.dataMap.get(list);
 
   if (recyclable) {
     return reIndexList(context, recyclable.value as CompositeListChunk, parent);
@@ -788,7 +790,10 @@ function findIndexingTree(
   context: Context,
   chunk: CompositeListChunk,
 ): AnyIndexedTree | null {
-  for (let tree = context.recycleTree; tree; tree = tree.prev) {
+  if (context.recycleTree?.dataMap.has(chunk.data)) {
+    return context.recycleTree;
+  }
+  for (let tree = context.recyclePrevTree; tree; tree = tree.prev) {
     if (tree.dataMap.has(chunk.data)) {
       return tree;
     }
