@@ -13,7 +13,6 @@ import type {
   SourceObject,
 } from "./types";
 import type {
-  DocumentDescriptor,
   FieldInfo,
   OperationDescriptor,
   PossibleSelections,
@@ -58,7 +57,7 @@ export function createDraft(
   // See src/cache/inmemory/readFromStore.ts:355
   source ??=
     !isRoot ||
-    isFragmentDocument(operation) ||
+    operation.kind === "DetachedFragment" ||
     ROOT_TYPES.includes(operation.rootType)
       ? undefined
       : ({ __typename: operation.rootType } as SourceObject);
@@ -386,13 +385,6 @@ function getMissingDraftFields(draft: ObjectDraft) {
 
 function getChunks(value: ObjectValue): ObjectChunk[] {
   return value.isAggregate ? value.chunks : [value];
-}
-
-function isFragmentDocument(descriptor: DocumentDescriptor) {
-  const operationDefinition = descriptor.definition;
-  const selections = operationDefinition.selectionSet.selections;
-
-  return selections.length === 1 && selections[0].kind === "FragmentSpread";
 }
 
 function isRecyclable(chunk: ObjectChunk): boolean {

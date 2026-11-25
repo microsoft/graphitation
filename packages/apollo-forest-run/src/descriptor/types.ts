@@ -86,7 +86,20 @@ export type ResolvedSelection = PossibleSelection & {
   resolvedHash?: number; // Structural hash + runtime-resolved state (args, skip/include)
 };
 
-export type OperationDescriptor = {
+/**
+ * Kinds of documents with their own result trees:
+ *
+ * - `Operation`: regular operation (query, mutation, subscription)
+ * - `DetachedFragment`: Apollo fragment document (`query { ...Fragment }` + fragment definitions)
+ *   used with `writeFragment` / `readFragment` / `watchFragment`. Its root is usually a regular node
+ *   (identified by `dataId` / `id`), not an operation root.
+ *
+ * Note: a third kind (`OperationFragment`) is reserved for sub-selections of operations (e.g. @defer chunks).
+ *   Those will point to the actual operation descriptor and will never be stored on their own.
+ */
+export type DescriptorKind = "Operation" | "DetachedFragment";
+
+type DescriptorBase = {
   id: OperationId;
   name: string | undefined;
   env: OperationEnv;
@@ -108,6 +121,19 @@ export type OperationDescriptor = {
   historySize: number; // Size of operation history to keep
   covers: string[]; // Operation names this operation covers (from @cache(covers: [...]))
 };
+
+export type RegularOperationDescriptor = {
+  readonly kind: "Operation";
+} & DescriptorBase;
+
+export type DetachedFragmentDescriptor = {
+  readonly kind: "DetachedFragment";
+} & DescriptorBase;
+
+// Descriptor of any document which may own a stored result tree
+export type OperationDescriptor =
+  | RegularOperationDescriptor
+  | DetachedFragmentDescriptor;
 
 export type FormattedError = GraphQLFormattedError;
 
