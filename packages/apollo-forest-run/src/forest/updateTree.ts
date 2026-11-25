@@ -181,7 +181,6 @@ export function updateTree<TTree extends AnyIndexedTree = IndexedTree>(
     base,
     { data: rootDraft },
     missingFields,
-    base,
   );
   // Transient trees never keep orphan nodes (thus, never have detached chunks updated in place)
   if (env.apolloCompat_keepOrphanNodes && isStoredTree(base)) {

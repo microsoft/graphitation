@@ -23,7 +23,6 @@ import type {
   OperationDescriptor,
   OperationFragmentDescriptor,
   PossibleSelections,
-  TreeDescriptor,
   TypeName,
 } from "../descriptor/types";
 import type {
@@ -91,19 +90,65 @@ export function indexTree(
   knownMissingFields?: MissingFieldsMap,
   previousTreeState: IndexedTree | null = null,
 ): IndexedTree {
-  const tree = indexTreeImpl(
+  const context = createTreeContext(
     env,
-    operation,
     operation,
     resolveRootNodeKey(env, operation, result),
     operation.rootType,
     result,
     knownMissingFields,
     previousTreeState,
-    operation.historySize,
   );
-  // Safe: tree kind is always taken from its descriptor kind
-  return tree as IndexedTree;
+  const root = indexRoot(context, operation.possibleSelections);
+  const history =
+    previousTreeState?.history ?? new CircularBuffer(operation.historySize);
+  // Note: explicit literals with the same fields in the same order for all tree kinds (keeps a single object shape)
+  let tree: IndexedTree;
+  switch (operation.kind) {
+    case "Operation":
+      tree = {
+        kind: "Operation",
+        operation,
+        result,
+        rootNodeKey: context.rootNodeKey,
+        nodes: context.nodes,
+        typeMap: context.typeMap,
+        dataMap: context.dataMap,
+        incompleteChunks: context.incompleteChunks,
+        prev: previousTreeState,
+        history,
+      };
+      break;
+    case "DetachedFragment":
+      tree = {
+        kind: "DetachedFragment",
+        operation,
+        result,
+        rootNodeKey: context.rootNodeKey,
+        nodes: context.nodes,
+        typeMap: context.typeMap,
+        dataMap: context.dataMap,
+        incompleteChunks: context.incompleteChunks,
+        prev: previousTreeState,
+        history,
+      };
+      break;
+    default:
+      assertNever(operation);
+  }
+  const repaired = repairSharedReferences(env, context, root);
+  if (!repaired) {
+    return tree;
+  }
+  const repairedTree = indexTree(
+    env,
+    operation,
+    { ...result, data: repaired.data },
+    repaired.missingFields,
+  );
+  repairedTree.prev = previousTreeState;
+  repairedTree.history = history;
+  return repairedTree;
 }
 
 /**
@@ -121,30 +166,54 @@ export function indexOperationFragmentTree(
   knownMissingFields?: MissingFieldsMap,
   previousTreeState: OperationFragmentTree | null = null,
 ): OperationFragmentTree {
-  const tree = indexTreeImpl(
+  const context = createTreeContext(
     env,
-    fragment,
     fragment.operation,
     rootNodeKey,
     undefined,
     result,
     knownMissingFields,
     previousTreeState,
-    0,
   );
-  // Safe: tree kind is always taken from its descriptor kind
-  return tree as OperationFragmentTree;
+  const root = indexRoot(context, fragment.possibleSelections);
+  const history = previousTreeState?.history ?? new CircularBuffer(0);
+  // Note: same fields in the same order as other tree kinds (see indexTree)
+  const tree: OperationFragmentTree = {
+    kind: "OperationFragment",
+    operation: fragment,
+    result,
+    rootNodeKey,
+    nodes: context.nodes,
+    typeMap: context.typeMap,
+    dataMap: context.dataMap,
+    incompleteChunks: context.incompleteChunks,
+    prev: previousTreeState,
+    history,
+  };
+  const repaired = repairSharedReferences(env, context, root);
+  if (!repaired) {
+    return tree;
+  }
+  const repairedTree = indexOperationFragmentTree(
+    env,
+    fragment,
+    rootNodeKey,
+    { ...result, data: repaired.data },
+    repaired.missingFields,
+  );
+  repairedTree.prev = previousTreeState;
+  repairedTree.history = history;
+  return repairedTree;
 }
 
 /**
- * Indexes a new state of the tree, preserving its kind and root node key.
+ * Indexes a new state of the tree (with the tree as its previous state), preserving its kind and root node key.
  */
 export function reindexTree<TTree extends AnyIndexedTree>(
   env: ForestEnv,
   tree: TTree,
   result: OperationResult,
   knownMissingFields: MissingFieldsMap | undefined,
-  previousTreeState: TTree | null,
 ): TTree {
   const base: AnyIndexedTree = tree;
   let reindexed: AnyIndexedTree;
@@ -156,8 +225,7 @@ export function reindexTree<TTree extends AnyIndexedTree>(
         base.operation,
         result,
         knownMissingFields,
-        // Safe: previous state is always a tree of the same kind
-        previousTreeState as IndexedTree | null,
+        base,
       );
       break;
     case "OperationFragment":
@@ -167,13 +235,13 @@ export function reindexTree<TTree extends AnyIndexedTree>(
         base.rootNodeKey,
         result,
         knownMissingFields,
-        previousTreeState as OperationFragmentTree | null,
+        base,
       );
       break;
     default:
       assertNever(base);
   }
-  // Safe: tree kind is always taken from its descriptor kind
+  // Safe: tree kind is always taken from its descriptor kind (TS doesn't narrow generic types by kind)
   return reindexed as TTree;
 }
 
@@ -204,19 +272,17 @@ function resolveRootNodeKey(
   }
 }
 
-function indexTreeImpl(
+function createTreeContext(
   env: ForestEnv,
-  descriptor: TreeDescriptor,
   operation: OperationDescriptor,
   rootNodeKey: NodeKey,
   rootType: TypeName | undefined,
   result: OperationResult,
   knownMissingFields: MissingFieldsMap | undefined,
   previousTreeState: AnyIndexedTree | null,
-  historySize: number,
-): AnyIndexedTree {
+): Context {
   const dataMap = new Map();
-  const context: Context = {
+  return {
     env: env,
     operation,
     result,
@@ -231,6 +297,12 @@ function indexTreeImpl(
     recycleTree: previousTreeState,
     findParent: createParentLocator(dataMap),
   };
+}
+
+function indexRoot(
+  context: Context,
+  possibleSelections: PossibleSelections,
+): ObjectChunk {
   const rootRef: RootChunkReference = {
     value: null,
     parent: null,
@@ -238,30 +310,27 @@ function indexTreeImpl(
   };
   rootRef.value = indexSourceObject(
     context,
-    result.data,
-    descriptor.possibleSelections,
+    context.result.data,
+    possibleSelections,
     rootRef,
   );
-  // Note: explicit literal with the same fields for all tree kinds (keeps a single object shape).
-  //   The cast is safe: tree kind is always taken from its descriptor kind
-  const tree = {
-    kind: descriptor.kind,
-    operation: descriptor,
-    result,
-    rootNodeKey,
-    nodes: context.nodes,
-    typeMap: context.typeMap,
-    dataMap: context.dataMap,
-    incompleteChunks: context.incompleteChunks,
-    prev: previousTreeState,
-    history: previousTreeState?.history ?? new CircularBuffer(historySize),
-  } as AnyIndexedTree;
+  return rootRef.value;
+}
+
+// Returns repaired data when the indexed result contains shared references (otherwise undefined)
+function repairSharedReferences(
+  env: ForestEnv,
+  context: Context,
+  root: ObjectChunk,
+) {
   // Every composite occurrence is counted, but dataMap keeps only unique sources.
   // This detects sharing without an additional map lookup or allocation per chunk.
-  if (context.indexedSources === dataMap.size) {
-    return tree;
+  if (context.indexedSources === context.dataMap.size) {
+    return undefined;
   }
-  return reindexSharedTree(env, tree, rootRef.value);
+  const repaired = cloneSharedReferences(env, root);
+  // Malformed, out-of-range list chunks may overcount without sharing actual data.
+  return repaired.data === context.result.data ? undefined : repaired;
 }
 
 // Matches ObjectChunkReference structure with additional fields
@@ -344,28 +413,6 @@ export function indexObject(
     }
   }
   return result as IndexedObject;
-}
-
-function reindexSharedTree<TTree extends AnyIndexedTree>(
-  env: ForestEnv,
-  tree: TTree,
-  root: ObjectChunk,
-): TTree {
-  const repaired = cloneSharedReferences(env, root);
-  // Malformed, out-of-range list chunks may overcount without sharing actual data.
-  if (repaired.data === tree.result.data) {
-    return tree;
-  }
-  const repairedTree = reindexTree(
-    env,
-    tree,
-    { ...tree.result, data: repaired.data },
-    repaired.missingFields,
-    null,
-  );
-  repairedTree.prev = tree.prev;
-  repairedTree.history = tree.history;
-  return repairedTree;
 }
 
 export function indexDraft(
