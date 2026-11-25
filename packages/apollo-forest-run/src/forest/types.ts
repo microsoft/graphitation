@@ -98,6 +98,12 @@ export type DetachedFragmentTree = {
 // Any tree which can be stored in the forest
 export type IndexedTree = OperationTree | DetachedFragmentTree;
 
+// Same fields as IndexedTree, but tree kind and operation kind are not correlated (yet)
+export type UncheckedIndexedTree = Omit<IndexedTree, "kind" | "operation"> & {
+  kind: IndexedTree["kind"];
+  operation: OperationDescriptor;
+};
+
 export type HistoryFieldChange =
   | FillerChange
   | ReplacementChange

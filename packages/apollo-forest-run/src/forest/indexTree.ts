@@ -22,7 +22,8 @@ import type {
   OperationDescriptor,
   PossibleSelections,
 } from "../descriptor/types";
-import type { ForestEnv, IndexedTree } from "./types";
+import type { ForestEnv, IndexedTree, UncheckedIndexedTree } from "./types";
+import { isIndexedTree } from "./predicates";
 import { ValueKind } from "../values/types";
 import {
   getFieldName,
@@ -30,7 +31,7 @@ import {
   resolveSelection,
 } from "../descriptor/resolvedSelection";
 import { accumulate } from "../jsutils/map";
-import { assert, assertNever } from "../jsutils/assert";
+import { assert } from "../jsutils/assert";
 import { CircularBuffer } from "../jsutils/circularBuffer";
 import { cloneSharedReferences } from "./cloneSharedReferences";
 import {
@@ -122,43 +123,21 @@ export function indexTree(
     operation.possibleSelections,
     rootRef,
   );
-  const history =
-    previousTreeState?.history ?? new CircularBuffer(operation.historySize);
-
-  // Note: explicit literals with the same fields in the same order for all tree kinds (keeps a single object shape)
-  let tree: IndexedTree;
-  switch (operation.kind) {
-    case "Operation":
-      tree = {
-        kind: "Operation",
-        operation,
-        result,
-        rootNodeKey,
-        nodes: context.nodes,
-        typeMap: context.typeMap,
-        dataMap: context.dataMap,
-        incompleteChunks: context.incompleteChunks,
-        prev: previousTreeState,
-        history,
-      };
-      break;
-    case "DetachedFragment":
-      tree = {
-        kind: "DetachedFragment",
-        operation,
-        result,
-        rootNodeKey,
-        nodes: context.nodes,
-        typeMap: context.typeMap,
-        dataMap: context.dataMap,
-        incompleteChunks: context.incompleteChunks,
-        prev: previousTreeState,
-        history,
-      };
-      break;
-    default:
-      assertNever(operation);
-  }
+  // Note: explicit literal with the same fields for all tree kinds (keeps a single object shape)
+  const tree: UncheckedIndexedTree = {
+    kind: operation.kind,
+    operation,
+    result,
+    rootNodeKey,
+    nodes: context.nodes,
+    typeMap: context.typeMap,
+    dataMap: context.dataMap,
+    incompleteChunks: context.incompleteChunks,
+    prev: previousTreeState,
+    history:
+      previousTreeState?.history ?? new CircularBuffer(operation.historySize),
+  };
+  assert(isIndexedTree(tree));
   // Every composite occurrence is counted, but dataMap keeps only unique sources.
   // This detects sharing without an additional map lookup or allocation per chunk.
   if (context.indexedSources === dataMap.size) {
