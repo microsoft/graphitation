@@ -23,8 +23,8 @@ import type { AnyIndexedTree, ForestEnv } from "./types";
 import * as Difference from "../diff/difference";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import { updateTree } from "./updateTree";
+import { createTreeParentLocator } from "./parentLocator";
 import {
-  createTreeParentLocator,
   findClosestNode,
   isParentObjectRef,
   isRootRef,

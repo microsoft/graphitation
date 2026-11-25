@@ -16,7 +16,6 @@ import type {
 import {
   createParentLocator,
   createSourceObject,
-  createTreeParentLocator,
   findClosestNode,
   getDataPathForDebugging,
   getGraphValueReference,
@@ -36,6 +35,7 @@ import type {
 } from "../types";
 import { indexOperationFragmentTree, indexTree } from "../indexTree";
 import { updateTree } from "../updateTree";
+import { createTreeParentLocator } from "../parentLocator";
 import { transformTree } from "../transformTree";
 import { diffTree } from "../../diff/diffTree";
 import {

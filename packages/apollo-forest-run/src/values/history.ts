@@ -13,7 +13,8 @@ import type {
   NodeDifferenceMap,
   ValueDifference,
 } from "../diff/types";
-import { createTreeParentLocator, getDataPathForDebugging } from "./traverse";
+import { getDataPathForDebugging } from "./traverse";
+import { createTreeParentLocator } from "../forest/parentLocator";
 import {
   CompositeListChunk,
   MissingFieldsSerialized,

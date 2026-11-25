@@ -33,7 +33,6 @@ import {
 } from "../diff/difference";
 import {
   createDraft,
-  createTreeParentLocator,
   getDataPathForDebugging,
   getEmbeddedChunkPath,
   hydrateDraft,
@@ -46,6 +45,7 @@ import {
   TraverseEnv,
 } from "../values";
 import { updateObject } from "./updateObject";
+import { createTreeParentLocator } from "./parentLocator";
 import { createUpdateLogger } from "../telemetry/updateStats/updateLogger";
 
 type ComplexValue = SourceObject | NestedList<SourceObject>;

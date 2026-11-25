@@ -33,6 +33,7 @@ import { isReference, makeReference } from "@apollo/client";
 import { maybeDeepFreeze } from "@apollo/client/utilities";
 import { equal } from "@wry/equality";
 import * as Value from "../values";
+import { createTreeParentLocator } from "../forest/parentLocator";
 import * as Difference from "../diff/difference";
 import { getNodeChunks, getObjectChunks } from "./draftHelpers";
 import {
@@ -337,7 +338,7 @@ function deleteNode(layer: DataForest | OptimisticLayer, nodeKey: string) {
       continue;
     }
     const pathEnv: Value.TraverseEnv = {
-      findParent: Value.createTreeParentLocator(tree),
+      findParent: createTreeParentLocator(tree),
     };
     for (const chunk of chunks) {
       const chunkRef = pathEnv.findParent(chunk);
@@ -412,7 +413,7 @@ function deletedNodeFields(
     }
     const operation = tree.operation;
     const pathEnv: Value.TraverseEnv = {
-      findParent: Value.createTreeParentLocator(tree),
+      findParent: createTreeParentLocator(tree),
     };
     const deleted = deleteTreeNodeFields(pathEnv, tree, nodeKey, deletedFields);
 
@@ -424,12 +425,12 @@ function deletedNodeFields(
 
     if (readResult) {
       const outputTree = readResult.outputTree;
-      pathEnv.findParent = Value.createTreeParentLocator(outputTree);
+      pathEnv.findParent = createTreeParentLocator(outputTree);
       deleteTreeNodeFields(pathEnv, outputTree, nodeKey, deletedFields);
     }
     if (optimisticReadResult) {
       const outputTree = optimisticReadResult.outputTree;
-      pathEnv.findParent = Value.createTreeParentLocator(outputTree);
+      pathEnv.findParent = createTreeParentLocator(outputTree);
       deleteTreeNodeFields(pathEnv, outputTree, nodeKey, deletedFields);
     }
   }

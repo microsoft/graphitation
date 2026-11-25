@@ -23,11 +23,11 @@ import {
   isObjectValue,
   isRootRef,
   TraverseEnv,
-  createTreeParentLocator,
   isNodeValue,
   isCompositeListValue,
   isParentObjectRef,
 } from "../values";
+import { createTreeParentLocator } from "../forest/parentLocator";
 import { applyReadPolicies } from "./policies";
 import { indexTree } from "../forest/indexTree";
 import { createChunkMatcher, createChunkProvider } from "./draftHelpers";

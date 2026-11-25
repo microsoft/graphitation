@@ -29,12 +29,12 @@ import { OperationId } from "../descriptor/types";
 import { resolveOperation } from "../descriptor/operation";
 import { AnyIndexedTree, IndexedForest, IndexedTree } from "../forest/types";
 import {
-  createTreeParentLocator,
   getEmbeddedChunkPath,
   getGraphValueReference,
   retrieveEmbeddedValue,
 } from "../values/traverse";
 import { isNodeValue, isObjectValue } from "../values/predicates";
+import { createTreeParentLocator } from "../forest/parentLocator";
 
 type MissingFieldsError = {
   kind: "MissingFields";
