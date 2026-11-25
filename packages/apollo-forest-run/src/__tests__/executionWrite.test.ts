@@ -122,8 +122,8 @@ describe("write with options.execution", () => {
       const before = cache.extract();
 
       cache.batch({
-        update: (c) => {
-          const ref = (c as ForestRun).write({
+        update: () => {
+          const ref = cache.write({
             query,
             execution: subsequentResults.latest,
           });
