@@ -12,12 +12,13 @@ import { resolveListItemChunk } from "../values/resolve";
 /**
  * Restores tree-shaped composite data without changing caller-owned objects.
  * Unlike a graph-preserving deep clone, every repeated occurrence gets its own copy.
+ * Pass the same seen set to repair occurrences shared by multiple roots.
  */
 export function cloneSharedReferences(
   env: ForestEnv,
   root: ObjectChunk,
+  seen = new Set<SourceObject | SourceCompositeList>(),
 ): { data: SourceObject; missingFields: MissingFieldsMap } {
-  const seen = new Set<SourceObject | SourceCompositeList>();
   const missingFields: MissingFieldsMap = new Map();
 
   function cloneObject(chunk: ObjectChunk): SourceObject {

@@ -173,9 +173,7 @@ function updateOperationFragment(
     roots,
     context.missingFields,
   );
-  if (env.apolloCompat_keepOrphanNodes) {
-    apolloBackwardsCompatibility_saveOrphanNodes(base, updatedTree);
-  }
+  // Note: no ApolloCompat orphan nodes for operation fragments (orphans are kept for stored trees only)
   return createUpdateTreeResult(context, updatedTree);
 }
 
@@ -464,8 +462,8 @@ function createSourceCopiesUpToRoot(
 }
 
 function apolloBackwardsCompatibility_saveOrphanNodes(
-  current: IndexedTree | IndexedOperationFragment,
-  next: IndexedTree | IndexedOperationFragment,
+  current: IndexedTree,
+  next: IndexedTree,
 ) {
   const currentNodes = current.nodes;
   const nextNodes = next.nodes;

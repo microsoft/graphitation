@@ -214,9 +214,11 @@ export function indexOperationFragment(
   if (context.indexedSources === dataMap.size) {
     return tree;
   }
+  // Sources may also be shared by different roots (e.g. returned by merge policies for multiple objects)
+  const seen = new Set<SourceObject | SourceCompositeList>();
   let missingFields: MissingFieldsMap | undefined;
   const repairedRoots = roots.map((root, i) => {
-    const repaired = cloneSharedReferences(env, rootChunks[i]);
+    const repaired = cloneSharedReferences(env, rootChunks[i], seen);
     if (repaired.missingFields?.size) {
       missingFields ??= new Map();
       for (const [source, fields] of repaired.missingFields) {
@@ -227,7 +229,6 @@ export function indexOperationFragment(
       ? root
       : { data: repaired.data, target: root.target };
   });
-  // Note: sources shared by different roots are not repaired
   if (repairedRoots.every((root, i) => root === roots[i])) {
     return tree;
   }
