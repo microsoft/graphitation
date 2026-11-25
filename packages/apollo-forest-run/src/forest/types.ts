@@ -100,21 +100,21 @@ export type DetachedFragmentTree = {
 export type IndexedTree = OperationTree | DetachedFragmentTree;
 
 /**
- * Transient tree of an operation fragment (e.g. a deferred fragment) with multiple roots: one root per object
- * with this fragment (e.g. all items of a list). Never stored in the forest, so it has no previous states and history.
+ * Indexed data of an operation fragment (e.g. a deferred fragment) with multiple roots: one root per object
+ * with this fragment (e.g. all items of a list). Transient: never stored in the forest, so it has no previous states and history.
  *
  * Each root takes the place of its target object in the stored tree: parents of roots are resolved in the stored
  * tree (see `createOperationFragmentParentLocator`). So a root embedded into a node of the stored tree is a regular embedded
  * object (key `false`): its differences are differences of that node (along the path from the node to the root).
  */
-export type OperationFragmentTree = {
+export type IndexedOperationFragment = {
   readonly kind: "OperationFragment";
   operation: OperationFragmentDescriptor;
   roots: OperationFragmentRoot[];
   nodes: NodeMap;
   typeMap: TypeMap;
 
-  // Inverse map from data to chunks (only for chunks of this tree)
+  // Inverse map from data to chunks (only for chunks of this fragment)
   dataMap: DataMap;
 
   // Error states
@@ -131,9 +131,6 @@ export type OperationFragmentRoot = {
   data: SourceObject;
   target: ObjectChunk; // Chunk of the same object in the stored tree
 };
-
-// Any tree, including transient trees
-export type AnyIndexedTree = IndexedTree | OperationFragmentTree;
 
 // Same fields as IndexedTree, but tree kind and operation kind are not correlated (yet)
 export type UncheckedIndexedTree = Omit<IndexedTree, "kind" | "operation"> & {
@@ -271,7 +268,7 @@ export type UpdateTreeContext = {
 };
 
 export type UpdateTreeResult = {
-  updatedTree: AnyIndexedTree;
+  updatedTree: IndexedTree | IndexedOperationFragment;
   changes: ChangedChunksMap;
   changedNodes: Set<NodeKey>; // Directly changed nodes (subset of NodeDifferenceMap keys)
   affectedNodes: Set<NodeKey>; // Parent nodes updated due to a change in a nested node (if node is both - directly updated and affected by another node update, it will be in both: changedNodes and affectedNodes)

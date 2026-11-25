@@ -15,15 +15,15 @@ import type {
 } from "../values/types";
 import type { NodeDifferenceMap } from "../diff/types";
 import type {
-  AnyIndexedTree,
   Draft,
   ForestEnv,
-  OperationFragmentTree,
+  IndexedOperationFragment,
+  IndexedTree,
   UpdateTreeContext,
   UpdateTreeResult,
 } from "./types";
 import { assert } from "../jsutils/assert";
-import { indexOperationFragmentTree, indexTree } from "./indexTree";
+import { indexOperationFragment, indexTree } from "./indexTree";
 import { resolveOperation } from "../descriptor/operation";
 import { isDirty, isObjectDifference } from "../diff/difference";
 import {
@@ -50,12 +50,12 @@ export { NodeDifferenceMap }; // FIXME
 
 export function updateTree(
   env: ForestEnv,
-  base: AnyIndexedTree,
+  base: IndexedTree | IndexedOperationFragment,
   differenceMap: NodeDifferenceMap,
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
 ): UpdateTreeResult {
   const baseOperation = resolveOperation(base.operation);
-  // Note: operation fragment trees may have any number of roots
+  // Note: indexed operation fragments may have any number of roots
   const rootChunks =
     base.kind === "OperationFragment"
       ? getOperationFragmentRoots(base)
@@ -205,14 +205,14 @@ export function updateTree(
       env.keyMap?.set(draft, key);
     }
   }
-  let updatedTree: AnyIndexedTree;
+  let updatedTree: IndexedTree | IndexedOperationFragment;
   if (base.kind === "OperationFragment") {
     const roots = base.roots.map((root) => {
       const draft = drafts.get(root.data);
       assert(draft === undefined || isSourceObject(draft));
       return draft ? { data: draft, target: root.target } : root;
     });
-    updatedTree = indexOperationFragmentTree(
+    updatedTree = indexOperationFragment(
       env,
       base.operation,
       base.findStoredParent,
@@ -244,7 +244,7 @@ export function updateTree(
 }
 
 function resolveAffectedChunks(
-  base: AnyIndexedTree,
+  base: IndexedTree | IndexedOperationFragment,
   differenceMap: NodeDifferenceMap,
 ): ObjectChunk[] {
   const affectedChunks: ObjectChunk[] = [];
@@ -260,7 +260,9 @@ function resolveAffectedChunks(
   return affectedChunks;
 }
 
-function getOperationFragmentRoots(tree: OperationFragmentTree): ObjectChunk[] {
+function getOperationFragmentRoots(
+  tree: IndexedOperationFragment,
+): ObjectChunk[] {
   return tree.roots.map(({ data }) => {
     const rootRef = tree.dataMap.get(data);
     assert(rootRef && isObjectValue(rootRef.value));
@@ -284,7 +286,7 @@ function debugPathClause(
 
 function completeObject(
   env: ForestEnv,
-  base: AnyIndexedTree,
+  base: IndexedTree | IndexedOperationFragment,
   getNodeChunks: ((key: NodeKey) => Iterable<NodeChunk>) | undefined,
   object: ObjectValue,
   possibleSelections: PossibleSelections,
@@ -343,7 +345,7 @@ function completeObject(
 
 function createSourceCopiesUpToRoot(
   context: UpdateTreeContext,
-  tree: AnyIndexedTree,
+  tree: IndexedTree | IndexedOperationFragment,
   from: CompositeValueChunk,
   isRootCall = true,
   isIndirectlyAffected = false,
@@ -401,8 +403,8 @@ function createSourceCopiesUpToRoot(
 }
 
 function apolloBackwardsCompatibility_saveOrphanNodes(
-  current: AnyIndexedTree,
-  next: AnyIndexedTree,
+  current: IndexedTree | IndexedOperationFragment,
+  next: IndexedTree | IndexedOperationFragment,
 ) {
   const currentNodes = current.nodes;
   const nextNodes = next.nodes;

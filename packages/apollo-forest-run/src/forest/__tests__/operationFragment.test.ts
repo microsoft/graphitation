@@ -31,9 +31,9 @@ import type {
   ForestEnv,
   IndexedTree,
   OperationFragmentRoot,
-  OperationFragmentTree,
+  IndexedOperationFragment,
 } from "../types";
-import { indexOperationFragmentTree, indexTree } from "../indexTree";
+import { indexOperationFragment, indexTree } from "../indexTree";
 import { updateTree } from "../updateTree";
 import { isStoredTree } from "../predicates";
 import {
@@ -51,7 +51,7 @@ const env: ForestEnv = {
     obj.__typename && obj.id ? `${obj.__typename}:${obj.id}` : false,
 };
 
-describe("OperationFragmentTree with embedded roots", () => {
+describe("IndexedOperationFragment with embedded roots", () => {
   const query = `
     query Embedded {
       user(id: "1") {
@@ -94,7 +94,7 @@ describe("OperationFragmentTree with embedded roots", () => {
     );
     // Deferred payloads for items 0 and 2 (one tree for all objects with the fragment)
     const index = (data: Record<number, SourceObject>) =>
-      indexOperationFragmentTree(
+      indexOperationFragment(
         env,
         fragment,
         createTreeParentLocator(stored),
@@ -225,7 +225,7 @@ describe("OperationFragmentTree with embedded roots", () => {
       },
     });
 
-    // ... and to the fragment tree (unwrapped for each root)
+    // ... and to the indexed fragment (unwrapped for each root)
     const updated = updateTree(env, base, nodeDifference).updatedTree;
     assert(updated.kind === "OperationFragment");
     expect(updated.roots.map((root) => root.data)).toEqual(
@@ -272,7 +272,7 @@ describe("OperationFragmentTree with embedded roots", () => {
   });
 });
 
-describe("OperationFragmentTree with node roots", () => {
+describe("IndexedOperationFragment with node roots", () => {
   const query = `
     {
       users {
@@ -297,7 +297,7 @@ describe("OperationFragmentTree with node roots", () => {
     addForestTree(forest, stored);
     const targets = ["1", "2", "3"].map((id) => getNode(stored, `User:${id}`));
     const fragment = getFragment(operation, targets[0]);
-    const tree = indexOperationFragmentTree(
+    const tree = indexOperationFragment(
       env,
       fragment,
       createTreeParentLocator(stored),
@@ -386,7 +386,7 @@ function getFragment(
   );
 }
 
-function getRoots(tree: OperationFragmentTree): ObjectChunk[] {
+function getRoots(tree: IndexedOperationFragment): ObjectChunk[] {
   return tree.roots.map(({ data }: OperationFragmentRoot) => {
     const rootRef = tree.dataMap.get(data);
     assert(rootRef && isObjectValue(rootRef.value));

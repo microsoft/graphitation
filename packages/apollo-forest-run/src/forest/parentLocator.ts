@@ -4,7 +4,11 @@ import type {
   ObjectChunk,
   ParentLocator,
 } from "../values/types";
-import type { AnyIndexedTree, OperationFragmentRoot } from "./types";
+import type {
+  IndexedOperationFragment,
+  IndexedTree,
+  OperationFragmentRoot,
+} from "./types";
 import {
   createParentLocator,
   isObjectValue,
@@ -14,7 +18,9 @@ import {
 import { assert } from "../jsutils/assert";
 
 // Parent locator of any tree kind
-export function createTreeParentLocator(tree: AnyIndexedTree): ParentLocator {
+export function createTreeParentLocator(
+  tree: IndexedTree | IndexedOperationFragment,
+): ParentLocator {
   return tree.kind === "OperationFragment"
     ? createOperationFragmentParentLocator(
         tree.dataMap,
@@ -25,7 +31,7 @@ export function createTreeParentLocator(tree: AnyIndexedTree): ParentLocator {
 }
 
 /**
- * Chunks of an operation fragment tree are resolved in the tree itself, except for roots: each root takes the place
+ * Chunks of an indexed operation fragment are resolved in the fragment itself, except for roots: each root takes the place
  * of its target object in the stored tree, so ascending from a root continues in the stored tree.
  */
 export function createOperationFragmentParentLocator(

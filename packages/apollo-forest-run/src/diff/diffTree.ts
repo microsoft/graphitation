@@ -13,7 +13,11 @@ import { diffObject } from "./diffObject";
 import { NodeKey, NodeMap, ObjectValue } from "../values/types";
 import { assert, assertNever } from "../jsutils/assert";
 import { OperationId } from "../descriptor/types";
-import { AnyIndexedTree, IndexedForest, IndexedTree } from "../forest/types";
+import {
+  IndexedForest,
+  IndexedOperationFragment,
+  IndexedTree,
+} from "../forest/types";
 import { resolveOperation } from "../descriptor/operation";
 import { diffEmbeddedRoots } from "./diffEmbedded";
 
@@ -62,7 +66,7 @@ const nodeDiffState = {
 
 export function diffTree(
   forest: IndexedForest,
-  model: AnyIndexedTree,
+  model: IndexedTree | IndexedOperationFragment,
   env: DiffEnv,
 ): GraphDifference {
   const context: Context = { env, forest: forest };

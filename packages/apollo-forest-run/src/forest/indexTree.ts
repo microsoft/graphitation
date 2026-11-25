@@ -29,7 +29,7 @@ import type {
   ForestEnv,
   IndexedTree,
   OperationFragmentRoot,
-  OperationFragmentTree,
+  IndexedOperationFragment,
   UncheckedIndexedTree,
 } from "./types";
 import { isIndexedTree } from "./predicates";
@@ -159,13 +159,13 @@ export function indexTree(
  * Indexes data of an operation fragment (e.g. a deferred fragment) in the context of the actual operation.
  * Each root is indexed with the key and the type of its target chunk in the stored tree.
  */
-export function indexOperationFragmentTree(
+export function indexOperationFragment(
   env: ForestEnv,
   fragment: OperationFragmentDescriptor,
   findStoredParent: ParentLocator,
   roots: OperationFragmentRoot[],
   knownMissingFields?: MissingFieldsMap,
-): OperationFragmentTree {
+): IndexedOperationFragment {
   const dataMap = new Map();
   const context: Context = {
     env: env,
@@ -201,7 +201,7 @@ export function indexOperationFragmentTree(
     );
     rootChunks.push(rootRef.value);
   }
-  const tree: OperationFragmentTree = {
+  const tree: IndexedOperationFragment = {
     kind: "OperationFragment",
     operation: fragment,
     roots,
@@ -231,7 +231,7 @@ export function indexOperationFragmentTree(
   if (repairedRoots.every((root, i) => root === roots[i])) {
     return tree;
   }
-  return indexOperationFragmentTree(
+  return indexOperationFragment(
     env,
     fragment,
     findStoredParent,

@@ -17,7 +17,7 @@ import type {
   ObjectDifference,
   ValueDifference,
 } from "../diff/types";
-import type { AnyIndexedTree, ForestEnv } from "./types";
+import type { ForestEnv, IndexedOperationFragment, IndexedTree } from "./types";
 import * as Difference from "../diff/difference";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import { updateTree } from "./updateTree";
@@ -66,7 +66,7 @@ const enum DirtyState {
 type TreeState = {
   dirty: DirtyState;
   nodeDifference: NodeDifferenceMap;
-  intermediateTree: AnyIndexedTree;
+  intermediateTree: IndexedTree | IndexedOperationFragment;
   findParent: ParentLocator;
 };
 
@@ -94,11 +94,11 @@ const EMPTY_ARRAY = Object.freeze([]);
  */
 export function transformTree(
   env: ForestEnv,
-  tree: AnyIndexedTree,
+  tree: IndexedTree | IndexedOperationFragment,
   direction: "ASCEND" | "DESCEND",
   chunkFilter: ChunkFilter,
   transformer: Transformer,
-): AnyIndexedTree {
+): IndexedTree | IndexedOperationFragment {
   const treeState: TreeState = {
     dirty: DirtyState.Clean,
     nodeDifference: new Map(),
@@ -248,7 +248,7 @@ function updateTreeStructure(env: ForestEnv, state: TreeState) {
 }
 
 function collectChunks(
-  tree: AnyIndexedTree,
+  tree: IndexedTree | IndexedOperationFragment,
   direction: "ASCEND" | "DESCEND",
   filter: ChunkFilter,
 ) {

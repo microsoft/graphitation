@@ -17,7 +17,7 @@ import type {
 import type {
   IndexedForest,
   IndexedTree,
-  OperationFragmentTree,
+  IndexedOperationFragment,
 } from "../forest/types";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import { assert } from "../jsutils/assert";
@@ -57,12 +57,12 @@ const rootDiffState: ObjectDiffState = {
 };
 
 /**
- * Diffs roots of an operation fragment tree embedded into nodes outside of the tree (see createOperationFragmentParentLocator).
+ * Diffs roots of an indexed operation fragment embedded into nodes of the stored tree (see createOperationFragmentParentLocator).
  * Differences are recorded as differences of the closest nodes of roots (along the path to each root).
  */
 export function diffEmbeddedRoots(
   forest: IndexedForest,
-  model: OperationFragmentTree,
+  model: IndexedOperationFragment,
   nodeDifference: NodeDifferenceMap,
   env: DiffEnv,
   onErrors: (root: ObjectChunk, errors: DiffError[]) => void,

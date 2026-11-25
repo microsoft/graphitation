@@ -180,7 +180,7 @@ export function descendToChunk(
  * Visits chunks on the path from the node down to the chunk.
  *
  * Unlike `descendToChunk`, visits chunks of the path itself (not chunks resolved by the path from the node):
- * the node may belong to another tree (e.g. a stored tree containing the root of an operation fragment tree).
+ * the node may belong to another tree (e.g. a stored tree containing a root of an indexed operation fragment).
  */
 export function descendFromNode(
   env: TraverseEnv,
