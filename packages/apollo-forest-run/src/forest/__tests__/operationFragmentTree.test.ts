@@ -38,7 +38,8 @@ import { updateTree } from "../updateTree";
 import { createTreeParentLocator } from "../parentLocator";
 import { transformTree } from "../transformTree";
 import { diffTree } from "../../diff/diffTree";
-import { createReplacement, getChunkDifference } from "../../diff/difference";
+import { createReplacement } from "../../diff/difference";
+import { getEmbeddedChunkDifference } from "../../diff/embedded";
 import { assert } from "../../jsutils/assert";
 
 const env: ForestEnv = {
@@ -189,7 +190,7 @@ describe("OperationFragmentTree with embedded roots", () => {
     const list = getField(getStoredUser(stored), "items");
     assert(isCompositeListValue(list));
     const nodeDiff = nodeDifference.get("User:1");
-    const listDiff = getChunkDifference(
+    const listDiff = getEmbeddedChunkDifference(
       nodeDifference,
       createTreeParentLocator(stored),
       list,

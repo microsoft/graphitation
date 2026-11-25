@@ -7,13 +7,11 @@ import {
   NodeDifferenceMap,
   ObjectDiffState,
 } from "./types";
+import { isComplete, isDirty, isObjectDifference } from "./difference";
 import {
-  addChunkDifference,
-  getChunkDifference,
-  isComplete,
-  isDirty,
-  isObjectDifference,
-} from "./difference";
+  addEmbeddedChunkDifference,
+  getEmbeddedChunkDifference,
+} from "./embedded";
 import { createObjectAggregate } from "../values/create";
 import { diffObject } from "./diffObject";
 import {
@@ -127,7 +125,7 @@ function diffEmbeddedRoot(
   const env = { findParent };
   const node = findClosestNode(root, findParent);
   const ref = getGraphValueReference(env, root);
-  const existing = getChunkDifference(nodeDifference, findParent, root);
+  const existing = getEmbeddedChunkDifference(nodeDifference, findParent, root);
   assert(!existing || isObjectDifference(existing));
 
   // Note: continues the difference of the same object within the node, when the node is in the tree too
@@ -156,7 +154,7 @@ function diffEmbeddedRoot(
   }
   const difference = state.difference;
   if (difference && isDirty(difference)) {
-    const added = addChunkDifference(
+    const added = addEmbeddedChunkDifference(
       nodeDifference,
       findParent,
       root,

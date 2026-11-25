@@ -26,11 +26,7 @@ import { assert } from "../jsutils/assert";
 import { indexOperationFragmentTree, indexTree } from "./indexTree";
 import { isSameTreeKind } from "./predicates";
 import { resolveOperation } from "../descriptor/operation";
-import {
-  getChunkDifference,
-  isDirty,
-  isObjectDifference,
-} from "../diff/difference";
+import { isDirty, isObjectDifference } from "../diff/difference";
 import {
   createDraft,
   getDataPathForDebugging,
@@ -46,6 +42,7 @@ import {
 } from "../values";
 import { updateObject } from "./updateObject";
 import { createTreeParentLocator } from "./parentLocator";
+import { getEmbeddedChunkDifference } from "../diff/embedded";
 import { createUpdateLogger } from "../telemetry/updateStats/updateLogger";
 
 type ComplexValue = SourceObject | NestedList<SourceObject>;
@@ -166,7 +163,7 @@ export function updateTree<TTree extends AnyIndexedTree>(
     // The root is embedded into a node outside of the tree (see createTreeParentLocator),
     //   so its difference is a part of that node difference.
     //   Note: roots are updated last, as the shallowest chunks of the tree
-    const difference = getChunkDifference(
+    const difference = getEmbeddedChunkDifference(
       differenceMap,
       context.findParent,
       rootChunk,
