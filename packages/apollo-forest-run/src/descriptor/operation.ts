@@ -3,6 +3,7 @@ import { valueFromASTUntyped } from "graphql";
 import type {
   DetachedFragmentDescriptor,
   DocumentDescriptor,
+  FragmentName,
   OperationDescriptor,
   OperationFragmentDescriptor,
   PossibleSelections,
@@ -173,22 +174,43 @@ function createDescriptor(
 }
 
 /**
- * Describes a sub-selection of the operation, starting from objects with the given `possibleSelections`
- * (e.g. objects with a deferred fragment).
+ * Describes a fragment of the operation (e.g. a deferred fragment), written to objects with the given
+ * `possibleSelections` (selection of the object within the operation).
  *
- * The descriptor is not tied to a specific object: all objects with the same selection may share it.
+ * `fragmentName` is set for named fragments (`...Foo`), `typeCondition` - for inline fragments with a type
+ * condition (`... on Foo`). Both are undefined for inline fragments without a type condition.
+ *
+ * The descriptor is not tied to a specific object: all objects with the same fragment may share it.
  */
 export function describeOperationFragment(
   env: OperationEnv,
   operation: OperationDescriptor,
   possibleSelections: PossibleSelections,
+  fragmentName?: FragmentName,
+  typeCondition?: TypeName,
 ): OperationFragmentDescriptor {
   assert(operation.env === env);
+  assert(!fragmentName || !typeCondition);
   return {
     kind: "OperationFragment",
     operation,
     possibleSelections,
+    fragmentName,
+    typeCondition,
   };
+}
+
+// e.g. `query Foo ...Bar`, `query Foo ... on Bar` or just `query Foo` (for inline fragments without type condition)
+export function getOperationFragmentDebugName({
+  operation,
+  fragmentName,
+  typeCondition,
+}: OperationFragmentDescriptor): string {
+  return fragmentName
+    ? `${operation.debugName} ...${fragmentName}`
+    : typeCondition
+    ? `${operation.debugName} ... on ${typeCondition}`
+    : operation.debugName;
 }
 
 // Operation which owns the selection of the descriptor
