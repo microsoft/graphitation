@@ -23,7 +23,8 @@ import type {
   UpdateTreeResult,
 } from "./types";
 import { assert } from "../jsutils/assert";
-import { isStoredTree, reindexTree } from "./indexTree";
+import { reindexTree } from "./indexTree";
+import { isStoredTree } from "./predicates";
 import { resolveOperation } from "../descriptor/operation";
 import { isDirty } from "../diff/difference";
 import {

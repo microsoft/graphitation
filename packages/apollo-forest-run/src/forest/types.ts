@@ -99,6 +99,12 @@ export type DetachedFragmentTree = {
 // Any tree which can be stored in the forest
 export type IndexedTree = OperationTree | DetachedFragmentTree;
 
+// Same fields as IndexedTree, but tree kind and operation kind are not correlated (yet)
+export type UncheckedIndexedTree = Omit<IndexedTree, "kind" | "operation"> & {
+  kind: IndexedTree["kind"];
+  operation: OperationDescriptor;
+};
+
 // Transient tree of an operation sub-selection (e.g. a deferred fragment). Never stored in the forest.
 export type OperationFragmentTree = {
   readonly kind: "OperationFragment";
