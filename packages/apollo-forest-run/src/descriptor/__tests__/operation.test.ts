@@ -1,7 +1,11 @@
 import { parse, OperationDefinitionNode } from "graphql";
 import { describeDocument } from "../document";
 import { describeResultTree } from "../possibleSelection";
-import { describeOperation, applyDefaultValues } from "../operation";
+import {
+  describeOperation,
+  describeDetachedFragment,
+  applyDefaultValues,
+} from "../operation";
 import type { VariableDefinitionNode } from "graphql";
 import type { OperationEnv } from "../types";
 
@@ -659,5 +663,65 @@ describe("@cache(covers)", () => {
     );
     expect(op.keyVariables).toEqual(["id"]);
     expect(op.covers).toEqual(["Detail"]);
+  });
+});
+
+describe("optimizeDescriptorShape", () => {
+  const document = parse(`
+    query ($id: ID!, $first: Int = 10) @cache(keyVars: ["id"]) {
+      ...Foo
+    }
+    fragment Foo on Foo {
+      id
+      ... @defer {
+        items(first: $first)
+      }
+    }
+  `);
+  const docDescriptor = describeDocument(document);
+  const resultTree = describeResultTree(docDescriptor);
+  const variables = { id: "1" };
+
+  const describeAll = (optimizeDescriptorShape: boolean) => {
+    let id = 0;
+    const env: OperationEnv = {
+      optimizeDescriptorShape,
+      genId: () => ++id,
+      historyConfig: { overwrittenHistorySize: 3 },
+    };
+    return [
+      describeOperation(env, docDescriptor, resultTree, variables),
+      describeDetachedFragment(
+        env,
+        docDescriptor,
+        resultTree,
+        variables,
+        undefined,
+        undefined,
+        "Foo",
+        "Foo:1",
+      ),
+    ];
+  };
+
+  it("produces equivalent descriptors in both modes", () => {
+    const optimized = describeAll(true);
+    const legacy = describeAll(false);
+
+    for (let i = 0; i < optimized.length; i++) {
+      const { env: _optimizedEnv, ...optimizedRest } = optimized[i];
+      const { env: _legacyEnv, ...legacyRest } = legacy[i];
+      expect(legacyRest).toEqual({
+        ...optimizedRest,
+        fieldsWithArgs: resultTree.fieldsWithArgs,
+      });
+      expect(Object.keys(optimized[i])).not.toContain("fieldsWithArgs");
+      expect(optimized[i].hasDeferSites).toBe(true);
+      expect(legacy[i].hasDeferSites).toBe(true);
+    }
+    expect(optimized.map((op) => op.kind)).toEqual([
+      "Operation",
+      "DetachedFragment",
+    ]);
   });
 });

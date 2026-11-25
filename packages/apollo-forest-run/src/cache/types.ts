@@ -207,6 +207,13 @@ export type ForestRunAdditionalConfig<
    * Avoids re-hydrating pending partial watches on every sibling response for a shared node.
    */
   optimizeIncompleteChunkInvalidation?: boolean;
+  /**
+   * Build operation descriptors from an explicit object literal (instead of spreading document and result tree
+   * descriptors), which keeps all descriptor properties in-object with a single stable shape.
+   *
+   * Enabled by default.
+   */
+  optimizeDescriptorShape?: boolean;
   cleanupNonCacheableOperations?: boolean;
   reconcileDivergentChunks?: boolean;
   /**
@@ -301,6 +308,13 @@ export type CacheEnv<TPartitions extends HistoryPartitions = any> = {
    * Disabled by default.
    */
   optimizeIncompleteChunkInvalidation: boolean;
+  /**
+   * When enabled, operation descriptors are created from an explicit object literal (all properties in-object,
+   * single stable shape for all descriptor kinds). When disabled, legacy spread-based construction is used.
+   *
+   * Enabled by default.
+   */
+  optimizeDescriptorShape: boolean;
   /**
    * When enabled, operation descriptors of non-cacheable operations (i.e. mutations without
    * the `@cache` directive) are released as soon as nothing references them anymore.
