@@ -50,7 +50,7 @@ export function createCacheEnvironment(config?: CacheConfig): CacheEnv {
     optimizeFragmentReads: config?.optimizeFragmentReads ?? false,
     optimizeIncompleteChunkInvalidation:
       config?.optimizeIncompleteChunkInvalidation ?? false,
-    optimizeDescriptorShape: config?.optimizeDescriptorShape ?? false,
+    optimizeDescriptorShape: config?.optimizeDescriptorShape ?? true,
     cleanupNonCacheableOperations:
       config?.cleanupNonCacheableOperations ?? false,
     reconcileDivergentChunks: config?.reconcileDivergentChunks ?? false,
