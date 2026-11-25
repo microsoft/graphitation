@@ -41,7 +41,7 @@ import {
   createTypedObjectChunk,
   createParentLocator,
   findClosestNode,
-  getDataPathForDebugging,
+  getDataPath,
   isCompositeListValue,
   isParentListRef,
   isParentObjectRef,
@@ -741,6 +741,6 @@ function describePath(
   list: CompositeListChunk,
   from?: ObjectChunk | CompositeListChunk | null,
 ): string {
-  const path = getDataPathForDebugging({ findParent }, list, from ?? undefined);
+  const path = getDataPath({ findParent }, list, from ?? undefined);
   return from ? path.join(".") : `data${path.map((s) => `.${s}`).join("")}`;
 }

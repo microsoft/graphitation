@@ -40,8 +40,9 @@ import { assert } from "../jsutils/assert";
 import { resolveOperationDescriptor } from "./descriptor";
 import { getActiveForest, getExistingResult, shouldCache } from "./store";
 import {
-  ascendFromChunk,
   createParentLocator,
+  findClosestNode,
+  getDataPath,
   isCompositeListValue,
   isNodeValue,
   isObjectValue,
@@ -226,7 +227,7 @@ function collectDeferredResults(
     }
     entries.push({
       placeholder,
-      path: getResponsePath(pathEnv, target),
+      path: getDataPath(pathEnv, target),
       subPath: result.subPath,
       data: result.data,
     });
@@ -523,9 +524,7 @@ function addPlaceholders(
       mergedChunk && isObjectValue(mergedChunk)
         ? createPlaceholder(findMergedParent, mergedChunk, path)
         : createPlaceholder(findIndexedParent, chunk, path);
-    if (placeholder) {
-      incremental.pending.set(id, placeholder);
-    }
+    incremental.pending.set(id, placeholder);
   }
 }
 
@@ -560,27 +559,14 @@ function createPlaceholder(
   findParent: ParentLocator,
   chunk: ObjectChunk,
   path: ResponsePath,
-): DeferPlaceholder | undefined {
-  const pathFromNode: (FieldInfo | number)[] = [];
-  let current: ObjectChunk | CompositeListChunk = chunk;
-  while (!isNodeValue(current)) {
-    const parentRef = findParent(current);
-    if (isParentObjectRef(parentRef)) {
-      pathFromNode.push(parentRef.field);
-      current = parentRef.parent;
-    } else if (isParentListRef(parentRef)) {
-      pathFromNode.push(parentRef.index);
-      current = parentRef.parent;
-    } else {
-      return undefined;
-    }
-  }
-  pathFromNode.reverse();
+): DeferPlaceholder {
+  const env: TraverseEnv = { findParent };
+  const node = findClosestNode(chunk, findParent);
   return {
     path,
-    nodeKey: current.key,
-    nodeSelections: current.possibleSelections,
-    pathFromNode,
+    nodeKey: node.key,
+    nodeSelections: node.possibleSelections,
+    pathFromNode: getDataPath(env, chunk, node),
   };
 }
 
@@ -590,23 +576,12 @@ function resolvePlaceholder(
   placeholder: DeferPlaceholder,
 ): ObjectChunk | undefined {
   for (const node of tree.nodes.get(placeholder.nodeKey) ?? EMPTY_ARRAY) {
-    if (node.possibleSelections !== placeholder.nodeSelections) {
-      continue;
-    }
-    let value: GraphChunk | undefined = node;
-    for (const step of placeholder.pathFromNode) {
-      value =
-        typeof step === "number"
-          ? resolveListItem(value, step)
-          : isObjectValue(value) && selectsField(value, step)
-          ? resolveObjectField(value, step)
-          : undefined;
-      if (!value) {
-        break;
-      }
-    }
-    if (value && isObjectValue(value)) {
-      return value;
+    const chunk =
+      node.possibleSelections === placeholder.nodeSelections
+        ? resolveResponsePath(node, placeholder.pathFromNode)
+        : undefined;
+    if (chunk) {
+      return chunk;
     }
   }
   return undefined;
@@ -659,21 +634,6 @@ function resolveListItem(
     : undefined;
 }
 
-function selectsField(chunk: ObjectChunk, field: FieldInfo): boolean {
-  return chunk.selection.fields.get(field.name)?.includes(field) ?? false;
-}
-
-function getResponsePath(
-  env: TraverseEnv,
-  chunk: ObjectChunk,
-): (string | number)[] {
-  const path: (string | number)[] = [];
-  ascendFromChunk(env, chunk, (_, __, step) => {
-    path.push(typeof step === "number" ? step : step.dataKey);
-  });
-  return path.reverse();
-}
-
 function isPathPrefix(prefix: ResponsePath, path: ResponsePath): boolean {
   return (
     prefix.length <= path.length &&
@@ -681,6 +641,7 @@ function isPathPrefix(prefix: ResponsePath, path: ResponsePath): boolean {
   );
 }
 
+// Unlike isSourceObject, excludes lists
 function isResultData(value: unknown): value is ResultData {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }

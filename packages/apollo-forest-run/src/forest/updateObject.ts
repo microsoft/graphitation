@@ -103,9 +103,7 @@ function updateObjectValue(
         context.env.logger?.debug(
           base.operation.debugName +
             ` is in inconsistent state at path ` +
-            Value.getDataPathForDebugging(context, base)
-              .concat(fieldName)
-              .join("."),
+            Value.getDataPath(context, base).concat(fieldName).join("."),
         );
         continue;
       }
@@ -391,7 +389,7 @@ function chunkPath(
     return undefined;
   }
   try {
-    return Value.getDataPathForDebugging(env, chunk);
+    return Value.getDataPath(env, chunk);
   } catch {
     return undefined;
   }

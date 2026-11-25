@@ -27,7 +27,7 @@ import { isDirty } from "../diff/difference";
 import {
   createDraft,
   createParentLocator,
-  getDataPathForDebugging,
+  getDataPath,
   hydrateDraft,
   isNodeValue,
   isObjectValue,
@@ -217,7 +217,7 @@ function debugPathClause(
   chunk: ObjectChunk | CompositeListChunk,
 ): string {
   try {
-    const path = getDataPathForDebugging(env, chunk);
+    const path = getDataPath(env, chunk);
     return path.length ? ` at path ${path.join(".")}` : "";
   } catch {
     return "";

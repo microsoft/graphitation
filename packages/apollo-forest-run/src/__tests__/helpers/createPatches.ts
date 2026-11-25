@@ -11,7 +11,7 @@ import {
   isLeafListValue,
   isMissingValue,
   isObjectValue,
-  getDataPathForDebugging,
+  getDataPath,
   resolveFieldValue,
   resolveListItemChunk,
 } from "../../values";
@@ -101,7 +101,7 @@ function createPatchesImpl(
             isCompositeValue(newValue) || isComplexLeafValue(newValue)
               ? newValue.data
               : newValue,
-          basePath: getDataPathForDebugging(env, obj),
+          basePath: getDataPath(env, obj),
           path,
         };
         patches.push(patch);
@@ -143,7 +143,7 @@ function createPatchesImpl(
                 isCompositeValue(newValue) || isLeafListValue(newValue)
                   ? newValue.data
                   : newValue,
-              basePath: getDataPathForDebugging(env, obj),
+              basePath: getDataPath(env, obj),
               path: itemPath,
             };
             patches.push(patch);
@@ -158,7 +158,7 @@ function createPatchesImpl(
           value: fieldDiff.state.layout.map((item) =>
             typeof item === "object" && null !== item ? item?.data : item,
           ),
-          basePath: getDataPathForDebugging(env, obj),
+          basePath: getDataPath(env, obj),
           path,
         });
         // Handle structural changes

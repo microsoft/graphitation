@@ -18,7 +18,6 @@ import type {
   VariableValues,
   DataKey,
   DeferLabel,
-  FieldInfo,
   FormattedError,
   PossibleSelections,
   ResponsePath,
@@ -380,11 +379,9 @@ export type DeferPlaceholder = {
   path: ResponsePath;
   nodeKey: NodeKey;
   nodeSelections: PossibleSelections;
-  pathFromNode: DeferPlaceholderPath;
+  // Response keys and list indexes from the node to the object
+  pathFromNode: ResponsePath;
 };
-
-// Fields and list indexes from the node to the object
-export type DeferPlaceholderPath = ReadonlyArray<FieldInfo | number>;
 
 /**
  * Copies of objects of the stored result with incremental results spliced in -> data keys of delivered fields.

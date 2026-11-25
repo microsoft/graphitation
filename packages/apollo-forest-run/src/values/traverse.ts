@@ -33,7 +33,7 @@ export const createParentLocator =
     return parent;
   };
 
-export function getDataPathForDebugging(
+export function getDataPath(
   env: TraverseEnv,
   chunk: ObjectChunk | CompositeListChunk,
   from?: ObjectChunk | CompositeListChunk,
@@ -42,7 +42,7 @@ export function getDataPathForDebugging(
   if (!parentInfo || Predicates.isRootRef(parentInfo) || chunk === from) {
     return [];
   }
-  const path = getDataPathForDebugging(env, parentInfo.parent, from);
+  const path = getDataPath(env, parentInfo.parent, from);
   if (Predicates.isParentObjectRef(parentInfo)) {
     path.push(parentInfo.field.dataKey);
   } else if (Predicates.isParentListRef(parentInfo)) {
@@ -58,7 +58,7 @@ function embeddedPathClause(env: TraverseEnv, source: NodeValue): string {
     return "";
   }
   try {
-    const path = getDataPathForDebugging(env, source);
+    const path = getDataPath(env, source);
     return path.length ? ` at path ${path.join(".")}` : "";
   } catch {
     return "";
