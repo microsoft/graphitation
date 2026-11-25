@@ -5,6 +5,7 @@ import {
 } from "../../__tests__/helpers/forest";
 import {
   describeOperationFragment,
+  getOperationFragmentDebugName,
   resolveOperation,
 } from "../../descriptor/operation";
 import type {
@@ -55,7 +56,7 @@ const query = `
 `;
 
 describe(describeOperationFragment, () => {
-  it("describes a sub-selection of the operation", () => {
+  it("describes an inline fragment without type condition", () => {
     const operation = createTestOperation(query);
     const selection = getUsersSelection(operation);
     const descriptor = describeOperationFragment(
@@ -67,8 +68,58 @@ describe(describeOperationFragment, () => {
       kind: "OperationFragment",
       operation,
       possibleSelections: selection,
+      fragmentName: undefined,
+      typeCondition: undefined,
     });
+    expect(Object.keys(descriptor)).toEqual([
+      "kind",
+      "operation",
+      "possibleSelections",
+      "fragmentName",
+      "typeCondition",
+    ]);
     expect(resolveOperation(descriptor)).toBe(operation);
+    expect(getOperationFragmentDebugName(descriptor)).toBe(operation.debugName);
+  });
+
+  it("describes an inline fragment with type condition", () => {
+    const operation = createTestOperation(query);
+    const descriptor = describeOperationFragment(
+      operation.env,
+      operation,
+      getUsersSelection(operation),
+      undefined,
+      "User",
+    );
+    expect(descriptor.fragmentName).toBe(undefined);
+    expect(descriptor.typeCondition).toBe("User");
+    expect(getOperationFragmentDebugName(descriptor)).toBe(
+      `${operation.debugName} ... on User`,
+    );
+  });
+
+  it("describes a named fragment", () => {
+    const operation = createTestOperation(`
+      query UsersQuery {
+        users { id ...UserDetails @defer }
+      }
+      fragment UserDetails on User { bio }
+    `);
+    const descriptor = describeOperationFragment(
+      operation.env,
+      operation,
+      getUsersSelection(operation),
+      "UserDetails",
+    );
+    expect(descriptor.fragmentName).toBe("UserDetails");
+    expect(descriptor.typeCondition).toBe(undefined);
+    expect(
+      operation.fragmentMap.get(descriptor.fragmentName ?? "")?.typeCondition
+        .name.value,
+    ).toBe("User");
+    expect(getOperationFragmentDebugName(descriptor)).toBe(
+      `${operation.debugName} ...UserDetails`,
+    );
   });
 
   it("can be shared by all objects with the same selection", () => {

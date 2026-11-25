@@ -148,11 +148,14 @@ export type OperationDescriptor =
  *
  * A descriptor is not tied to a specific object: it may be shared by trees of all objects with this selection
  * (e.g. all list items with a deferred fragment). Per-object data (e.g. root node key) belongs to trees.
+ * Identity (e.g. for memoization) is: operation + possibleSelections + fragmentName / typeCondition.
  */
 export type OperationFragmentDescriptor = {
   readonly kind: "OperationFragment";
   operation: OperationDescriptor;
   possibleSelections: PossibleSelections; // Selection of the root object within the operation
+  fragmentName: FragmentName | undefined; // Named fragment (`...Foo`), see operation.fragmentMap
+  typeCondition: TypeName | undefined; // Type condition of an inline fragment (`... on Foo`)
 };
 
 // Descriptor of any result tree, including transient trees which are never stored
