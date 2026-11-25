@@ -101,9 +101,6 @@ export type DescriptorKind =
   | "DetachedFragment"
   | "OperationFragment";
 
-// Kinds of documents which may own a stored result tree
-export type StoredDescriptorKind = OperationDescriptor["kind"];
-
 type DescriptorBase = {
   id: OperationId;
   name: string | undefined;
