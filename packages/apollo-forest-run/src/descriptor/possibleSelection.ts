@@ -540,10 +540,7 @@ function mergeSelectionsImpl(
     context.mergeMemo.set(mutableTarget, new Set([source]));
   }
   for (const site of source.deferSites ?? EMPTY_ARRAY) {
-    // The same site may be reached via multiple paths (e.g. spreads of the same fragment)
-    if (!mutableTarget.deferSites?.includes(site)) {
-      (mutableTarget.deferSites ??= []).push(site);
-    }
+    (mutableTarget.deferSites ??= []).push(site);
   }
 
   for (const [fieldName, sourceAliases] of source.fields.entries()) {
