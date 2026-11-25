@@ -14,6 +14,7 @@ import { describeDocument } from "../descriptor/document";
 import {
   applyDefaultValues,
   createVariablesKey,
+  describeDetachedFragment,
   describeOperation,
 } from "../descriptor/operation";
 import { addTypenameToDocument } from "../descriptor/addTypenameToDocument";
@@ -77,21 +78,30 @@ export function resolveOperationDescriptor(
       );
       resultTreeDescriptors.set(document, resultTreeDescriptor);
     }
-    let rootTypeName;
     if (isFragmentDocument(document)) {
       const fragment = getFragmentNode(document);
-      rootTypeName = fragment.typeCondition.name.value;
+      match = describeDetachedFragment(
+        env,
+        documentDescriptor,
+        resultTreeDescriptor,
+        variables ?? {},
+        variablesWithDefaultValues,
+        variablesKey,
+        fragment.typeCondition.name.value,
+        rootNodeKey,
+      );
+    } else {
+      match = describeOperation(
+        env,
+        documentDescriptor,
+        resultTreeDescriptor,
+        variables ?? {},
+        variablesWithDefaultValues,
+        variablesKey,
+        undefined,
+        rootNodeKey,
+      );
     }
-    match = describeOperation(
-      env,
-      documentDescriptor,
-      resultTreeDescriptor,
-      variables ?? {},
-      variablesWithDefaultValues,
-      variablesKey,
-      rootTypeName,
-      rootNodeKey,
-    );
     variants.set(cacheKey, match);
   }
   if (
@@ -144,6 +154,12 @@ export function getOriginalDocument(
   return reverseDocumentCache.get(maybeTransformed) ?? maybeTransformed;
 }
 
+/**
+ * Detects Apollo fragment documents (i.e. `query { ...Fragment }` + fragment definitions).
+ *
+ * Descriptors of such documents have the "DetachedFragment" kind, so prefer checking `descriptor.kind`.
+ * This predicate is only needed before the descriptor is resolved (or to resolve it).
+ */
 export function isFragmentDocument(document: DocumentNode) {
   const operationDefinition = document.definitions[0];
   if (operationDefinition.kind !== "OperationDefinition") {

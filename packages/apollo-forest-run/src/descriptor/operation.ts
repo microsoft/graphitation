@@ -1,8 +1,11 @@
 import type { VariableDefinitionNode, OperationDefinitionNode } from "graphql";
 import { valueFromASTUntyped } from "graphql";
 import type {
+  DescriptorKind,
+  DetachedFragmentDescriptor,
   DocumentDescriptor,
   OperationDescriptor,
+  RegularOperationDescriptor,
   ResultTreeDescriptor,
   OperationEnv,
   TypeName,
@@ -39,7 +42,60 @@ export function describeOperation(
   variablesKey?: string,
   rootTypeName?: TypeName,
   rootNodeKey?: string,
-): OperationDescriptor {
+): RegularOperationDescriptor {
+  return createDescriptor(
+    "Operation",
+    env,
+    documentDescriptor,
+    resultTreeDescriptor,
+    variables,
+    variablesWithDefaults,
+    variablesKey,
+    rootTypeName,
+    rootNodeKey,
+  );
+}
+
+/**
+ * Describes Apollo fragment document (i.e. `query { ...Fragment }` + fragment definitions).
+ *
+ * `rootTypeName` is expected to be the type condition of the fragment,
+ * `rootNodeKey` - key of the node this fragment is read from / written to (if known).
+ */
+export function describeDetachedFragment(
+  env: OperationEnv,
+  documentDescriptor: DocumentDescriptor,
+  resultTreeDescriptor: ResultTreeDescriptor,
+  variables: VariableValues,
+  variablesWithDefaults: VariableValues | undefined,
+  variablesKey: string | undefined,
+  rootTypeName: TypeName,
+  rootNodeKey?: string,
+): DetachedFragmentDescriptor {
+  return createDescriptor(
+    "DetachedFragment",
+    env,
+    documentDescriptor,
+    resultTreeDescriptor,
+    variables,
+    variablesWithDefaults,
+    variablesKey,
+    rootTypeName,
+    rootNodeKey,
+  );
+}
+
+function createDescriptor<TKind extends DescriptorKind>(
+  kind: TKind,
+  env: OperationEnv,
+  documentDescriptor: DocumentDescriptor,
+  resultTreeDescriptor: ResultTreeDescriptor,
+  variables: VariableValues,
+  variablesWithDefaults?: VariableValues,
+  variablesKey?: string,
+  rootTypeName?: TypeName,
+  rootNodeKey?: string,
+): Extract<OperationDescriptor, { kind: TKind }> {
   const {
     definition: { operation, variableDefinitions, directives },
   } = documentDescriptor;
@@ -57,30 +113,48 @@ export function describeOperation(
     ? applyDefaultValues(variables, variableDefinitions)
     : variables;
 
-  return {
-    ...documentDescriptor,
-    ...resultTreeDescriptor,
-    id: env.genId?.() ?? 0,
+  // Note: keeping evaluation order of helpers (some may throw or call user callbacks)
+  const id = env.genId?.() ?? 0;
+  const keyVariables = getKeyVars(documentDescriptor.definition);
+  const covers = getCovers(
+    documentDescriptor.definition,
+    variablesWithDefaults,
+  );
+  const historySize = env.historyConfig
+    ? getHistorySize(documentDescriptor.definition, variables, env)
+    : 0;
+  variablesKey ??= createVariablesKey(
+    variableDefinitions,
+    variablesWithDefaults,
+  );
+
+  // Note: explicit literal (vs spreads) keeps the same object shape for all descriptor kinds
+  const descriptor: OperationDescriptor = {
+    kind: kind as OperationDescriptor["kind"],
+    id,
     name: documentDescriptor.definition.name?.value,
     env,
+    document: documentDescriptor.document,
+    fragmentMap: documentDescriptor.fragmentMap,
+    debugName: documentDescriptor.debugName,
+    definition: documentDescriptor.definition,
+    hasDefaultValues: documentDescriptor.hasDefaultValues,
+    possibleSelections: resultTreeDescriptor.possibleSelections,
     variables,
     variablesWithDefaults,
+    variablesKey,
+    keyVariables,
     rootType: effectiveRootTypeName,
     rootNodeKey: effectiveRootNodeKey,
     selections: new Map(),
-    keyVariables: getKeyVars(documentDescriptor.definition),
-    covers: getCovers(documentDescriptor.definition, variablesWithDefaults),
-    historySize: env.historyConfig
-      ? getHistorySize(documentDescriptor.definition, variables, env)
-      : 0,
-    variablesKey:
-      variablesKey ??
-      createVariablesKey(variableDefinitions, variablesWithDefaults),
     cache: Boolean(
       operation !== "mutation" ||
         directives?.some((d) => d.name.value === "cache"),
     ),
+    historySize,
+    covers,
   };
+  return descriptor as Extract<OperationDescriptor, { kind: TKind }>;
 }
 
 export function applyDefaultValues(

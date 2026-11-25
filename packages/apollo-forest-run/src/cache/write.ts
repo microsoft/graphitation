@@ -14,7 +14,6 @@ import type {
 import type { NodeKey, OperationDescriptor } from "../descriptor/types";
 import { assert } from "../jsutils/assert";
 import {
-  isFragmentDocument,
   resolveResultDescriptor,
   resolveOperationDescriptor,
   ROOT_NODES,
@@ -334,7 +333,7 @@ function resolveExtraRootNodeType(
     return data["__typename"];
   }
   // Try fragment condition (fragments on abstract types are ignored)
-  if (isFragmentDocument(operationDescriptor.document)) {
+  if (operationDescriptor.kind === "DetachedFragment") {
     const [fragmentDef] = operationDescriptor.fragmentMap.values();
     const typeName = fragmentDef?.typeCondition.name.value;
     if (!env.possibleTypes?.[typeName]) {

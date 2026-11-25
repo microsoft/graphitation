@@ -1,9 +1,11 @@
 import {
+  DetachedFragmentDescriptor,
   FieldInfo,
   OperationDescriptor,
   OperationId,
   PossibleSelection,
   PossibleSelections,
+  RegularOperationDescriptor,
   TypeName,
   VariableValues,
 } from "../descriptor/types";
@@ -38,8 +40,10 @@ import {
 } from "../diff/types";
 import { HistoryConfig } from "../cache/types";
 
-export type IndexedTree = {
-  operation: OperationDescriptor;
+export type IndexedTreeBase<TOperation extends OperationDescriptor> = {
+  // Same as operation.kind, duplicated to discriminate trees without extra indirection
+  readonly kind: TOperation["kind"];
+  operation: TOperation;
   result: OperationResult;
   rootNodeKey: NodeKey;
   nodes: NodeMap;
@@ -63,6 +67,13 @@ export type IndexedTree = {
   // ApolloCompat
   danglingReferences?: Set<NodeKey>;
 };
+
+// Note: all tree kinds must have the same set of fields (keeps the same object shape in hot paths)
+export type OperationTree = IndexedTreeBase<RegularOperationDescriptor>;
+export type DetachedFragmentTree = IndexedTreeBase<DetachedFragmentDescriptor>;
+
+// Any tree which can be stored in the forest
+export type IndexedTree = OperationTree | DetachedFragmentTree;
 
 export type HistoryFieldChange =
   | FillerChange
