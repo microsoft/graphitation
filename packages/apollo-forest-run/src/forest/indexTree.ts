@@ -18,24 +18,20 @@ import type {
   ParentLocator,
 } from "../values/types";
 import type {
-  DetachedFragmentDescriptor,
   NodeKey,
   NormalizedFieldEntry,
   OperationDescriptor,
   OperationFragmentDescriptor,
   PossibleSelections,
-  RegularOperationDescriptor,
   TreeDescriptor,
   TypeName,
 } from "../descriptor/types";
 import type {
   AnyIndexedTree,
-  DetachedFragmentTree,
   ForestEnv,
   IndexedTree,
   IndexedTreeBase,
   OperationFragmentTree,
-  OperationTree,
 } from "./types";
 import { ValueKind } from "../values/types";
 import {
@@ -86,79 +82,59 @@ const EMPTY_ARRAY = Object.freeze([]);
 const isArray = Array.isArray;
 
 /**
- * Entry point for indexing of all tree kinds: returns a tree of the same kind as the descriptor.
+ * Entry point for indexing of all tree kinds: tree kind is always the same as its descriptor kind.
+ * Callers that need a specific tree kind should assert or check `tree.kind`.
  */
-export function indexTree(
-  env: ForestEnv,
-  operation: RegularOperationDescriptor,
-  result: OperationResult,
-  knownMissingFields?: MissingFieldsMap,
-  previousTreeState?: IndexedTree | null,
-): OperationTree;
-export function indexTree(
-  env: ForestEnv,
-  operation: DetachedFragmentDescriptor,
-  result: OperationResult,
-  knownMissingFields?: MissingFieldsMap,
-  previousTreeState?: IndexedTree | null,
-): DetachedFragmentTree;
 export function indexTree(
   env: ForestEnv,
   operation: OperationDescriptor,
   result: OperationResult,
   knownMissingFields?: MissingFieldsMap,
-  previousTreeState?: IndexedTree | null,
-): IndexedTree;
-// Operation fragment descriptors are shared by all objects with the same selection, so the root key is per tree
-export function indexTree(
+  previousTreeState: IndexedTree | null = null,
+): IndexedTree {
+  const tree = indexTreeImpl(
+    env,
+    operation,
+    operation,
+    resolveRootNodeKey(env, operation, result),
+    operation.rootType,
+    result,
+    knownMissingFields,
+    previousTreeState,
+    operation.historySize,
+  );
+  // Safe: tree kind is always taken from its descriptor kind
+  return tree as IndexedTree;
+}
+
+/**
+ * Indexes data of an operation sub-selection (e.g. a deferred fragment) in the context of the actual operation,
+ * starting from the selection of the root object.
+ *
+ * Fragment descriptors are shared by all objects with the same selection, so the root key is per tree
+ * (root type is resolved from the data for the same reason).
+ */
+export function indexOperationFragmentTree(
   env: ForestEnv,
-  operation: OperationFragmentDescriptor,
-  result: OperationResult,
-  knownMissingFields: MissingFieldsMap | undefined,
-  previousTreeState: OperationFragmentTree | null,
+  fragment: OperationFragmentDescriptor,
   rootNodeKey: NodeKey,
-): OperationFragmentTree;
-export function indexTree(
-  env: ForestEnv,
-  operation: TreeDescriptor,
   result: OperationResult,
   knownMissingFields?: MissingFieldsMap,
-  previousTreeState: AnyIndexedTree | null = null,
-  rootNodeKey?: NodeKey,
-): AnyIndexedTree {
-  switch (operation.kind) {
-    case "Operation":
-    case "DetachedFragment":
-      // Both kinds own stored trees and are indexed identically (root node key is resolved by the descriptor)
-      return indexTreeImpl(
-        env,
-        operation,
-        operation,
-        resolveRootNodeKey(env, operation, result),
-        operation.rootType,
-        result,
-        knownMissingFields,
-        previousTreeState,
-        operation.historySize,
-      );
-    case "OperationFragment":
-      // Indexed in the context of the actual operation, starting from the selection of the root object
-      //   (root type is resolved from the data, as the descriptor is shared by objects of different types)
-      assert(rootNodeKey !== undefined);
-      return indexTreeImpl(
-        env,
-        operation,
-        operation.operation,
-        rootNodeKey,
-        undefined,
-        result,
-        knownMissingFields,
-        previousTreeState,
-        0,
-      );
-    default:
-      assertNever(operation);
-  }
+  previousTreeState: OperationFragmentTree | null = null,
+): OperationFragmentTree {
+  const tree = indexTreeImpl(
+    env,
+    fragment,
+    fragment.operation,
+    rootNodeKey,
+    undefined,
+    result,
+    knownMissingFields,
+    previousTreeState,
+    0,
+  );
+  // Safe: tree kind is always taken from its descriptor kind
+  return tree as OperationFragmentTree;
 }
 
 /**
@@ -186,13 +162,13 @@ export function reindexTree<TTree extends AnyIndexedTree>(
       );
       break;
     case "OperationFragment":
-      reindexed = indexTree(
+      reindexed = indexOperationFragmentTree(
         env,
         base.operation,
+        base.rootNodeKey,
         result,
         knownMissingFields,
         previousTreeState as OperationFragmentTree | null,
-        base.rootNodeKey,
       );
       break;
     default:
