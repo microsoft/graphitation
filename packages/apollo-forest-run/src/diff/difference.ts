@@ -1,5 +1,10 @@
 import type { NormalizedFieldEntry } from "../descriptor/types";
-import type { CompositeValue, FieldName, GraphValue } from "../values/types";
+import type {
+  CompositeValue,
+  FieldName,
+  GraphValue,
+  NormalizedPath,
+} from "../values/types";
 import type {
   CompositeListDifference,
   FieldEntryDifference,
@@ -9,7 +14,7 @@ import type {
   ValueDifference,
 } from "./types";
 import * as Descriptor from "../descriptor/resolvedSelection";
-import { assertNever } from "../jsutils/assert";
+import { assert, assertNever } from "../jsutils/assert";
 import { isCompositeValue } from "../values/predicates";
 import { ValueKind } from "../values/types";
 import { DifferenceKind } from "./types";
@@ -241,6 +246,75 @@ export function createFiller(newValue: GraphValue): Filler {
 
 export function hasDirtyItems(value: CompositeListDifference): boolean {
   return Boolean(value.dirtyItems?.size);
+}
+
+// Difference of a value embedded into the object at the given path
+export function getEmbeddedDifference(
+  difference: ValueDifference | undefined,
+  path: NormalizedPath,
+): ValueDifference | undefined {
+  for (let i = 0; i < path.length && difference; i++) {
+    const step = path[i];
+    if (typeof step === "number") {
+      difference = isCompositeListDifference(difference)
+        ? getListItemDifference(difference, step)
+        : undefined;
+    } else {
+      difference = isObjectDifference(difference)
+        ? getFieldDifference(difference, step)?.state
+        : undefined;
+    }
+  }
+  return difference;
+}
+
+// Adds a dirty difference of a value embedded into the object at the given path (keeps existing differences)
+export function addEmbeddedDifference(
+  difference: ObjectDifference,
+  path: NormalizedPath,
+  embeddedDifference: ValueDifference,
+): void {
+  let parent: ValueDifference = difference;
+  for (let i = 0; i < path.length; i++) {
+    const step = path[i];
+    if (typeof step === "number") {
+      assert(isCompositeListDifference(parent));
+      addDirtyListItem(parent, step);
+      parent =
+        getListItemDifference(parent, step) ??
+        addListItemDifference(
+          parent,
+          step,
+          createPathStepDifference(path, i, embeddedDifference),
+        );
+    } else {
+      assert(isObjectDifference(parent));
+      addDirtyField(parent, step);
+      parent = (
+        getFieldDifference(parent, step) ??
+        addFieldDifference(
+          parent,
+          step,
+          createPathStepDifference(path, i, embeddedDifference),
+        )
+      ).state;
+    }
+  }
+  assert(parent === embeddedDifference);
+}
+
+function createPathStepDifference(
+  path: NormalizedPath,
+  index: number,
+  embeddedDifference: ValueDifference,
+): ValueDifference {
+  const next = path[index + 1];
+  if (next === undefined) {
+    return embeddedDifference;
+  }
+  return typeof next === "number"
+    ? createCompositeListDifference()
+    : createObjectDifference();
 }
 
 export function isObjectDifference(

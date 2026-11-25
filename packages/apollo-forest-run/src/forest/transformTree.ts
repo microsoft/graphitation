@@ -7,8 +7,10 @@ import type {
 import type {
   CompositeListChunk,
   GraphChunk,
+  ListItemReference,
   NodeChunk,
   ObjectChunk,
+  ObjectFieldReference,
   ParentLocator,
 } from "../values/types";
 import type {
@@ -17,14 +19,15 @@ import type {
   ObjectDifference,
   ValueDifference,
 } from "../diff/types";
-import type { IndexedTree, ForestEnv } from "./types";
+import type { AnyIndexedTree, ForestEnv } from "./types";
 import * as Difference from "../diff/difference";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import { updateTree } from "./updateTree";
 import {
-  createParentLocator,
-  descendToChunk,
+  createTreeParentLocator,
   findClosestNode,
+  isParentObjectRef,
+  isRootRef,
   isCompositeListValue,
   isObjectValue,
   resolveFieldAliases,
@@ -63,10 +66,10 @@ const enum DirtyState {
   StructureChanged,
 }
 
-type TreeState = {
+type TreeState<TTree extends AnyIndexedTree = AnyIndexedTree> = {
   dirty: DirtyState;
   nodeDifference: NodeDifferenceMap;
-  intermediateTree: IndexedTree;
+  intermediateTree: TTree;
   findParent: ParentLocator;
 };
 
@@ -92,18 +95,18 @@ const EMPTY_ARRAY = Object.freeze([]);
  * - In "DESCEND" mode tree may undergo multiple updates if transformation affects tree structure
  *   (add/remove list items, change union type members, change field values to null, etc.)
  */
-export function transformTree(
+export function transformTree<TTree extends AnyIndexedTree>(
   env: ForestEnv,
-  tree: IndexedTree,
+  tree: TTree,
   direction: "ASCEND" | "DESCEND",
   chunkFilter: ChunkFilter,
   transformer: Transformer,
-): IndexedTree {
-  const treeState: TreeState = {
+): TTree {
+  const treeState: TreeState<TTree> = {
     dirty: DirtyState.Clean,
     nodeDifference: new Map(),
     intermediateTree: tree,
-    findParent: createParentLocator(tree.dataMap),
+    findParent: createTreeParentLocator(tree),
   };
   let level = 0; // For "DESCEND" mode level 0 points to root chunk. For "ASCEND" mode - to the deepest chunks
   let chunks = collectChunks(tree, direction, chunkFilter);
@@ -229,7 +232,10 @@ function markTreeDirty(
   }
 }
 
-function updateTreeStructure(env: ForestEnv, state: TreeState) {
+function updateTreeStructure<TTree extends AnyIndexedTree>(
+  env: ForestEnv,
+  state: TreeState<TTree>,
+) {
   // Intermediate update of the tree structure
   //   We can skip intermediate updates in ASCEND mode because output of transformation doesn't change
   //   which chunks are visited during transformation.
@@ -242,13 +248,13 @@ function updateTreeStructure(env: ForestEnv, state: TreeState) {
   state.intermediateTree = updatedTree;
   state.dirty = DirtyState.Clean;
   state.nodeDifference.clear();
-  state.findParent = createParentLocator(updatedTree.dataMap);
+  state.findParent = createTreeParentLocator(updatedTree);
 
   return updatedTree;
 }
 
 function collectChunks(
-  tree: IndexedTree,
+  tree: AnyIndexedTree,
   direction: "ASCEND" | "DESCEND",
   filter: ChunkFilter,
 ) {
@@ -370,7 +376,7 @@ function getEmbeddedChunkDifference(
   let parentDifference: ValueDifference | undefined = parentNodeDifference;
   let valueDifference: ValueDifference | undefined = parentDifference;
 
-  descendToChunk(treeState, parentNode, chunk, (value, parent, step) => {
+  descendFromNode(treeState, parentNode, chunk, (value, parent, step) => {
     if (!parentDifference) {
       return;
     }
@@ -418,7 +424,7 @@ function addEmbeddedChunkDifference(
   let parentDiff: ValueDifference = parentNodeDifference;
   let valueDifference: ValueDifference = parentDiff;
 
-  descendToChunk(treeState, parentNode, chunk, (value, parent, step) => {
+  descendFromNode(treeState, parentNode, chunk, (value, parent, step) => {
     assert(isCompositeListValue(value) || isObjectValue(value));
     if (isObjectValue(parent)) {
       assert(
@@ -465,7 +471,7 @@ function markParentNodeDirty(
   assert(parentNodeDifference);
 
   let parentDifference: ValueDifference | undefined = parentNodeDifference;
-  descendToChunk(treeState, parentNode, chunk, (value, parent, step) => {
+  descendFromNode(treeState, parentNode, chunk, (value, parent, step) => {
     if (isObjectValue(parent)) {
       assert(
         typeof step !== "number" &&
@@ -501,4 +507,43 @@ function createValueDifference(
     return Difference.createCompositeListDifference();
   }
   assertNever(chunk);
+}
+
+const pathStack: (ObjectFieldReference | ListItemReference)[] = [];
+
+/**
+ * Visits chunks on the path from the node down to the chunk.
+ *
+ * Unlike `descendToChunk`, visits chunks of the path itself (not chunks resolved by the path from the node):
+ * the node may belong to another tree (e.g. a stored tree containing the root of an operation fragment tree).
+ */
+function descendFromNode(
+  treeState: TreeState,
+  node: NodeChunk,
+  chunk: ObjectChunk,
+  visit: (
+    value: GraphChunk,
+    parent: ObjectChunk | CompositeListChunk,
+    step: FieldInfo | number,
+  ) => void,
+) {
+  pathStack.length = 0;
+  let parentInfo = chunk === node ? null : treeState.findParent(chunk);
+  while (parentInfo) {
+    assert(!isRootRef(parentInfo));
+    pathStack.push(parentInfo);
+    parentInfo =
+      parentInfo.parent === node
+        ? null
+        : treeState.findParent(parentInfo.parent);
+  }
+  for (let i = pathStack.length - 1; i >= 0; i--) {
+    const ref = pathStack[i];
+    visit(
+      ref.value,
+      ref.parent,
+      isParentObjectRef(ref) ? ref.field : ref.index,
+    );
+  }
+  pathStack.length = 0;
 }

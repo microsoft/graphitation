@@ -2,6 +2,7 @@ import {
   DetachedFragmentDescriptor,
   FieldInfo,
   OperationDescriptor,
+  OperationFragmentDescriptor,
   OperationId,
   PossibleSelection,
   PossibleSelections,
@@ -97,6 +98,42 @@ export type DetachedFragmentTree = {
 
 // Any tree which can be stored in the forest
 export type IndexedTree = OperationTree | DetachedFragmentTree;
+
+/**
+ * Transient tree of an operation fragment (e.g. a deferred fragment) with multiple roots: one root per object
+ * with this fragment (e.g. all items of a list). Never stored in the forest, so it has no previous states and history.
+ *
+ * Each root takes the place of its target object in the stored tree: parents of roots are resolved in the stored
+ * tree (see `createTreeParentLocator`). So a root embedded into a node of the stored tree is a regular embedded
+ * object (key `false`): its differences are differences of that node (along the path from the node to the root).
+ */
+export type OperationFragmentTree = {
+  readonly kind: "OperationFragment";
+  operation: OperationFragmentDescriptor;
+  roots: OperationFragmentRoot[];
+  nodes: NodeMap;
+  typeMap: TypeMap;
+
+  // Inverse map from data to chunks (only for chunks of this tree)
+  dataMap: DataMap;
+
+  // Error states
+  incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
+
+  // Parent locator of the stored tree containing targets of all roots
+  findStoredParent: ParentLocator;
+
+  // ApolloCompat
+  danglingReferences?: Set<NodeKey>;
+};
+
+export type OperationFragmentRoot = {
+  data: SourceObject;
+  target: ObjectChunk; // Chunk of the same object in the stored tree
+};
+
+// Any tree, including transient trees
+export type AnyIndexedTree = IndexedTree | OperationFragmentTree;
 
 // Same fields as IndexedTree, but tree kind and operation kind are not correlated (yet)
 export type UncheckedIndexedTree = Omit<IndexedTree, "kind" | "operation"> & {
@@ -233,8 +270,8 @@ export type UpdateTreeContext = {
   statsLogger?: UpdateLogger;
 };
 
-export type UpdateTreeResult = {
-  updatedTree: IndexedTree;
+export type UpdateTreeResult<TTree extends AnyIndexedTree = IndexedTree> = {
+  updatedTree: TTree;
   changes: ChangedChunksMap;
   changedNodes: Set<NodeKey>; // Directly changed nodes (subset of NodeDifferenceMap keys)
   affectedNodes: Set<NodeKey>; // Parent nodes updated due to a change in a nested node (if node is both - directly updated and affected by another node update, it will be in both: changedNodes and affectedNodes)

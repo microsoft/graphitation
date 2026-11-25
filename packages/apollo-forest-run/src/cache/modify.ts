@@ -337,7 +337,7 @@ function deleteNode(layer: DataForest | OptimisticLayer, nodeKey: string) {
       continue;
     }
     const pathEnv: Value.TraverseEnv = {
-      findParent: Value.createParentLocator(tree.dataMap),
+      findParent: Value.createTreeParentLocator(tree),
     };
     for (const chunk of chunks) {
       const chunkRef = pathEnv.findParent(chunk);
@@ -412,7 +412,7 @@ function deletedNodeFields(
     }
     const operation = tree.operation;
     const pathEnv: Value.TraverseEnv = {
-      findParent: Value.createParentLocator(tree.dataMap),
+      findParent: Value.createTreeParentLocator(tree),
     };
     const deleted = deleteTreeNodeFields(pathEnv, tree, nodeKey, deletedFields);
 
@@ -424,12 +424,12 @@ function deletedNodeFields(
 
     if (readResult) {
       const outputTree = readResult.outputTree;
-      pathEnv.findParent = Value.createParentLocator(outputTree.dataMap);
+      pathEnv.findParent = Value.createTreeParentLocator(outputTree);
       deleteTreeNodeFields(pathEnv, outputTree, nodeKey, deletedFields);
     }
     if (optimisticReadResult) {
       const outputTree = optimisticReadResult.outputTree;
-      pathEnv.findParent = Value.createParentLocator(outputTree.dataMap);
+      pathEnv.findParent = Value.createTreeParentLocator(outputTree);
       deleteTreeNodeFields(pathEnv, outputTree, nodeKey, deletedFields);
     }
   }

@@ -10,7 +10,10 @@ import type {
   GraphChunkReference,
   ParentLocator,
   DataMap,
+  EmbeddedChunkPath,
+  NormalizedPath,
 } from "./types";
+import type { AnyIndexedTree } from "../forest/types";
 import { ValueKind } from "./types";
 import type { FieldInfo, NormalizedFieldEntry } from "../descriptor/types";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
@@ -32,6 +35,38 @@ export const createParentLocator =
     assert(parent);
     return parent;
   };
+
+/**
+ * Parent locator of any tree kind.
+ *
+ * Chunks of an operation fragment tree are resolved in the tree itself, except for roots: each root takes the place
+ * of its target object in the stored tree, so ascending from a root continues in the stored tree.
+ */
+export function createTreeParentLocator(tree: AnyIndexedTree): ParentLocator {
+  if (tree.kind !== "OperationFragment") {
+    return createParentLocator(tree.dataMap);
+  }
+  const { dataMap, findStoredParent } = tree;
+  const rootParents: DataMap = new Map();
+  for (const { data, target } of tree.roots) {
+    const rootRef = dataMap.get(data);
+    assert(rootRef && Predicates.isObjectValue(rootRef.value));
+    const value = rootRef.value;
+    const targetRef = findStoredParent(target);
+    rootParents.set(
+      data,
+      Predicates.isParentObjectRef(targetRef)
+        ? { value, parent: targetRef.parent, field: targetRef.field }
+        : Predicates.isParentListRef(targetRef)
+        ? { value, parent: targetRef.parent, index: targetRef.index }
+        : rootRef,
+    );
+  }
+  return (chunk: ObjectChunk | CompositeListChunk) =>
+    rootParents.get(chunk.data) ??
+    dataMap.get(chunk.data) ??
+    findStoredParent(chunk);
+}
 
 export function getDataPathForDebugging(
   env: TraverseEnv,
@@ -187,6 +222,26 @@ export const getGraphValueReference = (
   Predicates.isNodeValue(chunk)
     ? chunk.key
     : [env.findParent(chunk), env.findParent];
+
+// Closest node of the chunk and the path from it to the chunk (the node may be outside of the chunk tree)
+export function getEmbeddedChunkPath(
+  env: TraverseEnv,
+  chunk: ObjectChunk | CompositeListChunk,
+): EmbeddedChunkPath {
+  const path: NormalizedPath = [];
+  let value = chunk;
+  while (!Predicates.isNodeValue(value)) {
+    const parentRef = env.findParent(value);
+    assert(!Predicates.isRootRef(parentRef));
+    path.push(
+      Predicates.isParentObjectRef(parentRef)
+        ? resolveNormalizedField(parentRef.parent.selection, parentRef.field)
+        : parentRef.index,
+    );
+    value = parentRef.parent;
+  }
+  return { node: value, path: path.reverse() };
+}
 
 export function getChunkFieldReference(
   env: TraverseEnv,

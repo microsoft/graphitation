@@ -7,13 +7,34 @@ import {
   NodeDifferenceMap,
   ObjectDiffState,
 } from "./types";
-import { isComplete, isDirty } from "./difference";
+import {
+  addEmbeddedDifference,
+  createObjectDifference,
+  getEmbeddedDifference,
+  isComplete,
+  isDirty,
+  isObjectDifference,
+} from "./difference";
 import { createObjectAggregate } from "../values/create";
 import { diffObject } from "./diffObject";
-import { NodeKey, NodeMap, ObjectValue } from "../values/types";
+import {
+  NodeKey,
+  NodeMap,
+  ObjectChunk,
+  ObjectValue,
+  ParentLocator,
+} from "../values/types";
 import { assert, assertNever } from "../jsutils/assert";
 import { OperationId } from "../descriptor/types";
-import { IndexedForest, IndexedTree } from "../forest/types";
+import { resolveOperation } from "../descriptor/operation";
+import { AnyIndexedTree, IndexedForest, IndexedTree } from "../forest/types";
+import {
+  createTreeParentLocator,
+  getEmbeddedChunkPath,
+  getGraphValueReference,
+  retrieveEmbeddedValue,
+} from "../values/traverse";
+import { isNodeValue, isObjectValue } from "../values/predicates";
 
 type MissingFieldsError = {
   kind: "MissingFields";
@@ -60,12 +81,90 @@ const nodeDiffState = {
 
 export function diffTree(
   forest: IndexedForest,
-  model: IndexedTree,
+  model: AnyIndexedTree,
   env: DiffEnv,
 ): GraphDifference {
   const context: Context = { env, forest: forest };
-  const currentTreeState = forest.trees.get(model.operation.id);
-  return diffNodesImpl(context, forest, model.nodes, env, currentTreeState);
+  const currentTreeState = forest.trees.get(
+    resolveOperation(model.operation).id,
+  );
+  const difference = diffNodesImpl(
+    context,
+    forest,
+    model.nodes,
+    env,
+    currentTreeState,
+  );
+  if (model.kind === "OperationFragment") {
+    // Roots embedded into nodes outside of the tree (see createTreeParentLocator)
+    const findParent = createTreeParentLocator(model);
+    for (const { data } of model.roots) {
+      const rootRef = model.dataMap.get(data);
+      assert(rootRef && isObjectValue(rootRef.value));
+      if (rootRef.value.key === false) {
+        diffEmbeddedRoot(
+          context,
+          findParent,
+          rootRef.value,
+          difference.nodeDifference,
+        );
+      }
+    }
+    difference.errors = getErrors(context);
+  }
+  return difference;
+}
+
+/**
+ * Diffs the embedded root against the same object in the forest.
+ * The difference is recorded as a difference of the node containing the root (along the path to the root).
+ */
+function diffEmbeddedRoot(
+  context: Context,
+  findParent: ParentLocator,
+  root: ObjectChunk,
+  nodeDifference: NodeDifferenceMap,
+) {
+  const env = { findParent };
+  const { node, path } = getEmbeddedChunkPath(env, root);
+  const ref = getGraphValueReference(env, root);
+  const existing = getEmbeddedDifference(nodeDifference.get(node.key), path);
+  assert(!existing || isObjectDifference(existing));
+
+  // Note: continues the difference of the same object within the node, when the node is in the tree too
+  const state: ObjectDiffState = { difference: existing, errors: [] };
+
+  for (const operation of resolveOperationsWithNode(context.forest, node)) {
+    const baseChunks = context.forest.trees.get(operation)?.nodes.get(node.key);
+    if (!baseChunks?.length) {
+      continue;
+    }
+    const baseNode =
+      baseChunks.length === 1
+        ? baseChunks[0]
+        : createObjectAggregate(baseChunks);
+    assert(isNodeValue(baseNode));
+    const base = retrieveEmbeddedValue(env, baseNode, ref);
+    if (!base || !isObjectValue(base)) {
+      continue;
+    }
+    diffObject(base, root, context.env, state);
+    if (state.difference && isComplete(state.difference)) {
+      break;
+    }
+  }
+  const difference = state.difference;
+  if (difference && isDirty(difference)) {
+    let diff = nodeDifference.get(node.key);
+    if (!diff) {
+      diff = createObjectDifference();
+      nodeDifference.set(node.key, diff);
+    }
+    addEmbeddedDifference(diff, path, difference);
+  }
+  if (state.errors?.length) {
+    accumulateDiffErrors(context, root, state.errors);
+  }
 }
 
 export function diffNodes(
