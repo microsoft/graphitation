@@ -68,6 +68,27 @@ export function describeOperation(
     variablesWithDefaults,
   );
 
+  if (env.optimizeDescriptorShape === false) {
+    // Legacy construction (kept for A/B evaluation of optimizeDescriptorShape)
+    return {
+      kind: "Operation",
+      ...documentDescriptor,
+      ...resultTreeDescriptor,
+      id,
+      name: definition.name?.value,
+      env,
+      variables,
+      variablesWithDefaults,
+      rootType: rootType,
+      rootNodeKey: rootNodeKey ?? defaultRootNodeKeys[definition.operation],
+      selections: new Map(),
+      keyVariables,
+      covers,
+      historySize,
+      variablesKey,
+      cache: isCacheable(definition),
+    };
+  }
   // Note: explicit literal (vs spreads) keeps all properties in-object.
   //   Must have the same properties in the same order as in describeDetachedFragment (keeps a single object shape)
   return {
@@ -128,6 +149,27 @@ export function describeDetachedFragment(
     variablesWithDefaults,
   );
 
+  if (env.optimizeDescriptorShape === false) {
+    // Legacy construction (kept for A/B evaluation of optimizeDescriptorShape)
+    return {
+      kind: "DetachedFragment",
+      ...documentDescriptor,
+      ...resultTreeDescriptor,
+      id,
+      name: definition.name?.value,
+      env,
+      variables,
+      variablesWithDefaults,
+      rootType: rootTypeName,
+      rootNodeKey: rootNodeKey ?? defaultRootNodeKeys[definition.operation],
+      selections: new Map(),
+      keyVariables,
+      covers,
+      historySize,
+      variablesKey,
+      cache: isCacheable(definition),
+    };
+  }
   // Note: explicit literal (vs spreads) keeps all properties in-object.
   //   Must have the same properties in the same order as in describeOperation (keeps a single object shape)
   return {

@@ -61,6 +61,9 @@ export type OperationEnv = {
   ) => Key | KeySpecifier | undefined;
 
   historyConfig?: HistoryConfig;
+
+  // Feature flag: build descriptors from an explicit literal (stable object shape). Enabled unless `false`.
+  optimizeDescriptorShape?: boolean;
 };
 
 export type DocumentDescriptor = {
