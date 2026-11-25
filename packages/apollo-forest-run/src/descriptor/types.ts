@@ -146,7 +146,7 @@ export type OperationDescriptor =
  * Its trees are indexed in the context of the actual `operation` (all chunks reference it), starting from
  * the selection of the root object within this operation. Never stored in the forest.
  *
- * There is a single descriptor per operation + selection, shared by trees of all objects with this selection
+ * A descriptor is not tied to a specific object: it may be shared by trees of all objects with this selection
  * (e.g. all list items with a deferred fragment). Per-object data (e.g. root node key) belongs to trees.
  */
 export type OperationFragmentDescriptor = {
@@ -154,12 +154,6 @@ export type OperationFragmentDescriptor = {
   operation: OperationDescriptor;
   possibleSelections: PossibleSelections; // Selection of the root object within the operation
 };
-
-// Fragment descriptors of a single operation by their root selections (owned by callers, see getOperationFragmentDescriptor)
-export type OperationFragmentDescriptorCache = Map<
-  PossibleSelections,
-  OperationFragmentDescriptor
->;
 
 // Descriptor of any result tree, including transient trees which are never stored
 export type TreeDescriptor = OperationDescriptor | OperationFragmentDescriptor;

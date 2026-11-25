@@ -5,7 +5,6 @@ import type {
   DocumentDescriptor,
   OperationDescriptor,
   OperationFragmentDescriptor,
-  OperationFragmentDescriptorCache,
   PossibleSelections,
   RegularOperationDescriptor,
   TreeDescriptor,
@@ -174,28 +173,22 @@ function createDescriptor(
 }
 
 /**
- * Returns a descriptor of the operation sub-selection, starting from objects with the given `possibleSelections`
+ * Describes a sub-selection of the operation, starting from objects with the given `possibleSelections`
  * (e.g. objects with a deferred fragment).
  *
- * Descriptors are memoized in a caller-owned cache of this operation (e.g. state of an incremental execution),
- * so that all objects with the same selection share the same descriptor while it is needed.
+ * The descriptor is not tied to a specific object: all objects with the same selection may share it.
  */
-export function getOperationFragmentDescriptor(
-  cache: OperationFragmentDescriptorCache,
+export function describeOperationFragment(
+  env: OperationEnv,
   operation: OperationDescriptor,
   possibleSelections: PossibleSelections,
 ): OperationFragmentDescriptor {
-  let descriptor = cache.get(possibleSelections);
-  if (!descriptor) {
-    descriptor = {
-      kind: "OperationFragment",
-      operation,
-      possibleSelections,
-    };
-    cache.set(possibleSelections, descriptor);
-  }
-  assert(descriptor.operation === operation);
-  return descriptor;
+  assert(operation.env === env);
+  return {
+    kind: "OperationFragment",
+    operation,
+    possibleSelections,
+  };
 }
 
 // Operation which owns the selection of the descriptor
