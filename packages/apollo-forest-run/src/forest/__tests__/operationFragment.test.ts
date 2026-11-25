@@ -4,13 +4,12 @@ import {
   createTestForest,
 } from "../../__tests__/helpers/forest";
 import {
-  getOperationFragmentDescriptor,
+  describeOperationFragment,
   resolveOperation,
 } from "../../descriptor/operation";
 import type {
   OperationDescriptor,
   OperationFragmentDescriptor,
-  OperationFragmentDescriptorCache,
   PossibleSelections,
 } from "../../descriptor/types";
 import type { ObjectChunk, SourceScalar } from "../../values/types";
@@ -55,58 +54,40 @@ const query = `
   }
 `;
 
-describe(getOperationFragmentDescriptor, () => {
-  it("returns the same descriptor for all objects with the same selection", () => {
+describe(describeOperationFragment, () => {
+  it("describes a sub-selection of the operation", () => {
+    const operation = createTestOperation(query);
+    const selection = getUsersSelection(operation);
+    const descriptor = describeOperationFragment(
+      operation.env,
+      operation,
+      selection,
+    );
+    expect(descriptor).toEqual({
+      kind: "OperationFragment",
+      operation,
+      possibleSelections: selection,
+    });
+    expect(resolveOperation(descriptor)).toBe(operation);
+  });
+
+  it("can be shared by all objects with the same selection", () => {
     const operation = createTestOperation(query);
     const tree = indexTree(env, operation, {
       data: createSourceObject({
         users: [user("1", { bio: "a" }), user("2", { bio: "b" })],
       }),
     });
-    const [first, second] = [getNode(tree, "User:1"), getNode(tree, "User:2")];
-    expect(first.possibleSelections).toBe(second.possibleSelections);
-
-    const cache: OperationFragmentDescriptorCache = new Map();
-    const descriptor = getOperationFragmentDescriptor(
-      cache,
-      operation,
-      first.possibleSelections,
+    expect(getNode(tree, "User:1").possibleSelections).toBe(
+      getNode(tree, "User:2").possibleSelections,
     );
-    expect(
-      getOperationFragmentDescriptor(
-        cache,
-        operation,
-        second.possibleSelections,
-      ),
-    ).toBe(descriptor);
-    expect(descriptor).toEqual({
-      kind: "OperationFragment",
-      operation,
-      possibleSelections: first.possibleSelections,
-    });
-    expect(resolveOperation(descriptor)).toBe(operation);
   });
 
-  it("returns different descriptors for different selections and caches", () => {
+  it("requires the operation env", () => {
     const operation = createTestOperation(query);
-    const selection = getUsersSelection(operation);
-    const cache: OperationFragmentDescriptorCache = new Map();
-
-    const descriptor = getOperationFragmentDescriptor(
-      cache,
-      operation,
-      selection,
-    );
-    expect(
-      getOperationFragmentDescriptor(
-        cache,
-        operation,
-        operation.possibleSelections,
-      ),
-    ).not.toBe(descriptor);
-    expect(
-      getOperationFragmentDescriptor(new Map(), operation, selection),
-    ).not.toBe(descriptor);
+    expect(() =>
+      describeOperationFragment({}, operation, getUsersSelection(operation)),
+    ).toThrow();
   });
 });
 
@@ -266,8 +247,8 @@ function setup(): {
   fragment: OperationFragmentDescriptor;
 } {
   const operation = createTestOperation(query);
-  const fragment = getOperationFragmentDescriptor(
-    new Map(),
+  const fragment = describeOperationFragment(
+    operation.env,
     operation,
     getUsersSelection(operation),
   );
