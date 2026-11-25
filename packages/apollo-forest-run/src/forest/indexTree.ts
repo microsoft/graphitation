@@ -18,19 +18,11 @@ import type {
   ParentLocator,
 } from "../values/types";
 import type {
-  DetachedFragmentDescriptor,
   NormalizedFieldEntry,
   OperationDescriptor,
   PossibleSelections,
-  RegularOperationDescriptor,
 } from "../descriptor/types";
-import type {
-  DetachedFragmentTree,
-  ForestEnv,
-  IndexedTree,
-  IndexedTreeBase,
-  OperationTree,
-} from "./types";
+import type { ForestEnv, IndexedTree, IndexedTreeBase } from "./types";
 import { ValueKind } from "../values/types";
 import {
   getFieldName,
@@ -38,7 +30,7 @@ import {
   resolveSelection,
 } from "../descriptor/resolvedSelection";
 import { accumulate } from "../jsutils/map";
-import { assert, assertNever } from "../jsutils/assert";
+import { assert } from "../jsutils/assert";
 import { CircularBuffer } from "../jsutils/circularBuffer";
 import { cloneSharedReferences } from "./cloneSharedReferences";
 import {
@@ -79,58 +71,15 @@ const EMPTY_ARRAY = Object.freeze([]);
 const isArray = Array.isArray;
 
 /**
- * Entry point for indexing of all tree kinds: returns a tree of the same kind as the descriptor.
+ * Entry point for indexing of all tree kinds: tree kind is always the same as its descriptor kind.
+ * Callers that need a specific tree kind should assert or check `tree.kind`.
  */
-export function indexTree(
-  env: ForestEnv,
-  operation: RegularOperationDescriptor,
-  result: OperationResult,
-  knownMissingFields?: MissingFieldsMap,
-  previousTreeState?: IndexedTree | null,
-): OperationTree;
-export function indexTree(
-  env: ForestEnv,
-  operation: DetachedFragmentDescriptor,
-  result: OperationResult,
-  knownMissingFields?: MissingFieldsMap,
-  previousTreeState?: IndexedTree | null,
-): DetachedFragmentTree;
-export function indexTree(
-  env: ForestEnv,
-  operation: OperationDescriptor,
-  result: OperationResult,
-  knownMissingFields?: MissingFieldsMap,
-  previousTreeState?: IndexedTree | null,
-): IndexedTree;
 export function indexTree(
   env: ForestEnv,
   operation: OperationDescriptor,
   result: OperationResult,
   knownMissingFields?: MissingFieldsMap,
   previousTreeState: IndexedTree | null = null,
-): IndexedTree {
-  switch (operation.kind) {
-    case "Operation":
-    case "DetachedFragment":
-      // Both kinds own stored trees and are indexed identically (root node key is resolved by the descriptor)
-      return indexStoredTree(
-        env,
-        operation,
-        result,
-        knownMissingFields,
-        previousTreeState,
-      );
-    default:
-      assertNever(operation);
-  }
-}
-
-function indexStoredTree<TOperation extends OperationDescriptor>(
-  env: ForestEnv,
-  operation: TOperation,
-  result: OperationResult,
-  knownMissingFields: MissingFieldsMap | undefined,
-  previousTreeState: IndexedTree | null,
 ): IndexedTree {
   let rootNodeKey;
   try {
@@ -174,7 +123,7 @@ function indexStoredTree<TOperation extends OperationDescriptor>(
     rootRef,
   );
   // Note: explicit literal with the same fields for all tree kinds (keeps a single object shape)
-  const typedTree: IndexedTreeBase<TOperation> = {
+  const typedTree: IndexedTreeBase<OperationDescriptor> = {
     kind: operation.kind,
     operation,
     result,
