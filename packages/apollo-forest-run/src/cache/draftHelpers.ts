@@ -23,7 +23,9 @@ import {
   isNodeValue,
   isObjectValue,
   isCompositeNullValue,
+  EMBEDDED_ROOT_KEY,
   findClosestNode,
+  resolveStoredNodeKey,
   getDataPathForDebugging,
   resolveGraphValueReference,
   retrieveEmbeddedValue,
@@ -50,7 +52,7 @@ export function getObjectChunks(
   }
   const [chunkParentInfo, findParent] = ref;
   const value = resolveGraphValueReference(chunkParentInfo);
-  if (isNodeValue(value)) {
+  if (isNodeValue(value) && value.key !== EMBEDDED_ROOT_KEY) {
     return getNodeChunks(layers, value.key, includeDeleted);
   }
   assert(isObjectValue(value) || isCompositeListValue(value));
@@ -58,7 +60,11 @@ export function getObjectChunks(
 
   return getEmbeddedObjectChunks(
     { findParent: createParentLocator(layers) },
-    getNodeChunks(layers, parentNode.key, includeDeleted),
+    getNodeChunks(
+      layers,
+      resolveStoredNodeKey(parentNode, findParent),
+      includeDeleted,
+    ),
     ref,
   );
 }

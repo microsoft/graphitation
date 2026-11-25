@@ -3,6 +3,7 @@ import type {
   CompositeValueChunk,
   CompositeUndefinedChunk,
   DataMap,
+  EmbeddedRootAddress,
   GraphChunkReference,
   MissingFieldsMap,
   NodeChunk,
@@ -49,6 +50,7 @@ import {
   createCompositeUndefinedChunk,
   createTypedObjectChunk,
   createParentLocator,
+  EMBEDDED_ROOT_KEY,
   findClosestNode,
   getDataPathForDebugging,
   isCompositeListValue,
@@ -102,7 +104,7 @@ export function indexTree(
     knownMissingFields,
     previousTreeState,
   );
-  const root = indexRoot(context, operation.possibleSelections);
+  const root = indexRoot(context, operation.possibleSelections, undefined);
   const history =
     previousTreeState?.history ?? new CircularBuffer(operation.historySize);
   // Note: explicit literal with the same fields for all tree kinds (keeps a single object shape)
@@ -134,21 +136,30 @@ export function indexTree(
   return repairedTree;
 }
 
+// Root of an operation fragment tree: key of a node, or address of an embedded object
+export type OperationFragmentRoot = NodeKey | EmbeddedRootAddress;
+
 /**
  * Indexes data of an operation sub-selection (e.g. a deferred fragment) in the context of the actual operation,
  * starting from the selection of the root object.
  *
- * Fragment descriptors are shared by all objects with the same selection, so the root key is per tree
+ * Fragment descriptors are shared by all objects with the same selection, so the root is per tree
  * (root type is resolved from the data for the same reason).
+ *
+ * The root is either a node (`tree.rootNodeKey` is its key), or an object embedded into a node: such root
+ * is indexed as a node with a synthetic key (`tree.rootNodeKey` is EMBEDDED_ROOT_KEY) and its root reference
+ * keeps the embedded address (`embeddedIn`) to resolve it in other trees.
  */
 export function indexOperationFragmentTree(
   env: ForestEnv,
   fragment: OperationFragmentDescriptor,
-  rootNodeKey: NodeKey,
+  root: OperationFragmentRoot,
   result: OperationResult,
   knownMissingFields?: MissingFieldsMap,
   recycleTree: OperationFragmentTree | null = null, // Tree to recycle chunks from (e.g. on re-indexing)
 ): OperationFragmentTree {
+  const embeddedIn = typeof root === "string" ? undefined : root;
+  const rootNodeKey = typeof root === "string" ? root : EMBEDDED_ROOT_KEY;
   const context = createTreeContext(
     env,
     fragment.operation,
@@ -158,7 +169,7 @@ export function indexOperationFragmentTree(
     knownMissingFields,
     recycleTree,
   );
-  const root = indexRoot(context, fragment.possibleSelections);
+  const rootChunk = indexRoot(context, fragment.possibleSelections, embeddedIn);
   // Note: fragment trees are transient (never stored), so they don't keep previous states and history
   const tree: OperationFragmentTree = {
     kind: "OperationFragment",
@@ -170,14 +181,14 @@ export function indexOperationFragmentTree(
     dataMap: context.dataMap,
     incompleteChunks: context.incompleteChunks,
   };
-  const repaired = repairSharedReferences(env, context, root);
+  const repaired = repairSharedReferences(env, context, rootChunk);
   if (!repaired) {
     return tree;
   }
   return indexOperationFragmentTree(
     env,
     fragment,
-    rootNodeKey,
+    root,
     { ...result, data: repaired.data },
     repaired.missingFields,
   );
@@ -209,7 +220,7 @@ export function reindexTree<TTree extends AnyIndexedTree>(
       reindexed = indexOperationFragmentTree(
         env,
         base.operation,
-        base.rootNodeKey,
+        getOperationFragmentRoot(base),
         result,
         knownMissingFields,
         base,
@@ -242,6 +253,17 @@ function resolveRootNodeKey(
   } catch (e) {
     return operation.rootNodeKey;
   }
+}
+
+function getOperationFragmentRoot(
+  tree: OperationFragmentTree,
+): OperationFragmentRoot {
+  if (tree.rootNodeKey !== EMBEDDED_ROOT_KEY) {
+    return tree.rootNodeKey;
+  }
+  const rootRef = tree.dataMap.get(tree.result.data);
+  assert(rootRef && isRootRef(rootRef) && rootRef.embeddedIn);
+  return rootRef.embeddedIn;
 }
 
 function createTreeContext(
@@ -278,11 +300,13 @@ function createTreeContext(
 function indexRoot(
   context: Context,
   possibleSelections: PossibleSelections,
+  embeddedIn: EmbeddedRootAddress | undefined,
 ): ObjectChunk {
   const rootRef: RootChunkReference = {
     value: null,
     parent: null,
     detached: false,
+    embeddedIn,
   };
   rootRef.value = indexSourceObject(
     context,
@@ -314,6 +338,7 @@ export type IndexedObject = {
   value: ObjectChunk;
   parent: null;
   detached: boolean;
+  embeddedIn: undefined;
   dataMap: DataMap;
   nodes: NodeMap;
 };
@@ -358,6 +383,7 @@ export function indexObject(
     value: null as unknown,
     parent: null,
     detached: !isRoot,
+    embeddedIn: undefined,
     nodes: context.nodes,
     dataMap: context.dataMap,
   };
