@@ -74,6 +74,7 @@ export type DocumentDescriptor = {
 export type ResultTreeDescriptor = {
   possibleSelections: PossibleSelections;
   fieldsWithArgs: FieldInfo[]; // aggregated from all levels
+  hasDeferSites: boolean;
 };
 
 // Selection with additional information based on operation variables (resolved at runtime)
@@ -81,6 +82,7 @@ export type ResolvedSelection = PossibleSelection & {
   normalizedFields?: Map<FieldInfo, NormalizedFieldEntry>;
   skippedFields?: Set<FieldInfo>;
   skippedSpreads?: Set<SpreadInfo>;
+  deferredFragments?: DeferSite[]; // enabled for the operation variables
   resolvedHash?: number; // Structural hash + runtime-resolved state (args, skip/include)
 };
 
@@ -91,11 +93,16 @@ export type ResolvedSelection = PossibleSelection & {
  * - `DetachedFragment`: Apollo fragment document (`query { ...Fragment }` + fragment definitions)
  *   used with `writeFragment` / `readFragment` / `watchFragment`. Its root is usually a regular node
  *   (identified by `dataId` / `id`), not an operation root.
- *
- * Note: a third kind (`OperationFragment`) is reserved for sub-selections of operations (e.g. @defer chunks).
- *   Those will point to the actual operation descriptor and will never be stored on their own.
+ * - `OperationFragment`: sub-selection of an operation (e.g. data of a deferred fragment).
+ *   Points to the actual operation descriptor and is never stored on its own (see OperationFragmentDescriptor).
  */
-export type DescriptorKind = "Operation" | "DetachedFragment";
+export type DescriptorKind =
+  | "Operation"
+  | "DetachedFragment"
+  | "OperationFragment";
+
+// Kinds of documents which may own a stored result tree
+export type StoredDescriptorKind = OperationDescriptor["kind"];
 
 type DescriptorBase = {
   id: OperationId;
@@ -107,6 +114,7 @@ type DescriptorBase = {
   definition: OperationDefinitionNode;
   hasDefaultValues: boolean;
   possibleSelections: PossibleSelections;
+  hasDeferSites: boolean;
   variables: VariableValues;
   variablesWithDefaults: VariableValues;
   variablesKey: string; // Stringified, normalized variables
@@ -131,6 +139,30 @@ export type DetachedFragmentDescriptor = {
 export type OperationDescriptor =
   | RegularOperationDescriptor
   | DetachedFragmentDescriptor;
+
+/**
+ * Sub-selection of an operation, e.g. a deferred fragment (a selection of objects within the operation result).
+ *
+ * Its trees are indexed in the context of the actual `operation` (all chunks reference it), starting from
+ * the selection of the root object within this operation. Never stored in the forest.
+ *
+ * There is a single descriptor per operation + selection, shared by trees of all objects with this selection
+ * (e.g. all list items with a deferred fragment). Per-object data (e.g. root node key) belongs to trees.
+ */
+export type OperationFragmentDescriptor = {
+  readonly kind: "OperationFragment";
+  operation: OperationDescriptor;
+  possibleSelections: PossibleSelections; // Selection of the root object within the operation
+};
+
+// Fragment descriptors of a single operation by their root selections (owned by callers, see getOperationFragmentDescriptor)
+export type OperationFragmentDescriptorCache = Map<
+  PossibleSelections,
+  OperationFragmentDescriptor
+>;
+
+// Descriptor of any result tree, including transient trees which are never stored
+export type TreeDescriptor = OperationDescriptor | OperationFragmentDescriptor;
 
 export type FormattedError = GraphQLFormattedError;
 
@@ -177,6 +209,7 @@ export type PossibleSelection = {
 
   spreads?: FragmentSpreadMap; // e.g. object with selection { foo, ...Bar, ... { ...Baz } } will have ["Bar", "Baz"] here
   spreadsWithDirectives?: SpreadInfo[];
+  deferSites?: DeferSite[];
 
   experimentalAlias?: FragmentAlias;
   experimentalAliasedFragments?: Map<FragmentAlias, PossibleSelection>;
@@ -184,6 +217,16 @@ export type PossibleSelection = {
   hasDescendantsToResolve?: boolean; // true if any descendant has fieldsToNormalize, fieldsWithDirectives, or spreadsWithDirectives
 
   structuralHash: number; // Order-independent hash of field structure (names, dataKeys, arg names, child hashes)
+};
+
+// A deferred fragment in the document (its data is written with the selection of the object it is deferred on)
+//
+// TODO: for defer-aware reads (`dataState: "streaming"`), add `deferBoundary` to `FieldInfo`: the closest enclosing
+//   `DeferSite` of a field (collected like `watchBoundaries`). A missing field is then pending if its boundary is
+//   a site still waiting for data on the object.
+export type DeferSite = {
+  label?: DeferLabel;
+  conditions: { variable: VariableName; expected: boolean; defer: boolean }[];
 };
 
 export type ResolvedSelections = Map<

@@ -19,16 +19,22 @@ import type {
 } from "../values/types";
 import type {
   DetachedFragmentDescriptor,
+  NodeKey,
   NormalizedFieldEntry,
   OperationDescriptor,
+  OperationFragmentDescriptor,
   PossibleSelections,
   RegularOperationDescriptor,
+  TreeDescriptor,
+  TypeName,
 } from "../descriptor/types";
 import type {
+  AnyIndexedTree,
   DetachedFragmentTree,
   ForestEnv,
   IndexedTree,
   IndexedTreeBase,
+  OperationFragmentTree,
   OperationTree,
 } from "./types";
 import { ValueKind } from "../values/types";
@@ -69,9 +75,10 @@ type Context = {
   dataMap: DataMap;
   indexedSources: number;
   rootNodeKey: string;
+  rootType: TypeName | undefined;
   knownMissingFields: MissingFieldsMap | undefined;
   incompleteChunks: Set<ObjectChunk>;
-  recycleTree: IndexedTree | null;
+  recycleTree: AnyIndexedTree | null;
   findParent: ParentLocator;
 };
 
@@ -102,39 +109,111 @@ export function indexTree(
   knownMissingFields?: MissingFieldsMap,
   previousTreeState?: IndexedTree | null,
 ): IndexedTree;
+// Operation fragment descriptors are shared by all objects with the same selection, so the root key is per tree
 export function indexTree(
   env: ForestEnv,
-  operation: OperationDescriptor,
+  operation: OperationFragmentDescriptor,
+  result: OperationResult,
+  knownMissingFields: MissingFieldsMap | undefined,
+  previousTreeState: OperationFragmentTree | null,
+  rootNodeKey: NodeKey,
+): OperationFragmentTree;
+export function indexTree(
+  env: ForestEnv,
+  operation: TreeDescriptor,
   result: OperationResult,
   knownMissingFields?: MissingFieldsMap,
-  previousTreeState: IndexedTree | null = null,
-): IndexedTree {
+  previousTreeState: AnyIndexedTree | null = null,
+  rootNodeKey?: NodeKey,
+): AnyIndexedTree {
   switch (operation.kind) {
     case "Operation":
     case "DetachedFragment":
       // Both kinds own stored trees and are indexed identically (root node key is resolved by the descriptor)
-      return indexStoredTree(
+      return indexTreeImpl(
         env,
         operation,
+        operation,
+        resolveRootNodeKey(env, operation, result),
+        operation.rootType,
         result,
         knownMissingFields,
         previousTreeState,
+        operation.historySize,
+      );
+    case "OperationFragment":
+      // Indexed in the context of the actual operation, starting from the selection of the root object
+      //   (root type is resolved from the data, as the descriptor is shared by objects of different types)
+      assert(rootNodeKey !== undefined);
+      return indexTreeImpl(
+        env,
+        operation,
+        operation.operation,
+        rootNodeKey,
+        undefined,
+        result,
+        knownMissingFields,
+        previousTreeState,
+        0,
       );
     default:
       assertNever(operation);
   }
 }
 
-function indexStoredTree<TOperation extends OperationDescriptor>(
+/**
+ * Indexes a new state of the tree, preserving its kind and root node key.
+ */
+export function reindexTree<TTree extends AnyIndexedTree>(
   env: ForestEnv,
-  operation: TOperation,
+  tree: TTree,
   result: OperationResult,
   knownMissingFields: MissingFieldsMap | undefined,
-  previousTreeState: IndexedTree | null,
-): IndexedTree {
-  let rootNodeKey;
+  previousTreeState: TTree | null,
+): TTree {
+  const base: AnyIndexedTree = tree;
+  let reindexed: AnyIndexedTree;
+  switch (base.kind) {
+    case "Operation":
+    case "DetachedFragment":
+      reindexed = indexTree(
+        env,
+        base.operation,
+        result,
+        knownMissingFields,
+        // Safe: previous state is always a tree of the same kind
+        previousTreeState as IndexedTree | null,
+      );
+      break;
+    case "OperationFragment":
+      reindexed = indexTree(
+        env,
+        base.operation,
+        result,
+        knownMissingFields,
+        previousTreeState as OperationFragmentTree | null,
+        base.rootNodeKey,
+      );
+      break;
+    default:
+      assertNever(base);
+  }
+  // Safe: tree kind is always taken from its descriptor kind
+  return reindexed as TTree;
+}
+
+// Narrows to trees which can be stored in the forest
+export function isStoredTree(tree: AnyIndexedTree): tree is IndexedTree {
+  return tree.kind !== "OperationFragment";
+}
+
+function resolveRootNodeKey(
+  env: ForestEnv,
+  operation: OperationDescriptor,
+  result: OperationResult,
+): NodeKey {
   try {
-    rootNodeKey =
+    return (
       env.objectKey(
         result.data,
         resolveSelection(
@@ -143,10 +222,24 @@ function indexStoredTree<TOperation extends OperationDescriptor>(
           operation.rootType,
         ),
         operation,
-      ) || operation.rootNodeKey;
+      ) || operation.rootNodeKey
+    );
   } catch (e) {
-    rootNodeKey = operation.rootNodeKey;
+    return operation.rootNodeKey;
   }
+}
+
+function indexTreeImpl<TDescriptor extends TreeDescriptor>(
+  env: ForestEnv,
+  descriptor: TDescriptor,
+  operation: OperationDescriptor,
+  rootNodeKey: NodeKey,
+  rootType: TypeName | undefined,
+  result: OperationResult,
+  knownMissingFields: MissingFieldsMap | undefined,
+  previousTreeState: AnyIndexedTree | null,
+  historySize: number,
+): AnyIndexedTree {
   const dataMap = new Map();
   const context: Context = {
     env: env,
@@ -159,6 +252,7 @@ function indexStoredTree<TOperation extends OperationDescriptor>(
     indexedSources: 0,
     incompleteChunks: new Set(),
     rootNodeKey,
+    rootType,
     recycleTree: previousTreeState,
     findParent: createParentLocator(dataMap),
   };
@@ -170,13 +264,13 @@ function indexStoredTree<TOperation extends OperationDescriptor>(
   rootRef.value = indexSourceObject(
     context,
     result.data,
-    operation.possibleSelections,
+    descriptor.possibleSelections,
     rootRef,
   );
   // Note: explicit literal with the same fields for all tree kinds (keeps a single object shape)
-  const typedTree: IndexedTreeBase<TOperation> = {
-    kind: operation.kind,
-    operation,
+  const typedTree: IndexedTreeBase<TDescriptor, AnyIndexedTree> = {
+    kind: descriptor.kind,
+    operation: descriptor,
     result,
     rootNodeKey,
     nodes: context.nodes,
@@ -184,11 +278,10 @@ function indexStoredTree<TOperation extends OperationDescriptor>(
     dataMap: context.dataMap,
     incompleteChunks: context.incompleteChunks,
     prev: previousTreeState,
-    history:
-      previousTreeState?.history ?? new CircularBuffer(operation.historySize),
+    history: previousTreeState?.history ?? new CircularBuffer(historySize),
   };
-  // Safe: tree kind is always taken from its operation kind
-  const tree = typedTree as IndexedTree;
+  // Safe: tree kind is always taken from its descriptor kind
+  const tree = typedTree as AnyIndexedTree;
   // Every composite occurrence is counted, but dataMap keeps only unique sources.
   // This detects sharing without an additional map lookup or allocation per chunk.
   if (context.indexedSources === dataMap.size) {
@@ -237,6 +330,7 @@ export function indexObject(
     indexedSources: initialDataMapSize,
     incompleteChunks: new Set(),
     rootNodeKey,
+    rootType: operation.rootType,
     recycleTree: null,
     findParent: createParentLocator(dataMap),
   };
@@ -278,21 +372,22 @@ export function indexObject(
   return result as IndexedObject;
 }
 
-function reindexSharedTree(
+function reindexSharedTree<TTree extends AnyIndexedTree>(
   env: ForestEnv,
-  tree: IndexedTree,
+  tree: TTree,
   root: ObjectChunk,
-): IndexedTree {
+): TTree {
   const repaired = cloneSharedReferences(env, root);
   // Malformed, out-of-range list chunks may overcount without sharing actual data.
   if (repaired.data === tree.result.data) {
     return tree;
   }
-  const repairedTree = indexTree(
+  const repairedTree = reindexTree(
     env,
-    tree.operation,
+    tree,
     { ...tree.result, data: repaired.data },
     repaired.missingFields,
+    null,
   );
   repairedTree.prev = tree.prev;
   repairedTree.history = tree.history;
@@ -337,7 +432,7 @@ function indexSourceObject(
 
   const isRoot = isRootRef(parent) && !parent.detached;
   const sourceTypeName = source.__typename;
-  const typeName = isRoot ? sourceTypeName ?? op.rootType : sourceTypeName;
+  const typeName = isRoot ? sourceTypeName ?? context.rootType : sourceTypeName;
 
   const selection = resolveSelection(op, possibleSelections, typeName || null);
   const objectKeyResult = isRoot
@@ -694,7 +789,7 @@ function describeMalformedPayload(
 function findIndexingTree(
   context: Context,
   chunk: CompositeListChunk,
-): IndexedTree | null {
+): AnyIndexedTree | null {
   for (let tree = context.recycleTree; tree; tree = tree.prev) {
     if (tree.dataMap.has(chunk.data)) {
       return tree;
@@ -708,7 +803,7 @@ function findIndexingTree(
 // `typeMap` indexes every chunk by type, keyed or not, and the closest node scopes the hits
 // down to the one entity that is actually repeated.
 function findOccurrences(
-  tree: IndexedTree | null,
+  tree: AnyIndexedTree | null,
   type: ObjectChunk["type"] | undefined,
   fieldEntry: NormalizedFieldEntry | null,
   node: NodeChunk | null,

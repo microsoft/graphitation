@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Descriptor defer sites and OperationFragment descriptor/tree kind (foundations for @defer, behaviour-neutral)",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}

@@ -1,5 +1,6 @@
 import { FieldNode, OperationDefinitionNode, parse, print } from "graphql";
 import type {
+  DeferSite,
   DocumentDescriptor,
   PossibleSelections,
   PossibleTypes,
@@ -701,6 +702,185 @@ describe(describeResultTree, () => {
     });
   });
 
+  describe("with @defer", () => {
+    it("has no defer sites without @defer", () => {
+      const descriptor = testHelperV2(`{ foo { ... on Foo { bar } } }`);
+      expect(descriptor.hasDeferSites).toBe(false);
+      expect(collectDeferSites(descriptor.possibleSelections)).toEqual([]);
+    });
+
+    it("collects sites with static labels on the selection of the deferred object", () => {
+      const descriptor = testHelperV2(
+        `{
+          foo {
+            id
+            ... @defer(label: "inline") { bar }
+            ... on Foo @defer { baz }
+            ...FooFragment @defer(label: "spread")
+          }
+        }
+        fragment FooFragment on Foo { qux }`,
+      );
+      const foo = descriptor.possibleSelections
+        .get(commonSelectionKey)
+        ?.fields.get("foo")?.[0].selection;
+
+      expect(descriptor.hasDeferSites).toBe(true);
+      expect(descriptor.possibleSelections.get(null)?.deferSites).toBe(
+        undefined,
+      );
+      expect(foo?.get(null)?.deferSites).toEqual([
+        { label: "inline", conditions: [] },
+      ]);
+      // Untyped sites are merged into typed selections
+      expect(foo?.get("Foo")?.deferSites).toEqual([
+        { label: undefined, conditions: [] },
+        { label: "spread", conditions: [] },
+        { label: "inline", conditions: [] },
+      ]);
+    });
+
+    it("ignores non-static labels", () => {
+      const descriptor = testHelperV2(
+        `query ($label: String) { foo { ... @defer(label: $label) { bar } } }`,
+      );
+      expect(collectDeferSites(descriptor.possibleSelections)).toEqual([
+        { label: undefined, conditions: [] },
+      ]);
+    });
+
+    it("evaluates static conditions", () => {
+      const descriptor = testHelperV2(
+        `{
+          foo {
+            ... @defer(if: true, label: "a") { a }
+            ... @defer(if: false, label: "b") { b }
+            ... @include(if: false) @defer(label: "c") { c }
+            ... @skip(if: true) @defer(label: "d") { d }
+            ... @include(if: true) @skip(if: false) @defer(label: "e") { e }
+          }
+        }`,
+      );
+      expect(collectDeferSites(descriptor.possibleSelections)).toEqual([
+        { label: "a", conditions: [] },
+        { label: "e", conditions: [] },
+      ]);
+    });
+
+    it("collects variable conditions of the site and its ancestors", () => {
+      const descriptor = testHelperV2(
+        `query ($defer: Boolean, $include: Boolean, $skip: Boolean) {
+          foo @include(if: $include) {
+            ... @skip(if: $skip) {
+              ... @defer(if: $defer, label: "a") { a }
+            }
+          }
+        }`,
+      );
+      expect(collectDeferSites(descriptor.possibleSelections)).toEqual([
+        {
+          label: "a",
+          conditions: [
+            { variable: "include", expected: true, defer: false },
+            { variable: "skip", expected: false, defer: false },
+            { variable: "defer", expected: true, defer: true },
+          ],
+        },
+      ]);
+    });
+
+    it("doesn't inherit conditions of enclosing deferred fragments", () => {
+      const descriptor = testHelperV2(
+        `query ($outer: Boolean, $inner: Boolean) {
+          foo {
+            ... @defer(if: $outer, label: "outer") {
+              bar {
+                ... @defer(if: $inner, label: "inner") { baz }
+              }
+            }
+          }
+        }`,
+      );
+      const foo = descriptor.possibleSelections
+        .get(commonSelectionKey)
+        ?.fields.get("foo")?.[0].selection;
+      const bar = foo?.get(null)?.fields.get("bar")?.[0].selection;
+
+      expect(foo?.get(null)?.deferSites).toEqual([
+        {
+          label: "outer",
+          conditions: [{ variable: "outer", expected: true, defer: true }],
+        },
+      ]);
+      expect(bar?.get(null)?.deferSites).toEqual([
+        {
+          label: "inner",
+          conditions: [{ variable: "inner", expected: true, defer: true }],
+        },
+      ]);
+    });
+
+    it("doesn't duplicate sites merged into the same selection multiple times", () => {
+      const descriptor = testHelperV2(
+        `{
+          node {
+            ... @defer(label: "a") { id }
+            ... on Node { foo }
+            ... on User { bar }
+          }
+        }`,
+        { Node: ["User", "Post"] },
+      );
+      const node = descriptor.possibleSelections
+        .get(commonSelectionKey)
+        ?.fields.get("node")?.[0].selection;
+
+      const site = { label: "a", conditions: [] };
+      expect(node?.get(null)?.deferSites).toEqual([site]);
+      expect(node?.get("User")?.deferSites).toEqual([site]);
+      expect(node?.get("Post")?.deferSites).toEqual([site]);
+    });
+
+    it("collects sites of each spread of the same fragment", () => {
+      const descriptor = testHelperV2(
+        `query ($a: Boolean, $b: Boolean) {
+          foo {
+            ...FooFragment @include(if: $a)
+            ...FooFragment @include(if: $b)
+          }
+        }
+        fragment FooFragment on Foo { ... @defer(label: "a") { bar } }`,
+      );
+      expect(collectDeferSites(descriptor.possibleSelections)).toEqual([
+        {
+          label: "a",
+          conditions: [{ variable: "a", expected: true, defer: false }],
+        },
+        {
+          label: "a",
+          conditions: [{ variable: "b", expected: true, defer: false }],
+        },
+      ]);
+    });
+
+    function collectDeferSites(
+      possibleSelections: PossibleSelections,
+      sites = new Set<DeferSite>(),
+    ): DeferSite[] {
+      for (const selection of possibleSelections.values()) {
+        for (const site of selection.deferSites ?? []) {
+          sites.add(site);
+        }
+        for (const fieldAliases of selection.fields.values()) {
+          for (const field of fieldAliases) {
+            if (field.selection) collectDeferSites(field.selection, sites);
+          }
+        }
+      }
+      return [...sites];
+    }
+  });
+
   function testHelper(
     operation: string,
     possibleTypes?: PossibleTypes,
@@ -1186,6 +1366,7 @@ describe(collectSubFields, () => {
       fieldsWithArgs: [],
       mergeMemo: new Map(),
       copyOnWrite: new Set(),
+      deferSites: [],
     };
     return collectSubFields(context, fieldInfo);
   }

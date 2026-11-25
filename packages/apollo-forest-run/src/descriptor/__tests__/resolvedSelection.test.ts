@@ -516,6 +516,56 @@ describe(resolveSelection, () => {
     );
     expect(resolvedFooSelection.skippedFields?.has(barField)).toBe(true);
   });
+
+  describe("deferred fragments", () => {
+    const query = `
+      query ($defer: Boolean, $include: Boolean, $deferWithDefault: Boolean = false) {
+        foo {
+          ... @defer(label: "static") { a }
+          ... @defer(if: $defer, label: "defer") { b }
+          ... @include(if: $include) @defer(label: "include") { c }
+          ... @defer(if: $deferWithDefault, label: "default") { d }
+        }
+      }
+    `;
+    function resolveDeferredLabels(variables: Record<string, unknown>) {
+      const operation = createTestOperation(query, variables);
+      const fooSelection = operation.possibleSelections
+        .get(null)
+        ?.fields.get("foo")?.[0]?.selection;
+      assert(fooSelection);
+      return resolveSelection(
+        operation,
+        fooSelection,
+        null,
+      ).deferredFragments?.map((site) => site.label);
+    }
+
+    it("enables sites by operation variables", () => {
+      expect(resolveDeferredLabels({})).toEqual(["static", "defer"]);
+      expect(resolveDeferredLabels({ defer: false })).toEqual(["static"]);
+      expect(
+        resolveDeferredLabels({
+          defer: true,
+          include: true,
+          deferWithDefault: true,
+        }),
+      ).toEqual(["static", "defer", "include", "default"]);
+    });
+
+    it("has no deferred fragments without enabled sites", () => {
+      const operation = createTestOperation(
+        `query ($defer: Boolean) { foo { ... @defer(if: $defer) { a } } }`,
+        { defer: false },
+      );
+      const fooSelection = operation.possibleSelections
+        .get(null)
+        ?.fields.get("foo")?.[0]?.selection;
+      assert(fooSelection);
+      const resolved = resolveSelection(operation, fooSelection, null);
+      expect(resolved.deferredFragments).toBe(undefined);
+    });
+  });
 });
 
 describe(resolvedSelectionsAreEqual, () => {

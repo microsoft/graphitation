@@ -15,6 +15,7 @@ import type {
 } from "../values/types";
 import type { NodeDifferenceMap } from "../diff/types";
 import type {
+  AnyIndexedTree,
   Draft,
   ForestEnv,
   IndexedTree,
@@ -22,7 +23,8 @@ import type {
   UpdateTreeResult,
 } from "./types";
 import { assert } from "../jsutils/assert";
-import { indexTree } from "./indexTree";
+import { isStoredTree, reindexTree } from "./indexTree";
+import { resolveOperation } from "../descriptor/operation";
 import { isDirty } from "../diff/difference";
 import {
   createDraft,
@@ -44,24 +46,25 @@ type ComplexValue = SourceObject | NestedList<SourceObject>;
 
 export { NodeDifferenceMap }; // FIXME
 
-export function updateTree(
+export function updateTree<TTree extends AnyIndexedTree = IndexedTree>(
   env: ForestEnv,
-  base: IndexedTree,
+  base: TTree,
   differenceMap: NodeDifferenceMap,
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
-): UpdateTreeResult {
+): UpdateTreeResult<TTree> {
+  const baseOperation = resolveOperation(base.operation);
   const rootChunks = base.nodes.get(base.rootNodeKey);
   if (rootChunks?.length !== 1) {
     assert(
       false,
       `Failed to update "${
-        base.operation.debugName
+        baseOperation.debugName
       }": expected a single root chunk, got ${rootChunks?.length ?? 0}`,
     );
   }
   const rootChunk = rootChunks[0];
   const context: UpdateTreeContext = {
-    operation: base.operation,
+    operation: baseOperation,
     drafts: new Map(),
     changes: new Map(),
     changedNodes: new Set(),
@@ -117,7 +120,7 @@ export function updateTree(
       assert(
         difference,
         `Failed to update "${
-          base.operation.debugName
+          baseOperation.debugName
         }"${at}: missing difference for ${chunk.type || "object"}`,
       );
     }
@@ -173,14 +176,15 @@ export function updateTree(
       env.keyMap?.set(draft, key);
     }
   }
-  const updatedTree = indexTree(
+  const updatedTree = reindexTree(
     env,
-    base.operation,
+    base,
     { data: rootDraft },
     missingFields,
     base,
   );
-  if (env.apolloCompat_keepOrphanNodes) {
+  // Transient trees never keep orphan nodes (thus, never have detached chunks updated in place)
+  if (env.apolloCompat_keepOrphanNodes && isStoredTree(base)) {
     apolloBackwardsCompatibility_saveOrphanNodes(base, updatedTree);
   }
   return {
@@ -194,7 +198,7 @@ export function updateTree(
 }
 
 function resolveAffectedChunks(
-  base: IndexedTree,
+  base: AnyIndexedTree,
   differenceMap: NodeDifferenceMap,
 ): ObjectChunk[] {
   const affectedChunks: ObjectChunk[] = [];
@@ -226,7 +230,7 @@ function debugPathClause(
 
 function completeObject(
   env: ForestEnv,
-  base: IndexedTree,
+  base: AnyIndexedTree,
   getNodeChunks: ((key: NodeKey) => Iterable<NodeChunk>) | undefined,
   object: ObjectValue,
   possibleSelections: PossibleSelections,
@@ -285,7 +289,7 @@ function completeObject(
 
 function createSourceCopiesUpToRoot(
   context: UpdateTreeContext,
-  tree: IndexedTree,
+  tree: AnyIndexedTree,
   from: CompositeValueChunk,
   isRootCall = true,
   isIndirectlyAffected = false,
@@ -343,8 +347,8 @@ function createSourceCopiesUpToRoot(
 }
 
 function apolloBackwardsCompatibility_saveOrphanNodes(
-  current: IndexedTree,
-  next: IndexedTree,
+  current: AnyIndexedTree,
+  next: AnyIndexedTree,
 ) {
   const currentNodes = current.nodes;
   const nextNodes = next.nodes;

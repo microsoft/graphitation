@@ -1,11 +1,15 @@
 import type { VariableDefinitionNode, OperationDefinitionNode } from "graphql";
 import { valueFromASTUntyped } from "graphql";
 import type {
-  DescriptorKind,
   DetachedFragmentDescriptor,
   DocumentDescriptor,
   OperationDescriptor,
+  OperationFragmentDescriptor,
+  OperationFragmentDescriptorCache,
+  PossibleSelections,
   RegularOperationDescriptor,
+  StoredDescriptorKind,
+  TreeDescriptor,
   ResultTreeDescriptor,
   OperationEnv,
   TypeName,
@@ -13,6 +17,7 @@ import type {
   VariableName,
 } from "./types";
 import { sortKeys } from "../jsutils/normalize";
+import { assert, assertNever } from "../jsutils/assert";
 
 const defaultOperationTypes: Record<
   OperationDefinitionNode["operation"],
@@ -85,7 +90,47 @@ export function describeDetachedFragment(
   );
 }
 
-function createDescriptor<TKind extends DescriptorKind>(
+/**
+ * Returns a descriptor of the operation sub-selection, starting from objects with the given `possibleSelections`
+ * (e.g. objects with a deferred fragment).
+ *
+ * Descriptors are memoized in a caller-owned cache of this operation (e.g. state of an incremental execution),
+ * so that all objects with the same selection share the same descriptor while it is needed.
+ */
+export function getOperationFragmentDescriptor(
+  cache: OperationFragmentDescriptorCache,
+  operation: OperationDescriptor,
+  possibleSelections: PossibleSelections,
+): OperationFragmentDescriptor {
+  let descriptor = cache.get(possibleSelections);
+  if (!descriptor) {
+    descriptor = {
+      kind: "OperationFragment",
+      operation,
+      possibleSelections,
+    };
+    cache.set(possibleSelections, descriptor);
+  }
+  assert(descriptor.operation === operation);
+  return descriptor;
+}
+
+// Operation which owns the selection of the descriptor
+export function resolveOperation(
+  descriptor: TreeDescriptor,
+): OperationDescriptor {
+  switch (descriptor.kind) {
+    case "Operation":
+    case "DetachedFragment":
+      return descriptor;
+    case "OperationFragment":
+      return descriptor.operation;
+    default:
+      assertNever(descriptor);
+  }
+}
+
+function createDescriptor<TKind extends StoredDescriptorKind>(
   kind: TKind,
   env: OperationEnv,
   documentDescriptor: DocumentDescriptor,
@@ -140,6 +185,7 @@ function createDescriptor<TKind extends DescriptorKind>(
     definition: documentDescriptor.definition,
     hasDefaultValues: documentDescriptor.hasDefaultValues,
     possibleSelections: resultTreeDescriptor.possibleSelections,
+    hasDeferSites: resultTreeDescriptor.hasDeferSites,
     variables,
     variablesWithDefaults,
     variablesKey,

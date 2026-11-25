@@ -2,10 +2,12 @@ import {
   DetachedFragmentDescriptor,
   FieldInfo,
   OperationDescriptor,
+  OperationFragmentDescriptor,
   OperationId,
   PossibleSelection,
   PossibleSelections,
   RegularOperationDescriptor,
+  TreeDescriptor,
   TypeName,
   VariableValues,
 } from "../descriptor/types";
@@ -40,10 +42,10 @@ import {
 } from "../diff/types";
 import { HistoryConfig } from "../cache/types";
 
-export type IndexedTreeBase<TOperation extends OperationDescriptor> = {
+export type IndexedTreeBase<TDescriptor extends TreeDescriptor, TPrevTree> = {
   // Same as operation.kind, duplicated to discriminate trees without extra indirection
-  readonly kind: TOperation["kind"];
-  operation: TOperation;
+  readonly kind: TDescriptor["kind"];
+  operation: TDescriptor;
   result: OperationResult;
   rootNodeKey: NodeKey;
   nodes: NodeMap;
@@ -56,7 +58,7 @@ export type IndexedTreeBase<TOperation extends OperationDescriptor> = {
   // Previous state of this tree.
   //   Useful for recycling chunks from multiple tree states, (e.g. with merge policies when final tree
   //   should recycle chunks from both - incoming and existing trees).
-  prev: IndexedTree | null;
+  prev: TPrevTree | null;
 
   // Error states
   incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
@@ -69,11 +71,23 @@ export type IndexedTreeBase<TOperation extends OperationDescriptor> = {
 };
 
 // Note: all tree kinds must have the same set of fields (keeps the same object shape in hot paths)
-export type OperationTree = IndexedTreeBase<RegularOperationDescriptor>;
-export type DetachedFragmentTree = IndexedTreeBase<DetachedFragmentDescriptor>;
+// Note: interfaces (vs type aliases) allow trees to reference their own kinds (in `prev`)
+/* eslint-disable @typescript-eslint/no-empty-interface */
+export interface OperationTree
+  extends IndexedTreeBase<RegularOperationDescriptor, IndexedTree> {}
+export interface DetachedFragmentTree
+  extends IndexedTreeBase<DetachedFragmentDescriptor, IndexedTree> {}
 
 // Any tree which can be stored in the forest
 export type IndexedTree = OperationTree | DetachedFragmentTree;
+
+// Transient tree of an operation sub-selection (e.g. a deferred fragment). Never stored in the forest.
+export interface OperationFragmentTree
+  extends IndexedTreeBase<OperationFragmentDescriptor, OperationFragmentTree> {}
+/* eslint-enable @typescript-eslint/no-empty-interface */
+
+// Any tree, including transient trees
+export type AnyIndexedTree = IndexedTree | OperationFragmentTree;
 
 export type HistoryFieldChange =
   | FillerChange
@@ -204,8 +218,8 @@ export type UpdateTreeContext = {
   statsLogger?: UpdateLogger;
 };
 
-export type UpdateTreeResult = {
-  updatedTree: IndexedTree;
+export type UpdateTreeResult<TTree extends AnyIndexedTree = IndexedTree> = {
+  updatedTree: TTree;
   changes: ChangedChunksMap;
   changedNodes: Set<NodeKey>; // Directly changed nodes (subset of NodeDifferenceMap keys)
   affectedNodes: Set<NodeKey>; // Parent nodes updated due to a change in a nested node (if node is both - directly updated and affected by another node update, it will be in both: changedNodes and affectedNodes)

@@ -17,7 +17,7 @@ import type {
   ObjectDifference,
   ValueDifference,
 } from "../diff/types";
-import type { IndexedTree, ForestEnv } from "./types";
+import type { AnyIndexedTree, ForestEnv } from "./types";
 import * as Difference from "../diff/difference";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import { updateTree } from "./updateTree";
@@ -63,10 +63,10 @@ const enum DirtyState {
   StructureChanged,
 }
 
-type TreeState = {
+type TreeState<TTree extends AnyIndexedTree = AnyIndexedTree> = {
   dirty: DirtyState;
   nodeDifference: NodeDifferenceMap;
-  intermediateTree: IndexedTree;
+  intermediateTree: TTree;
   findParent: ParentLocator;
 };
 
@@ -92,14 +92,14 @@ const EMPTY_ARRAY = Object.freeze([]);
  * - In "DESCEND" mode tree may undergo multiple updates if transformation affects tree structure
  *   (add/remove list items, change union type members, change field values to null, etc.)
  */
-export function transformTree(
+export function transformTree<TTree extends AnyIndexedTree>(
   env: ForestEnv,
-  tree: IndexedTree,
+  tree: TTree,
   direction: "ASCEND" | "DESCEND",
   chunkFilter: ChunkFilter,
   transformer: Transformer,
-): IndexedTree {
-  const treeState: TreeState = {
+): TTree {
+  const treeState: TreeState<TTree> = {
     dirty: DirtyState.Clean,
     nodeDifference: new Map(),
     intermediateTree: tree,
@@ -229,7 +229,10 @@ function markTreeDirty(
   }
 }
 
-function updateTreeStructure(env: ForestEnv, state: TreeState) {
+function updateTreeStructure<TTree extends AnyIndexedTree>(
+  env: ForestEnv,
+  state: TreeState<TTree>,
+) {
   // Intermediate update of the tree structure
   //   We can skip intermediate updates in ASCEND mode because output of transformation doesn't change
   //   which chunks are visited during transformation.
@@ -248,7 +251,7 @@ function updateTreeStructure(env: ForestEnv, state: TreeState) {
 }
 
 function collectChunks(
-  tree: IndexedTree,
+  tree: AnyIndexedTree,
   direction: "ASCEND" | "DESCEND",
   filter: ChunkFilter,
 ) {
