@@ -3,6 +3,7 @@ import { valueFromASTUntyped } from "graphql";
 import type {
   DetachedFragmentDescriptor,
   DocumentDescriptor,
+  OperationDescriptor,
   RegularOperationDescriptor,
   ResultTreeDescriptor,
   OperationEnv,
@@ -11,6 +12,7 @@ import type {
   VariableName,
 } from "./types";
 import { sortKeys } from "../jsutils/normalize";
+import { assert } from "../jsutils/assert";
 
 const defaultOperationTypes: Record<
   OperationDefinitionNode["operation"],
@@ -41,72 +43,24 @@ export function describeOperation(
   rootTypeName?: TypeName,
   rootNodeKey?: string,
 ): RegularOperationDescriptor {
-  const { definition } = documentDescriptor;
-  const rootType = rootTypeName ?? defaultOperationTypes[definition.operation];
+  const operation = documentDescriptor.definition.operation;
+  const rootType = rootTypeName ?? defaultOperationTypes[operation];
   if (!rootType) {
-    throw new Error(`Unexpected operation type: ${definition.operation}`);
+    throw new Error(`Unexpected operation type: ${operation}`);
   }
-  variablesWithDefaults ??= resolveVariablesWithDefaults(
-    documentDescriptor,
-    variables,
-  );
-  // Note: keeping evaluation order of helpers (some may throw or call user callbacks)
-  const id = env.genId?.() ?? 0;
-  const keyVariables = getKeyVars(definition);
-  const covers = getCovers(definition, variablesWithDefaults);
-  const historySize = env.historyConfig
-    ? getHistorySize(definition, variables, env)
-    : 0;
-  variablesKey ??= createVariablesKey(
-    definition.variableDefinitions,
-    variablesWithDefaults,
-  );
-
-  if (env.optimizeDescriptorShape === false) {
-    // Legacy construction (kept for A/B evaluation of optimizeDescriptorShape)
-    return {
-      kind: "Operation",
-      ...documentDescriptor,
-      ...resultTreeDescriptor,
-      id,
-      name: definition.name?.value,
-      env,
-      variables,
-      variablesWithDefaults,
-      rootType: rootType,
-      rootNodeKey: rootNodeKey ?? defaultRootNodeKeys[definition.operation],
-      selections: new Map(),
-      keyVariables,
-      covers,
-      historySize,
-      variablesKey,
-      cache: isCacheable(definition),
-    };
-  }
-  // Note: explicit literal (vs spreads) keeps all properties in-object.
-  //   Must have the same properties in the same order as in describeDetachedFragment (keeps a single object shape)
-  return {
-    kind: "Operation",
-    id,
-    name: definition.name?.value,
+  const descriptor = createDescriptor(
+    "Operation",
     env,
-    document: documentDescriptor.document,
-    fragmentMap: documentDescriptor.fragmentMap,
-    debugName: documentDescriptor.debugName,
-    definition,
-    hasDefaultValues: documentDescriptor.hasDefaultValues,
-    possibleSelections: resultTreeDescriptor.possibleSelections,
+    documentDescriptor,
+    resultTreeDescriptor,
     variables,
     variablesWithDefaults,
     variablesKey,
-    keyVariables,
     rootType,
-    rootNodeKey: rootNodeKey ?? defaultRootNodeKeys[definition.operation],
-    selections: new Map(),
-    cache: isCacheable(definition),
-    historySize,
-    covers,
-  };
+    rootNodeKey,
+  );
+  assert(descriptor.kind === "Operation");
+  return descriptor;
 }
 
 /**
@@ -125,6 +79,32 @@ export function describeDetachedFragment(
   rootTypeName: TypeName,
   rootNodeKey?: string,
 ): DetachedFragmentDescriptor {
+  const descriptor = createDescriptor(
+    "DetachedFragment",
+    env,
+    documentDescriptor,
+    resultTreeDescriptor,
+    variables,
+    variablesWithDefaults,
+    variablesKey,
+    rootTypeName,
+    rootNodeKey,
+  );
+  assert(descriptor.kind === "DetachedFragment");
+  return descriptor;
+}
+
+function createDescriptor(
+  kind: OperationDescriptor["kind"],
+  env: OperationEnv,
+  documentDescriptor: DocumentDescriptor,
+  resultTreeDescriptor: ResultTreeDescriptor,
+  variables: VariableValues,
+  variablesWithDefaults: VariableValues | undefined,
+  variablesKey: string | undefined,
+  rootType: TypeName,
+  rootNodeKey: string | undefined,
+): OperationDescriptor {
   const { definition } = documentDescriptor;
   variablesWithDefaults ??= resolveVariablesWithDefaults(
     documentDescriptor,
@@ -145,7 +125,7 @@ export function describeDetachedFragment(
   if (env.optimizeDescriptorShape === false) {
     // Legacy construction (kept for A/B evaluation of optimizeDescriptorShape)
     return {
-      kind: "DetachedFragment",
+      kind,
       ...documentDescriptor,
       ...resultTreeDescriptor,
       id,
@@ -153,7 +133,7 @@ export function describeDetachedFragment(
       env,
       variables,
       variablesWithDefaults,
-      rootType: rootTypeName,
+      rootType,
       rootNodeKey: rootNodeKey ?? defaultRootNodeKeys[definition.operation],
       selections: new Map(),
       keyVariables,
@@ -163,10 +143,9 @@ export function describeDetachedFragment(
       cache: isCacheable(definition),
     };
   }
-  // Note: explicit literal (vs spreads) keeps all properties in-object.
-  //   Must have the same properties in the same order as in describeOperation (keeps a single object shape)
+  // Note: explicit literal (vs spreads) keeps all properties in-object with a single shape for all descriptor kinds
   return {
-    kind: "DetachedFragment",
+    kind,
     id,
     name: definition.name?.value,
     env,
@@ -180,7 +159,7 @@ export function describeDetachedFragment(
     variablesWithDefaults,
     variablesKey,
     keyVariables,
-    rootType: rootTypeName,
+    rootType,
     rootNodeKey: rootNodeKey ?? defaultRootNodeKeys[definition.operation],
     selections: new Map(),
     cache: isCacheable(definition),
