@@ -166,6 +166,8 @@ export type TreeDescriptor = OperationDescriptor | OperationFragmentDescriptor;
 
 export type FormattedError = GraphQLFormattedError;
 
+export type ResponsePath = ReadonlyArray<string | number>;
+
 export type FieldInfo = {
   name: FieldName;
   dataKey: FieldAlias | FieldName;

@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Cache write API for @defer: `execution` write option (initial results written as regular results, subsequent results ignored for now), deprecated `result`",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}

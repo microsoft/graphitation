@@ -1,14 +1,16 @@
-import type { Cache } from "@apollo/client";
 import type { IndexedTree, UpdateTreeResult } from "../forest/types";
 import type { OperationResult } from "../values/types";
 import type {
   CacheEnv,
   DataForest,
   DataTree,
+  ExecutionResult,
   ModifyResult,
   OptimisticLayer,
   Store,
+  SubsequentIncrementalExecutionResult,
   Transaction,
+  WriteOptions,
   WriteResult,
 } from "./types";
 import type { NodeKey, OperationDescriptor } from "../descriptor/types";
@@ -42,15 +44,18 @@ export function write(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
-  options: Cache.WriteOptions,
+  options: WriteOptions,
 ): WriteResult {
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
   const targetForest = getActiveForest(store, activeTransaction);
 
-  const writeData =
-    typeof options.result === "object" && options.result !== null
-      ? options.result
-      : {};
+  // TODO: subsequent results of incremental delivery are written in the next layer (incremental writes)
+  const { execution } = options;
+  assert(!execution || !isSubsequentResult(execution));
+
+  // An initial result of incremental delivery is written as a regular (partial) result
+  const result = execution ? execution.data : options.result;
+  const writeData = typeof result === "object" && result !== null ? result : {};
   const rootNodeKey = options.dataId ?? objectKey(writeData);
   assert(rootNodeKey !== false);
 
@@ -356,4 +361,10 @@ const EMPTY_ARRAY = Object.freeze([]);
 
 export function isWrite(op: WriteResult | ModifyResult): op is WriteResult {
   return "incoming" in op; // write has "incoming" tree
+}
+
+export function isSubsequentResult(
+  execution: ExecutionResult,
+): execution is SubsequentIncrementalExecutionResult & ExecutionResult {
+  return !("data" in execution);
 }
