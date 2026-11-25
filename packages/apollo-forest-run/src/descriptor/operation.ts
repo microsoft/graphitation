@@ -8,7 +8,6 @@ import type {
   OperationFragmentDescriptorCache,
   PossibleSelections,
   RegularOperationDescriptor,
-  StoredDescriptorKind,
   TreeDescriptor,
   ResultTreeDescriptor,
   OperationEnv,
@@ -48,17 +47,52 @@ export function describeOperation(
   rootTypeName?: TypeName,
   rootNodeKey?: string,
 ): RegularOperationDescriptor {
-  return createDescriptor(
-    "Operation",
-    env,
+  const { definition } = documentDescriptor;
+  const rootType = rootTypeName ?? defaultOperationTypes[definition.operation];
+  if (!rootType) {
+    throw new Error(`Unexpected operation type: ${definition.operation}`);
+  }
+  variablesWithDefaults ??= resolveVariablesWithDefaults(
     documentDescriptor,
-    resultTreeDescriptor,
+    variables,
+  );
+  // Note: keeping evaluation order of helpers (some may throw or call user callbacks)
+  const id = env.genId?.() ?? 0;
+  const keyVariables = getKeyVars(definition);
+  const covers = getCovers(definition, variablesWithDefaults);
+  const historySize = env.historyConfig
+    ? getHistorySize(definition, variables, env)
+    : 0;
+  variablesKey ??= createVariablesKey(
+    definition.variableDefinitions,
+    variablesWithDefaults,
+  );
+
+  // Note: explicit literal (vs spreads) keeps all properties in-object.
+  //   Must have the same properties in the same order as in describeDetachedFragment (keeps a single object shape)
+  return {
+    kind: "Operation",
+    id,
+    name: definition.name?.value,
+    env,
+    document: documentDescriptor.document,
+    fragmentMap: documentDescriptor.fragmentMap,
+    debugName: documentDescriptor.debugName,
+    definition,
+    hasDefaultValues: documentDescriptor.hasDefaultValues,
+    possibleSelections: resultTreeDescriptor.possibleSelections,
+    hasDeferSites: resultTreeDescriptor.hasDeferSites,
     variables,
     variablesWithDefaults,
     variablesKey,
-    rootTypeName,
-    rootNodeKey,
-  );
+    keyVariables,
+    rootType,
+    rootNodeKey: rootNodeKey ?? defaultRootNodeKeys[definition.operation],
+    selections: new Map(),
+    cache: isCacheable(definition),
+    historySize,
+    covers,
+  };
 }
 
 /**
@@ -77,17 +111,48 @@ export function describeDetachedFragment(
   rootTypeName: TypeName,
   rootNodeKey?: string,
 ): DetachedFragmentDescriptor {
-  return createDescriptor(
-    "DetachedFragment",
-    env,
+  const { definition } = documentDescriptor;
+  variablesWithDefaults ??= resolveVariablesWithDefaults(
     documentDescriptor,
-    resultTreeDescriptor,
+    variables,
+  );
+  // Note: keeping evaluation order of helpers (some may throw or call user callbacks)
+  const id = env.genId?.() ?? 0;
+  const keyVariables = getKeyVars(definition);
+  const covers = getCovers(definition, variablesWithDefaults);
+  const historySize = env.historyConfig
+    ? getHistorySize(definition, variables, env)
+    : 0;
+  variablesKey ??= createVariablesKey(
+    definition.variableDefinitions,
+    variablesWithDefaults,
+  );
+
+  // Note: explicit literal (vs spreads) keeps all properties in-object.
+  //   Must have the same properties in the same order as in describeOperation (keeps a single object shape)
+  return {
+    kind: "DetachedFragment",
+    id,
+    name: definition.name?.value,
+    env,
+    document: documentDescriptor.document,
+    fragmentMap: documentDescriptor.fragmentMap,
+    debugName: documentDescriptor.debugName,
+    definition,
+    hasDefaultValues: documentDescriptor.hasDefaultValues,
+    possibleSelections: resultTreeDescriptor.possibleSelections,
+    hasDeferSites: resultTreeDescriptor.hasDeferSites,
     variables,
     variablesWithDefaults,
     variablesKey,
-    rootTypeName,
-    rootNodeKey,
-  );
+    keyVariables,
+    rootType: rootTypeName,
+    rootNodeKey: rootNodeKey ?? defaultRootNodeKeys[definition.operation],
+    selections: new Map(),
+    cache: isCacheable(definition),
+    historySize,
+    covers,
+  };
 }
 
 /**
@@ -130,77 +195,23 @@ export function resolveOperation(
   }
 }
 
-function createDescriptor<TKind extends StoredDescriptorKind>(
-  kind: TKind,
-  env: OperationEnv,
+function resolveVariablesWithDefaults(
   documentDescriptor: DocumentDescriptor,
-  resultTreeDescriptor: ResultTreeDescriptor,
   variables: VariableValues,
-  variablesWithDefaults?: VariableValues,
-  variablesKey?: string,
-  rootTypeName?: TypeName,
-  rootNodeKey?: string,
-): Extract<OperationDescriptor, { kind: TKind }> {
-  const {
-    definition: { operation, variableDefinitions, directives },
-  } = documentDescriptor;
-
-  const effectiveRootTypeName =
-    rootTypeName ?? defaultOperationTypes[operation];
-
-  const effectiveRootNodeKey = rootNodeKey ?? defaultRootNodeKeys[operation];
-
-  if (!effectiveRootTypeName) {
-    throw new Error(`Unexpected operation type: ${operation}`);
-  }
-
-  variablesWithDefaults ??= documentDescriptor.hasDefaultValues
-    ? applyDefaultValues(variables, variableDefinitions)
+): VariableValues {
+  return documentDescriptor.hasDefaultValues
+    ? applyDefaultValues(
+        variables,
+        documentDescriptor.definition.variableDefinitions,
+      )
     : variables;
+}
 
-  // Note: keeping evaluation order of helpers (some may throw or call user callbacks)
-  const id = env.genId?.() ?? 0;
-  const keyVariables = getKeyVars(documentDescriptor.definition);
-  const covers = getCovers(
-    documentDescriptor.definition,
-    variablesWithDefaults,
+function isCacheable(definition: OperationDefinitionNode): boolean {
+  return Boolean(
+    definition.operation !== "mutation" ||
+      definition.directives?.some((d) => d.name.value === "cache"),
   );
-  const historySize = env.historyConfig
-    ? getHistorySize(documentDescriptor.definition, variables, env)
-    : 0;
-  variablesKey ??= createVariablesKey(
-    variableDefinitions,
-    variablesWithDefaults,
-  );
-
-  // Note: explicit literal (vs spreads) keeps the same object shape for all descriptor kinds
-  const descriptor: OperationDescriptor = {
-    kind: kind as OperationDescriptor["kind"],
-    id,
-    name: documentDescriptor.definition.name?.value,
-    env,
-    document: documentDescriptor.document,
-    fragmentMap: documentDescriptor.fragmentMap,
-    debugName: documentDescriptor.debugName,
-    definition: documentDescriptor.definition,
-    hasDefaultValues: documentDescriptor.hasDefaultValues,
-    possibleSelections: resultTreeDescriptor.possibleSelections,
-    hasDeferSites: resultTreeDescriptor.hasDeferSites,
-    variables,
-    variablesWithDefaults,
-    variablesKey,
-    keyVariables,
-    rootType: effectiveRootTypeName,
-    rootNodeKey: effectiveRootNodeKey,
-    selections: new Map(),
-    cache: Boolean(
-      operation !== "mutation" ||
-        directives?.some((d) => d.name.value === "cache"),
-    ),
-    historySize,
-    covers,
-  };
-  return descriptor as Extract<OperationDescriptor, { kind: TKind }>;
 }
 
 export function applyDefaultValues(
