@@ -13,6 +13,8 @@ export type {
   CompleteExecutionResult,
   ExecutionKey,
   ExecutionResult,
+  GraphQL17InitialIncrementalExecutionResult,
+  GraphQL17SubsequentIncrementalExecutionResult,
   InitialIncrementalExecutionResult,
   SubsequentIncrementalExecutionResult,
   WriteOptions,

@@ -3,8 +3,12 @@ import type { DocumentNode } from "graphql";
 import { ForestRun } from "../ForestRun";
 import { resolveOperationDescriptor } from "../cache/descriptor";
 import { canReleaseOperationDescriptor } from "../cache/store";
-import type { ExecutionKey, PendingId } from "../cache/types";
-import type { ResponsePath } from "../descriptor/types";
+import type {
+  ExecutionKey,
+  GraphQL17SubsequentIncrementalExecutionResult,
+  IncrementalDeferResult,
+  PendingResult,
+} from "../cache/types";
 import { assert } from "../jsutils/assert";
 import {
   isCompositeListValue,
@@ -22,10 +26,14 @@ class TestCache extends ForestRun {
   storedTree(query: DocumentNode, variables = {}) {
     return this.store.dataForest.trees.get(this.operation(query, variables).id);
   }
-  pendingCount(query: DocumentNode, variables = {}) {
+  execution(query: DocumentNode, variables = {}) {
     return this.store.incrementalExecutions.get(
       this.operation(query, variables),
-    )?.pending.size;
+    );
+  }
+  placeholders(query: DocumentNode, variables = {}) {
+    const keys = this.execution(query, variables)?.placeholders.keys();
+    return keys ? [...keys].sort() : undefined;
   }
   canRelease(query: DocumentNode, variables = {}) {
     return canReleaseOperationDescriptor(
@@ -35,48 +43,28 @@ class TestCache extends ForestRun {
   }
 }
 
-type Pending = { path: ResponsePath; label?: string };
-type Incremental = {
-  id: PendingId;
-  data: Record<string, unknown>;
-  subPath?: ResponsePath;
-};
-
-// Incremental execution in the latest incremental delivery format
+// Incremental execution in the 2022 draft format
 function execute(
   cache: ForestRun,
   query: DocumentNode,
   { variables = {}, key }: { variables?: object; key?: ExecutionKey } = {},
 ) {
   return {
-    initial(data: Record<string, unknown>, pending: Pending[]) {
+    initial(data: Record<string, unknown>) {
       cache.write({
         query,
         variables,
-        execution: {
-          data,
-          pending: pending.map((p, i) => ({ id: String(i), ...p })),
-          hasNext: true,
-          key,
-        },
+        execution: { data, hasNext: true, key },
       });
     },
     subsequent(
-      incremental: Incremental[],
-      {
-        completed = incremental.map(({ id }) => id),
-        hasNext = false,
-      }: { completed?: PendingId[]; hasNext?: boolean } = {},
+      incremental: IncrementalDeferResult[],
+      { hasNext = false }: { hasNext?: boolean } = {},
     ) {
       return cache.write({
         query,
         variables,
-        execution: {
-          incremental,
-          completed: completed.map((id) => ({ id })),
-          hasNext,
-          key,
-        },
+        execution: { incremental, hasNext, key },
       });
     },
   };
@@ -102,20 +90,40 @@ const message = (id: string, name?: string) => ({
   ...(name !== undefined && { name }),
 });
 
+const nestedQuery = gql`
+  query {
+    user {
+      id
+      ... @defer(label: "outer") {
+        name
+        friends {
+          id
+          ... @defer(label: "inner") {
+            bio
+          }
+        }
+      }
+    }
+  }
+`;
+const user = { __typename: "User", id: "u" };
+const friend = (id: string, bio?: string) => ({
+  __typename: "User",
+  id,
+  ...(bio !== undefined && { bio }),
+});
+
 describe("@defer: subsequent results", () => {
   it("writes a deferred fragment to its node", () => {
     const cache = new TestCache();
     const execution = execute(cache, messagesQuery);
-    execution.initial({ messages: [message("1"), message("2")] }, [
-      { path: ["messages", 0], label: "name" },
-      { path: ["messages", 1], label: "name" },
-    ]);
+    execution.initial({ messages: [message("1"), message("2")] });
     const watch = jest.fn();
     cache.watch({ query: messagesQuery, optimistic: true, callback: watch });
 
     const ref = execution.subsequent([
-      { id: "0", data: { name: "one" } },
-      { id: "1", data: { name: "two" } },
+      { path: ["messages", 0], label: "name", data: { name: "one" } },
+      { path: ["messages", 1], label: "name", data: { name: "two" } },
     ]);
 
     expect(ref).toBeUndefined();
@@ -129,9 +137,7 @@ describe("@defer: subsequent results", () => {
   it("writes a deferred fragment to its original node after a list prepend (apollo-client#13530)", () => {
     const cache = new TestCache();
     const execution = execute(cache, messagesQuery);
-    execution.initial({ messages: [message("1")] }, [
-      { path: ["messages", 0], label: "name" },
-    ]);
+    execution.initial({ messages: [message("1")] });
     cache.modify({
       fields: {
         messages(existing) {
@@ -150,7 +156,7 @@ describe("@defer: subsequent results", () => {
       },
     });
 
-    execution.subsequent([{ id: "0", data: { name: "one" } }]);
+    execution.subsequent([{ path: ["messages", 0], data: { name: "one" } }]);
 
     expect(cache.readQuery({ query: messagesQuery })).toEqual({
       messages: [message("2", "not deferred"), message("1", "one")],
@@ -173,9 +179,7 @@ describe("@defer: subsequent results", () => {
       }
     `;
     const execution = execute(cache, query);
-    execution.initial({ info: { __typename: "Info", item: message("1") } }, [
-      { path: ["info"], label: "name" },
-    ]);
+    execution.initial({ info: { __typename: "Info", item: message("1") } });
     cache.writeFragment({
       id: "Message:1",
       fragment: gql`
@@ -186,7 +190,7 @@ describe("@defer: subsequent results", () => {
       data: { __typename: "Message", text: "edited" },
     });
 
-    execution.subsequent([{ id: "0", data: { name: "delivered" } }]);
+    execution.subsequent([{ path: ["info"], data: { name: "delivered" } }]);
 
     expect(cache.readQuery({ query })).toEqual({
       info: {
@@ -215,20 +219,18 @@ describe("@defer: subsequent results", () => {
     const cell = { __typename: "Cell" };
     const execution = execute(cache, query);
     // The same source object at different positions
-    execution.initial(
-      { message: { ...message("1"), rows: [[cell], [cell]] } },
-      [
-        { path: ["message", "rows", 0, 0], label: "cell" },
-        { path: ["message", "rows", 1, 0], label: "cell" },
-      ],
-    );
+    execution.initial({ message: { ...message("1"), rows: [[cell], [cell]] } });
+    expect(cache.placeholders(query)).toEqual([
+      "message.rows.0.0",
+      "message.rows.1.0",
+    ]);
     const watch = jest.fn();
     cache.watch({ query, optimistic: true, callback: watch });
     const diffTree = jest.spyOn(DiffTree, "diffTree");
 
     execution.subsequent([
-      { id: "1", data: { name: "b" } },
-      { id: "0", data: { name: "a" } },
+      { path: ["message", "rows", 1, 0], data: { name: "b" } },
+      { path: ["message", "rows", 0, 0], data: { name: "a" } },
     ]);
 
     // One write: one diff of the incoming result
@@ -243,70 +245,80 @@ describe("@defer: subsequent results", () => {
     diffTree.mockRestore();
   });
 
-  it("writes results of nested @defer announced by subsequent results", () => {
+  it("writes results of nested @defer within delivered data", () => {
     const cache = new TestCache();
-    const query = gql`
-      query {
-        user {
-          id
-          ... @defer(label: "outer") {
-            name
-            friends {
-              id
-              ... @defer(label: "inner") {
-                bio
-              }
-            }
-          }
-        }
-      }
-    `;
-    const user = { __typename: "User", id: "u" };
-    const friend = (id: string) => ({ __typename: "User", id });
-    const execution = execute(cache, query);
-    execution.initial({ user }, [{ path: ["user"], label: "outer" }]);
+    const execution = execute(cache, nestedQuery);
+    execution.initial({ user });
+    expect(cache.placeholders(nestedQuery)).toEqual(["user"]);
 
-    cache.write({
-      query,
-      execution: {
-        incremental: [
-          {
-            id: "0",
-            data: { name: "user", friends: [friend("1"), friend("2")] },
-          },
-        ],
-        pending: [
-          { id: "1", path: ["user", "friends", 0], label: "inner" },
-          { id: "2", path: ["user", "friends", 1], label: "inner" },
-        ],
-        completed: [{ id: "0" }],
-        hasNext: true,
-      },
-    });
-    expect(cache.pendingCount(query)).toBe(2);
-    expect(cache.diff({ query, optimistic: false }).result).toEqual({
+    execution.subsequent(
+      [
+        {
+          path: ["user"],
+          label: "outer",
+          data: { name: "user", friends: [friend("1"), friend("2")] },
+        },
+      ],
+      { hasNext: true },
+    );
+    expect(cache.placeholders(nestedQuery)).toEqual([
+      "user",
+      "user.friends.0",
+      "user.friends.1",
+    ]);
+    expect(
+      cache.diff({ query: nestedQuery, optimistic: false }).result,
+    ).toEqual({
       user: { ...user, name: "user", friends: [friend("1"), friend("2")] },
     });
 
     execution.subsequent([
-      { id: "2", data: { bio: "second" } },
-      { id: "1", data: { bio: "first" } },
+      { path: ["user", "friends", 1], label: "inner", data: { bio: "second" } },
+      { path: ["user", "friends", 0], label: "inner", data: { bio: "first" } },
     ]);
 
-    expect(cache.pendingCount(query)).toBeUndefined();
-    expect(cache.diff({ query, optimistic: false })).toMatchObject({
-      complete: true,
-      result: {
-        user: {
-          ...user,
-          name: "user",
-          friends: [
-            { ...friend("1"), bio: "first" },
-            { ...friend("2"), bio: "second" },
-          ],
+    expect(cache.execution(nestedQuery)).toBeUndefined();
+    expect(cache.diff({ query: nestedQuery, optimistic: false })).toMatchObject(
+      {
+        complete: true,
+        result: {
+          user: {
+            ...user,
+            name: "user",
+            friends: [friend("1", "first"), friend("2", "second")],
+          },
         },
       },
-    });
+    );
+  });
+
+  it("writes results of nested @defer delivered with their parent in the same payload", () => {
+    const cache = new TestCache();
+    const execution = execute(cache, nestedQuery);
+    execution.initial({ user });
+
+    execution.subsequent([
+      { path: ["user", "friends", 1], label: "inner", data: { bio: "second" } },
+      {
+        path: ["user"],
+        label: "outer",
+        data: { name: "user", friends: [friend("1"), friend("2")] },
+      },
+      { path: ["user", "friends", 0], label: "inner", data: { bio: "first" } },
+    ]);
+
+    expect(cache.diff({ query: nestedQuery, optimistic: false })).toMatchObject(
+      {
+        complete: true,
+        result: {
+          user: {
+            ...user,
+            name: "user",
+            friends: [friend("1", "first"), friend("2", "second")],
+          },
+        },
+      },
+    );
   });
 
   it("locates nested @defer within delivered data after a list prepend", () => {
@@ -328,9 +340,7 @@ describe("@defer: subsequent results", () => {
       }
     `;
     const execution = execute(cache, query);
-    execution.initial({ messages: [message("1")] }, [
-      { path: ["messages", 0], label: "details" },
-    ]);
+    execution.initial({ messages: [message("1")] });
     cache.modify({
       fields: {
         messages(existing) {
@@ -355,18 +365,18 @@ describe("@defer: subsequent results", () => {
       },
     });
 
-    cache.write({
-      query,
-      execution: {
-        incremental: [
-          { id: "0", data: { info: { __typename: "Info", size: 1 } } },
-        ],
-        pending: [{ id: "1", path: ["messages", 0, "info"], label: "more" }],
-        completed: [{ id: "0" }],
-        hasNext: true,
-      },
-    });
-    execution.subsequent([{ id: "1", data: { more: "deferred" } }]);
+    execution.subsequent(
+      [
+        {
+          path: ["messages", 0],
+          data: { info: { __typename: "Info", size: 1 } },
+        },
+      ],
+      { hasNext: true },
+    );
+    execution.subsequent([
+      { path: ["messages", 0, "info"], data: { more: "deferred" } },
+    ]);
 
     expect(cache.readQuery({ query })).toEqual({
       messages: [
@@ -382,7 +392,7 @@ describe("@defer: subsequent results", () => {
     });
   });
 
-  it("writes results of different selections as separate operation fragments", () => {
+  it("writes results of fragments deferred on different objects", () => {
     const cache = new TestCache();
     const query = gql`
       query {
@@ -400,19 +410,14 @@ describe("@defer: subsequent results", () => {
         }
       }
     `;
-    const user = { __typename: "User", id: "u" };
     const post = (id: string) => ({ __typename: "Post", id });
     const execution = execute(cache, query);
-    execution.initial({ user: { ...user, posts: [post("1"), post("2")] } }, [
-      { path: ["user"], label: "bio" },
-      { path: ["user", "posts", 0], label: "title" },
-      { path: ["user", "posts", 1], label: "title" },
-    ]);
+    execution.initial({ user: { ...user, posts: [post("1"), post("2")] } });
 
     execution.subsequent([
-      { id: "1", data: { title: "first" } },
-      { id: "0", data: { bio: "bio" } },
-      { id: "2", data: { title: "second" } },
+      { path: ["user", "posts", 0], data: { title: "first" } },
+      { path: ["user"], data: { bio: "bio" } },
+      { path: ["user", "posts", 1], data: { title: "second" } },
     ]);
 
     expect(cache.readQuery({ query })).toEqual({
@@ -448,16 +453,12 @@ describe("@defer: subsequent results", () => {
         }
       }
     `;
-    const user = { __typename: "User", id: "u" };
     const execution = execute(cache, query);
-    execution.initial({ user }, [
-      { path: ["user"], label: "a" },
-      { path: ["user"], label: "b" },
-    ]);
+    execution.initial({ user });
 
     execution.subsequent([
-      { id: "0", data: { a: "a", nested: { x: "x" } } },
-      { id: "1", data: { b: "b", nested: { y: "y" } } },
+      { path: ["user"], label: "a", data: { a: "a", nested: { x: "x" } } },
+      { path: ["user"], label: "b", data: { b: "b", nested: { y: "y" } } },
     ]);
 
     expect(cache.readQuery({ query })).toEqual({
@@ -465,7 +466,7 @@ describe("@defer: subsequent results", () => {
     });
   });
 
-  it("writes data at a sub-path of a fragment to the object at that path", () => {
+  it("merges results delivered to the same nested object in one payload", () => {
     const cache = new TestCache();
     const query = gql`
       query {
@@ -490,17 +491,16 @@ describe("@defer: subsequent results", () => {
         }
       }
     `;
-    const user = { __typename: "User", id: "u" };
     const profile = { __typename: "Profile", id: "p" };
     const execution = execute(cache, query);
-    execution.initial({ user: { ...user, profile } }, [
-      { path: ["user"], label: "inner" },
-      { path: ["user", "profile"], label: "outer" },
-    ]);
+    execution.initial({ user: { ...user, profile } });
 
     execution.subsequent([
-      { id: "1", data: { settings: { theme: "dark" } } },
-      { id: "0", subPath: ["profile", "settings"], data: { language: "en" } },
+      { path: ["user", "profile"], data: { settings: { theme: "dark" } } },
+      {
+        path: ["user"],
+        data: { profile: { ...profile, settings: { language: "en" } } },
+      },
     ]);
 
     expect(cache.readQuery({ query })).toEqual({
@@ -537,11 +537,11 @@ describe("@defer: subsequent results", () => {
     const user = (name: string) => ({ __typename: "User", id: "a", name });
     cache.writeQuery({ query: author, data: { author: user("old") } });
     const execution = execute(cache, query);
-    execution.initial({ messages: [{ __typename: "Message", id: "1" }] }, [
-      { path: ["messages", 0] },
-    ]);
+    execution.initial({ messages: [{ __typename: "Message", id: "1" }] });
 
-    execution.subsequent([{ id: "0", data: { author: user("new") } }]);
+    execution.subsequent([
+      { path: ["messages", 0], data: { author: user("new") } },
+    ]);
 
     expect(cache.readQuery({ query: author })).toEqual({
       author: user("new"),
@@ -566,15 +566,11 @@ describe("@defer: subsequent results", () => {
         }
       }
     `;
-    const user = { __typename: "User", id: "u" };
     const meta = (id: string, fields: Record<string, string> = {}) => ({
       meta: { __typename: "Meta", id, a: `a${id}`, ...fields },
     });
     const execution = execute(cache, query);
-    execution.initial({ user: { ...user, items: [meta("0"), meta("1")] } }, [
-      { path: ["user", "items", 0, "meta"] },
-      { path: ["user", "items", 1, "meta"] },
-    ]);
+    execution.initial({ user: { ...user, items: [meta("0"), meta("1")] } });
     // Make the second item partial
     cache.modify({
       id: "Meta:1",
@@ -582,8 +578,8 @@ describe("@defer: subsequent results", () => {
     });
 
     execution.subsequent([
-      { id: "0", data: { b: "b0" } },
-      { id: "1", data: { b: "b1" } },
+      { path: ["user", "items", 0, "meta"], data: { b: "b0" } },
+      { path: ["user", "items", 1, "meta"], data: { b: "b1" } },
     ]);
 
     const tree = cache.storedTree(query);
@@ -611,37 +607,45 @@ describe("@defer: subsequent results", () => {
       meta("0", { b: "b0" }).meta,
     );
   });
+
   it("ignores results for objects missing in the stored tree", () => {
     const cache = new TestCache();
     const execution = execute(cache, messagesQuery);
-    execution.initial({ messages: [message("1")] }, [
-      { path: ["messages", 0], label: "name" },
-    ]);
+    execution.initial({ messages: [message("1")] });
     cache.writeQuery({ query: messagesQuery, data: { messages: [] } });
 
-    execution.subsequent([{ id: "0", data: { name: "one" } }]);
+    execution.subsequent([{ path: ["messages", 0], data: { name: "one" } }]);
 
     expect(cache.readQuery({ query: messagesQuery })).toEqual({
       messages: [],
     });
   });
 
+  it("ignores results without data", () => {
+    const cache = new TestCache();
+    const execution = execute(cache, messagesQuery);
+    execution.initial({ messages: [message("1")] });
+    const before = cache.extract();
+
+    execution.subsequent([
+      { path: ["messages", 0], data: null, errors: [{ message: "failed" }] },
+    ]);
+
+    expect(cache.extract()).toEqual(before);
+  });
+
   it("ignores results of a superseded execution", () => {
     const cache = new TestCache();
     const first = execute(cache, messagesQuery, { key: 1 });
     const second = execute(cache, messagesQuery, { key: 2 });
-    first.initial({ messages: [message("1")] }, [
-      { path: ["messages", 0], label: "name" },
-    ]);
-    second.initial({ messages: [message("2")] }, [
-      { path: ["messages", 0], label: "name" },
-    ]);
+    first.initial({ messages: [message("1")] });
+    second.initial({ messages: [message("2")] });
 
-    first.subsequent([{ id: "0", data: { name: "first" } }]);
+    first.subsequent([{ path: ["messages", 0], data: { name: "first" } }]);
     expect(cache.readQuery({ query: messagesQuery })).toEqual({
       messages: [message("2")],
     });
-    second.subsequent([{ id: "0", data: { name: "second" } }]);
+    second.subsequent([{ path: ["messages", 0], data: { name: "second" } }]);
     expect(cache.readQuery({ query: messagesQuery })).toEqual({
       messages: [message("2", "second")],
     });
@@ -650,46 +654,82 @@ describe("@defer: subsequent results", () => {
   it("ignores results after a complete result of the operation", () => {
     const cache = new TestCache();
     const execution = execute(cache, messagesQuery);
-    execution.initial({ messages: [message("1")] }, [
-      { path: ["messages", 0], label: "name" },
-    ]);
+    execution.initial({ messages: [message("1")] });
     cache.write({
       query: messagesQuery,
       execution: { data: { messages: [message("1", "complete")] } },
     });
 
-    execution.subsequent([{ id: "0", data: { name: "late" } }]);
+    execution.subsequent([{ path: ["messages", 0], data: { name: "late" } }]);
 
-    expect(cache.pendingCount(messagesQuery)).toBeUndefined();
+    expect(cache.execution(messagesQuery)).toBeUndefined();
     expect(cache.readQuery({ query: messagesQuery })).toEqual({
       messages: [message("1", "complete")],
     });
   });
 
-  it("forgets completed results and the execution without next results", () => {
+  it("does not track results with deferred data resolved inline (a complete result)", () => {
+    const cache = new TestCache();
+    cache.write({
+      query: messagesQuery,
+      execution: { data: { messages: [message("1", "inline")] } },
+    });
+
+    expect(cache.execution(messagesQuery)).toBeUndefined();
+  });
+
+  it("writes results of partially inlined fragments", () => {
     const cache = new TestCache();
     const execution = execute(cache, messagesQuery);
-    execution.initial({ messages: [message("1"), message("2")] }, [
-      { path: ["messages", 0], label: "name" },
-      { path: ["messages", 1], label: "name" },
+    execution.initial({ messages: [message("1", "inline"), message("2")] });
+    expect(cache.placeholders(messagesQuery)).toEqual([
+      "messages.0",
+      "messages.1",
     ]);
-    expect(cache.pendingCount(messagesQuery)).toBe(2);
 
-    execution.subsequent([{ id: "0", data: { name: "one" } }], {
+    execution.subsequent([{ path: ["messages", 1], data: { name: "two" } }]);
+
+    expect(cache.readQuery({ query: messagesQuery })).toEqual({
+      messages: [message("1", "inline"), message("2", "two")],
+    });
+  });
+
+  it("captures placeholders of fragments enabled by variables only", () => {
+    const cache = new TestCache();
+    const query = gql`
+      query ($defer: Boolean) {
+        messages {
+          id
+          ... @defer(if: $defer) {
+            name
+          }
+        }
+      }
+    `;
+    const variables = { defer: false };
+    cache.write({
+      query,
+      variables,
+      execution: { data: { messages: [message("1")] }, hasNext: true },
+    });
+    expect(cache.execution(query, variables)).toBeUndefined();
+  });
+
+  it("forgets the execution without next results", () => {
+    const cache = new TestCache();
+    const execution = execute(cache, messagesQuery);
+    execution.initial({ messages: [message("1"), message("2")] });
+
+    execution.subsequent([{ path: ["messages", 0], data: { name: "one" } }], {
       hasNext: true,
     });
-    expect(cache.pendingCount(messagesQuery)).toBe(1);
-    // Completed results are not written again
-    execution.subsequent([{ id: "0", data: { name: "again" } }], {
-      completed: [],
-      hasNext: true,
-    });
+    expect(cache.execution(messagesQuery)).toBeDefined();
+
+    execution.subsequent([], { hasNext: false });
+    expect(cache.execution(messagesQuery)).toBeUndefined();
     expect(cache.readQuery({ query: messagesQuery })).toEqual({
       messages: [message("1", "one"), message("2")],
     });
-
-    execution.subsequent([], { completed: ["1"], hasNext: false });
-    expect(cache.pendingCount(messagesQuery)).toBeUndefined();
   });
 
   it("keeps the operation descriptor while results are pending", () => {
@@ -706,39 +746,166 @@ describe("@defer: subsequent results", () => {
     `;
     const execution = execute(cache, mutation);
     cache.recordOptimisticTransaction(() => {
-      execution.initial({ send: message("1") }, [{ path: ["send"] }]);
+      execution.initial({ send: message("1") });
     }, "layer");
     cache.removeOptimistic("layer");
-    expect(cache.pendingCount(mutation)).toBe(1);
+    expect(cache.placeholders(mutation)).toEqual(["send"]);
     expect(cache.canRelease(mutation)).toBe(false);
   });
+});
 
-  it("ignores results in the 2022 draft format (not supported yet)", () => {
-    const logger = {
-      debug: jest.fn(),
-      log: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
+describe("@defer: results in the GraphQL 17 format", () => {
+  // Incremental execution in the GraphQL 17 format (`pending`, `id`, `subPath`, `completed`)
+  function executeGraphQL17(cache: ForestRun, query: DocumentNode) {
+    return {
+      initial(data: Record<string, unknown>, pending: PendingResult[]) {
+        cache.write({ query, execution: { data, pending, hasNext: true } });
+      },
+      subsequent(execution: GraphQL17SubsequentIncrementalExecutionResult) {
+        cache.write({ query, execution });
+      },
     };
-    const cache = new TestCache({ logger });
-    const execution = execute(cache, messagesQuery);
-    execution.initial({ messages: [message("1")] }, [
-      { path: ["messages", 0], label: "name" },
+  }
+
+  it("converts results with ids and sub-paths", () => {
+    const cache = new TestCache();
+    const query = gql`
+      query {
+        user {
+          id
+          profile {
+            id
+            ... @defer(label: "outer") {
+              settings {
+                theme
+              }
+            }
+          }
+          ... @defer(label: "inner") {
+            profile {
+              id
+              settings {
+                language
+              }
+            }
+          }
+        }
+      }
+    `;
+    const profile = { __typename: "Profile", id: "p" };
+    const execution = executeGraphQL17(cache, query);
+    execution.initial({ user: { ...user, profile } }, [
+      { id: "0", path: ["user"], label: "inner" },
+      { id: "1", path: ["user", "profile"], label: "outer" },
+    ]);
+
+    execution.subsequent({
+      incremental: [
+        { id: "1", data: { settings: { theme: "dark" } } },
+        { id: "0", subPath: ["profile", "settings"], data: { language: "en" } },
+      ],
+      completed: [{ id: "0" }, { id: "1" }],
+      hasNext: false,
+    });
+
+    expect(cache.readQuery({ query })).toEqual({
+      user: {
+        ...user,
+        profile: { ...profile, settings: { theme: "dark", language: "en" } },
+      },
+    });
+  });
+
+  it("converts results of pending fragments announced by subsequent results", () => {
+    const cache = new TestCache();
+    const execution = executeGraphQL17(cache, nestedQuery);
+    execution.initial({ user }, [{ id: "0", path: ["user"], label: "outer" }]);
+
+    execution.subsequent({
+      incremental: [
+        { id: "0", data: { name: "user", friends: [friend("1")] } },
+      ],
+      pending: [{ id: "1", path: ["user", "friends", 0], label: "inner" }],
+      completed: [{ id: "0" }],
+      hasNext: true,
+    });
+    expect([
+      ...(cache.execution(nestedQuery)?.pendingResults?.keys() ?? []),
+    ]).toEqual(["1"]);
+
+    execution.subsequent({
+      incremental: [{ id: "1", data: { bio: "first" } }],
+      completed: [{ id: "1" }],
+      hasNext: false,
+    });
+
+    expect(cache.execution(nestedQuery)).toBeUndefined();
+    expect(cache.readQuery({ query: nestedQuery })).toEqual({
+      user: { ...user, name: "user", friends: [friend("1", "first")] },
+    });
+  });
+
+  it("writes results of fragments nested in omitted fragments", () => {
+    const cache = new TestCache();
+    const query = gql`
+      query {
+        user {
+          id
+          friends {
+            id
+          }
+          ... @defer(label: "outer") {
+            friends {
+              id
+              ... @defer(label: "inner") {
+                bio
+              }
+            }
+          }
+        }
+      }
+    `;
+    const execution = executeGraphQL17(cache, query);
+    execution.initial({ user: { ...user, friends: [friend("1")] } }, [
+      { id: "0", path: ["user"], label: "outer" },
+    ]);
+
+    // All fields of the outer fragment were delivered: the fragment is omitted
+    execution.subsequent({
+      pending: [{ id: "1", path: ["user", "friends", 0], label: "inner" }],
+      completed: [{ id: "0" }],
+      hasNext: true,
+    });
+    execution.subsequent({
+      incremental: [{ id: "1", data: { bio: "first" } }],
+      completed: [{ id: "1" }],
+      hasNext: false,
+    });
+
+    expect(cache.readQuery({ query })).toEqual({
+      user: { ...user, friends: [friend("1", "first")] },
+    });
+  });
+
+  it("ignores failed fragments and results of unknown ids", () => {
+    const cache = new TestCache();
+    const execution = executeGraphQL17(cache, messagesQuery);
+    execution.initial({ messages: [message("1"), message("2")] }, [
+      { id: "0", path: ["messages", 0], label: "name" },
+      { id: "1", path: ["messages", 1], label: "name" },
     ]);
     const before = cache.extract();
 
-    cache.write({
-      query: messagesQuery,
-      execution: {
-        incremental: [
-          { path: ["messages", 0], label: "name", data: { name: "one" } },
-        ],
-        hasNext: false,
-      },
+    execution.subsequent({
+      incremental: [{ id: "unknown", data: { name: "unknown" } }],
+      completed: [{ id: "0", errors: [{ message: "failed" }] }],
+      hasNext: true,
     });
 
     expect(cache.extract()).toEqual(before);
-    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect([
+      ...(cache.execution(messagesQuery)?.pendingResults?.keys() ?? []),
+    ]).toEqual(["1"]);
   });
 });
 
@@ -763,12 +930,12 @@ describe("@defer: diffing of subsequent results", () => {
     const user = { __typename: "User", id: "u", name: "name" };
     const profile = { __typename: "Profile", bio: "bio", age: 1 };
     const execution = execute(cache, query);
-    execution.initial({ user: { ...user, profile } }, [
-      { path: ["user", "profile"] },
-    ]);
+    execution.initial({ user: { ...user, profile } });
     const getFieldEntryQueue = jest.spyOn(Difference, "getFieldEntryQueue");
 
-    execution.subsequent([{ id: "0", data: { avatar: "avatar" } }]);
+    execution.subsequent([
+      { path: ["user", "profile"], data: { avatar: "avatar" } },
+    ]);
 
     const compared = new Set(getFieldEntryQueue.mock.calls.map(([, f]) => f));
     getFieldEntryQueue.mockRestore();
@@ -804,9 +971,11 @@ describe("@defer: diffing of subsequent results", () => {
     const user = (fields = {}) => ({ __typename: "User", id: "u", ...fields });
     cache.writeQuery({ query: name, data: { user: user({ name: "old" }) } });
     const execution = execute(cache, query);
-    execution.initial({ user: user() }, [{ path: ["user"] }]);
+    execution.initial({ user: user() });
 
-    execution.subsequent([{ id: "0", data: { self: user({ name: "new" }) } }]);
+    execution.subsequent([
+      { path: ["user"], data: { self: user({ name: "new" }) } },
+    ]);
 
     expect(cache.readQuery({ query: name })).toEqual({
       user: user({ name: "new" }),
@@ -871,13 +1040,11 @@ describe("@defer: merge policies of subsequent results", () => {
   it("does not re-apply merge policies of fields outside of delivered data", () => {
     const { cache, mergeItems } = createCache();
     const execution = execute(cache, query);
-    execution.initial({ feed: { ...feed, items: [item("a"), item("b")] } }, [
-      { path: ["feed"], label: "comments" },
-    ]);
+    execution.initial({ feed: { ...feed, items: [item("a"), item("b")] } });
     expect(mergeItems).toHaveBeenCalledTimes(1);
 
     execution.subsequent([
-      { id: "0", data: { title: "title", comments: [comment("x")] } },
+      { path: ["feed"], data: { title: "title", comments: [comment("x")] } },
     ]);
 
     expect(mergeItems).toHaveBeenCalledTimes(1);
@@ -898,13 +1065,11 @@ describe("@defer: merge policies of subsequent results", () => {
       data: { feed: { ...feed, comments: [comment("x")] } },
     });
     const execution = execute(cache, query);
-    execution.initial({ feed: { ...feed, items: [item("a")] } }, [
-      { path: ["feed"], label: "comments" },
-    ]);
+    execution.initial({ feed: { ...feed, items: [item("a")] } });
     mergeComments.mockClear();
 
     execution.subsequent([
-      { id: "0", data: { title: "title", comments: [comment("y")] } },
+      { path: ["feed"], data: { title: "title", comments: [comment("y")] } },
     ]);
 
     expect(mergeComments).toHaveBeenCalledTimes(1);
@@ -938,10 +1103,10 @@ describe("@defer: merge policies of subsequent results", () => {
     `;
     const user = { __typename: "User", id: "u" };
     const execution = execute(cache, nested);
-    execution.initial({ user }, [{ path: ["user"] }]);
+    execution.initial({ user });
 
     execution.subsequent([
-      { id: "0", data: { feed: { ...feed, items: [item("a")] } } },
+      { path: ["user"], data: { feed: { ...feed, items: [item("a")] } } },
     ]);
 
     expect(mergeItems).toHaveBeenCalledTimes(1);

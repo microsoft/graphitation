@@ -357,26 +357,26 @@ export type SerializedCache = Record<
 //   Only needed to ignore late results of a superseded execution of the same operation (with the same variables)
 export type ExecutionKey = string | number | object;
 
-// Identifies a pending result within an incremental execution (the latest format)
-export type PendingId = string;
+// Serialized response path (response keys and list indexes joined with ".")
+export type ResponsePathKey = string;
 
 export type IncrementalExecution = {
   // A new execution of the operation replaces the previous one (late results of the previous one are ignored)
   key: ExecutionKey | undefined;
-  // Objects pending results are delivered to
-  pending: Map<PendingId, DeferPlaceholder>;
+  // Objects with deferred fragments by their (server) response paths
+  placeholders: Map<ResponsePathKey, DeferPlaceholder>;
+  // Pending results announced by results in the GraphQL 17 format (see convertSubsequentResult)
+  pendingResults: Map<PendingId, PendingResult> | undefined;
 };
 
 /**
- * Placeholder of a pending result: address of the object its data is delivered to.
+ * Placeholder of an object with deferred fragments: address of the object the fragments are delivered to.
  *
  * The object is addressed by its closest node and the path from that node (not by the response path),
  * so the address stays valid when other writes replace the stored result in the meantime
  * (e.g. items are prepended to a list, see apollographql/apollo-client#13530).
  */
 export type DeferPlaceholder = {
-  // Response path of the pending result (as announced), locates pending results nested in its data
-  path: ResponsePath;
   nodeKey: NodeKey;
   nodeSelections: PossibleSelections;
   // Response keys and list indexes from the node to the object
@@ -395,16 +395,16 @@ export type DeliveredFields = Map<object, Set<DataKey>>;
 // Subsequent results of incremental delivery spliced into a copy of the stored result
 export type SplicedResult = {
   incremental: IncrementalExecution;
-  // Pending results announced by the payload (e.g. nested `@defer`)
-  pending: ReadonlyArray<PendingResult>;
   data: ResultData;
   deliveredFields: DeliveredFields;
   missingFields: MissingFieldsMap;
-  anchors: PendingAnchor[];
+  // Objects of the spliced result data was delivered to -> (server) response paths of incremental results
+  //   (locates objects with deferred fragments in delivered data)
+  targets: Map<ResultData, ResponsePath>;
 };
 
-// An object of the spliced result data was delivered to (locates pending results nested in its data)
-export type PendingAnchor = {
+// Result of a deferred fragment with data
+export type DeferredResult = {
   path: ResponsePath;
   data: ResultData;
 };
@@ -418,33 +418,31 @@ export type SpliceState = {
   missingFields: MissingFieldsMap;
 };
 
-export type DeferredResultEntry = {
-  placeholder: DeferPlaceholder;
-  // Path to the placeholder object in the stored result
-  path: ResponsePath;
-  subPath: ResponsePath | undefined;
-  data: ResultData;
-};
-
 export type ResultData = Record<string, unknown>;
 export type ResultExtensions = Record<string, unknown>;
 
-// Results of incremental delivery: GraphQL incremental delivery format (`pending`, `id`, `subPath`, `completed`)
-//   and the earlier 2022 draft (deferred fragments addressed by `path` and `label`).
-export type PendingResult = {
-  id: PendingId;
-  path: ResponsePath;
-  label?: DeferLabel;
+export type CompleteExecutionResult = {
+  data: ResultData;
+  errors?: ReadonlyArray<FormattedError>;
+  extensions?: ResultExtensions;
+};
+
+// Results of incremental delivery in the 2022 draft format (deferred fragments addressed by `path` and `label`),
+//   as in Apollo Client 4 `Defer20220917Handler`
+export type InitialIncrementalExecutionResult = CompleteExecutionResult & {
+  hasNext: boolean;
+};
+
+export type SubsequentIncrementalExecutionResult = {
+  incremental?: ReadonlyArray<IncrementalDeferResult | IncrementalStreamResult>;
+  hasNext: boolean;
+  extensions?: ResultExtensions;
 };
 
 export type IncrementalDeferResult = {
   data?: ResultData | null;
   errors?: ReadonlyArray<FormattedError>;
   extensions?: ResultExtensions;
-  // Latest format
-  id?: PendingId;
-  subPath?: ResponsePath;
-  // Earlier draft
   path?: ResponsePath;
   label?: DeferLabel;
 };
@@ -453,11 +451,19 @@ export type IncrementalStreamResult = {
   items?: ReadonlyArray<unknown> | null;
   errors?: ReadonlyArray<FormattedError>;
   extensions?: ResultExtensions;
-  // Latest format
-  id?: PendingId;
-  subPath?: ResponsePath;
-  // Earlier draft
   path?: ResponsePath;
+  label?: DeferLabel;
+};
+
+// Results of incremental delivery in the GraphQL 17 format (`pending`, `id`, `subPath`, `completed`),
+//   as in Apollo Client 4 `GraphQL17Alpha9Handler`. Converted to the 2022 format when written.
+
+// Identifies a pending result within an incremental execution
+export type PendingId = string;
+
+export type PendingResult = {
+  id: PendingId;
+  path: ResponsePath;
   label?: DeferLabel;
 };
 
@@ -466,22 +472,34 @@ export type CompletedResult = {
   errors?: ReadonlyArray<FormattedError>;
 };
 
-export type CompleteExecutionResult = {
+export type GraphQL17InitialIncrementalExecutionResult =
+  CompleteExecutionResult & {
+    pending: ReadonlyArray<PendingResult>;
+    hasNext: boolean;
+  };
+
+export type GraphQL17SubsequentIncrementalExecutionResult = {
+  pending?: ReadonlyArray<PendingResult>;
+  incremental?: ReadonlyArray<
+    GraphQL17IncrementalDeferResult | GraphQL17IncrementalStreamResult
+  >;
+  completed?: ReadonlyArray<CompletedResult>;
+  hasNext: boolean;
+  extensions?: ResultExtensions;
+};
+
+export type GraphQL17IncrementalDeferResult = {
+  id: PendingId;
+  subPath?: ResponsePath;
   data: ResultData;
   errors?: ReadonlyArray<FormattedError>;
   extensions?: ResultExtensions;
 };
 
-export type InitialIncrementalExecutionResult = CompleteExecutionResult & {
-  pending?: ReadonlyArray<PendingResult>;
-  hasNext: boolean;
-};
-
-export type SubsequentIncrementalExecutionResult = {
-  pending?: ReadonlyArray<PendingResult>;
-  incremental?: ReadonlyArray<IncrementalDeferResult | IncrementalStreamResult>;
-  completed?: ReadonlyArray<CompletedResult>;
-  hasNext: boolean;
+export type GraphQL17IncrementalStreamResult = {
+  id: PendingId;
+  items: ReadonlyArray<unknown>;
+  errors?: ReadonlyArray<FormattedError>;
   extensions?: ResultExtensions;
 };
 
@@ -494,6 +512,13 @@ export type ExecutionResult = (
   | CompleteExecutionResult
   | InitialIncrementalExecutionResult
   | SubsequentIncrementalExecutionResult
+  | GraphQL17InitialIncrementalExecutionResult
+  | GraphQL17SubsequentIncrementalExecutionResult
+) & { key?: ExecutionKey };
+
+export type SubsequentExecutionResult = (
+  | SubsequentIncrementalExecutionResult
+  | GraphQL17SubsequentIncrementalExecutionResult
 ) & { key?: ExecutionKey };
 
 export type WriteOptions = Omit<Cache.WriteOptions, "result"> & {

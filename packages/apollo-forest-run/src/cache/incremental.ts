@@ -1,6 +1,7 @@
 import type { IndexedTree } from "../forest/types";
 import type {
   CompositeListChunk,
+  DataMap,
   GraphChunk,
   ObjectChunk,
   ParentLocator,
@@ -8,19 +9,20 @@ import type {
 import type {
   CacheEnv,
   DataForest,
-  DeferredResultEntry,
   DeferPlaceholder,
+  DeferredResult,
   DeliveredFields,
   ExecutionResult,
   IncrementalDeferResult,
   IncrementalExecution,
+  IncrementalStreamResult,
   OptimisticLayer,
-  PendingAnchor,
-  PendingResult,
+  ResponsePathKey,
   ResultData,
   SplicedResult,
   SpliceState,
   Store,
+  SubsequentExecutionResult,
   SubsequentIncrementalExecutionResult,
   Transaction,
   WriteOptions,
@@ -55,16 +57,23 @@ import {
 } from "../values";
 import * as Difference from "../diff/difference";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
+import {
+  convertSubsequentResult,
+  isGraphQL17Result,
+  trackPendingResults,
+} from "./incrementalFormat";
 
 /**
- * Subsequent results of incremental delivery (`@defer`) are written as a regular result of the operation:
- * data of all results of the payload is spliced into a copy of the stored result of the operation
+ * Subsequent results of incremental delivery (`@defer`, the 2022 draft format) are written as a regular result
+ * of the operation: data of all results of the payload is spliced into a copy of the stored result of the operation
  * (only objects on the path to delivered objects are copied), and the copy is written as a whole (see `write`).
  *
- * Objects data is delivered to are located by placeholders (see `DeferPlaceholder`) in the stored result.
+ * Objects data is delivered to are located by placeholders (see `DeferPlaceholder`), keyed by response paths
+ * of incremental results. Placeholders are captured statically: for objects with deferred fragments
+ * (enabled for the operation variables) in the initial result and in delivered data.
  * Merge policies only run for delivered fields (see `DeliveredFields`).
  *
- * Also updates the state of the execution (`pending`, `completed`, `hasNext`).
+ * Results in the GraphQL 17 format are converted to the 2022 format first (see `convertSubsequentResult`).
  * Returns undefined when there is nothing to write.
  */
 export function spliceSubsequentResult(
@@ -72,7 +81,7 @@ export function spliceSubsequentResult(
   store: Store,
   activeTransaction: Transaction,
   options: WriteOptions,
-  execution: SubsequentIncrementalExecutionResult & ExecutionResult,
+  execution: SubsequentExecutionResult,
 ): SplicedResult | undefined {
   const operation = resolveOperationDescriptor(
     env,
@@ -86,28 +95,23 @@ export function spliceSubsequentResult(
     // Results of an unknown or a superseded execution
     return undefined;
   }
+  const result = isGraphQL17Result(execution)
+    ? convertSubsequentResult(incremental, execution)
+    : execution;
   const targetForest = getActiveForest(store, activeTransaction);
   const tree = getExistingResult(env, store, targetForest, operation);
-  let splice: SplicedResult | undefined;
-  if (tree) {
-    splice = spliceIncrementalResults(env, tree, incremental, execution);
-    if (!splice && execution.pending?.length) {
-      addPlaceholders(incremental, execution.pending, tree, tree, EMPTY_ARRAY);
-    }
-  }
-  // Note: placeholders of pending results announced by the payload are added by the write of the spliced result
-  for (const { id } of execution.completed ?? EMPTY_ARRAY) {
-    incremental.pending.delete(id);
-  }
-  if (!execution.hasNext) {
+  const splice = tree
+    ? spliceIncrementalResults(tree, incremental, result)
+    : undefined;
+  if (!result.hasNext) {
     store.incrementalExecutions.delete(operation);
   }
   return splice;
 }
 
 /**
- * Captures placeholders of pending results after indexing (and applying merge policies to) a written result:
- * announced by the initial result of an incremental execution, or by the payload of a spliced result.
+ * Captures placeholders after indexing (and applying merge policies to) a written result:
+ * of the initial result of an incremental execution, or of delivered data of a spliced result (nested `@defer`).
  */
 export function captureIncrementalExecution(
   store: Store,
@@ -119,13 +123,23 @@ export function captureIncrementalExecution(
   merged: IndexedTree,
 ) {
   if (splice) {
-    addPlaceholders(
-      splice.incremental,
-      splice.pending,
-      indexed,
-      merged,
-      splice.anchors,
-    );
+    for (const [target, path] of splice.targets) {
+      const chunk = isSourceObject(target)
+        ? indexed.dataMap.get(target)?.value
+        : undefined;
+      if (chunk && isObjectValue(chunk)) {
+        // Objects of the stored result already have their placeholders
+        const known = indexed.prev?.dataMap;
+        capturePlaceholders(
+          splice.incremental,
+          indexed,
+          merged,
+          chunk,
+          path,
+          known,
+        );
+      }
+    }
   } else if (execution) {
     updateIncrementalExecution(
       store,
@@ -139,15 +153,23 @@ export function captureIncrementalExecution(
 }
 
 function spliceIncrementalResults(
-  env: CacheEnv,
   tree: IndexedTree,
   incremental: IncrementalExecution,
   execution: SubsequentIncrementalExecutionResult,
 ): SplicedResult | undefined {
-  let entries = collectDeferredResults(env, tree, incremental, execution);
-  if (!entries.length) {
+  const results: DeferredResult[] = [];
+  for (const result of execution.incremental ?? EMPTY_ARRAY) {
+    // Note: results without data (e.g. errors only) are not written. TODO: streamed list items (`items`)
+    if (isDeferResult(result) && result.path && isResultData(result.data)) {
+      results.push({ path: result.path, data: result.data });
+    }
+  }
+  if (!results.length) {
     return undefined;
   }
+  // Results deferred within delivered data of the same payload (nested `@defer`) are spliced after their parents
+  results.sort((a, b) => a.path.length - b.path.length);
+
   const state: SpliceState = {
     tree,
     copies: new Map(),
@@ -156,83 +178,69 @@ function spliceIncrementalResults(
   };
   const data = copyValue(state, tree.result.data);
   assert(isResultData(data));
-
-  const anchors: PendingAnchor[] = [];
-  while (entries.length) {
-    // Objects at sub-paths may be delivered by other results of the payload
-    const unresolved: DeferredResultEntry[] = [];
-    for (const entry of entries) {
-      const path = entry.subPath?.length
-        ? [...entry.path, ...entry.subPath]
-        : entry.path;
-      const target = spliceAt(state, data, path);
-      if (!target) {
-        unresolved.push(entry);
-        continue;
-      }
-      spliceData(state, target, entry.data);
-      anchors.push({
-        path: entry.subPath?.length
-          ? [...entry.placeholder.path, ...entry.subPath]
-          : entry.placeholder.path,
-        data: target,
-      });
+  const pathEnv: TraverseEnv = {
+    findParent: createParentLocator(tree.dataMap),
+  };
+  const targets = new Map<ResultData, ResponsePath>();
+  for (const result of results) {
+    const target = spliceTarget(
+      state,
+      pathEnv,
+      incremental,
+      targets,
+      data,
+      result.path,
+    );
+    if (target) {
+      spliceData(state, target, result.data);
+      targets.set(target, result.path);
     }
-    if (unresolved.length === entries.length) {
-      break;
-    }
-    entries = unresolved;
   }
-  if (!anchors.length) {
+  if (!targets.size) {
     return undefined;
   }
   return {
     incremental,
-    pending: execution.pending ?? EMPTY_ARRAY,
     data,
     deliveredFields: state.deliveredFields,
     missingFields: state.missingFields,
-    anchors,
+    targets,
   };
 }
 
-function collectDeferredResults(
-  env: CacheEnv,
-  tree: IndexedTree,
+/**
+ * Resolves (and copies) the object a result is delivered to: within data delivered by the payload
+ * (results nested in a parent result of the same payload, server paths are consistent within a payload),
+ * or in the stored result by its placeholder.
+ */
+function spliceTarget(
+  state: SpliceState,
+  pathEnv: TraverseEnv,
   incremental: IncrementalExecution,
-  execution: SubsequentIncrementalExecutionResult,
-): DeferredResultEntry[] {
-  const entries: DeferredResultEntry[] = [];
-  const pathEnv: TraverseEnv = {
-    findParent: createParentLocator(tree.dataMap),
-  };
-  for (const result of execution.incremental ?? EMPTY_ARRAY) {
-    if (result.id === undefined) {
-      // TODO: the earlier draft format (`path` and `label`)
-      env.logger?.warnOnce(
-        "incremental_format_not_supported",
-        "Incremental results without `id` (the 2022 draft format) are not supported yet and are ignored",
-      );
-      continue;
+  targets: Map<ResultData, ResponsePath>,
+  data: ResultData,
+  path: ResponsePath,
+): ResultData | undefined {
+  let parent: ResultData | undefined;
+  let parentPath: ResponsePath = EMPTY_ARRAY;
+  for (const [target, targetPath] of targets) {
+    if (
+      (!parent || targetPath.length > parentPath.length) &&
+      isPathPrefix(targetPath, path)
+    ) {
+      parent = target;
+      parentPath = targetPath;
     }
-    // TODO: streamed list items (`items`)
-    if (!isDeferResult(result) || !isResultData(result.data)) {
-      continue;
-    }
-    const placeholder = incremental.pending.get(result.id);
-    const target = placeholder && resolvePlaceholder(tree, placeholder);
-    if (!placeholder || !target) {
-      // Completed, unknown, or the object is gone from the stored result
-      continue;
-    }
-    entries.push({
-      placeholder,
-      path: getDataPath(pathEnv, target),
-      subPath: result.subPath,
-      data: result.data,
-    });
   }
-  return entries;
+  const nested = parent
+    ? spliceAt(state, parent, path.slice(parentPath.length))
+    : undefined;
+  if (nested) {
+    return nested;
+  }
+  const placeholder = incremental.placeholders.get(getPathKey(path));
+  const chunk = placeholder && resolvePlaceholder(state.tree, placeholder);
+  return chunk ? spliceAt(state, data, getDataPath(pathEnv, chunk)) : undefined;
 }
 
 // Copies objects on the path (copy-on-write), returns the (copied) object at the path
@@ -466,8 +474,7 @@ function seedDifference(
 }
 
 /**
- * Remembers placeholders of pending results announced by the initial result of an incremental execution
- * (replaces the previous execution of the operation).
+ * Starts tracking an incremental execution with its initial result (replaces the previous execution of the operation).
  */
 function updateIncrementalExecution(
   store: Store,
@@ -480,93 +487,102 @@ function updateIncrementalExecution(
   if (
     !("hasNext" in execution) ||
     !execution.hasNext ||
-    !execution.pending?.length ||
+    !operation.hasDeferSites ||
     !shouldCache(targetForest, operation)
   ) {
+    // E.g. deferred data was resolved inline by the server (a complete result)
     store.incrementalExecutions.delete(operation);
     return;
   }
   const incremental: IncrementalExecution = {
     key: execution.key,
-    pending: new Map(),
+    placeholders: new Map(),
+    pendingResults: undefined,
   };
-  addPlaceholders(incremental, execution.pending, indexed, merged, EMPTY_ARRAY);
-  store.incrementalExecutions.set(operation, incremental);
+  if ("pending" in execution) {
+    trackPendingResults(incremental, execution.pending);
+  }
+  const root = indexed.dataMap.get(indexed.result.data)?.value;
+  assert(root && isObjectValue(root));
+  capturePlaceholders(
+    incremental,
+    indexed,
+    merged,
+    root,
+    EMPTY_ARRAY,
+    undefined,
+  );
+  if (incremental.placeholders.size) {
+    store.incrementalExecutions.set(operation, incremental);
+  } else {
+    // No objects with deferred fragments (enabled for the operation variables): nothing to write later
+    store.incrementalExecutions.delete(operation);
+  }
 }
 
 /**
- * Paths of pending results are resolved in the indexed result (as returned by the server):
- * from the root, or from the closest anchor (delivered object) of the payload for nested `@defer`.
+ * Captures placeholders of objects with deferred fragments (enabled for the operation variables) at and below `chunk`
+ * (objects of `known` and below are skipped). `path` is the response path of the chunk in the server view
+ * (indexed results are not changed by merge policies), placeholders are keyed by paths of incremental results.
+ *
  * Addresses are captured in the result with merge policies applied (merge policies may move objects).
+ *
+ * Note: objects with deferred fragments delivered inline (partially) get placeholders too, unused ones are dropped
+ *   with the execution.
  */
-function addPlaceholders(
+function capturePlaceholders(
   incremental: IncrementalExecution,
-  pending: ReadonlyArray<PendingResult>,
   indexed: IndexedTree,
   merged: IndexedTree,
-  anchors: ReadonlyArray<PendingAnchor>,
+  chunk: ObjectChunk,
+  path: ResponsePath,
+  known: DataMap | undefined,
 ) {
-  if (!pending.length) {
-    return;
-  }
   const findIndexedParent = createParentLocator(indexed.dataMap);
   const findMergedParent =
     merged === indexed
       ? findIndexedParent
       : createParentLocator(merged.dataMap);
-  for (const { id, path } of pending) {
-    const chunk = resolvePendingChunk(indexed, path, anchors);
-    if (!chunk) {
-      continue;
+  const capture = (value: GraphChunk | undefined, valuePath: ResponsePath) => {
+    if (!value) {
+      return;
     }
-    const mergedChunk = merged.dataMap.get(chunk.data)?.value;
-    const placeholder =
-      mergedChunk && isObjectValue(mergedChunk)
-        ? createPlaceholder(findMergedParent, mergedChunk, path)
-        : createPlaceholder(findIndexedParent, chunk, path);
-    incremental.pending.set(id, placeholder);
-  }
-}
-
-function resolvePendingChunk(
-  tree: IndexedTree,
-  path: ResponsePath,
-  anchors: ReadonlyArray<PendingAnchor>,
-): ObjectChunk | undefined {
-  let anchor: PendingAnchor | undefined;
-  for (const candidate of anchors) {
-    if (
-      (!anchor || candidate.path.length > anchor.path.length) &&
-      isPathPrefix(candidate.path, path)
-    ) {
-      anchor = candidate;
+    if (isObjectValue(value) && !known?.has(value.data)) {
+      if (value.selection.deferredFragments?.length) {
+        const mergedValue = merged.dataMap.get(value.data)?.value;
+        incremental.placeholders.set(
+          getPathKey(valuePath),
+          mergedValue && isObjectValue(mergedValue)
+            ? createPlaceholder(findMergedParent, mergedValue)
+            : createPlaceholder(findIndexedParent, value),
+        );
+      }
+      for (const field of value.selection.fieldQueue) {
+        if (field.selection) {
+          capture(resolveObjectField(value, field), [
+            ...valuePath,
+            field.dataKey,
+          ]);
+        }
+      }
+    } else if (isCompositeListValue(value) && !known?.has(value.data)) {
+      for (let index = 0; index < value.data.length; index++) {
+        capture(resolveListItem(value, index), [...valuePath, index]);
+      }
     }
-  }
-  const anchorChunk =
-    anchor && isSourceObject(anchor.data)
-      ? tree.dataMap.get(anchor.data)?.value
-      : undefined;
-  if (anchor && anchorChunk && isObjectValue(anchorChunk)) {
-    return resolveResponsePath(anchorChunk, path.slice(anchor.path.length));
-  }
-  const root = tree.dataMap.get(tree.result.data)?.value;
-  return root && isObjectValue(root)
-    ? resolveResponsePath(root, path)
-    : undefined;
+  };
+  capture(chunk, path);
 }
 
 function createPlaceholder(
   findParent: ParentLocator,
   chunk: ObjectChunk,
-  path: ResponsePath,
 ): DeferPlaceholder {
-  const env: TraverseEnv = { findParent };
   const node = findClosestNode(chunk, findParent);
   return {
-    path,
     nodeKey: node.key,
     nodeSelections: node.possibleSelections,
-    pathFromNode: getDataPath(env, chunk, node),
+    pathFromNode: getDataPath({ findParent }, chunk, node),
   };
 }
 
@@ -646,17 +662,19 @@ function isResultData(value: unknown): value is ResultData {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function getPathKey(path: ResponsePath): ResponsePathKey {
+  return path.join(".");
+}
+
 function isDeferResult(
-  result: NonNullable<
-    SubsequentIncrementalExecutionResult["incremental"]
-  >[number],
+  result: IncrementalDeferResult | IncrementalStreamResult,
 ): result is IncrementalDeferResult {
   return "data" in result;
 }
 
 export function isSubsequentResult(
   execution: ExecutionResult,
-): execution is SubsequentIncrementalExecutionResult & ExecutionResult {
+): execution is SubsequentExecutionResult {
   return !("data" in execution);
 }
 
