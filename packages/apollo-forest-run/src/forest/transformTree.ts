@@ -7,10 +7,8 @@ import type {
 import type {
   CompositeListChunk,
   GraphChunk,
-  ListItemReference,
   NodeChunk,
   ObjectChunk,
-  ObjectFieldReference,
   ParentLocator,
 } from "../values/types";
 import type {
@@ -25,9 +23,8 @@ import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import { updateTree } from "./updateTree";
 import { createTreeParentLocator } from "./parentLocator";
 import {
+  descendFromNode,
   findClosestNode,
-  isParentObjectRef,
-  isRootRef,
   isCompositeListValue,
   isObjectValue,
   resolveFieldAliases,
@@ -504,43 +501,4 @@ function createValueDifference(
     return Difference.createCompositeListDifference();
   }
   assertNever(chunk);
-}
-
-const pathStack: (ObjectFieldReference | ListItemReference)[] = [];
-
-/**
- * Visits chunks on the path from the node down to the chunk.
- *
- * Unlike `descendToChunk`, visits chunks of the path itself (not chunks resolved by the path from the node):
- * the node may belong to another tree (e.g. a stored tree containing the root of an operation fragment tree).
- */
-function descendFromNode(
-  treeState: TreeState,
-  node: NodeChunk,
-  chunk: ObjectChunk,
-  visit: (
-    value: GraphChunk,
-    parent: ObjectChunk | CompositeListChunk,
-    step: FieldInfo | number,
-  ) => void,
-) {
-  pathStack.length = 0;
-  let parentInfo = chunk === node ? null : treeState.findParent(chunk);
-  while (parentInfo) {
-    assert(!isRootRef(parentInfo));
-    pathStack.push(parentInfo);
-    parentInfo =
-      parentInfo.parent === node
-        ? null
-        : treeState.findParent(parentInfo.parent);
-  }
-  for (let i = pathStack.length - 1; i >= 0; i--) {
-    const ref = pathStack[i];
-    visit(
-      ref.value,
-      ref.parent,
-      isParentObjectRef(ref) ? ref.field : ref.index,
-    );
-  }
-  pathStack.length = 0;
 }
