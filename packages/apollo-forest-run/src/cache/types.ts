@@ -28,6 +28,7 @@ import type {
   Key,
   KeySpecifier,
   ObjectKey,
+  MissingFieldsMap,
   SourceCompositeList,
   SourceObject,
 } from "../values/types";
@@ -393,6 +394,40 @@ export type DeferPlaceholderPath = ReadonlyArray<FieldInfo | number>;
  * or objects of incremental results (all fields are delivered).
  */
 export type DeliveredFields = Map<object, Set<DataKey>>;
+
+// Subsequent results of incremental delivery spliced into a copy of the stored result
+export type SplicedResult = {
+  incremental: IncrementalExecution;
+  // Pending results announced by the payload (e.g. nested `@defer`)
+  pending: ReadonlyArray<PendingResult>;
+  data: ResultData;
+  deliveredFields: DeliveredFields;
+  missingFields: MissingFieldsMap;
+  anchors: PendingAnchor[];
+};
+
+// An object of the spliced result data was delivered to (locates pending results nested in its data)
+export type PendingAnchor = {
+  path: ResponsePath;
+  data: ResultData;
+};
+
+export type SpliceState = {
+  tree: IndexedTree;
+  // Objects and lists of the stored result (and copies themselves) -> copies
+  copies: Map<object, ResultData | unknown[]>;
+  deliveredFields: DeliveredFields;
+  // Missing fields of copied objects (not delivered)
+  missingFields: MissingFieldsMap;
+};
+
+export type DeferredResultEntry = {
+  placeholder: DeferPlaceholder;
+  // Path to the placeholder object in the stored result
+  path: ResponsePath;
+  subPath: ResponsePath | undefined;
+  data: ResultData;
+};
 
 export type ResultData = Record<string, unknown>;
 export type ResultExtensions = Record<string, unknown>;

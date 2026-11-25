@@ -2,7 +2,6 @@ import type { IndexedTree, UpdateTreeResult } from "../forest/types";
 import type {
   CompositeListChunk,
   GraphChunk,
-  MissingFieldsMap,
   ObjectChunk,
   OperationResult,
   ParentLocator,
@@ -11,6 +10,7 @@ import type {
   CacheEnv,
   DataForest,
   DataTree,
+  DeferredResultEntry,
   DeferPlaceholder,
   DeliveredFields,
   ExecutionResult,
@@ -18,8 +18,11 @@ import type {
   IncrementalExecution,
   ModifyResult,
   OptimisticLayer,
+  PendingAnchor,
   PendingResult,
   ResultData,
+  SplicedResult,
+  SpliceState,
   Store,
   SubsequentIncrementalExecutionResult,
   Transaction,
@@ -338,40 +341,6 @@ export function writeSubsequentResult(
   }
   return result;
 }
-
-// Subsequent results of incremental delivery spliced into a copy of the stored result
-type SplicedResult = {
-  incremental: IncrementalExecution;
-  // Pending results announced by the payload (e.g. nested `@defer`)
-  pending: ReadonlyArray<PendingResult>;
-  data: ResultData;
-  deliveredFields: DeliveredFields;
-  missingFields: MissingFieldsMap;
-  anchors: PendingAnchor[];
-};
-
-// An object of the spliced result data was delivered to (locates pending results nested in its data)
-type PendingAnchor = {
-  path: ResponsePath;
-  data: ResultData;
-};
-
-type SpliceState = {
-  tree: IndexedTree;
-  // Objects and lists of the stored result (and copies themselves) -> copies
-  copies: Map<object, ResultData | unknown[]>;
-  deliveredFields: DeliveredFields;
-  // Missing fields of copied objects (not delivered)
-  missingFields: MissingFieldsMap;
-};
-
-type DeferredResultEntry = {
-  placeholder: DeferPlaceholder;
-  // Path to the placeholder object in the stored result
-  path: ResponsePath;
-  subPath: ResponsePath | undefined;
-  data: ResultData;
-};
 
 function spliceIncrementalResults(
   env: CacheEnv,
