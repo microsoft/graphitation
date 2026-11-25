@@ -40,10 +40,10 @@ import {
 } from "../diff/types";
 import { HistoryConfig } from "../cache/types";
 
-export type IndexedTreeBase<TOperation extends OperationDescriptor> = {
-  // Same as operation.kind, duplicated to discriminate trees without extra indirection
-  readonly kind: TOperation["kind"];
-  operation: TOperation;
+// Note: all tree kinds must have the same set of fields (keeps the same object shape in hot paths)
+export type OperationTree = {
+  readonly kind: "Operation";
+  operation: RegularOperationDescriptor;
   result: OperationResult;
   rootNodeKey: NodeKey;
   nodes: NodeMap;
@@ -68,9 +68,32 @@ export type IndexedTreeBase<TOperation extends OperationDescriptor> = {
   danglingReferences?: Set<NodeKey>;
 };
 
-// Note: all tree kinds must have the same set of fields (keeps the same object shape in hot paths)
-export type OperationTree = IndexedTreeBase<RegularOperationDescriptor>;
-export type DetachedFragmentTree = IndexedTreeBase<DetachedFragmentDescriptor>;
+export type DetachedFragmentTree = {
+  readonly kind: "DetachedFragment";
+  operation: DetachedFragmentDescriptor;
+  result: OperationResult;
+  rootNodeKey: NodeKey;
+  nodes: NodeMap;
+  typeMap: TypeMap;
+
+  // Inverse map from data to chunks
+  //   This is necessary for efficient re-indexing of existing data and chunk recycling
+  dataMap: DataMap;
+
+  // Previous state of this tree.
+  //   Useful for recycling chunks from multiple tree states, (e.g. with merge policies when final tree
+  //   should recycle chunks from both - incoming and existing trees).
+  prev: IndexedTree | null;
+
+  // Error states
+  incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
+
+  // Tree changes
+  history: CircularBuffer<HistoryChange>;
+
+  // ApolloCompat
+  danglingReferences?: Set<NodeKey>;
+};
 
 // Any tree which can be stored in the forest
 export type IndexedTree = OperationTree | DetachedFragmentTree;
