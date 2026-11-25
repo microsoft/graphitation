@@ -13,7 +13,8 @@ import type {
   NodeDifferenceMap,
   ValueDifference,
 } from "../diff/types";
-import { createParentLocator, getDataPathForDebugging } from "./traverse";
+import { getDataPathForDebugging } from "./traverse";
+import { createTreeParentLocator } from "../forest/parentLocator";
 import {
   CompositeListChunk,
   MissingFieldsSerialized,
@@ -21,6 +22,8 @@ import {
   SourceCompositeList,
 } from "./types";
 import { isCompositeListEntryTuple } from "./predicates";
+import { isStoredTree } from "../forest/predicates";
+import { assert } from "../jsutils/assert";
 
 import * as ChangeKind from "../diff/itemChangeKind";
 import * as DifferenceKind from "../diff/differenceKind";
@@ -68,7 +71,7 @@ function getChunkPath(
   if (!enableRichHistory) {
     return ["Enable enableRichHistory for full path"];
   }
-  const findParent = createParentLocator(currentTree.dataMap);
+  const findParent = createTreeParentLocator(currentTree);
   return getDataPathForDebugging({ findParent }, chunk);
 }
 
@@ -234,6 +237,7 @@ export function createRegularHistoryEntry(
   incomingTree: IndexedTree | undefined,
   env: ForestEnv,
 ): HistoryChange {
+  assert(isStoredTree(updatedTree.updatedTree));
   const changes = getChanges(currentTree, updatedTree, env);
   return {
     kind: "Regular",

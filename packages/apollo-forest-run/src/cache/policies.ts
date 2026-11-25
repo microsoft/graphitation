@@ -29,6 +29,7 @@ import type {
 } from "../values/types";
 import { ValueKind } from "../values/types";
 import { assert } from "../jsutils/assert";
+import { isStoredTree } from "../forest/predicates";
 import {
   createDraft,
   findClosestNode,
@@ -171,6 +172,7 @@ export function applyReadPolicies(
       },
     },
   );
+  assert(isStoredTree(updatedTree));
   if (conversionContext.danglingReferences.size) {
     updatedTree.danglingReferences = conversionContext.danglingReferences;
   }
@@ -222,7 +224,7 @@ export function applyMergePolicies(
       return result;
     },
   };
-  return transformTree(
+  const updatedTree = transformTree(
     env,
     incomingTree,
     "ASCEND",
@@ -298,6 +300,8 @@ export function applyMergePolicies(
       },
     },
   );
+  assert(isStoredTree(updatedTree));
+  return updatedTree;
 }
 
 function materializeFromForest(

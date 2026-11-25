@@ -13,7 +13,13 @@ import { diffObject } from "./diffObject";
 import { NodeKey, NodeMap, ObjectValue } from "../values/types";
 import { assert, assertNever } from "../jsutils/assert";
 import { OperationId } from "../descriptor/types";
-import { IndexedForest, IndexedTree } from "../forest/types";
+import {
+  IndexedForest,
+  IndexedOperationFragment,
+  IndexedTree,
+} from "../forest/types";
+import { resolveOperation } from "../descriptor/operation";
+import { diffEmbeddedRoots } from "./diffEmbedded";
 
 type MissingFieldsError = {
   kind: "MissingFields";
@@ -60,12 +66,31 @@ const nodeDiffState = {
 
 export function diffTree(
   forest: IndexedForest,
-  model: IndexedTree,
+  model: IndexedTree | IndexedOperationFragment,
   env: DiffEnv,
 ): GraphDifference {
   const context: Context = { env, forest: forest };
-  const currentTreeState = forest.trees.get(model.operation.id);
-  return diffNodesImpl(context, forest, model.nodes, env, currentTreeState);
+  const currentTreeState = forest.trees.get(
+    resolveOperation(model.operation).id,
+  );
+  const difference = diffNodesImpl(
+    context,
+    forest,
+    model.nodes,
+    env,
+    currentTreeState,
+  );
+  if (model.kind === "OperationFragment") {
+    diffEmbeddedRoots(
+      forest,
+      model,
+      difference.nodeDifference,
+      env,
+      (root, errors) => accumulateDiffErrors(context, root, errors),
+    );
+    difference.errors = getErrors(context);
+  }
+  return difference;
 }
 
 export function diffNodes(

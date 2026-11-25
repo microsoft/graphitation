@@ -9,6 +9,7 @@ import {
   fieldEntriesAreEqual,
 } from "../descriptor/resolvedSelection";
 import { assert } from "../jsutils/assert";
+import { isStoredTree } from "./predicates";
 import type {
   IndexedForest,
   ForestEnv,
@@ -46,10 +47,12 @@ export function updateAffectedTrees(
       //   but current operation is { id: "1", lastName: "Unchanged" }
       continue;
     }
+    const { updatedTree } = result;
+    assert(isStoredTree(updatedTree));
     allUpdated.push(result);
 
     if (currentTreeState.operation.historySize) {
-      result.updatedTree.history.push(
+      updatedTree.history.push(
         createRegularHistoryEntry(
           currentTreeState,
           result,
@@ -59,9 +62,9 @@ export function updateAffectedTrees(
       );
     }
 
-    replaceTree(env, forest, result.updatedTree);
+    replaceTree(env, forest, updatedTree);
     // Reset previous tree state on commit
-    result.updatedTree.prev = null;
+    updatedTree.prev = null;
   }
   return allUpdated;
 }

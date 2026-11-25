@@ -23,11 +23,11 @@ import {
   isObjectValue,
   isRootRef,
   TraverseEnv,
-  createParentLocator,
   isNodeValue,
   isCompositeListValue,
   isParentObjectRef,
 } from "../values";
+import { createTreeParentLocator } from "../forest/parentLocator";
 import { applyReadPolicies } from "./policies";
 import { indexTree } from "../forest/indexTree";
 import { createChunkMatcher, createChunkProvider } from "./draftHelpers";
@@ -428,7 +428,7 @@ function indexReadPolicies(env: CacheEnv, tree: ResultTree) {
 
 function reportFirstMissingField(tree: IndexedTree): MissingFieldError {
   const pathEnv: TraverseEnv = {
-    findParent: createParentLocator(tree.dataMap),
+    findParent: createTreeParentLocator(tree),
   };
   const [chunk] = tree.incompleteChunks;
   const path = getDataPathForDebugging(pathEnv, chunk);
@@ -496,7 +496,7 @@ function resolveAffectedOptimisticNodes(
 }
 
 function appendParentNodes(inputTree: ResultTree, dirtyNodes: DirtyNodeMap) {
-  const findParent = createParentLocator(inputTree.dataMap);
+  const findParent = createTreeParentLocator(inputTree);
   for (const nodeKey of dirtyNodes.keys()) {
     const chunks = inputTree.nodes.get(nodeKey);
     for (const chunk of chunks ?? EMPTY_ARRAY) {

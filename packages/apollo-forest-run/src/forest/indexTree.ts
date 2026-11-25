@@ -18,11 +18,20 @@ import type {
   ParentLocator,
 } from "../values/types";
 import type {
+  NodeKey,
   NormalizedFieldEntry,
   OperationDescriptor,
+  OperationFragmentDescriptor,
   PossibleSelections,
+  TypeName,
 } from "../descriptor/types";
-import type { ForestEnv, IndexedTree, UncheckedIndexedTree } from "./types";
+import type {
+  ForestEnv,
+  IndexedTree,
+  OperationFragmentRoot,
+  IndexedOperationFragment,
+  UncheckedIndexedTree,
+} from "./types";
 import { isIndexedTree } from "./predicates";
 import { ValueKind } from "../values/types";
 import {
@@ -56,12 +65,12 @@ import {
 type Context = {
   env: ForestEnv;
   operation: OperationDescriptor;
-  result: OperationResult;
   nodes: NodeMap;
   typeMap: TypeMap;
   dataMap: DataMap;
   indexedSources: number;
-  rootNodeKey: string;
+  rootNodeKey: NodeKey | false;
+  rootType: TypeName | undefined;
   knownMissingFields: MissingFieldsMap | undefined;
   incompleteChunks: Set<ObjectChunk>;
   recycleTree: IndexedTree | null;
@@ -101,7 +110,6 @@ export function indexTree(
   const context: Context = {
     env: env,
     operation,
-    result,
     knownMissingFields,
     nodes: new Map(),
     typeMap: new Map(),
@@ -109,6 +117,7 @@ export function indexTree(
     indexedSources: 0,
     incompleteChunks: new Set(),
     rootNodeKey,
+    rootType: operation.rootType,
     recycleTree: previousTreeState,
     findParent: createParentLocator(dataMap),
   };
@@ -146,6 +155,91 @@ export function indexTree(
   return reindexSharedTree(env, tree, rootRef.value);
 }
 
+/**
+ * Indexes data of an operation fragment (e.g. a deferred fragment) in the context of the actual operation.
+ * Each root is indexed with the key and the type of its target chunk in the stored tree.
+ */
+export function indexOperationFragment(
+  env: ForestEnv,
+  fragment: OperationFragmentDescriptor,
+  findStoredParent: ParentLocator,
+  roots: OperationFragmentRoot[],
+  knownMissingFields?: MissingFieldsMap,
+): IndexedOperationFragment {
+  const dataMap = new Map();
+  const context: Context = {
+    env: env,
+    operation: fragment.operation,
+    knownMissingFields,
+    nodes: new Map(),
+    typeMap: new Map(),
+    dataMap,
+    indexedSources: 0,
+    incompleteChunks: new Set(),
+    rootNodeKey: false,
+    rootType: undefined,
+    recycleTree: null,
+    // Tree-local on purpose: markAsPartial must not ascend into chunks of the stored tree
+    //   (partial flags of stored ancestors are updated when the difference is applied to the stored tree)
+    findParent: createParentLocator(dataMap),
+  };
+  const rootChunks: ObjectChunk[] = [];
+  for (const { data, target } of roots) {
+    assert(target.possibleSelections === fragment.possibleSelections);
+    context.rootNodeKey = target.key;
+    context.rootType = target.type || undefined;
+    const rootRef: RootChunkReference = {
+      value: null,
+      parent: null,
+      detached: false,
+    };
+    rootRef.value = indexSourceObject(
+      context,
+      data,
+      fragment.possibleSelections,
+      rootRef,
+    );
+    rootChunks.push(rootRef.value);
+  }
+  const tree: IndexedOperationFragment = {
+    kind: "OperationFragment",
+    operation: fragment,
+    roots,
+    nodes: context.nodes,
+    typeMap: context.typeMap,
+    dataMap: context.dataMap,
+    incompleteChunks: context.incompleteChunks,
+    findStoredParent,
+  };
+  if (context.indexedSources === dataMap.size) {
+    return tree;
+  }
+  let missingFields: MissingFieldsMap | undefined;
+  const repairedRoots = roots.map((root, i) => {
+    const repaired = cloneSharedReferences(env, rootChunks[i]);
+    if (repaired.missingFields?.size) {
+      missingFields ??= new Map();
+      for (const [source, fields] of repaired.missingFields) {
+        missingFields.set(source, fields);
+      }
+    }
+    return repaired.data === root.data
+      ? root
+      : { data: repaired.data, target: root.target };
+  });
+  // Note: sources shared by different roots are not repaired
+  if (repairedRoots.every((root, i) => root === roots[i])) {
+    return tree;
+  }
+  return indexOperationFragment(
+    env,
+    fragment,
+    findStoredParent,
+    repairedRoots,
+    missingFields,
+  );
+}
+
 // Matches ObjectChunkReference structure with additional fields
 export type IndexedObject = {
   value: ObjectChunk;
@@ -179,13 +273,13 @@ export function indexObject(
     env: env,
     operation,
     knownMissingFields,
-    result: { data: source },
     nodes: new Map(),
     typeMap: new Map(),
     dataMap,
     indexedSources: initialDataMapSize,
     incompleteChunks: new Set(),
     rootNodeKey,
+    rootType: operation.rootType,
     recycleTree: null,
     findParent: createParentLocator(dataMap),
   };
@@ -286,7 +380,7 @@ function indexSourceObject(
 
   const isRoot = isRootRef(parent) && !parent.detached;
   const sourceTypeName = source.__typename;
-  const typeName = isRoot ? sourceTypeName ?? op.rootType : sourceTypeName;
+  const typeName = isRoot ? sourceTypeName ?? context.rootType : sourceTypeName;
 
   const selection = resolveSelection(op, possibleSelections, typeName || null);
   const objectKeyResult = isRoot

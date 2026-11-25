@@ -10,6 +10,8 @@ import type {
   GraphChunkReference,
   ParentLocator,
   DataMap,
+  ObjectFieldReference,
+  ListItemReference,
 } from "./types";
 import { ValueKind } from "./types";
 import type { FieldInfo, NormalizedFieldEntry } from "../descriptor/types";
@@ -20,6 +22,7 @@ import { assert, assertNever } from "../jsutils/assert";
 
 const stack: (FieldInfo | number)[] = [];
 const normalizedStack: (NormalizedFieldEntry | number)[] = [];
+const refStack: (ObjectFieldReference | ListItemReference)[] = [];
 
 export type TraverseEnv = {
   findParent: ParentLocator;
@@ -171,6 +174,41 @@ export function descendToChunk(
   stack.length = 0;
 
   return value;
+}
+
+/**
+ * Visits chunks on the path from the node down to the chunk.
+ *
+ * Unlike `descendToChunk`, visits chunks of the path itself (not chunks resolved by the path from the node):
+ * the node may belong to another tree (e.g. a stored tree containing a root of an indexed operation fragment).
+ */
+export function descendFromNode(
+  env: TraverseEnv,
+  node: NodeChunk,
+  chunk: ObjectChunk | CompositeListChunk,
+  visit: (
+    value: GraphChunk,
+    parent: ObjectChunk | CompositeListChunk,
+    step: FieldInfo | number,
+  ) => void,
+): void {
+  refStack.length = 0;
+  let parentInfo = chunk === node ? null : env.findParent(chunk);
+  while (parentInfo) {
+    assert(!Predicates.isRootRef(parentInfo));
+    refStack.push(parentInfo);
+    parentInfo =
+      parentInfo.parent === node ? null : env.findParent(parentInfo.parent);
+  }
+  for (let i = refStack.length - 1; i >= 0; i--) {
+    const ref = refStack[i];
+    visit(
+      ref.value,
+      ref.parent,
+      Predicates.isParentObjectRef(ref) ? ref.field : ref.index,
+    );
+  }
+  refStack.length = 0;
 }
 
 export function getChunkReference(

@@ -8,6 +8,7 @@ import type {
   ObjectValue,
   NodeKey,
   NodeChunk,
+  ParentLocator,
   CompositeValueChunk,
   CompositeListChunk,
   ObjectDraft,
@@ -17,17 +18,19 @@ import type { NodeDifferenceMap } from "../diff/types";
 import type {
   Draft,
   ForestEnv,
+  IndexedOperationFragment,
   IndexedTree,
   UpdateTreeContext,
   UpdateTreeResult,
 } from "./types";
 import { assert } from "../jsutils/assert";
-import { indexTree } from "./indexTree";
-import { isDirty } from "../diff/difference";
+import { indexOperationFragment, indexTree } from "./indexTree";
+import { isDirty, isObjectDifference } from "../diff/difference";
 import {
   createDraft,
   createParentLocator,
   getDataPathForDebugging,
+  findClosestNode,
   hydrateDraft,
   isNodeValue,
   isObjectValue,
@@ -38,6 +41,8 @@ import {
   TraverseEnv,
 } from "../values";
 import { updateObject } from "./updateObject";
+import { createOperationFragmentParentLocator } from "./parentLocator";
+import { getEmbeddedChunkDifference } from "../diff/diffEmbedded";
 import { createUpdateLogger } from "../telemetry/updateStats/updateLogger";
 
 type ComplexValue = SourceObject | NestedList<SourceObject>;
@@ -45,6 +50,17 @@ type ComplexValue = SourceObject | NestedList<SourceObject>;
 export { NodeDifferenceMap }; // FIXME
 
 export function updateTree(
+  env: ForestEnv,
+  base: IndexedTree | IndexedOperationFragment,
+  differenceMap: NodeDifferenceMap,
+  getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
+): UpdateTreeResult {
+  return base.kind === "OperationFragment"
+    ? updateOperationFragment(env, base, differenceMap, getNodeChunks)
+    : updateIndexedTree(env, base, differenceMap, getNodeChunks);
+}
+
+function updateIndexedTree(
   env: ForestEnv,
   base: IndexedTree,
   differenceMap: NodeDifferenceMap,
@@ -60,39 +76,148 @@ export function updateTree(
     );
   }
   const rootChunk = rootChunks[0];
+  const context = createUpdateTreeContext(
+    env,
+    base,
+    base.operation,
+    createParentLocator(base.dataMap),
+    getNodeChunks,
+  );
+  updateNodeChunks(context, base, differenceMap);
+
+  if (!context.changedNodes.size) {
+    return createUpdateTreeResult(context, base);
+  }
+  const rootDraft = context.drafts.get(rootChunk.data);
+  assert(isSourceObject(rootDraft));
+
+  preserveDraftsState(context);
+  const updatedTree = indexTree(
+    env,
+    base.operation,
+    { data: rootDraft },
+    context.missingFields,
+    base,
+  );
+  if (env.apolloCompat_keepOrphanNodes) {
+    apolloBackwardsCompatibility_saveOrphanNodes(base, updatedTree);
+  }
+  return createUpdateTreeResult(context, updatedTree);
+}
+
+/**
+ * Embedded roots of an operation fragment take the place of objects embedded into nodes of the stored tree
+ * (see createOperationFragmentParentLocator), so their differences are parts of those node differences.
+ */
+function updateOperationFragment(
+  env: ForestEnv,
+  base: IndexedOperationFragment,
+  differenceMap: NodeDifferenceMap,
+  getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
+): UpdateTreeResult {
+  const context = createUpdateTreeContext(
+    env,
+    base,
+    base.operation.operation,
+    createOperationFragmentParentLocator(
+      base.dataMap,
+      base.roots,
+      base.findStoredParent,
+    ),
+    getNodeChunks,
+  );
+  // Roots which are nodes are updated with other nodes
+  updateNodeChunks(context, base, differenceMap);
+
+  // Embedded roots are updated last, as the shallowest chunks of the fragment
+  const { drafts, changedNodes, statsLogger, findParent } = context;
+  for (const { data } of base.roots) {
+    const rootRef = base.dataMap.get(data);
+    assert(rootRef && isObjectValue(rootRef.value));
+    const root = rootRef.value;
+    if (root.key !== false) {
+      continue;
+    }
+    const difference = getEmbeddedChunkDifference(
+      differenceMap,
+      findParent,
+      root,
+    );
+    // Other differences would replace the root itself, which is never the case for a root
+    if (!isObjectDifference(difference) || !isDirty(difference)) {
+      continue;
+    }
+    statsLogger?.startChunkUpdate(root);
+    const result = updateObject(context, root, difference);
+    if (!result) {
+      continue;
+    }
+    assert(result.draft === drafts.get(root.data));
+    changedNodes.add(findClosestNode(root, findParent).key);
+    createSourceCopiesUpToRoot(context, base, root);
+    statsLogger?.finishChunkUpdate();
+  }
+  if (!changedNodes.size) {
+    return createUpdateTreeResult(context, base);
+  }
+  preserveDraftsState(context);
+  const roots = base.roots.map((root) => {
+    const draft = drafts.get(root.data);
+    assert(draft === undefined || isSourceObject(draft));
+    return draft ? { data: draft, target: root.target } : root;
+  });
+  const updatedTree = indexOperationFragment(
+    env,
+    base.operation,
+    base.findStoredParent,
+    roots,
+    context.missingFields,
+  );
+  if (env.apolloCompat_keepOrphanNodes) {
+    apolloBackwardsCompatibility_saveOrphanNodes(base, updatedTree);
+  }
+  return createUpdateTreeResult(context, updatedTree);
+}
+
+function createUpdateTreeContext(
+  env: ForestEnv,
+  base: IndexedTree | IndexedOperationFragment,
+  operation: OperationDescriptor,
+  findParent: ParentLocator,
+  getNodeChunks: ((key: NodeKey) => Iterable<NodeChunk>) | undefined,
+): UpdateTreeContext {
   const context: UpdateTreeContext = {
-    operation: base.operation,
+    operation,
     drafts: new Map(),
     changes: new Map(),
     changedNodes: new Set(),
     affectedNodes: new Set(),
     missingFields: new Map(),
     completeObject: completeObject.bind(null, env, base, getNodeChunks),
-    findParent: createParentLocator(base.dataMap),
+    findParent,
     statsLogger: createUpdateLogger(env.logUpdateStats),
     env,
   };
-  const {
-    operation,
-    missingFields,
-    drafts,
-    changes,
-    changedNodes,
-    affectedNodes,
-    statsLogger,
-  } = context;
-
   // Preserve existing information about any missing fields.
   // (updated objects will get their own entry in the map, so there won't be collisions)
   for (const incompleteChunk of base.incompleteChunks) {
     assert(isObjectValue(incompleteChunk));
     if (incompleteChunk.missingFields) {
-      missingFields.set(
+      context.missingFields.set(
         incompleteChunk.data,
         new Set(incompleteChunk.missingFields),
       );
     }
   }
+  return context;
+}
+
+function updateNodeChunks(
+  context: UpdateTreeContext,
+  base: IndexedTree | IndexedOperationFragment,
+  differenceMap: NodeDifferenceMap,
+) {
+  const { operation, drafts, changedNodes, statsLogger } = context;
 
   // Update existing chunks starting from the deepest.
   //
@@ -117,7 +242,7 @@ export function updateTree(
       assert(
         difference,
         `Failed to update "${
-          base.operation.debugName
+          operation.debugName
         }"${at}: missing difference for ${chunk.type || "object"}`,
       );
     }
@@ -145,19 +270,13 @@ export function updateTree(
     createSourceCopiesUpToRoot(context, base, chunk);
     statsLogger?.finishChunkUpdate();
   }
-  if (!changedNodes.size) {
-    return {
-      updatedTree: base,
-      changes,
-      changedNodes,
-      affectedNodes,
-      missingFields,
-      stats: statsLogger?.getStats(operation.debugName),
-    };
-  }
-  const rootDraft = drafts.get(rootChunk.data);
-  assert(isSourceObject(rootDraft));
+}
 
+function preserveDraftsState({
+  drafts,
+  missingFields,
+  env,
+}: UpdateTreeContext) {
   for (const [source, draft] of drafts.entries()) {
     if (!isSourceObject(source)) {
       continue;
@@ -173,16 +292,19 @@ export function updateTree(
       env.keyMap?.set(draft, key);
     }
   }
-  const updatedTree = indexTree(
-    env,
-    base.operation,
-    { data: rootDraft },
+}
+
+function createUpdateTreeResult(
+  {
+    changes,
+    changedNodes,
+    affectedNodes,
     missingFields,
-    base,
-  );
-  if (env.apolloCompat_keepOrphanNodes) {
-    apolloBackwardsCompatibility_saveOrphanNodes(base, updatedTree);
-  }
+    statsLogger,
+    operation,
+  }: UpdateTreeContext,
+  updatedTree: IndexedTree | IndexedOperationFragment,
+): UpdateTreeResult {
   return {
     updatedTree,
     changes,
@@ -192,9 +314,8 @@ export function updateTree(
     stats: statsLogger?.getStats(operation.debugName),
   };
 }
-
 function resolveAffectedChunks(
-  base: IndexedTree,
+  base: IndexedTree | IndexedOperationFragment,
   differenceMap: NodeDifferenceMap,
 ): ObjectChunk[] {
   const affectedChunks: ObjectChunk[] = [];
@@ -226,7 +347,7 @@ function debugPathClause(
 
 function completeObject(
   env: ForestEnv,
-  base: IndexedTree,
+  base: IndexedTree | IndexedOperationFragment,
   getNodeChunks: ((key: NodeKey) => Iterable<NodeChunk>) | undefined,
   object: ObjectValue,
   possibleSelections: PossibleSelections,
@@ -285,7 +406,7 @@ function completeObject(
 
 function createSourceCopiesUpToRoot(
   context: UpdateTreeContext,
-  tree: IndexedTree,
+  tree: IndexedTree | IndexedOperationFragment,
   from: CompositeValueChunk,
   isRootCall = true,
   isIndirectlyAffected = false,
@@ -343,8 +464,8 @@ function createSourceCopiesUpToRoot(
 }
 
 function apolloBackwardsCompatibility_saveOrphanNodes(
-  current: IndexedTree,
-  next: IndexedTree,
+  current: IndexedTree | IndexedOperationFragment,
+  next: IndexedTree | IndexedOperationFragment,
 ) {
   const currentNodes = current.nodes;
   const nextNodes = next.nodes;
