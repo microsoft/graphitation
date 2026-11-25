@@ -3,8 +3,6 @@ import type {
   CompositeValueChunk,
   CompositeUndefinedChunk,
   DataMap,
-  EmbeddedRootAddress,
-  EmbeddedRootChunk,
   GraphChunkReference,
   MissingFieldsMap,
   NodeChunk,
@@ -18,6 +16,8 @@ import type {
   SourceObject,
   TypeMap,
   ParentLocator,
+  EmbeddedRootAddress,
+  EmbeddedRootChunk,
 } from "../values/types";
 import type {
   NodeKey,
@@ -34,7 +34,7 @@ import type {
   OperationFragmentTree,
   UncheckedIndexedTree,
 } from "./types";
-import { isIndexedTree, isSameTreeKind, isStoredTree } from "./predicates";
+import { isIndexedTree, isSameTreeKind } from "./predicates";
 import { ValueKind } from "../values/types";
 import {
   getFieldName,
@@ -76,8 +76,7 @@ type Context = {
   rootType: TypeName | undefined;
   knownMissingFields: MissingFieldsMap | undefined;
   incompleteChunks: Set<ObjectChunk>;
-  recycleTree: AnyIndexedTree | null;
-  recyclePrevTree: IndexedTree | null; // Previous state of the recycled tree (stored trees only)
+  recycleTree: IndexedTree | null;
   findParent: ParentLocator;
 };
 
@@ -95,19 +94,49 @@ export function indexTree(
   knownMissingFields?: MissingFieldsMap,
   previousTreeState: IndexedTree | null = null,
 ): IndexedTree {
-  const rootNodeKey = resolveRootNodeKey(env, operation, result);
-  const context = createTreeContext(
-    env,
+  let rootNodeKey;
+  try {
+    rootNodeKey =
+      env.objectKey(
+        result.data,
+        resolveSelection(
+          operation,
+          operation.possibleSelections,
+          operation.rootType,
+        ),
+        operation,
+      ) || operation.rootNodeKey;
+  } catch (e) {
+    rootNodeKey = operation.rootNodeKey;
+  }
+  const dataMap = new Map();
+  const context: Context = {
+    env: env,
     operation,
-    rootNodeKey,
-    operation.rootType,
     result,
     knownMissingFields,
-    previousTreeState,
+    nodes: new Map(),
+    typeMap: new Map(),
+    dataMap,
+    indexedSources: 0,
+    incompleteChunks: new Set(),
+    rootNodeKey,
+    rootType: operation.rootType,
+    recycleTree: previousTreeState,
+    findParent: createParentLocator(dataMap),
+  };
+  const rootRef: RootChunkReference = {
+    value: null,
+    parent: null,
+    detached: false,
+    embeddedIn: undefined,
+  };
+  rootRef.value = indexSourceObject(
+    context,
+    result.data,
+    operation.possibleSelections,
+    rootRef,
   );
-  const root = indexRoot(context, operation.possibleSelections, undefined);
-  const history =
-    previousTreeState?.history ?? new CircularBuffer(operation.historySize);
   // Note: explicit literal with the same fields for all tree kinds (keeps a single object shape)
   const tree: UncheckedIndexedTree = {
     kind: operation.kind,
@@ -119,33 +148,24 @@ export function indexTree(
     dataMap: context.dataMap,
     incompleteChunks: context.incompleteChunks,
     prev: previousTreeState,
-    history,
+    history:
+      previousTreeState?.history ?? new CircularBuffer(operation.historySize),
   };
   assert(isIndexedTree(tree));
-  const repaired = repairSharedReferences(env, context, root);
-  if (!repaired) {
+  // Every composite occurrence is counted, but dataMap keeps only unique sources.
+  // This detects sharing without an additional map lookup or allocation per chunk.
+  if (context.indexedSources === dataMap.size) {
     return tree;
   }
-  const repairedTree = indexTree(
-    env,
-    operation,
-    { ...result, data: repaired.data },
-    repaired.missingFields,
-  );
-  repairedTree.prev = previousTreeState;
-  repairedTree.history = history;
-  return repairedTree;
+  return reindexSharedTree(env, tree, rootRef.value);
 }
 
-// Root of an operation fragment tree: key of a node, or address of an embedded object
+// Root of an operation fragment tree: key of a node, or address of an object embedded into a node
 export type OperationFragmentRoot = NodeKey | EmbeddedRootAddress;
 
 /**
- * Indexes data of an operation sub-selection (e.g. a deferred fragment) in the context of the actual operation,
- * starting from the selection of the root object.
- *
- * Fragment descriptors are shared by all objects with the same selection, so the root is per tree
- * (root type is resolved from the data for the same reason).
+ * Indexes data of an operation fragment (e.g. a deferred fragment) in the context of the actual operation,
+ * starting from the fragment selection. Fragment trees are transient: no previous states, history or recycling.
  *
  * The root is either a node (`tree.rootNodeKey` is its key), or an object embedded into a node: such root
  * is a regular embedded object (`tree.rootNodeKey` is `false`) and its root reference keeps the embedded
@@ -157,21 +177,37 @@ export function indexOperationFragmentTree(
   root: OperationFragmentRoot,
   result: OperationResult,
   knownMissingFields?: MissingFieldsMap,
-  recycleTree: OperationFragmentTree | null = null, // Tree to recycle chunks from (e.g. on re-indexing)
 ): OperationFragmentTree {
-  const embeddedIn = typeof root === "string" ? undefined : root;
   const rootNodeKey = typeof root === "string" ? root : false;
-  const context = createTreeContext(
-    env,
-    fragment.operation,
-    rootNodeKey,
-    undefined,
+  const dataMap = new Map();
+  const context: Context = {
+    env: env,
+    operation: fragment.operation,
     result,
     knownMissingFields,
-    recycleTree,
+    nodes: new Map(),
+    typeMap: new Map(),
+    dataMap,
+    indexedSources: 0,
+    incompleteChunks: new Set(),
+    rootNodeKey,
+    // Fragment descriptors are shared by objects of different types, so root type comes from the data
+    rootType: undefined,
+    recycleTree: null,
+    findParent: createParentLocator(dataMap),
+  };
+  const rootRef: RootChunkReference = {
+    value: null,
+    parent: null,
+    detached: false,
+    embeddedIn: typeof root === "string" ? undefined : root,
+  };
+  rootRef.value = indexSourceObject(
+    context,
+    result.data,
+    fragment.possibleSelections,
+    rootRef,
   );
-  const rootChunk = indexRoot(context, fragment.possibleSelections, embeddedIn);
-  // Note: fragment trees are transient (never stored), so they don't keep previous states and history
   const tree: OperationFragmentTree = {
     kind: "OperationFragment",
     operation: fragment,
@@ -182,8 +218,11 @@ export function indexOperationFragmentTree(
     dataMap: context.dataMap,
     incompleteChunks: context.incompleteChunks,
   };
-  const repaired = repairSharedReferences(env, context, rootChunk);
-  if (!repaired) {
+  if (context.indexedSources === dataMap.size) {
+    return tree;
+  }
+  const repaired = cloneSharedReferences(env, rootRef.value);
+  if (repaired.data === result.data) {
     return tree;
   }
   return indexOperationFragmentTree(
@@ -196,7 +235,7 @@ export function indexOperationFragmentTree(
 }
 
 /**
- * Indexes a new state of the tree (with the tree as its previous state), preserving its kind and root node key.
+ * Indexes a new state of the tree, preserving its kind and root.
  */
 export function reindexTree<TTree extends AnyIndexedTree>(
   env: ForestEnv,
@@ -217,121 +256,25 @@ export function reindexTree<TTree extends AnyIndexedTree>(
         base,
       );
       break;
-    case "OperationFragment":
+    case "OperationFragment": {
+      const rootRef = base.dataMap.get(base.result.data);
+      assert(rootRef && isRootRef(rootRef));
+      const root = rootRef.embeddedIn ?? base.rootNodeKey;
+      assert(root !== false);
       reindexed = indexOperationFragmentTree(
         env,
         base.operation,
-        getOperationFragmentRoot(base),
+        root,
         result,
         knownMissingFields,
-        base,
       );
       break;
+    }
     default:
       assertNever(base);
   }
   assert(isSameTreeKind(tree, reindexed));
   return reindexed;
-}
-
-function resolveRootNodeKey(
-  env: ForestEnv,
-  operation: OperationDescriptor,
-  result: OperationResult,
-): NodeKey {
-  try {
-    return (
-      env.objectKey(
-        result.data,
-        resolveSelection(
-          operation,
-          operation.possibleSelections,
-          operation.rootType,
-        ),
-        operation,
-      ) || operation.rootNodeKey
-    );
-  } catch (e) {
-    return operation.rootNodeKey;
-  }
-}
-
-function getOperationFragmentRoot(
-  tree: OperationFragmentTree,
-): OperationFragmentRoot {
-  if (tree.rootNodeKey !== false) {
-    return tree.rootNodeKey;
-  }
-  const rootRef = tree.dataMap.get(tree.result.data);
-  assert(rootRef && isRootRef(rootRef) && rootRef.embeddedIn);
-  return rootRef.embeddedIn;
-}
-
-function createTreeContext(
-  env: ForestEnv,
-  operation: OperationDescriptor,
-  rootNodeKey: NodeKey | false,
-  rootType: TypeName | undefined,
-  result: OperationResult,
-  knownMissingFields: MissingFieldsMap | undefined,
-  previousTreeState: AnyIndexedTree | null,
-): Context {
-  const dataMap = new Map();
-  return {
-    env: env,
-    operation,
-    result,
-    knownMissingFields,
-    nodes: new Map(),
-    typeMap: new Map(),
-    dataMap,
-    indexedSources: 0,
-    incompleteChunks: new Set(),
-    rootNodeKey,
-    rootType,
-    recycleTree: previousTreeState,
-    recyclePrevTree:
-      previousTreeState && isStoredTree(previousTreeState)
-        ? previousTreeState.prev
-        : null,
-    findParent: createParentLocator(dataMap),
-  };
-}
-
-function indexRoot(
-  context: Context,
-  possibleSelections: PossibleSelections,
-  embeddedIn: EmbeddedRootAddress | undefined,
-): ObjectChunk {
-  const rootRef: RootChunkReference = {
-    value: null,
-    parent: null,
-    detached: false,
-    embeddedIn,
-  };
-  rootRef.value = indexSourceObject(
-    context,
-    context.result.data,
-    possibleSelections,
-    rootRef,
-  );
-  return rootRef.value;
-}
-
-// Returns repaired data when the indexed result contains shared references (otherwise undefined)
-function repairSharedReferences(
-  env: ForestEnv,
-  context: Context,
-  root: ObjectChunk,
-) {
-  // Every composite occurrence is counted, but dataMap keeps only unique sources.
-  // This detects sharing without an additional map lookup or allocation per chunk.
-  if (context.indexedSources === context.dataMap.size) {
-    return undefined;
-  }
-  const repaired = cloneSharedReferences(env, root);
-  // Malformed, out-of-range list chunks may overcount without sharing actual data.
-  return repaired.data === context.result.data ? undefined : repaired;
 }
 
 // Matches ObjectChunkReference structure with additional fields
@@ -377,7 +320,6 @@ export function indexObject(
     rootNodeKey,
     rootType: operation.rootType,
     recycleTree: null,
-    recyclePrevTree: null,
     findParent: createParentLocator(dataMap),
   };
   const result = {
@@ -419,6 +361,27 @@ export function indexObject(
   return result as IndexedObject;
 }
 
+function reindexSharedTree(
+  env: ForestEnv,
+  tree: IndexedTree,
+  root: ObjectChunk,
+): IndexedTree {
+  const repaired = cloneSharedReferences(env, root);
+  // Malformed, out-of-range list chunks may overcount without sharing actual data.
+  if (repaired.data === tree.result.data) {
+    return tree;
+  }
+  const repairedTree = indexTree(
+    env,
+    tree.operation,
+    { ...tree.result, data: repaired.data },
+    repaired.missingFields,
+  );
+  repairedTree.prev = tree.prev;
+  repairedTree.history = tree.history;
+  return repairedTree;
+}
+
 export function indexDraft(
   env: ForestEnv,
   { data, dangling, operation, possibleSelections, missingFields }: ObjectDraft,
@@ -440,8 +403,7 @@ function indexSourceObject(
 ) {
   const recycleTree = context.recycleTree;
   const recyclable =
-    recycleTree?.dataMap.get(source) ??
-    context.recyclePrevTree?.dataMap.get(source);
+    recycleTree?.dataMap.get(source) ?? recycleTree?.prev?.dataMap.get(source);
 
   if (recyclable) {
     return reIndexObject(context, recyclable.value as ObjectChunk, parent);
@@ -571,8 +533,7 @@ function indexSourceList(
 ) {
   const recycleTree = context.recycleTree;
   const recyclable =
-    recycleTree?.dataMap.get(list) ??
-    context.recyclePrevTree?.dataMap.get(list);
+    recycleTree?.dataMap.get(list) ?? recycleTree?.prev?.dataMap.get(list);
 
   if (recyclable) {
     return reIndexList(context, recyclable.value as CompositeListChunk, parent);
@@ -816,11 +777,8 @@ function describeMalformedPayload(
 function findIndexingTree(
   context: Context,
   chunk: CompositeListChunk,
-): AnyIndexedTree | null {
-  if (context.recycleTree?.dataMap.has(chunk.data)) {
-    return context.recycleTree;
-  }
-  for (let tree = context.recyclePrevTree; tree; tree = tree.prev) {
+): IndexedTree | null {
+  for (let tree = context.recycleTree; tree; tree = tree.prev) {
     if (tree.dataMap.has(chunk.data)) {
       return tree;
     }
@@ -833,7 +791,7 @@ function findIndexingTree(
 // `typeMap` indexes every chunk by type, keyed or not, and the closest node scopes the hits
 // down to the one entity that is actually repeated.
 function findOccurrences(
-  tree: AnyIndexedTree | null,
+  tree: IndexedTree | null,
   type: ObjectChunk["type"] | undefined,
   fieldEntry: NormalizedFieldEntry | null,
   node: NodeChunk | EmbeddedRootChunk | null,

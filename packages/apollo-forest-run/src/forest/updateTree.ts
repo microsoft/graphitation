@@ -54,7 +54,19 @@ export function updateTree<TTree extends AnyIndexedTree = IndexedTree>(
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
 ): UpdateTreeResult<TTree> {
   const baseOperation = resolveOperation(base.operation);
-  const rootChunk = getRootChunk(base, baseOperation);
+  const rootChunks =
+    base.rootNodeKey === false
+      ? [getEmbeddedRootChunk(base)]
+      : base.nodes.get(base.rootNodeKey);
+  if (rootChunks?.length !== 1) {
+    assert(
+      false,
+      `Failed to update "${
+        baseOperation.debugName
+      }": expected a single root chunk, got ${rootChunks?.length ?? 0}`,
+    );
+  }
+  const rootChunk = rootChunks[0];
   const context: UpdateTreeContext = {
     operation: baseOperation,
     drafts: new Map(),
@@ -102,7 +114,7 @@ export function updateTree<TTree extends AnyIndexedTree = IndexedTree>(
   // By executing updates from bottom to top we make sure that list updates happen after all nested objects
   //   are already updated (thus, we can safely change paths); and that all "dirty" child nodes
   //   (and their intermediate parent plain objects) already have their "drafts" by the time we update them.
-  const chunkQueue = resolveAffectedChunks(base, rootChunk, differenceMap);
+  const chunkQueue = resolveAffectedChunks(base, differenceMap);
   chunkQueue.sort((a, b) => b.selection.depth - a.selection.depth); // parent is missing for orphan nodes
 
   let hasChanges = false;
@@ -192,31 +204,15 @@ export function updateTree<TTree extends AnyIndexedTree = IndexedTree>(
   };
 }
 
-function getRootChunk(
-  base: AnyIndexedTree,
-  operation: OperationDescriptor,
-): ObjectChunk {
-  if (base.rootNodeKey === false) {
-    // Embedded root (see RootChunkReference.embeddedIn)
-    const rootRef = base.dataMap.get(base.result.data);
-    assert(rootRef && isRootRef(rootRef) && isObjectValue(rootRef.value));
-    return rootRef.value;
-  }
-  const rootChunks = base.nodes.get(base.rootNodeKey);
-  if (rootChunks?.length !== 1) {
-    assert(
-      false,
-      `Failed to update "${
-        operation.debugName
-      }": expected a single root chunk, got ${rootChunks?.length ?? 0}`,
-    );
-  }
-  return rootChunks[0];
+// Embedded root is not a node (see RootChunkReference.embeddedIn)
+function getEmbeddedRootChunk(base: AnyIndexedTree): ObjectChunk {
+  const rootRef = base.dataMap.get(base.result.data);
+  assert(rootRef && isRootRef(rootRef) && isObjectValue(rootRef.value));
+  return rootRef.value;
 }
 
 function resolveAffectedChunks(
   base: AnyIndexedTree,
-  rootChunk: ObjectChunk,
   differenceMap: TreeDifferenceMap,
 ): ObjectChunk[] {
   const affectedChunks: ObjectChunk[] = [];
@@ -224,12 +220,10 @@ function resolveAffectedChunks(
     if (!isDirty(difference)) {
       continue;
     }
-    if (objectKey === false) {
-      // Difference of an embedded root
-      affectedChunks.push(rootChunk);
-      continue;
-    }
-    const chunks = base.nodes.get(objectKey);
+    const chunks =
+      objectKey === false
+        ? [getEmbeddedRootChunk(base)]
+        : base.nodes.get(objectKey);
     if (chunks?.length) {
       affectedChunks.push(...chunks);
     }

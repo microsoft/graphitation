@@ -375,11 +375,11 @@ export function resolveObjectKey(
 }
 
 export function isNodeRef(ref: GraphValueReference): boolean {
-  if (typeof ref === "string") {
+  if (
+    typeof ref === "string" ||
+    (Predicates.isRootRef(ref[0]) && !ref[0].embeddedIn)
+  ) {
     return true;
-  }
-  if (Predicates.isRootRef(ref[0])) {
-    return !ref[0].embeddedIn;
   }
   const value = resolveGraphValueReference(ref[0]);
   return Predicates.isNodeValue(value);
