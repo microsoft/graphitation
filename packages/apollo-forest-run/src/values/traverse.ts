@@ -10,6 +10,8 @@ import type {
   GraphChunkReference,
   ParentLocator,
   DataMap,
+  EmbeddedRootAddress,
+  NodeKey,
 } from "./types";
 import { ValueKind } from "./types";
 import type { FieldInfo, NormalizedFieldEntry } from "../descriptor/types";
@@ -24,6 +26,13 @@ const normalizedStack: (NormalizedFieldEntry | number)[] = [];
 export type TraverseEnv = {
   findParent: ParentLocator;
 };
+
+/**
+ * Synthetic key of a tree root embedded into a node of another tree (see RootChunkReference.embeddedIn).
+ * Such root is indexed as a node, so that tree-local operations work as usual. The key never leaves its tree:
+ * lookups in other trees are resolved via the embedded root address.
+ */
+export const EMBEDDED_ROOT_KEY = "__EMBEDDED_ROOT__";
 
 export const createParentLocator =
   (map: DataMap): ParentLocator =>
@@ -184,9 +193,25 @@ export const getGraphValueReference = (
   env: TraverseEnv,
   chunk: ObjectChunk | CompositeListChunk,
 ): GraphValueReference =>
-  Predicates.isNodeValue(chunk)
+  Predicates.isNodeValue(chunk) && chunk.key !== EMBEDDED_ROOT_KEY
     ? chunk.key
     : [env.findParent(chunk), env.findParent];
+
+/**
+ * Key of the node in the store: for an embedded root - key of the node it is embedded into
+ * (in this case, `node` itself is not in the store, embedded value must be retrieved by reference).
+ */
+export function resolveStoredNodeKey(
+  node: NodeChunk,
+  findParent: ParentLocator,
+): NodeKey {
+  if (node.key !== EMBEDDED_ROOT_KEY) {
+    return node.key;
+  }
+  const ref = findParent(node);
+  assert(Predicates.isRootRef(ref) && ref.embeddedIn);
+  return ref.embeddedIn.nodeKey;
+}
 
 export function getChunkFieldReference(
   env: TraverseEnv,
@@ -236,6 +261,14 @@ export function retrieveEmbeddedValue(
     );
     parentRef = refParentLocator(parentRef.parent);
   }
+  const embeddedIn =
+    parentRef && Predicates.isRootRef(parentRef)
+      ? parentRef.embeddedIn
+      : undefined;
+  if (embeddedIn) {
+    // Reference from a tree with an embedded root: continue from the node it is embedded into
+    return retrieveFromEmbeddedRoot(source, embeddedIn);
+  }
   if (
     !parentRef ||
     !Predicates.isParentObjectRef(parentRef) ||
@@ -256,11 +289,31 @@ export function retrieveEmbeddedValue(
   if (source === resolveGraphValueReference(parentRef)) {
     return resolveGraphValueReference(ref[0]);
   }
-  let parent: CompositeValue = source;
-  let step: NormalizedFieldEntry | number | undefined = resolveNormalizedField(
-    parentRef.parent.selection,
-    parentRef.field,
+  return descendNormalizedPath(
+    source,
+    resolveNormalizedField(parentRef.parent.selection, parentRef.field),
   );
+}
+
+function retrieveFromEmbeddedRoot(
+  source: NodeValue,
+  { nodeKey, path }: EmbeddedRootAddress,
+): GraphValue | undefined {
+  assert(nodeKey === source.key && path.length);
+  // Steps from the embedded root (collected in normalizedStack) are popped after the path to it
+  for (let i = path.length - 1; i > 0; i--) {
+    normalizedStack.push(path[i]);
+  }
+  return descendNormalizedPath(source, path[0]);
+}
+
+// Descends from the source by the first step + steps collected in normalizedStack (in reverse order)
+function descendNormalizedPath(
+  source: NodeValue,
+  firstStep: NormalizedFieldEntry | number,
+): GraphValue | undefined {
+  let parent: CompositeValue = source;
+  let step: NormalizedFieldEntry | number | undefined = firstStep;
   while (step !== undefined) {
     if (Predicates.isObjectValue(parent)) {
       assert(typeof step !== "number");
@@ -316,8 +369,11 @@ export function resolveObjectKey(
 }
 
 export function isNodeRef(ref: GraphValueReference): boolean {
-  if (typeof ref === "string" || Predicates.isRootRef(ref[0])) {
+  if (typeof ref === "string") {
     return true;
+  }
+  if (Predicates.isRootRef(ref[0])) {
+    return !ref[0].embeddedIn;
   }
   const value = resolveGraphValueReference(ref[0]);
   return Predicates.isNodeValue(value);

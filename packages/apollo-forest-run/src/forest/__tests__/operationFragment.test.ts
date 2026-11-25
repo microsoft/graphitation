@@ -13,8 +13,25 @@ import type {
   OperationFragmentDescriptor,
   PossibleSelections,
 } from "../../descriptor/types";
-import type { ObjectChunk, SourceScalar } from "../../values/types";
-import { createSourceObject } from "../../values";
+import type {
+  EmbeddedRootAddress,
+  ObjectChunk,
+  RootChunkReference,
+  SourceScalar,
+} from "../../values/types";
+import {
+  createParentLocator,
+  createSourceObject,
+  EMBEDDED_ROOT_KEY,
+  getGraphValueReference,
+  isCompositeListValue,
+  isNodeRef,
+  isObjectValue,
+  resolveFieldChunk,
+  resolveListItemChunk,
+  resolveObjectKey,
+} from "../../values";
+import { getObjectChunks } from "../../cache/draftHelpers";
 import type {
   AnyIndexedTree,
   ForestEnv,
@@ -181,15 +198,6 @@ describe("OperationFragmentTree", () => {
     expect(second.rootNodeKey).toBe("User:2");
   });
 
-  it("uses the given root key for objects without own keys", () => {
-    const { fragment } = setup();
-    const data = createSourceObject({ bio: "a", friend: null });
-    const tree = indexOperationFragmentTree(env, fragment, "User:1.embedded", {
-      data,
-    });
-    expect(getNode(tree, "User:1.embedded").data).toBe(data);
-  });
-
   it("keeps the kind and root key when updated", () => {
     const { fragment } = setup();
     const base = indexOperationFragmentTree(env, fragment, "User:1", {
@@ -294,6 +302,154 @@ describe("OperationFragmentTree", () => {
   });
 });
 
+describe("OperationFragmentTree with embedded root", () => {
+  const embeddedQuery = `
+    query Embedded {
+      user(id: "1") {
+        __typename
+        id
+        list: items(first: 2) {
+          meta {
+            a
+            ... @defer { b nested { c } }
+          }
+        }
+      }
+    }
+  `;
+
+  function setupEmbedded() {
+    const operation = createTestOperation(embeddedQuery);
+    const stored = indexTree(env, operation, {
+      data: createSourceObject({
+        user: {
+          __typename: "User",
+          id: "1",
+          list: [0, 1].map((i) => ({
+            meta: { a: `a${i}`, b: `b${i}`, nested: { c: `c${i}` } },
+          })),
+        },
+      }),
+    });
+    const forest = createTestForest();
+    addForestTree(forest, stored);
+
+    // Address of `user.list[1].meta`
+    const user = getNode(stored, "User:1");
+    const itemsField = user.selection.fields.get("items")?.[0];
+    assert(itemsField);
+    const list = resolveFieldChunk(user, itemsField);
+    assert(isCompositeListValue(list));
+    const item = resolveListItemChunk(list, 1);
+    assert(isObjectValue(item));
+    const metaField = item.selection.fields.get("meta")?.[0];
+    assert(metaField?.selection);
+    const address: EmbeddedRootAddress = {
+      nodeKey: "User:1",
+      path: [
+        resolveNormalizedField(user.selection, itemsField),
+        1,
+        resolveNormalizedField(item.selection, metaField),
+      ],
+    };
+    const fragment = describeOperationFragment(
+      operation.env,
+      operation,
+      metaField.selection,
+    );
+    const data = createSourceObject({ b: "new", nested: { c: "new" } });
+    const tree = indexOperationFragmentTree(env, fragment, address, { data });
+    return { stored, forest, address, fragment, tree, data };
+  }
+
+  it("indexes the root as a node with a synthetic key and keeps its address", () => {
+    const { tree, address, data } = setupEmbedded();
+
+    expect(tree.rootNodeKey).toBe(EMBEDDED_ROOT_KEY);
+    const root = getNode(tree, EMBEDDED_ROOT_KEY);
+    expect(root.data).toBe(data);
+    expect(tree.dataMap.get(data)).toEqual({
+      value: root,
+      parent: null,
+      detached: false,
+      embeddedIn: address,
+    });
+  });
+
+  it("resolves matching embedded chunks in other trees (through lists and aliases)", () => {
+    const { tree, forest } = setupEmbedded();
+    const pathEnv = { findParent: createParentLocator(tree.dataMap) };
+    const root = getNode(tree, EMBEDDED_ROOT_KEY);
+    const nestedField = root.selection.fields.get("nested")?.[0];
+    assert(nestedField);
+    const nested = resolveFieldChunk(root, nestedField);
+    assert(isObjectValue(nested));
+
+    const rootRef = getGraphValueReference(pathEnv, root);
+    expect(typeof rootRef).not.toBe("string");
+    expect(isNodeRef(rootRef)).toBe(false);
+    expect(resolveObjectKey(rootRef)).toBe(false);
+    expect(
+      [...getObjectChunks([forest], rootRef)].map((chunk) => chunk.data),
+    ).toEqual([{ a: "a1", b: "b1", nested: { c: "c1" } }]);
+
+    const nestedRef = getGraphValueReference(pathEnv, nested);
+    expect(
+      [...getObjectChunks([forest], nestedRef)].map((chunk) => chunk.data),
+    ).toEqual([{ c: "c1" }]);
+  });
+
+  it("keeps the embedded root when updated and transformed", () => {
+    const { tree, address } = setupEmbedded();
+    const root = getNode(tree, EMBEDDED_ROOT_KEY);
+
+    const { updatedTree } = updateTree(
+      env,
+      tree,
+      new Map([[EMBEDDED_ROOT_KEY, fieldDifference(root, "b", "updated")]]),
+    );
+    expect(updatedTree.rootNodeKey).toBe(EMBEDDED_ROOT_KEY);
+    expect(updatedTree.result.data).toEqual({
+      b: "updated",
+      nested: { c: "new" },
+    });
+    expect(updatedTree.dataMap.get(updatedTree.result.data)).toMatchObject({
+      parent: null,
+      embeddedIn: address,
+    });
+
+    const transformed = transformTree(
+      env,
+      tree,
+      "DESCEND",
+      {},
+      {
+        getFieldQueue: () => ["b"],
+        transformField: (_parent, _field, value) =>
+          createReplacement(value, "transformed" as SourceScalar),
+      },
+    );
+    expect(transformed.rootNodeKey).toBe(EMBEDDED_ROOT_KEY);
+    expect(transformed.result.data).toEqual({
+      b: "transformed",
+      nested: { c: "new" },
+    });
+    expect(transformed.dataMap.get(transformed.result.data)?.parent).toBeNull();
+    expect(
+      (transformed.dataMap.get(transformed.result.data) as RootChunkReference)
+        .embeddedIn,
+    ).toEqual(address);
+  });
+
+  it("doesn't change root references of regular trees", () => {
+    const { stored } = setupEmbedded();
+    const rootRef = stored.dataMap.get(stored.result.data);
+    expect(rootRef && "embeddedIn" in rootRef).toBe(true);
+    expect((rootRef as RootChunkReference).embeddedIn).toBe(undefined);
+    expect(getNode(stored, "User:1").key).toBe("User:1");
+  });
+});
+
 function setup(): {
   operation: OperationDescriptor;
   fragment: OperationFragmentDescriptor;
@@ -339,6 +495,23 @@ function nameDifference(chunk: ObjectChunk, name: string) {
     difference,
     entry,
     createReplacement(chunk.data.name as SourceScalar, name as SourceScalar),
+  );
+  addDirtyField(difference, entry);
+  return difference;
+}
+
+function fieldDifference(chunk: ObjectChunk, fieldName: string, value: string) {
+  const field = chunk.selection.fields.get(fieldName)?.[0];
+  assert(field);
+  const entry = resolveNormalizedField(chunk.selection, field);
+  const difference = createObjectDifference();
+  addFieldDifference(
+    difference,
+    entry,
+    createReplacement(
+      chunk.data[field.dataKey] as SourceScalar,
+      value as SourceScalar,
+    ),
   );
   addDirtyField(difference, entry);
   return difference;

@@ -376,6 +376,7 @@ function apolloBackwardsCompatibility_saveOrphanNodes(
         value: chunk,
         parent: null,
         detached: true,
+        embeddedIn: undefined,
       });
     }
   }
