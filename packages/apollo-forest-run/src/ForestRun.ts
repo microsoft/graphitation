@@ -17,6 +17,7 @@ import type {
   SerializedOperationInfo,
   Store,
   Transaction,
+  WriteOptions,
 } from "./cache/types";
 import { ApolloCache } from "@apollo/client";
 import { assert } from "./jsutils/assert";
@@ -40,7 +41,12 @@ import {
   isFragmentDocument,
   transformDocument,
 } from "./cache/descriptor";
-import { isWrite, write } from "./cache/write";
+import {
+  isSubsequentResult,
+  isWrite,
+  write,
+  writeSubsequentResult,
+} from "./cache/write";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -199,7 +205,10 @@ export class ForestRun<
     return result.dirty;
   }
 
-  public write(options: Cache.WriteOptions): Reference | undefined {
+  /**
+   * Writes a complete result, or results of incremental delivery (`@defer`) via `options.execution`.
+   */
+  public write(options: WriteOptions): Reference | undefined {
     return this.transactionStack.length
       ? this.runWrite(options)
       : this.runTransaction({
@@ -207,9 +216,23 @@ export class ForestRun<
         });
   }
 
-  private runWrite(options: Cache.WriteOptions): Reference | undefined {
+  private runWrite(options: WriteOptions): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
+    const { execution } = options;
+    if (execution && isSubsequentResult(execution)) {
+      const result = writeSubsequentResult(
+        this.env,
+        this.store,
+        transaction,
+        options,
+        execution,
+      );
+      if (result) {
+        transaction.changelog.push(result);
+      }
+      return undefined;
+    }
     const result = write(this.env, this.store, transaction, options);
     transaction.changelog.push(result);
 

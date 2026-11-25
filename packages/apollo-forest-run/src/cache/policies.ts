@@ -48,7 +48,12 @@ import {
   retrieveEmbeddedChunk,
   TraverseEnv,
 } from "../values";
-import { CacheEnv, DataForest, OptimisticLayer } from "./types";
+import {
+  CacheEnv,
+  DataForest,
+  DeliveredFields,
+  OptimisticLayer,
+} from "./types";
 import {
   createChunkMatcher,
   createChunkProvider,
@@ -183,6 +188,8 @@ export function applyMergePolicies(
   mergePoliciesMap: Map<TypeName, Map<FieldName, FieldMergeFunction>>,
   incomingTree: IndexedTree,
   overwrite: boolean,
+  // Restricts merge policies to delivered fields of incremental results (spliced into the stored result)
+  deliveredFields?: DeliveredFields,
 ): IndexedTree {
   const findChunkInfo = (value: ApolloStoreValue | SourceObject) => {
     if (typeof value !== "object" || value === null) {
@@ -246,6 +253,12 @@ export function applyMergePolicies(
         if (isMissingValue(fieldValue)) {
           return undefined;
         }
+        if (
+          deliveredFields &&
+          !isDeliveredField(incomingTree, deliveredFields, parent, field)
+        ) {
+          return fieldDiff;
+        }
         let existingChunk: GraphChunk | undefined;
         if (!overwrite) {
           // Resolving "existing" value through parent, because field value may not have metadata, e.g. be a scalar
@@ -256,6 +269,21 @@ export function applyMergePolicies(
           existingChunk = existingParent
             ? resolveFieldChunk(existingParent, field)
             : materializeFromForest(env, pathEnv, layers, parent, field);
+
+          if (
+            deliveredFields &&
+            existingChunk !== undefined &&
+            isMissingValue(existingChunk)
+          ) {
+            // Delivered fields are usually missing in the stored result (deferred), but may exist in the forest
+            existingChunk = materializeFromForest(
+              env,
+              pathEnv,
+              layers,
+              parent,
+              field,
+            );
+          }
 
           if (existingChunk !== undefined) {
             assert(isCompatibleValue(fieldValue, existingChunk));
@@ -298,6 +326,20 @@ export function applyMergePolicies(
       },
     },
   );
+}
+
+function isDeliveredField(
+  incomingTree: IndexedTree,
+  deliveredFields: DeliveredFields,
+  parent: ObjectChunk,
+  field: FieldInfo,
+): boolean {
+  const delivered = deliveredFields.get(parent.data);
+  if (delivered) {
+    return delivered.has(field.dataKey);
+  }
+  // Objects of the stored result are not touched by incremental results, other objects come from them
+  return !incomingTree.prev?.dataMap.has(parent.data);
 }
 
 function materializeFromForest(

@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "@defer: write subsequent incremental results by splicing them into the stored result (placeholders, delivered-only merge policies and diffing)",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
