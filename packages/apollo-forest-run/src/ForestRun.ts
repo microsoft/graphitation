@@ -42,10 +42,7 @@ import {
   transformDocument,
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
-import {
-  isSubsequentResult,
-  spliceSubsequentResult,
-} from "./cache/incremental";
+import { isSubsequentResult, applySubsequentResult } from "./cache/incremental";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -220,22 +217,26 @@ export class ForestRun<
     assert(transaction);
     const { execution } = options;
     if (execution && isSubsequentResult(execution)) {
-      // Written as a regular result of the operation, with incremental results spliced in
-      const splice = spliceSubsequentResult(
+      // Written as a regular result of the operation, with incremental results applied
+      const update = applySubsequentResult(
         this.env,
         this.store,
         transaction,
         options,
         execution,
       );
-      if (splice) {
+      if (update) {
         transaction.changelog.push(
           write(
             this.env,
             this.store,
             transaction,
-            { ...options, result: splice.data, execution: undefined },
-            splice,
+            {
+              ...options,
+              result: update.tree.result.data,
+              execution: undefined,
+            },
+            update,
           ),
         );
       }

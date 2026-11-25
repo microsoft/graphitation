@@ -48,12 +48,9 @@ import {
   retrieveEmbeddedChunk,
   TraverseEnv,
 } from "../values";
-import {
-  CacheEnv,
-  DataForest,
-  DeliveredFields,
-  OptimisticLayer,
-} from "./types";
+import { CacheEnv, DataForest, OptimisticLayer } from "./types";
+import type { NodeDifferenceMap } from "../diff/types";
+import { isDeliveredField } from "./incremental";
 import {
   createChunkMatcher,
   createChunkProvider,
@@ -188,8 +185,8 @@ export function applyMergePolicies(
   mergePoliciesMap: Map<TypeName, Map<FieldName, FieldMergeFunction>>,
   incomingTree: IndexedTree,
   overwrite: boolean,
-  // Restricts merge policies to delivered fields of incremental results (spliced into the stored result)
-  deliveredFields?: DeliveredFields,
+  // Restricts merge policies to delivered fields of incremental results (applied to the stored result)
+  delivered?: NodeDifferenceMap,
 ): IndexedTree {
   const findChunkInfo = (value: ApolloStoreValue | SourceObject) => {
     if (typeof value !== "object" || value === null) {
@@ -254,8 +251,14 @@ export function applyMergePolicies(
           return undefined;
         }
         if (
-          deliveredFields &&
-          !isDeliveredField(incomingTree, deliveredFields, parent, field)
+          delivered &&
+          !isDeliveredField(
+            incomingTree,
+            delivered,
+            pathEnv.findParent,
+            parent,
+            field,
+          )
         ) {
           return fieldDiff;
         }
@@ -269,7 +272,7 @@ export function applyMergePolicies(
           // Delivered fields (incremental results) are usually missing in the stored result (deferred),
           //   so their existing values are resolved from the forest
           existingChunk =
-            existingParent && !deliveredFields
+            existingParent && !delivered
               ? resolveFieldChunk(existingParent, field)
               : materializeFromForest(env, pathEnv, layers, parent, field);
 
@@ -314,20 +317,6 @@ export function applyMergePolicies(
       },
     },
   );
-}
-
-function isDeliveredField(
-  incomingTree: IndexedTree,
-  deliveredFields: DeliveredFields,
-  parent: ObjectChunk,
-  field: FieldInfo,
-): boolean {
-  const delivered = deliveredFields.get(parent.data);
-  if (delivered) {
-    return delivered.has(field.dataKey);
-  }
-  // Objects of the stored result are not touched by incremental results, other objects come from them
-  return !incomingTree.prev?.dataMap.has(parent.data);
 }
 
 function materializeFromForest(

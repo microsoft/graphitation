@@ -16,7 +16,6 @@ import type {
   OperationId,
   NormalizedFieldEntry,
   VariableValues,
-  DataKey,
   DeferLabel,
   FormattedError,
   PossibleSelections,
@@ -27,7 +26,6 @@ import type {
   Key,
   KeySpecifier,
   ObjectKey,
-  MissingFieldsMap,
   SourceCompositeList,
   SourceObject,
 } from "../values/types";
@@ -38,7 +36,7 @@ import type {
 import type { TelemetryEvent } from "../telemetry/types";
 import { ExtendedLogger, Logger } from "../jsutils/logger";
 import { GraphDifference, GraphDiffError } from "../diff/diffTree";
-import { ObjectDifference } from "../diff/types";
+import { NodeDifferenceMap, ObjectDifference } from "../diff/types";
 
 export type PartitionOptions = {
   maxOperationCount: number;
@@ -384,45 +382,29 @@ export type DeferPlaceholder = {
 };
 
 /**
- * Copies of objects of the stored result with incremental results spliced in -> data keys of delivered fields.
+ * Subsequent results of incremental delivery applied to the stored result of the operation (see updateTree).
  *
- * Merge policies of a spliced result only run for delivered fields (other fields already went through them).
- * Other objects of a spliced result are either objects of the stored result (no delivered fields)
- * or objects of incremental results (all fields are delivered).
+ * The difference fills (or replaces) delivered fields of objects data is delivered to (nested under their closest nodes).
+ * It also restricts merge policies to delivered fields and seeds diffing of the updated result (see diffTree).
  */
-export type DeliveredFields = Map<object, Set<DataKey>>;
-
-// Subsequent results of incremental delivery spliced into a copy of the stored result
-export type SplicedResult = {
+export type IncrementalUpdate = {
   incremental: IncrementalExecution;
   // Pending results announced by the payload (e.g. nested `@defer`)
   pending: ReadonlyArray<PendingResult>;
-  data: ResultData;
-  deliveredFields: DeliveredFields;
-  missingFields: MissingFieldsMap;
+  tree: IndexedTree;
+  difference: NodeDifferenceMap;
   anchors: PendingAnchor[];
 };
 
-// An object of the spliced result data was delivered to (locates pending results nested in its data)
+// An object data is delivered to (locates pending results nested in its data)
 export type PendingAnchor = {
+  // Response path of the object (as announced)
+  responsePath: ResponsePath;
+  // Path to the object in the stored result
   path: ResponsePath;
-  data: ResultData;
 };
 
-export type SpliceState = {
-  tree: IndexedTree;
-  // Objects and lists of the stored result (and copies themselves) -> copies
-  copies: Map<object, ResultData | unknown[]>;
-  deliveredFields: DeliveredFields;
-  // Missing fields of copied objects (not delivered)
-  missingFields: MissingFieldsMap;
-};
-
-export type DeferredResultEntry = {
-  placeholder: DeferPlaceholder;
-  // Path to the placeholder object in the stored result
-  path: ResponsePath;
-  subPath: ResponsePath | undefined;
+export type DeferredResultEntry = PendingAnchor & {
   data: ResultData;
 };
 

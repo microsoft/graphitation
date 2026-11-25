@@ -10,16 +10,14 @@ import type {
   DataForest,
   DeferredResultEntry,
   DeferPlaceholder,
-  DeliveredFields,
   ExecutionResult,
   IncrementalDeferResult,
   IncrementalExecution,
+  IncrementalUpdate,
   OptimisticLayer,
   PendingAnchor,
   PendingResult,
   ResultData,
-  SplicedResult,
-  SpliceState,
   Store,
   SubsequentIncrementalExecutionResult,
   Transaction,
@@ -41,13 +39,16 @@ import { resolveOperationDescriptor } from "./descriptor";
 import { getActiveForest, getExistingResult, shouldCache } from "./store";
 import {
   createParentLocator,
+  createTypedObjectChunk,
   findClosestNode,
   getDataPath,
   isCompositeListValue,
+  isMissingValue,
   isNodeValue,
   isObjectValue,
   isParentListRef,
   isParentObjectRef,
+  isRootRef,
   isSourceObject,
   resolveFieldChunk,
   resolveListItemChunk,
@@ -55,25 +56,26 @@ import {
 } from "../values";
 import * as Difference from "../diff/difference";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
+import { updateTree } from "../forest/updateTree";
 
 /**
  * Subsequent results of incremental delivery (`@defer`) are written as a regular result of the operation:
- * data of all results of the payload is spliced into a copy of the stored result of the operation
- * (only objects on the path to delivered objects are copied), and the copy is written as a whole (see `write`).
+ * the stored result of the operation is updated with data of all results of the payload (see updateTree),
+ * and the updated result is written as a whole (see `write`).
  *
  * Objects data is delivered to are located by placeholders (see `DeferPlaceholder`) in the stored result.
- * Merge policies only run for delivered fields (see `DeliveredFields`).
+ * The difference applied to the stored result also restricts merge policies and diffing to delivered fields.
  *
  * Also updates the state of the execution (`pending`, `completed`, `hasNext`).
  * Returns undefined when there is nothing to write.
  */
-export function spliceSubsequentResult(
+export function applySubsequentResult(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
   options: WriteOptions,
   execution: SubsequentIncrementalExecutionResult & ExecutionResult,
-): SplicedResult | undefined {
+): IncrementalUpdate | undefined {
   const operation = resolveOperationDescriptor(
     env,
     store,
@@ -88,43 +90,43 @@ export function spliceSubsequentResult(
   }
   const targetForest = getActiveForest(store, activeTransaction);
   const tree = getExistingResult(env, store, targetForest, operation);
-  let splice: SplicedResult | undefined;
+  let update: IncrementalUpdate | undefined;
   if (tree) {
-    splice = spliceIncrementalResults(env, tree, incremental, execution);
-    if (!splice && execution.pending?.length) {
+    update = updateWithIncrementalResults(env, tree, incremental, execution);
+    if (!update && execution.pending?.length) {
       addPlaceholders(incremental, execution.pending, tree, tree, EMPTY_ARRAY);
     }
   }
-  // Note: placeholders of pending results announced by the payload are added by the write of the spliced result
+  // Note: placeholders of pending results announced by the payload are added by the write of the updated result
   for (const { id } of execution.completed ?? EMPTY_ARRAY) {
     incremental.pending.delete(id);
   }
   if (!execution.hasNext) {
     store.incrementalExecutions.delete(operation);
   }
-  return splice;
+  return update;
 }
 
 /**
  * Captures placeholders of pending results after indexing (and applying merge policies to) a written result:
- * announced by the initial result of an incremental execution, or by the payload of a spliced result.
+ * announced by the initial result of an incremental execution, or by the payload of an updated result.
  */
 export function captureIncrementalExecution(
   store: Store,
   targetForest: DataForest | OptimisticLayer,
   operation: OperationDescriptor,
   execution: ExecutionResult | undefined,
-  splice: SplicedResult | undefined,
+  update: IncrementalUpdate | undefined,
   indexed: IndexedTree,
   merged: IndexedTree,
 ) {
-  if (splice) {
+  if (update) {
     addPlaceholders(
-      splice.incremental,
-      splice.pending,
+      update.incremental,
+      update.pending,
       indexed,
       merged,
-      splice.anchors,
+      update.anchors,
     );
   } else if (execution) {
     updateIncrementalExecution(
@@ -138,45 +140,34 @@ export function captureIncrementalExecution(
   }
 }
 
-function spliceIncrementalResults(
+function updateWithIncrementalResults(
   env: CacheEnv,
   tree: IndexedTree,
   incremental: IncrementalExecution,
   execution: SubsequentIncrementalExecutionResult,
-): SplicedResult | undefined {
+): IncrementalUpdate | undefined {
+  const root = tree.dataMap.get(tree.result.data)?.value;
+  assert(root && isObjectValue(root));
   let entries = collectDeferredResults(env, tree, incremental, execution);
-  if (!entries.length) {
-    return undefined;
-  }
-  const state: SpliceState = {
-    tree,
-    copies: new Map(),
-    deliveredFields: new Map(),
-    missingFields: new Map(),
-  };
-  const data = copyValue(state, tree.result.data);
-  assert(isResultData(data));
 
+  // Delivered data at its path in the stored result
+  let patch: ResultData = {};
   const anchors: PendingAnchor[] = [];
   while (entries.length) {
     // Objects at sub-paths may be delivered by other results of the payload
     const unresolved: DeferredResultEntry[] = [];
     for (const entry of entries) {
-      const path = entry.subPath?.length
-        ? [...entry.path, ...entry.subPath]
-        : entry.path;
-      const target = spliceAt(state, data, path);
-      if (!target) {
+      if (
+        !resolveResponsePath(root, entry.path) &&
+        !isResultData(getPatchValue(patch, entry.path))
+      ) {
         unresolved.push(entry);
         continue;
       }
-      spliceData(state, target, entry.data);
-      anchors.push({
-        path: entry.subPath?.length
-          ? [...entry.placeholder.path, ...entry.subPath]
-          : entry.placeholder.path,
-        data: target,
-      });
+      const merged = mergeData(patch, wrapData(entry.path, entry.data));
+      assert(isResultData(merged));
+      patch = merged;
+      anchors.push(entry);
     }
     if (unresolved.length === entries.length) {
       break;
@@ -186,12 +177,18 @@ function spliceIncrementalResults(
   if (!anchors.length) {
     return undefined;
   }
+  const difference: NodeDifferenceMap = new Map();
+  patchValue(difference, root, patch, undefined);
+
+  const { updatedTree } = updateTree(env, tree, difference);
+  if (updatedTree === tree) {
+    return undefined;
+  }
   return {
     incremental,
     pending: execution.pending ?? EMPTY_ARRAY,
-    data,
-    deliveredFields: state.deliveredFields,
-    missingFields: state.missingFields,
+    tree: updatedTree,
+    difference,
     anchors,
   };
 }
@@ -225,244 +222,309 @@ function collectDeferredResults(
       // Completed, unknown, or the object is gone from the stored result
       continue;
     }
+    const subPath = result.subPath ?? EMPTY_ARRAY;
     entries.push({
-      placeholder,
-      path: getDataPath(pathEnv, target),
-      subPath: result.subPath,
+      responsePath: [...placeholder.path, ...subPath],
+      path: [...getDataPath(pathEnv, target), ...subPath],
       data: result.data,
     });
   }
   return entries;
 }
 
-// Copies objects on the path (copy-on-write), returns the (copied) object at the path
-function spliceAt(
-  state: SpliceState,
-  data: ResultData,
-  path: ResponsePath,
-): ResultData | undefined {
-  let current: ResultData | unknown[] = data;
+// List indexes are keys of wrapping objects (see mergeData)
+function wrapData(path: ResponsePath, data: ResultData): ResultData {
+  let value = data;
+  for (let i = path.length - 1; i >= 0; i--) {
+    value = { [path[i]]: value };
+  }
+  return value;
+}
+
+// Objects are merged field by field (e.g. a field selected by multiple fragments), lists are replaced.
+//   Wrapped items (keyed by list indexes) are merged into delivered lists.
+function mergeData(existing: unknown, incoming: unknown): unknown {
+  if (Array.isArray(existing) || Array.isArray(incoming)) {
+    const [list, items] = Array.isArray(existing)
+      ? [existing, incoming]
+      : [incoming, existing];
+    if (!Array.isArray(list) || !isResultData(items)) {
+      return incoming;
+    }
+    const merged = list.slice();
+    for (const key of Object.keys(items)) {
+      const index = Number(key);
+      if (index >= 0 && index < merged.length) {
+        merged[index] = mergeData(merged[index], items[key]);
+      }
+    }
+    return merged;
+  }
+  if (!isResultData(existing) || !isResultData(incoming)) {
+    return incoming;
+  }
+  const merged = { ...existing };
+  for (const key of Object.keys(incoming)) {
+    merged[key] = mergeData(merged[key], incoming[key]);
+  }
+  return merged;
+}
+
+function getPatchValue(patch: ResultData, path: ResponsePath): unknown {
+  let value: unknown = patch;
   for (const step of path) {
-    let copy: ResultData | unknown[] | undefined;
-    if (Array.isArray(current)) {
-      if (typeof step !== "number") {
-        return undefined;
-      }
-      copy = copyValue(state, current[step]);
-      if (copy) {
-        current[step] = copy;
-      }
+    if (isResultData(value)) {
+      value = value[step];
     } else {
-      if (typeof step !== "string") {
-        return undefined;
-      }
-      copy = copyValue(state, current[step]);
-      if (copy) {
-        current[step] = copy;
-      }
+      value =
+        Array.isArray(value) && typeof step === "number"
+          ? value[step]
+          : undefined;
     }
-    if (!copy) {
-      return undefined;
-    }
-    current = copy;
   }
-  return isResultData(current) ? current : undefined;
+  return value;
 }
 
-function copyValue(
-  state: SpliceState,
-  value: unknown,
-): ResultData | unknown[] | undefined {
-  if (typeof value !== "object" || value === null) {
-    return undefined;
-  }
-  const known = state.copies.get(value);
-  if (known) {
-    return known;
-  }
-  let copy: ResultData | unknown[];
-  if (Array.isArray(value)) {
-    copy = value.slice();
-  } else {
-    const object: ResultData = { ...value };
-    const chunk = isSourceObject(value)
-      ? state.tree.dataMap.get(value)?.value
-      : undefined;
-    // Objects of the stored result have no delivered fields yet,
-    //   objects of incremental results (spliced earlier in this payload) are delivered as a whole
-    state.deliveredFields.set(
-      object,
-      new Set(chunk ? EMPTY_ARRAY : Object.keys(object)),
-    );
-    if (chunk && isObjectValue(chunk) && chunk.missingFields?.size) {
-      // Data of missing fields may be stale (e.g. fields deleted by cache.modify)
-      assert(isSourceObject(object));
-      for (const field of chunk.missingFields) {
-        delete object[field.dataKey];
-      }
-      state.missingFields.set(object, new Set(chunk.missingFields));
-    }
-    copy = object;
-  }
-  state.copies.set(value, copy);
-  state.copies.set(copy, copy);
-  return copy;
-}
-
-function spliceData(state: SpliceState, target: ResultData, data: ResultData) {
-  const delivered = state.deliveredFields.get(target);
-  assert(delivered);
-  for (const key of Object.keys(data)) {
-    const existing = target[key];
-    const incoming = data[key];
-    if (isResultData(existing) && isResultData(incoming)) {
-      // The object is in the stored result already, e.g. a field selected by multiple fragments
-      const copy = copyValue(state, existing);
-      assert(isResultData(copy));
-      target[key] = copy;
-      spliceData(state, copy, incoming);
-    } else {
-      target[key] = incoming;
-      delivered.add(key);
-      deleteMissingField(state, target, key);
-    }
-  }
-}
-
-function deleteMissingField(
-  state: SpliceState,
-  target: ResultData,
-  key: string,
+/**
+ * Fills (or replaces) fields of an object of the stored result with delivered data.
+ * Objects and lists of the stored result within delivered data are updated in place (see patchValue).
+ */
+function patchObject(
+  differences: NodeDifferenceMap,
+  chunk: ObjectChunk,
+  patch: ResultData,
+  difference: ObjectDifference,
 ) {
-  const missingFields = isSourceObject(target)
-    ? state.missingFields.get(target)
-    : undefined;
-  for (const field of missingFields ?? EMPTY_ARRAY) {
-    if (field.dataKey === key) {
-      missingFields?.delete(field);
+  let delivered: ObjectChunk | undefined;
+  for (const key of Object.keys(patch)) {
+    const field = chunk.selection.fieldQueue.find((f) => f.dataKey === key);
+    if (!field) {
+      continue;
+    }
+    const entry = resolveNormalizedField(chunk.selection, field);
+    const existing = Difference.getFieldDifference(difference, entry);
+    const patched = patchValue(
+      differences,
+      resolveObjectField(chunk, field),
+      patch[key],
+      existing?.state,
+    );
+    if (patched === null) {
+      continue;
+    }
+    let state: ValueDifference;
+    if (patched) {
+      state = patched;
+    } else {
+      assert(isSourceObject(patch));
+      delivered ??= createTypedObjectChunk(
+        chunk.operation,
+        chunk.possibleSelections,
+        patch,
+        chunk.type || undefined,
+        chunk.key,
+      );
+      const base = resolveFieldChunk(chunk, field);
+      const value = resolveFieldChunk(delivered, field);
+      state =
+        chunk.missingFields?.has(field) || isMissingValue(base)
+          ? Difference.createFiller(value)
+          : Difference.createReplacement(base, value);
+    }
+    if (existing) {
+      existing.state = state;
+    } else {
+      Difference.addFieldDifference(difference, entry, state);
+    }
+    if (Difference.isDirty(state)) {
+      Difference.addDirtyField(difference, entry);
+    }
+  }
+}
+
+function patchList(
+  differences: NodeDifferenceMap,
+  list: CompositeListChunk,
+  patch: ResultData,
+  difference: CompositeListDifference,
+) {
+  for (const key of Object.keys(patch)) {
+    const index = Number(key);
+    const state = patchValue(
+      differences,
+      resolveListItem(list, index),
+      patch[key],
+      difference.itemState.get(index),
+    );
+    if (state) {
+      difference.itemState.set(index, state);
+      if (Difference.isDirty(state)) {
+        Difference.addDirtyListItem(difference, index);
+      }
     }
   }
 }
 
 /**
- * Initial differences of nodes with spliced data (see diffTree): restricted to delivered fields and paths to them.
- * Other fields of copied objects are the same as in the stored result, so they are not compared.
+ * Updates an object (or a list) of the stored result in place with delivered data.
+ * Returns null for nodes (their differences are not nested, see NodeDifferenceMap),
+ * and undefined when the value is replaced with delivered data.
+ */
+function patchValue(
+  differences: NodeDifferenceMap,
+  value: GraphChunk | undefined,
+  patch: unknown,
+  existing: ValueDifference | undefined,
+): ObjectDifference | CompositeListDifference | null | undefined {
+  if (!value || !isResultData(patch)) {
+    return undefined;
+  }
+  if (isCompositeListValue(value)) {
+    const difference = Difference.isCompositeListDifference(existing)
+      ? existing
+      : Difference.createCompositeListDifference();
+    patchList(differences, value, patch, difference);
+    return difference;
+  }
+  if (!isObjectValue(value)) {
+    return undefined;
+  }
+  if (isNodeValue(value)) {
+    const difference =
+      differences.get(value.key) ?? Difference.createObjectDifference();
+    differences.set(value.key, difference);
+    patchObject(differences, value, patch, difference);
+    return null;
+  }
+  const difference = Difference.isObjectDifference(existing)
+    ? existing
+    : Difference.createObjectDifference();
+  patchObject(differences, value, patch, difference);
+  return difference;
+}
+
+/**
+ * Whether a field of an object of the updated result is delivered by incremental results:
+ * filled (or replaced) by the difference applied to the stored result, or within delivered data.
+ */
+export function isDeliveredField(
+  tree: IndexedTree,
+  differences: NodeDifferenceMap,
+  findParent: ParentLocator,
+  parent: ObjectChunk,
+  field: FieldInfo,
+): boolean {
+  const difference = resolveChunkDifference(
+    tree,
+    differences,
+    findParent,
+    parent,
+  );
+  return isDelivered(
+    Difference.isObjectDifference(difference)
+      ? Difference.getFieldDifference(
+          difference,
+          resolveNormalizedField(parent.selection, field),
+        )?.state
+      : difference,
+  );
+}
+
+// Difference applied to an object (or a list) of the updated result (delivered value within delivered data)
+function resolveChunkDifference(
+  tree: IndexedTree,
+  differences: NodeDifferenceMap,
+  findParent: ParentLocator,
+  chunk: ObjectChunk | CompositeListChunk,
+): ValueDifference | undefined {
+  if (tree.prev?.dataMap.has(chunk.data)) {
+    // Not touched by incremental results
+    return undefined;
+  }
+  const ref = findParent(chunk);
+  const parent = isRootRef(ref)
+    ? undefined
+    : resolveChunkDifference(tree, differences, findParent, ref.parent);
+  let difference = isDelivered(parent) ? parent : undefined;
+  if (isParentObjectRef(ref) && Difference.isObjectDifference(parent)) {
+    const entry = resolveNormalizedField(ref.parent.selection, ref.field);
+    difference = Difference.getFieldDifference(parent, entry)?.state;
+  } else if (
+    isParentListRef(ref) &&
+    Difference.isCompositeListDifference(parent)
+  ) {
+    difference = Difference.getListItemDifference(parent, ref.index);
+  }
+  return !difference && isNodeValue(chunk)
+    ? differences.get(chunk.key)
+    : difference;
+}
+
+function isDelivered(difference: ValueDifference | undefined): boolean {
+  return (
+    Difference.isFiller(difference) || Difference.isReplacement(difference)
+  );
+}
+
+/**
+ * Initial differences of nodes updated by incremental results (see diffTree): restricted to delivered fields
+ * and paths to them (other fields are the same as in the stored result).
+ * Nodes with chunks within delivered data are compared in full.
  *
- * Built in the indexed result: merge policies only change values of delivered fields (paths stay the same).
+ * Built from (and consumes) the difference applied to the stored result.
  */
 export function seedDifferences(
   tree: IndexedTree,
-  deliveredFields: DeliveredFields,
-): NodeDifferenceMap | undefined {
+  differences: NodeDifferenceMap,
+): NodeDifferenceMap {
   const findParent = createParentLocator(tree.dataMap);
-  const seed: NodeDifferenceMap = new Map();
-  for (const [data, delivered] of deliveredFields) {
-    const chunk = isSourceObject(data)
-      ? tree.dataMap.get(data)?.value
-      : undefined;
-    if (!chunk || !isObjectValue(chunk)) {
-      // E.g. shared objects were cloned when indexing: diff in full
-      return undefined;
-    }
-    const difference = seedDifference(seed, findParent, deliveredFields, chunk);
-    if (!difference) {
-      // Delivered as a part of a delivered field (diffed in full)
-      continue;
-    }
-    assert(Difference.isObjectDifference(difference));
-    for (const field of chunk.selection.fieldQueue) {
-      if (delivered.has(field.dataKey)) {
-        Difference.enqueueField(
-          difference,
-          resolveNormalizedField(chunk.selection, field),
-        );
-      }
-    }
+  const comparedInFull = [...differences.keys()].filter((nodeKey) =>
+    tree.nodes
+      .get(nodeKey)
+      ?.some((chunk) =>
+        isDelivered(
+          resolveChunkDifference(tree, differences, findParent, chunk),
+        ),
+      ),
+  );
+  for (const nodeKey of comparedInFull) {
+    differences.delete(nodeKey);
   }
-  // Nodes with other chunks (e.g. in delivered data) are diffed in full
-  for (const nodeKey of seed.keys()) {
-    for (const chunk of tree.nodes.get(nodeKey) ?? EMPTY_ARRAY) {
-      if (
-        !deliveredFields.has(chunk.data) &&
-        !tree.prev?.dataMap.has(chunk.data)
-      ) {
-        seed.delete(nodeKey);
-        break;
-      }
-    }
+  for (const difference of differences.values()) {
+    seedDifference(difference);
   }
-  return seed;
+  return differences;
 }
 
-function seedDifference(
-  seed: NodeDifferenceMap,
-  findParent: ParentLocator,
-  deliveredFields: DeliveredFields,
-  value: ObjectChunk | CompositeListChunk,
-): ObjectDifference | CompositeListDifference | undefined {
-  if (isObjectValue(value) && isNodeValue(value)) {
-    let difference = seed.get(value.key);
-    if (!difference) {
-      difference = Difference.createObjectDifference();
-      seed.set(value.key, difference);
+// Delivered values are queued (to be compared), paths to them are queued with their nested differences.
+//   Returns false for delivered values.
+function seedDifference(difference: ValueDifference): boolean {
+  if (Difference.isCompositeListDifference(difference)) {
+    difference.itemQueue = difference.dirtyItems ?? new Set();
+    difference.dirtyItems = undefined;
+    for (const [index, item] of difference.itemState) {
+      if (!seedDifference(item)) {
+        difference.itemState.delete(index);
+      }
     }
-    return difference;
+    return true;
   }
-  const parentRef = findParent(value);
-  let difference: ValueDifference | undefined;
-  if (isParentObjectRef(parentRef)) {
-    if (
-      deliveredFields.get(parentRef.parent.data)?.has(parentRef.field.dataKey)
-    ) {
-      return undefined;
-    }
-    const parent = seedDifference(
-      seed,
-      findParent,
-      deliveredFields,
-      parentRef.parent,
-    );
-    if (!parent) {
-      return undefined;
-    }
-    assert(Difference.isObjectDifference(parent));
-    const entry = resolveNormalizedField(
-      parentRef.parent.selection,
-      parentRef.field,
-    );
-    Difference.enqueueField(parent, entry);
-    difference =
-      Difference.getFieldDifference(parent, entry)?.state ??
-      Difference.addFieldDifference(
-        parent,
-        entry,
-        Difference.createCompositeValueDifference(value),
-      ).state;
-  } else if (isParentListRef(parentRef)) {
-    const parent = seedDifference(
-      seed,
-      findParent,
-      deliveredFields,
-      parentRef.parent,
-    );
-    if (!parent) {
-      return undefined;
-    }
-    assert(Difference.isCompositeListDifference(parent));
-    Difference.enqueueListItem(parent, parentRef.index);
-    difference =
-      Difference.getListItemDifference(parent, parentRef.index) ??
-      Difference.addListItemDifference(
-        parent,
-        parentRef.index,
-        Difference.createCompositeValueDifference(value),
-      );
+  if (!Difference.isObjectDifference(difference)) {
+    return false;
   }
-  assert(
-    Difference.isObjectDifference(difference) ||
-      Difference.isCompositeListDifference(difference),
-  );
-  return difference;
+  difference.fieldQueue = difference.dirtyFields ?? new Set();
+  difference.dirtyFields = undefined;
+  for (const [fieldName, state] of difference.fieldState) {
+    const entries = (Array.isArray(state) ? state : [state]).filter((entry) =>
+      seedDifference(entry.state),
+    );
+    if (entries.length) {
+      difference.fieldState.set(fieldName, entries);
+    } else {
+      difference.fieldState.delete(fieldName);
+    }
+  }
+  return true;
 }
 
 /**
@@ -536,23 +598,20 @@ function resolvePendingChunk(
   let anchor: PendingAnchor | undefined;
   for (const candidate of anchors) {
     if (
-      (!anchor || candidate.path.length > anchor.path.length) &&
-      isPathPrefix(candidate.path, path)
+      (!anchor || candidate.responsePath.length > anchor.responsePath.length) &&
+      isPathPrefix(candidate.responsePath, path)
     ) {
       anchor = candidate;
     }
   }
-  const anchorChunk =
-    anchor && isSourceObject(anchor.data)
-      ? tree.dataMap.get(anchor.data)?.value
-      : undefined;
-  if (anchor && anchorChunk && isObjectValue(anchorChunk)) {
-    return resolveResponsePath(anchorChunk, path.slice(anchor.path.length));
-  }
   const root = tree.dataMap.get(tree.result.data)?.value;
-  return root && isObjectValue(root)
-    ? resolveResponsePath(root, path)
-    : undefined;
+  if (!root || !isObjectValue(root)) {
+    return undefined;
+  }
+  return resolveResponsePath(
+    root,
+    anchor ? [...anchor.path, ...path.slice(anchor.responsePath.length)] : path,
+  );
 }
 
 function createPlaceholder(

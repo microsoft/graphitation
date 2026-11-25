@@ -4,8 +4,8 @@ import type {
   CacheEnv,
   DataForest,
   ModifyResult,
+  IncrementalUpdate,
   OptimisticLayer,
-  SplicedResult,
   Store,
   Transaction,
   WriteOptions,
@@ -48,12 +48,12 @@ export function write(
   store: Store,
   activeTransaction: Transaction,
   options: WriteOptions,
-  splice?: SplicedResult,
+  update?: IncrementalUpdate,
 ): WriteResult {
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
   const targetForest = getActiveForest(store, activeTransaction);
 
-  // Subsequent results of incremental delivery are spliced into the stored result first (see spliceSubsequentResult)
+  // Subsequent results of incremental delivery are applied to the stored result first (see applySubsequentResult)
   const { execution } = options;
   assert(!execution || !isSubsequentResult(execution));
 
@@ -129,13 +129,15 @@ export function write(
     operationDescriptor.rootType = typeName ?? "";
   }
 
-  const incomingResult = indexTree(
-    env,
-    operationDescriptor,
-    operationResult,
-    splice?.missingFields,
-    existingResult,
-  );
+  const incomingResult =
+    update?.tree ??
+    indexTree(
+      env,
+      operationDescriptor,
+      operationResult,
+      undefined,
+      existingResult,
+    );
 
   // ApolloCompat: necessary for fragment writes with custom ids
   if (options.dataId && incomingResult.rootNodeKey !== options.dataId) {
@@ -152,7 +154,7 @@ export function write(
     mergePolicies,
     incomingResult,
     options.overwrite ?? false,
-    splice?.deliveredFields,
+    update?.difference,
   );
 
   captureIncrementalExecution(
@@ -160,7 +162,7 @@ export function write(
     targetForest,
     operationDescriptor,
     execution,
-    splice,
+    update,
     incomingResult,
     modifiedIncomingResult,
   );
@@ -169,7 +171,7 @@ export function write(
     targetForest,
     modifiedIncomingResult,
     env,
-    splice && seedDifferences(incomingResult, splice.deliveredFields),
+    update && seedDifferences(incomingResult, update.difference),
   );
 
   if (difference.errors.length) {
