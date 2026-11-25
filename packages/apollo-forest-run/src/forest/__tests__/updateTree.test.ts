@@ -1,5 +1,7 @@
 import { DocumentNode } from "graphql";
 import { updateTree } from "../updateTree";
+import { isStoredTree } from "../predicates";
+import { assert } from "../../jsutils/assert";
 import { gql, createTestOperation } from "../../__tests__/helpers/descriptor";
 import {
   completeObject,
@@ -2073,6 +2075,7 @@ function diffAndUpdate(
     baseTree,
     difference.nodeDifference,
   );
+  assert(isStoredTree(updatedTree));
   return {
     baseTree,
     difference,
@@ -2165,6 +2168,7 @@ function update(
     baseTree,
     diff.nodeDifference,
   );
+  assert(isStoredTree(updatedTree));
   return {
     baseTree,
     updatedTree,

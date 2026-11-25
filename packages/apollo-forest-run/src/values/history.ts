@@ -22,6 +22,8 @@ import {
   SourceCompositeList,
 } from "./types";
 import { isCompositeListEntryTuple } from "./predicates";
+import { isStoredTree } from "../forest/predicates";
+import { assert } from "../jsutils/assert";
 
 import * as ChangeKind from "../diff/itemChangeKind";
 import * as DifferenceKind from "../diff/differenceKind";
@@ -235,6 +237,7 @@ export function createRegularHistoryEntry(
   incomingTree: IndexedTree | undefined,
   env: ForestEnv,
 ): HistoryChange {
+  assert(isStoredTree(updatedTree.updatedTree));
   const changes = getChanges(currentTree, updatedTree, env);
   return {
     kind: "Regular",

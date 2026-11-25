@@ -24,7 +24,6 @@ import type {
 } from "./types";
 import { assert } from "../jsutils/assert";
 import { indexOperationFragmentTree, indexTree } from "./indexTree";
-import { isSameTreeKind } from "./predicates";
 import { resolveOperation } from "../descriptor/operation";
 import { isDirty, isObjectDifference } from "../diff/difference";
 import {
@@ -49,20 +48,19 @@ type ComplexValue = SourceObject | NestedList<SourceObject>;
 
 export { NodeDifferenceMap }; // FIXME
 
-export function updateTree<TTree extends AnyIndexedTree>(
+export function updateTree(
   env: ForestEnv,
-  base: TTree,
+  base: AnyIndexedTree,
   differenceMap: NodeDifferenceMap,
   getNodeChunks?: (key: NodeKey) => Iterable<NodeChunk>,
-): UpdateTreeResult<TTree> {
-  const tree: AnyIndexedTree = base;
-  const baseOperation = resolveOperation(tree.operation);
+): UpdateTreeResult {
+  const baseOperation = resolveOperation(base.operation);
   // Note: operation fragment trees may have any number of roots
   const rootChunks =
-    tree.kind === "OperationFragment"
-      ? getOperationFragmentRoots(tree)
-      : tree.nodes.get(tree.rootNodeKey);
-  if (tree.kind !== "OperationFragment" && rootChunks?.length !== 1) {
+    base.kind === "OperationFragment"
+      ? getOperationFragmentRoots(base)
+      : base.nodes.get(base.rootNodeKey);
+  if (base.kind !== "OperationFragment" && rootChunks?.length !== 1) {
     assert(
       false,
       `Failed to update "${
@@ -208,16 +206,16 @@ export function updateTree<TTree extends AnyIndexedTree>(
     }
   }
   let updatedTree: AnyIndexedTree;
-  if (tree.kind === "OperationFragment") {
-    const roots = tree.roots.map((root) => {
+  if (base.kind === "OperationFragment") {
+    const roots = base.roots.map((root) => {
       const draft = drafts.get(root.data);
       assert(draft === undefined || isSourceObject(draft));
       return draft ? { data: draft, target: root.target } : root;
     });
     updatedTree = indexOperationFragmentTree(
       env,
-      tree.operation,
-      tree.findStoredParent,
+      base.operation,
+      base.findStoredParent,
       roots,
       missingFields,
     );
@@ -226,13 +224,12 @@ export function updateTree<TTree extends AnyIndexedTree>(
     assert(isSourceObject(rootDraft));
     updatedTree = indexTree(
       env,
-      tree.operation,
+      base.operation,
       { data: rootDraft },
       missingFields,
-      tree,
+      base,
     );
   }
-  assert(isSameTreeKind(base, updatedTree));
   if (env.apolloCompat_keepOrphanNodes) {
     apolloBackwardsCompatibility_saveOrphanNodes(base, updatedTree);
   }

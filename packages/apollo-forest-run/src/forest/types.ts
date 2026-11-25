@@ -270,8 +270,8 @@ export type UpdateTreeContext = {
   statsLogger?: UpdateLogger;
 };
 
-export type UpdateTreeResult<TTree extends AnyIndexedTree = IndexedTree> = {
-  updatedTree: TTree;
+export type UpdateTreeResult = {
+  updatedTree: AnyIndexedTree;
   changes: ChangedChunksMap;
   changedNodes: Set<NodeKey>; // Directly changed nodes (subset of NodeDifferenceMap keys)
   affectedNodes: Set<NodeKey>; // Parent nodes updated due to a change in a nested node (if node is both - directly updated and affected by another node update, it will be in both: changedNodes and affectedNodes)

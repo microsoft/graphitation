@@ -35,6 +35,7 @@ import type {
 } from "../types";
 import { indexOperationFragmentTree, indexTree } from "../indexTree";
 import { updateTree } from "../updateTree";
+import { isStoredTree } from "../predicates";
 import {
   createOperationFragmentParentLocator,
   createTreeParentLocator,
@@ -211,6 +212,7 @@ describe("OperationFragmentTree with embedded roots", () => {
 
     // The difference is applicable to the stored tree as is
     const { updatedTree } = updateTree(env, stored, nodeDifference);
+    assert(isStoredTree(updatedTree));
     expect(updatedTree.result.data).toEqual({
       user: {
         __typename: "User",
@@ -224,12 +226,8 @@ describe("OperationFragmentTree with embedded roots", () => {
     });
 
     // ... and to the fragment tree (unwrapped for each root)
-    const updated: OperationFragmentTree = updateTree(
-      env,
-      base,
-      nodeDifference,
-    ).updatedTree;
-    expect(updated.kind).toBe("OperationFragment");
+    const updated = updateTree(env, base, nodeDifference).updatedTree;
+    assert(updated.kind === "OperationFragment");
     expect(updated.roots.map((root) => root.data)).toEqual(
       incoming.roots.map((root) => root.data),
     );
@@ -240,7 +238,7 @@ describe("OperationFragmentTree with embedded roots", () => {
 
   it("transforms all roots at once (also when the stored node is inside the fragment)", () => {
     const { tree } = setup();
-    const transformed: OperationFragmentTree = transformTree(
+    const transformed = transformTree(
       env,
       tree,
       "DESCEND",
@@ -255,7 +253,7 @@ describe("OperationFragmentTree with embedded roots", () => {
       },
     );
     expect(transformed).not.toBe(tree);
-    expect(transformed.kind).toBe("OperationFragment");
+    assert(transformed.kind === "OperationFragment");
     expect(transformed.roots.map((root) => root.data)).toEqual([
       meta(0, { b: "b0!", owner: owner("old!") }),
       meta(2, { b: "b2!", owner: owner("old!") }),
@@ -348,6 +346,7 @@ describe("OperationFragmentTree with node roots", () => {
       "User:9",
     ]);
     const { updatedTree } = updateTree(env, stored, nodeDifference);
+    assert(isStoredTree(updatedTree));
     expect(updatedTree.result.data).toEqual({
       users: ["1", "2", "3"].map((id) =>
         user(id, { bio: `new${id}`, friend: user("9", { name: "new" }) }),
@@ -367,6 +366,7 @@ describe("OperationFragmentTree with node roots", () => {
             : createReplacement(value, "x" as SourceScalar),
       },
     );
+    assert(transformed.kind === "OperationFragment");
     expect(transformed.roots.map((root) => root.data.bio)).toEqual([
       "x",
       "x",

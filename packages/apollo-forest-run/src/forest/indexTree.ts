@@ -179,6 +179,8 @@ export function indexOperationFragmentTree(
     rootNodeKey: false,
     rootType: undefined,
     recycleTree: null,
+    // Tree-local on purpose: markAsPartial must not ascend into chunks of the stored tree
+    //   (partial flags of stored ancestors are updated when the difference is applied to the stored tree)
     findParent: createParentLocator(dataMap),
   };
   const rootChunks: ObjectChunk[] = [];

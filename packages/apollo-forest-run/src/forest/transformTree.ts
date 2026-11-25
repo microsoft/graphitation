@@ -66,10 +66,10 @@ const enum DirtyState {
   StructureChanged,
 }
 
-type TreeState<TTree extends AnyIndexedTree = AnyIndexedTree> = {
+type TreeState = {
   dirty: DirtyState;
   nodeDifference: NodeDifferenceMap;
-  intermediateTree: TTree;
+  intermediateTree: AnyIndexedTree;
   findParent: ParentLocator;
 };
 
@@ -95,14 +95,14 @@ const EMPTY_ARRAY = Object.freeze([]);
  * - In "DESCEND" mode tree may undergo multiple updates if transformation affects tree structure
  *   (add/remove list items, change union type members, change field values to null, etc.)
  */
-export function transformTree<TTree extends AnyIndexedTree>(
+export function transformTree(
   env: ForestEnv,
-  tree: TTree,
+  tree: AnyIndexedTree,
   direction: "ASCEND" | "DESCEND",
   chunkFilter: ChunkFilter,
   transformer: Transformer,
-): TTree {
-  const treeState: TreeState<TTree> = {
+): AnyIndexedTree {
+  const treeState: TreeState = {
     dirty: DirtyState.Clean,
     nodeDifference: new Map(),
     intermediateTree: tree,
@@ -232,10 +232,7 @@ function markTreeDirty(
   }
 }
 
-function updateTreeStructure<TTree extends AnyIndexedTree>(
-  env: ForestEnv,
-  state: TreeState<TTree>,
-) {
+function updateTreeStructure(env: ForestEnv, state: TreeState) {
   // Intermediate update of the tree structure
   //   We can skip intermediate updates in ASCEND mode because output of transformation doesn't change
   //   which chunks are visited during transformation.

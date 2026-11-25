@@ -8,8 +8,6 @@ export const isIndexedTree = (
   tree: UncheckedIndexedTree,
 ): tree is IndexedTree => tree.kind === tree.operation.kind;
 
-// Narrows the tree to the (possibly generic) type of another tree of the same kind
-export const isSameTreeKind = <TTree extends AnyIndexedTree>(
-  base: TTree,
-  tree: AnyIndexedTree,
-): tree is TTree => tree.kind === base.kind;
+// Trees which can be stored in the forest (all except transient operation fragment trees)
+export const isStoredTree = (tree: AnyIndexedTree): tree is IndexedTree =>
+  tree.kind !== "OperationFragment";
