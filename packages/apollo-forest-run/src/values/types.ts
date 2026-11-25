@@ -8,7 +8,6 @@ import {
   DataKey,
   ResolvedSelection,
   ArgumentValues,
-  NormalizedFieldEntry,
 } from "../descriptor/types";
 import type { HistoryChangeSerialized } from "../forest/types";
 import * as ValueKind from "./valueKind";
@@ -100,19 +99,7 @@ export type RootChunkReference = {
   value: GraphChunk;
   parent: null;
   detached: boolean;
-  // Set for trees with the root embedded into a node of another tree (e.g. a deferred fragment written
-  //   to an embedded object). Such root is a regular embedded object (key `false`), see EmbeddedRootChunk.
-  embeddedIn: EmbeddedRootAddress | undefined;
 };
-
-// Address of an embedded object: its closest node + path from that node to the object
-export type EmbeddedRootAddress = {
-  nodeKey: NodeKey;
-  path: EmbeddedPath;
-};
-
-// Normalized fields (name + arguments) and list indices from a node to an object embedded into it
-export type EmbeddedPath = readonly (NormalizedFieldEntry | number)[];
 export type ObjectFieldReference = {
   value: GraphChunk;
   parent: ObjectChunk;
@@ -352,8 +339,6 @@ export type IncompleteObjects = Map<SourceObject, FieldInfo[]>;
 export type IncompleteValues = IncompleteObjects & IncompleteLists;
 
 export type NodeChunk = ObjectChunk & { key: NodeKey };
-// Root of a tree embedded into a node of another tree (has no key, see RootChunkReference.embeddedIn)
-export type EmbeddedRootChunk = ObjectChunk & { key: false };
 export type NodeAggregate = ObjectAggregate & { key: string };
 export type NodeValue = NodeChunk | NodeAggregate;
 

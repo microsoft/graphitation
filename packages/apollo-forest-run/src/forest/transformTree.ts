@@ -7,18 +7,17 @@ import type {
 import type {
   CompositeListChunk,
   GraphChunk,
-  EmbeddedRootChunk,
   NodeChunk,
   ObjectChunk,
   ParentLocator,
 } from "../values/types";
 import type {
   CompositeListDifference,
-  TreeDifferenceMap,
+  NodeDifferenceMap,
   ObjectDifference,
   ValueDifference,
 } from "../diff/types";
-import type { AnyIndexedTree, ForestEnv } from "./types";
+import type { IndexedTree, ForestEnv } from "./types";
 import * as Difference from "../diff/difference";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import { updateTree } from "./updateTree";
@@ -64,10 +63,10 @@ const enum DirtyState {
   StructureChanged,
 }
 
-type TreeState<TTree extends AnyIndexedTree = AnyIndexedTree> = {
+type TreeState = {
   dirty: DirtyState;
-  nodeDifference: TreeDifferenceMap;
-  intermediateTree: TTree;
+  nodeDifference: NodeDifferenceMap;
+  intermediateTree: IndexedTree;
   findParent: ParentLocator;
 };
 
@@ -93,14 +92,14 @@ const EMPTY_ARRAY = Object.freeze([]);
  * - In "DESCEND" mode tree may undergo multiple updates if transformation affects tree structure
  *   (add/remove list items, change union type members, change field values to null, etc.)
  */
-export function transformTree<TTree extends AnyIndexedTree>(
+export function transformTree(
   env: ForestEnv,
-  tree: TTree,
+  tree: IndexedTree,
   direction: "ASCEND" | "DESCEND",
   chunkFilter: ChunkFilter,
   transformer: Transformer,
-): TTree {
-  const treeState: TreeState<TTree> = {
+): IndexedTree {
+  const treeState: TreeState = {
     dirty: DirtyState.Clean,
     nodeDifference: new Map(),
     intermediateTree: tree,
@@ -230,10 +229,7 @@ function markTreeDirty(
   }
 }
 
-function updateTreeStructure<TTree extends AnyIndexedTree>(
-  env: ForestEnv,
-  state: TreeState<TTree>,
-) {
+function updateTreeStructure(env: ForestEnv, state: TreeState) {
   // Intermediate update of the tree structure
   //   We can skip intermediate updates in ASCEND mode because output of transformation doesn't change
   //   which chunks are visited during transformation.
@@ -252,18 +248,12 @@ function updateTreeStructure<TTree extends AnyIndexedTree>(
 }
 
 function collectChunks(
-  tree: AnyIndexedTree,
+  tree: IndexedTree,
   direction: "ASCEND" | "DESCEND",
   filter: ChunkFilter,
 ) {
   if (!filter.types && !filter.nodes) {
     const chunks: ObjectChunk[] = [];
-    if (tree.rootNodeKey === false) {
-      // Embedded root is not a node (see RootChunkReference.embeddedIn)
-      const rootRef = tree.dataMap.get(tree.result.data);
-      assert(rootRef && isObjectValue(rootRef.value));
-      chunks.push(rootRef.value);
-    }
     for (const nodeChunks of tree.nodes.values()) {
       pushAll(chunks, nodeChunks);
     }
@@ -332,7 +322,7 @@ function resolveLevelChunks(
 
 function getDifference(
   treeState: TreeState,
-  parentNode: NodeChunk | EmbeddedRootChunk,
+  parentNode: NodeChunk,
   chunk: ObjectChunk,
 ): ObjectDifference | undefined {
   const nodeDiff = treeState.nodeDifference.get(parentNode.key);
@@ -343,7 +333,7 @@ function getDifference(
 
 function addDifference(
   treeState: TreeState,
-  parentNode: NodeChunk | EmbeddedRootChunk,
+  parentNode: NodeChunk,
   chunk: ObjectChunk,
   chunkDifference: ObjectDifference,
 ): ObjectDifference {
@@ -371,7 +361,7 @@ function addDifference(
 function getEmbeddedChunkDifference(
   treeState: TreeState,
   chunk: ObjectChunk,
-  parentNode: NodeChunk | EmbeddedRootChunk,
+  parentNode: NodeChunk,
   parentNodeDifference: ObjectDifference | undefined,
 ): ObjectDifference | undefined {
   if (!parentNodeDifference) {
@@ -420,7 +410,7 @@ function getEmbeddedChunkDifference(
 
 function addEmbeddedChunkDifference(
   treeState: TreeState,
-  parentNode: NodeChunk | EmbeddedRootChunk,
+  parentNode: NodeChunk,
   parentNodeDifference: ObjectDifference,
   chunk: ObjectChunk,
   chunkDifference: ObjectDifference,
@@ -468,7 +458,7 @@ function addEmbeddedChunkDifference(
 
 function markParentNodeDirty(
   treeState: TreeState,
-  parentNode: NodeChunk | EmbeddedRootChunk,
+  parentNode: NodeChunk,
   chunk: ObjectChunk,
 ) {
   const parentNodeDifference = treeState.nodeDifference.get(parentNode.key);

@@ -2,7 +2,6 @@ import {
   DetachedFragmentDescriptor,
   FieldInfo,
   OperationDescriptor,
-  OperationFragmentDescriptor,
   OperationId,
   PossibleSelection,
   PossibleSelections,
@@ -41,7 +40,7 @@ import {
 } from "../diff/types";
 import { HistoryConfig } from "../cache/types";
 
-// Note: all stored tree kinds must have the same set of fields (keeps the same object shape in hot paths)
+// Note: all tree kinds must have the same set of fields (keeps the same object shape in hot paths)
 export type OperationTree = {
   readonly kind: "Operation";
   operation: RegularOperationDescriptor;
@@ -104,30 +103,6 @@ export type UncheckedIndexedTree = Omit<IndexedTree, "kind" | "operation"> & {
   kind: IndexedTree["kind"];
   operation: OperationDescriptor;
 };
-
-// Transient tree of an operation sub-selection (e.g. a deferred fragment). Never stored in the forest,
-//   so it has no previous states and history (other fields are the same as in stored trees)
-export type OperationFragmentTree = {
-  readonly kind: "OperationFragment";
-  operation: OperationFragmentDescriptor;
-  result: OperationResult;
-  rootNodeKey: NodeKey | false; // `false` when the root is embedded (see RootChunkReference.embeddedIn)
-  nodes: NodeMap;
-  typeMap: TypeMap;
-
-  // Inverse map from data to chunks
-  //   This is necessary for efficient re-indexing of existing data and chunk recycling
-  dataMap: DataMap;
-
-  // Error states
-  incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
-
-  // ApolloCompat
-  danglingReferences?: Set<NodeKey>;
-};
-
-// Any tree, including transient trees
-export type AnyIndexedTree = IndexedTree | OperationFragmentTree;
 
 export type HistoryFieldChange =
   | FillerChange
@@ -258,8 +233,8 @@ export type UpdateTreeContext = {
   statsLogger?: UpdateLogger;
 };
 
-export type UpdateTreeResult<TTree extends AnyIndexedTree = IndexedTree> = {
-  updatedTree: TTree;
+export type UpdateTreeResult = {
+  updatedTree: IndexedTree;
   changes: ChangedChunksMap;
   changedNodes: Set<NodeKey>; // Directly changed nodes (subset of NodeDifferenceMap keys)
   affectedNodes: Set<NodeKey>; // Parent nodes updated due to a change in a nested node (if node is both - directly updated and affected by another node update, it will be in both: changedNodes and affectedNodes)

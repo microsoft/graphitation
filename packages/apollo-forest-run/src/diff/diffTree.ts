@@ -13,8 +13,7 @@ import { diffObject } from "./diffObject";
 import { NodeKey, NodeMap, ObjectValue } from "../values/types";
 import { assert, assertNever } from "../jsutils/assert";
 import { OperationId } from "../descriptor/types";
-import { AnyIndexedTree, IndexedForest, IndexedTree } from "../forest/types";
-import { resolveOperation } from "../descriptor/operation";
+import { IndexedForest, IndexedTree } from "../forest/types";
 
 type MissingFieldsError = {
   kind: "MissingFields";
@@ -61,13 +60,11 @@ const nodeDiffState = {
 
 export function diffTree(
   forest: IndexedForest,
-  model: AnyIndexedTree,
+  model: IndexedTree,
   env: DiffEnv,
 ): GraphDifference {
   const context: Context = { env, forest: forest };
-  const currentTreeState = forest.trees.get(
-    resolveOperation(model.operation).id,
-  );
+  const currentTreeState = forest.trees.get(model.operation.id);
   return diffNodesImpl(context, forest, model.nodes, env, currentTreeState);
 }
 
