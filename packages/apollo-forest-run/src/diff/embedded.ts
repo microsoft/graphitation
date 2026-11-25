@@ -31,84 +31,68 @@ import {
 } from "./difference";
 /**
  * Difference of an embedded chunk within the difference of its closest node
- * (resolved by ascending from the chunk with the locator, so the node may be outside of the chunk tree)
+ * (resolved by ascending from the chunk with the locator, so the node may be outside of the chunk tree).
+ *
+ * When `added` is set, it is added as the chunk difference (if missing), missing differences on the path
+ * are created, and the path is marked dirty.
  */
 export function getEmbeddedChunkDifference(
   nodeDifference: NodeDifferenceMap,
   findParent: ParentLocator,
   chunk: ObjectChunk | CompositeListChunk,
+  added?: ObjectDifference,
+  target = chunk,
 ): ValueDifference | undefined {
   if (isNodeValue(chunk)) {
-    return nodeDifference.get(chunk.key);
-  }
-  const ref = findParent(chunk);
-  assert(!isRootRef(ref));
-  const parentDifference = getEmbeddedChunkDifference(
-    nodeDifference,
-    findParent,
-    ref.parent,
-  );
-  if (isParentObjectRef(ref)) {
-    return isObjectDifference(parentDifference)
-      ? getFieldDifference(
-          parentDifference,
-          resolveNormalizedField(ref.parent.selection, ref.field),
-        )?.state
-      : undefined;
-  }
-  return isCompositeListDifference(parentDifference)
-    ? getListItemDifference(parentDifference, ref.index)
-    : undefined;
-}
-
-/**
- * Adds a dirty difference of an embedded chunk to the difference of its closest node (keeps existing differences).
- * Returns the difference of the chunk (existing or added).
- */
-export function addEmbeddedChunkDifference(
-  nodeDifference: NodeDifferenceMap,
-  findParent: ParentLocator,
-  chunk: ObjectChunk | CompositeListChunk,
-  difference?: ObjectDifference | CompositeListDifference, // Created when missing
-): ValueDifference {
-  if (isNodeValue(chunk)) {
-    let nodeDiff = nodeDifference.get(chunk.key);
-    if (!nodeDiff) {
-      const created = difference ?? createObjectDifference();
-      assert(isObjectDifference(created));
-      nodeDiff = created;
-      nodeDifference.set(chunk.key, nodeDiff);
+    let difference = nodeDifference.get(chunk.key);
+    if (!difference && added) {
+      difference = chunk === target ? added : createObjectDifference();
+      nodeDifference.set(chunk.key, difference);
     }
-    return nodeDiff;
+    return difference;
   }
   const ref = findParent(chunk);
   assert(!isRootRef(ref));
-  const parentDifference = addEmbeddedChunkDifference(
+  const parent = getEmbeddedChunkDifference(
     nodeDifference,
     findParent,
     ref.parent,
+    added,
+    target,
   );
   if (isParentObjectRef(ref)) {
-    assert(isObjectDifference(parentDifference));
+    if (!isObjectDifference(parent)) {
+      return undefined;
+    }
     const field = resolveNormalizedField(ref.parent.selection, ref.field);
-    addDirtyField(parentDifference, field);
+    const existing = getFieldDifference(parent, field)?.state;
+    if (!added) {
+      return existing;
+    }
+    addDirtyField(parent, field);
     return (
-      getFieldDifference(parentDifference, field) ??
+      existing ??
       addFieldDifference(
-        parentDifference,
+        parent,
         field,
-        difference ?? createChunkDifference(chunk),
-      )
-    ).state;
+        chunk === target ? added : createChunkDifference(chunk),
+      ).state
+    );
   }
-  assert(isCompositeListDifference(parentDifference));
-  addDirtyListItem(parentDifference, ref.index);
+  if (!isCompositeListDifference(parent)) {
+    return undefined;
+  }
+  const existing = getListItemDifference(parent, ref.index);
+  if (!added) {
+    return existing;
+  }
+  addDirtyListItem(parent, ref.index);
   return (
-    getListItemDifference(parentDifference, ref.index) ??
+    existing ??
     addListItemDifference(
-      parentDifference,
+      parent,
       ref.index,
-      difference ?? createChunkDifference(chunk),
+      chunk === target ? added : createChunkDifference(chunk),
     )
   );
 }

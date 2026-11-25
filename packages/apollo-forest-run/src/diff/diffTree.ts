@@ -8,15 +8,13 @@ import {
   ObjectDiffState,
 } from "./types";
 import { isComplete, isDirty, isObjectDifference } from "./difference";
-import {
-  addEmbeddedChunkDifference,
-  getEmbeddedChunkDifference,
-} from "./embedded";
+import { getEmbeddedChunkDifference } from "./embedded";
 import { createObjectAggregate } from "../values/create";
 import { diffObject } from "./diffObject";
 import {
   NodeKey,
   NodeMap,
+  NodeValue,
   ObjectChunk,
   ObjectValue,
   ParentLocator,
@@ -129,32 +127,23 @@ function diffEmbeddedRoot(
   assert(!existing || isObjectDifference(existing));
 
   // Note: continues the difference of the same object within the node, when the node is in the tree too
-  nodeDiffState.errors.length = 0;
   const state: ObjectDiffState = nodeDiffState;
   state.difference = existing;
+  nodeDiffState.errors.length = 0;
 
   for (const operation of resolveOperationsWithNode(context.forest, node)) {
-    const baseChunks = context.forest.trees.get(operation)?.nodes.get(node.key);
-    if (!baseChunks?.length) {
-      continue;
-    }
-    const baseNode =
-      baseChunks.length === 1
-        ? baseChunks[0]
-        : createObjectAggregate(baseChunks);
-    assert(isNodeValue(baseNode));
-    const base = retrieveEmbeddedValue(env, baseNode, ref);
-    if (!base || !isObjectValue(base)) {
-      continue;
-    }
-    diffObject(base, root, context.env, state);
-    if (state.difference && isComplete(state.difference)) {
-      break;
+    const baseNode = getBaseNode(context.forest.trees.get(operation), node.key);
+    const base = baseNode && retrieveEmbeddedValue(env, baseNode, ref);
+    if (base && isObjectValue(base)) {
+      diffObject(base, root, context.env, state);
+      if (state.difference && isComplete(state.difference)) {
+        break;
+      }
     }
   }
   const difference = state.difference;
   if (difference && isDirty(difference)) {
-    const added = addEmbeddedChunkDifference(
+    const added = getEmbeddedChunkDifference(
       nodeDifference,
       findParent,
       root,
@@ -275,11 +264,8 @@ function diffTreeNode(
   if (nodeDiffState.difference && isComplete(nodeDiffState.difference)) {
     return nodeDiffState.difference;
   }
-  const baseChunks = baseTree.nodes.get(modelNode.key as string);
-  assert(baseChunks?.length);
-
-  const baseNode =
-    baseChunks.length === 1 ? baseChunks[0] : createObjectAggregate(baseChunks);
+  const baseNode = getBaseNode(baseTree, modelNode.key as string);
+  assert(baseNode);
 
   try {
     const { difference } = diffObject(
@@ -302,6 +288,19 @@ function diffTreeNode(
     };
     return undefined;
   }
+}
+
+function getBaseNode(
+  tree: IndexedTree | undefined,
+  key: NodeKey,
+): NodeValue | undefined {
+  const chunks = tree?.nodes.get(key);
+  if (!chunks?.length) {
+    return undefined;
+  }
+  const node = chunks.length === 1 ? chunks[0] : createObjectAggregate(chunks);
+  assert(isNodeValue(node));
+  return node;
 }
 
 function accumulateDiffErrors(
