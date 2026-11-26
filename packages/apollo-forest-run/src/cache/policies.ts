@@ -185,6 +185,7 @@ export function applyMergePolicies(
   overwrite: boolean,
   // Restricts merge policies to some fields
   applyToField?: (parent: ObjectChunk, field: FieldInfo) => boolean,
+  transient = false,
 ): IndexedTree {
   const findChunkInfo = (value: ApolloStoreValue | SourceObject) => {
     if (typeof value !== "object" || value === null) {
@@ -255,8 +256,9 @@ export function applyMergePolicies(
         if (!overwrite) {
           // Resolving "existing" value through parent, because field value may not have metadata, e.g. be a scalar
           const existingParent =
-            findExistingChunk(pathEnv, incomingTree, parent) ??
-            findChunk(pathEnv, layers, parent);
+            (!transient
+              ? findExistingChunk(pathEnv, incomingTree, parent)
+              : undefined) ?? findChunk(pathEnv, layers, parent);
 
           existingChunk = existingParent
             ? resolveFieldChunk(existingParent, field)
@@ -271,6 +273,14 @@ export function applyMergePolicies(
               parent,
               field,
             );
+          }
+          if (
+            transient &&
+            (existingChunk === undefined || isMissingValue(existingChunk))
+          ) {
+            // No live value (e.g. a mutation root): use the last execution result.
+            const previous = findExistingChunk(pathEnv, incomingTree, parent);
+            existingChunk = previous && resolveFieldChunk(previous, field);
           }
 
           if (existingChunk !== undefined) {

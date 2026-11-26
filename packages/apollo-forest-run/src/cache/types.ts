@@ -36,8 +36,6 @@ import { ObjectDifference } from "../diff/types";
 import type {
   ExecutionResult,
   IncrementalExecution,
-  InitialExecutionResult,
-  SplicedIncrementalResult,
 } from "../incremental/types";
 
 export type PartitionOptions = {
@@ -99,6 +97,7 @@ export type TransformedResult = {
 };
 
 export type ExtendedForest = IndexedForest & {
+  incrementalExecutions: WeakMap<OperationDescriptor, IncrementalExecution>;
   // Derived trees resulted from applying read policies
   readResults: Map<OperationDescriptor, TransformedResult>;
   mutations: Set<OperationDescriptor>;
@@ -133,8 +132,6 @@ export type Store = {
   partitions: WeakMap<IndexedTree, ResolvedPartition>;
   // Pending scheduled auto-eviction
   pendingEviction: ScheduledEvictionHandle | null;
-  // The latest incremental execution (`@defer`) of an operation, while it has pending results
-  incrementalExecutions: WeakMap<OperationDescriptor, IncrementalExecution>;
 };
 
 export type Transaction = {
@@ -152,7 +149,7 @@ export type Transaction = {
 };
 
 export type WriteResult = {
-  options: WriteOptionsInternal;
+  options: Cache.WriteOptions;
   incoming: DataTree;
   affected: Iterable<OperationDescriptor>;
   affectedNodes: Set<NodeKey>; // contains directly updated nodes + parent nodes indirectly affected by nested node update
@@ -357,10 +354,3 @@ export type SerializedCache = Record<
 export type ExecutionWriteOptions = Omit<Cache.WriteOptions, "result"> & {
   execution: ExecutionResult;
 };
-
-// Options of the internal `write`: a result, or an execution result (subsequent results are spliced by ForestRun first)
-export type WriteOptionsInternal =
-  | Cache.WriteOptions
-  | (Omit<Cache.WriteOptions, "result"> & {
-      execution: InitialExecutionResult | SplicedIncrementalResult;
-    });

@@ -24,6 +24,7 @@ const DEFAULT_PARTITION: DefaultPartition = "__default__";
 
 export function createStore(_: CacheEnv): Store {
   const dataForest: DataForest = {
+    incrementalExecutions: new WeakMap(),
     trees: new Map(),
     operationsByNodes: new Map<NodeKey, Set<OperationId>>(),
     operationsByName: new Map(),
@@ -56,7 +57,6 @@ export function createStore(_: CacheEnv): Store {
     atime: new Map(),
     partitions: new WeakMap(),
     pendingEviction: null,
-    incrementalExecutions: new WeakMap(),
   };
   return store;
 }
@@ -208,7 +208,6 @@ export function canReleaseOperationDescriptor(
   }
   if (
     store.watches.has(operation) ||
-    store.incrementalExecutions.has(operation) ||
     store.optimisticReadResults.has(operation) ||
     store.partialReadResults.has(operation)
   ) {
@@ -230,6 +229,7 @@ function isReferencedByForest(
   operation: OperationDescriptor,
 ): boolean {
   return (
+    forest.incrementalExecutions.has(operation) ||
     forest.trees.has(operation.id) ||
     forest.readResults.has(operation) ||
     forest.operationsWithErrors.has(operation)
@@ -287,6 +287,7 @@ export function createOptimisticLayer(
 ): OptimisticLayer {
   return {
     layerTag,
+    incrementalExecutions: new WeakMap(),
     trees: new Map(),
     operationsByNodes: new Map(),
     operationsWithErrors: new Set(),
@@ -502,7 +503,7 @@ export function resetStore(store: Store): void {
   operations.clear();
   optimisticReadResults.clear();
   optimisticLayers.length = 0;
-  store.incrementalExecutions = new WeakMap();
+  dataForest.incrementalExecutions = new WeakMap();
 }
 
 const getRootNode = (result: IndexedTree): NodeChunk | undefined =>

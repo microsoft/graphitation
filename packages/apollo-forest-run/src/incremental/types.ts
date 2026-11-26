@@ -151,7 +151,7 @@ export type IncrementalExecution = {
   // A new execution of the operation replaces the previous one (late results of the previous one are ignored)
   key: ExecutionKey | undefined;
   // Placeholders: addresses of objects with deferred fragments by their (server) response paths
-  //   (and of list items below them in the incremental delivery format, see `subPath`)
+  //   and keyed descendants (also list items in the incremental delivery format, see `subPath`)
   placeholders: Map<ResponsePathKey, ObjectAddress>;
   // The latest result of an operation which is not stored in the forest (e.g. a mutation): results are spliced into it
   transientTree: IndexedTree | undefined;
@@ -210,6 +210,7 @@ export type DeliveredFields = Map<SourceObject, Set<DataKey>>;
 
 export type SpliceState = {
   tree: IndexedTree;
+  transient: boolean;
   // Whether a field of the type has a merge policy (such fields are compared as a whole when delivered)
   hasMergePolicy: (typeName: TypeName, fieldName: FieldName) => boolean;
   // Objects and lists of the stored result -> copies (sources of a stored result are unique per location)

@@ -29,7 +29,7 @@ class TestCache extends ForestRun {
     return this.store.dataForest.trees.get(this.operation(query, variables).id);
   }
   execution(query: DocumentNode, variables = {}) {
-    return this.store.incrementalExecutions.get(
+    return this.store.dataForest.incrementalExecutions.get(
       this.operation(query, variables),
     );
   }
@@ -1055,10 +1055,10 @@ describe("@defer: subsequent results", () => {
     });
   });
 
-  it("keeps the operation descriptor while results are pending", () => {
+  it("keeps a non-cacheable descriptor only while its optimistic layer exists", () => {
     const cache = new TestCache({ autoEvict: false });
     const mutation = gql`
-      mutation Send @cache {
+      mutation Send {
         send {
           id
           ... @defer {
@@ -1071,9 +1071,10 @@ describe("@defer: subsequent results", () => {
     cache.recordOptimisticTransaction(() => {
       execution.initial({ send: message("1") });
     }, "layer");
-    cache.removeOptimistic("layer");
-    expect(cache.placeholders(mutation)).toEqual(["send"]);
     expect(cache.canRelease(mutation)).toBe(false);
+    cache.removeOptimistic("layer");
+    expect(cache.placeholders(mutation)).toBeUndefined();
+    expect(cache.canRelease(mutation)).toBe(true);
   });
 });
 
