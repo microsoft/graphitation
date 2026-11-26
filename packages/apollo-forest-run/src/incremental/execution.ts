@@ -667,6 +667,13 @@ export function isSplicedIncrementalResult(
   return "kind" in execution && execution.kind === "SplicedIncrementalResult";
 }
 
+// Complete or initial results are written as is (subsequent results are spliced into the stored result first)
+export function isInitialExecutionWrite(
+  options: ExecutionWriteOptions,
+): options is ExecutionWriteOptions & { execution: InitialExecutionResult } {
+  return "data" in options.execution;
+}
+
 export function isSubsequentResult(
   execution: ExecutionResult,
 ): execution is SubsequentExecutionResult {

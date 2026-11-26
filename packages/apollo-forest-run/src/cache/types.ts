@@ -36,6 +36,8 @@ import { ObjectDifference } from "../diff/types";
 import type {
   ExecutionResult,
   IncrementalExecution,
+  InitialExecutionResult,
+  SplicedIncrementalResult,
 } from "../incremental/types";
 
 export type PartitionOptions = {
@@ -150,7 +152,7 @@ export type Transaction = {
 };
 
 export type WriteResult = {
-  options: Cache.WriteOptions | ExecutionWriteOptions;
+  options: WriteOptionsInternal;
   incoming: DataTree;
   affected: Iterable<OperationDescriptor>;
   affectedNodes: Set<NodeKey>; // contains directly updated nodes + parent nodes indirectly affected by nested node update
@@ -353,6 +355,12 @@ export type SerializedCache = Record<
 
 // Options of ForestRun.writeExecutionResult: the same as of `write`, but with an execution result (instead of `result`)
 export type ExecutionWriteOptions = Omit<Cache.WriteOptions, "result"> & {
-  result?: never;
   execution: ExecutionResult;
 };
+
+// Options of the internal `write`: a result, or an execution result (subsequent results are spliced by ForestRun first)
+export type WriteOptionsInternal =
+  | Cache.WriteOptions
+  | (Omit<Cache.WriteOptions, "result"> & {
+      execution: InitialExecutionResult | SplicedIncrementalResult;
+    });

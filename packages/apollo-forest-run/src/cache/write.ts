@@ -8,7 +8,7 @@ import type {
   OptimisticLayer,
   Store,
   Transaction,
-  ExecutionWriteOptions,
+  WriteOptionsInternal,
   WriteResult,
 } from "./types";
 import type { NodeKey, OperationDescriptor } from "../descriptor/types";
@@ -52,18 +52,23 @@ export function write(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
-  options: Cache.WriteOptions | ExecutionWriteOptions,
-  // An initial (or complete) execution result, or subsequent results spliced into the stored result
-  execution?: InitialExecutionResult | SplicedIncrementalResult,
+  options: WriteOptionsInternal,
 ): WriteResult {
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
   const targetForest = getActiveForest(store, activeTransaction);
 
   // An initial result of incremental delivery is written as a regular (partial) result,
   //   subsequent results are spliced into the stored result first (see spliceSubsequentResult)
+  let execution: InitialExecutionResult | SplicedIncrementalResult | undefined;
+  let result: Cache.WriteOptions["result"];
+  if (isExecutionWrite(options)) {
+    execution = options.execution;
+    result = execution.data;
+  } else {
+    result = options.result;
+  }
   const splicedResult =
     execution && isSplicedIncrementalResult(execution) ? execution : undefined;
-  const result = execution ? execution.data : options.result;
   const writeData = typeof result === "object" && result !== null ? result : {};
   const rootNodeKey = options.dataId ?? objectKey(writeData);
   assert(rootNodeKey !== false);
@@ -357,6 +362,12 @@ function resolveExtraRootNodeType(
     return chunk.type;
   }
   return undefined;
+}
+
+function isExecutionWrite(
+  options: WriteOptionsInternal,
+): options is Exclude<WriteOptionsInternal, Cache.WriteOptions> {
+  return "execution" in options;
 }
 
 const inspect = JSON.stringify.bind(JSON);

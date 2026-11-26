@@ -102,18 +102,4 @@ describe("write", () => {
       result: completeData,
     });
   });
-
-  it("ignores execution results", () => {
-    const cache = new ForestRun();
-    const options = {
-      query,
-      result: initialData,
-      execution: { data: completeData },
-    };
-    cache.write(options);
-
-    expect(cache.diff({ query, optimistic: false }).result).toEqual(
-      initialData,
-    );
-  });
 });

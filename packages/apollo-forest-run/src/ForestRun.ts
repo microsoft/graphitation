@@ -43,6 +43,7 @@ import {
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
 import {
+  isInitialExecutionWrite,
   isSubsequentResult,
   spliceSubsequentResult,
 } from "./incremental/execution";
@@ -241,8 +242,9 @@ export class ForestRun<
   ): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
-    const { execution } = options;
-    if (isSubsequentResult(execution)) {
+    if (!isInitialExecutionWrite(options)) {
+      const { execution } = options;
+      assert(isSubsequentResult(execution));
       // Written as a regular result of the operation, with incremental results spliced in
       const spliced = spliceSubsequentResult(
         this.env,
@@ -253,12 +255,15 @@ export class ForestRun<
       );
       if (spliced) {
         transaction.changelog.push(
-          write(this.env, this.store, transaction, options, spliced),
+          write(this.env, this.store, transaction, {
+            ...options,
+            execution: spliced,
+          }),
         );
       }
       return undefined;
     }
-    const result = write(this.env, this.store, transaction, options, execution);
+    const result = write(this.env, this.store, transaction, options);
     transaction.changelog.push(result);
 
     const incoming = result.incoming;
