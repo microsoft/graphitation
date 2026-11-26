@@ -469,6 +469,7 @@ function deleteTreeChunkField(
   const didDelete = Value.deleteField(pathEnv, chunk, field);
   if (didDelete) {
     tree.incompleteChunks.add(chunk);
+    removeDeletedChunks(tree);
   }
   return didDelete;
 }
@@ -482,8 +483,18 @@ function deleteTreeChunkItem(
   const didDelete = Value.deleteListItem(pathEnv, chunk, index);
   if (didDelete) {
     tree.incompleteChunks.add(chunk);
+    removeDeletedChunks(tree);
   }
   return didDelete;
+}
+
+// Keeps the invariant of `deferredChunks` (the tree is mutated in place: deleted values are not re-indexed)
+function removeDeletedChunks(tree: IndexedTree) {
+  if (tree.deferredChunks?.length) {
+    tree.deferredChunks = tree.deferredChunks.filter((chunk) =>
+      Value.isReachable(tree.dataMap, chunk),
+    );
+  }
 }
 
 // TODO: move this to "convert"

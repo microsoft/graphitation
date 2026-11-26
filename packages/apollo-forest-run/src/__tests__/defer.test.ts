@@ -9,6 +9,8 @@ import type {
   IncrementalDeferResult,
   PendingResult,
 } from "../cache/types";
+import type { IndexedTree } from "../forest/types";
+import type { GraphChunk, ObjectChunk } from "../values/types";
 import { assert } from "../jsutils/assert";
 import {
   isCompositeListValue,
@@ -751,6 +753,194 @@ describe("@defer: subsequent results", () => {
     cache.removeOptimistic("layer");
     expect(cache.placeholders(mutation)).toEqual(["send"]);
     expect(cache.canRelease(mutation)).toBe(false);
+  });
+});
+
+describe("@defer: deferred chunks of trees", () => {
+  // All chunks with deferred fragments reachable from the root of the tree
+  function collectDeferredChunks(tree: IndexedTree): ObjectChunk[] {
+    const chunks: ObjectChunk[] = [];
+    const visit = (value: GraphChunk) => {
+      if (isObjectValue(value)) {
+        if (value.selection.deferredFragments) {
+          chunks.push(value);
+        }
+        for (const ref of value.fieldChunks.values()) {
+          visit(ref.value);
+        }
+      } else if (isCompositeListValue(value)) {
+        for (let index = 0; index < value.data.length; index++) {
+          visit(resolveListItemChunk(value, index));
+        }
+      }
+    };
+    const root = tree.dataMap.get(tree.result.data)?.value;
+    assert(root);
+    visit(root);
+    return chunks;
+  }
+
+  function expectCurrentDeferredChunks(tree: IndexedTree | undefined) {
+    assert(tree?.deferredChunks);
+    for (const chunk of tree.deferredChunks) {
+      expect(tree.dataMap.get(chunk.data)?.value).toBe(chunk);
+    }
+    expect(new Set(tree.deferredChunks)).toEqual(
+      new Set(collectDeferredChunks(tree)),
+    );
+    expect(tree.deferredChunks).toHaveLength(new Set(tree.deferredChunks).size);
+    return tree.deferredChunks;
+  }
+
+  const textQuery = gql`
+    query {
+      messages {
+        id
+        text
+      }
+    }
+  `;
+
+  it("are not collected for operations without @defer", () => {
+    const cache = new TestCache();
+    cache.writeQuery({ query: textQuery, data: { messages: [message("1")] } });
+    expect(cache.storedTree(textQuery)?.deferredChunks).toBeUndefined();
+  });
+
+  it("are current after the initial write", () => {
+    const cache = new TestCache();
+    execute(cache, messagesQuery).initial({
+      messages: [message("1"), message("2")],
+    });
+    expect(
+      expectCurrentDeferredChunks(cache.storedTree(messagesQuery)),
+    ).toHaveLength(2);
+  });
+
+  it("are current after re-indexing with recycled chunks (updateTree)", () => {
+    const cache = new TestCache();
+    execute(cache, messagesQuery).initial({
+      messages: [message("1"), message("2")],
+    });
+    const before = cache.storedTree(messagesQuery);
+    const [, second] = before?.deferredChunks ?? [];
+
+    // Another operation changes a node of the tree
+    cache.writeQuery({
+      query: gql`
+        query {
+          message {
+            id
+            text
+          }
+        }
+      `,
+      data: { message: { ...message("1"), text: "changed" } },
+    });
+
+    const after = cache.storedTree(messagesQuery);
+    expect(after).not.toBe(before);
+    const chunks = expectCurrentDeferredChunks(after);
+    expect(chunks).toHaveLength(2);
+    // The unchanged chunk is recycled (and current), the changed one is new
+    expect(chunks).toContain(second);
+    expect(chunks.map((chunk) => chunk.data.text)).toEqual([
+      "changed",
+      "text 2",
+    ]);
+  });
+
+  it("are current after merge policies are applied", () => {
+    const cache = new TestCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            messages: {
+              merge: (existing: unknown[] = [], incoming: unknown[]) => [
+                ...existing,
+                ...incoming,
+              ],
+            },
+          },
+        },
+      },
+    });
+    cache.writeQuery({
+      query: messagesQuery,
+      data: { messages: [message("1", "one")] },
+    });
+    execute(cache, messagesQuery).initial({ messages: [message("2")] });
+
+    const chunks = expectCurrentDeferredChunks(cache.storedTree(messagesQuery));
+    expect(chunks.map((chunk) => chunk.key)).toEqual([
+      "Message:1",
+      "Message:2",
+    ]);
+  });
+
+  it("are current after repair of shared references", () => {
+    const cache = new TestCache();
+    const query = gql`
+      query {
+        message {
+          id
+          rows: grid {
+            __typename
+            ... @defer {
+              name
+            }
+          }
+        }
+      }
+    `;
+    const cell = { __typename: "Cell" };
+    execute(cache, query).initial({
+      message: { ...message("1"), rows: [[cell], [cell]] },
+    });
+
+    const chunks = expectCurrentDeferredChunks(cache.storedTree(query));
+    expect(chunks).toHaveLength(2);
+    expect(chunks[0].data).not.toBe(chunks[1].data);
+  });
+
+  it("are current after splicing", () => {
+    const cache = new TestCache();
+    const execution = execute(cache, nestedQuery);
+    execution.initial({ user });
+
+    execution.subsequent(
+      [
+        {
+          path: ["user"],
+          data: { name: "user", friends: [friend("1"), friend("2")] },
+        },
+      ],
+      { hasNext: true },
+    );
+
+    const chunks = expectCurrentDeferredChunks(cache.storedTree(nestedQuery));
+    expect(chunks.map((chunk) => chunk.key)).toEqual([
+      "User:u",
+      "User:1",
+      "User:2",
+    ]);
+  });
+
+  it("are current after deleting fields in place (cache.modify)", () => {
+    const cache = new TestCache();
+    const execution = execute(cache, messagesQuery);
+    execution.initial({ messages: [message("1")] });
+
+    cache.modify({ fields: { messages: (_, { DELETE }) => DELETE } });
+
+    expect(
+      expectCurrentDeferredChunks(cache.storedTree(messagesQuery)),
+    ).toEqual([]);
+    // The deleted object is not written to
+    execution.subsequent([{ path: ["messages", 0], data: { name: "one" } }]);
+    expect(cache.storedTree(messagesQuery)?.result.data.messages).toEqual([
+      message("1"),
+    ]);
   });
 });
 

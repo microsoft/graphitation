@@ -64,6 +64,7 @@ type Context = {
   rootNodeKey: string;
   knownMissingFields: MissingFieldsMap | undefined;
   incompleteChunks: Set<ObjectChunk>;
+  deferredChunks: ObjectChunk[] | undefined;
   recycleTree: IndexedTree | null;
   findParent: ParentLocator;
 };
@@ -108,6 +109,8 @@ export function indexTree(
     dataMap,
     indexedSources: 0,
     incompleteChunks: new Set(),
+    // Fresh for every tree (see IndexedTree.deferredChunks)
+    deferredChunks: operation.hasDeferSites ? [] : undefined,
     rootNodeKey,
     recycleTree: previousTreeState,
     findParent: createParentLocator(dataMap),
@@ -133,6 +136,7 @@ export function indexTree(
     typeMap: context.typeMap,
     dataMap: context.dataMap,
     incompleteChunks: context.incompleteChunks,
+    deferredChunks: context.deferredChunks,
     prev: previousTreeState,
     history:
       previousTreeState?.history ?? new CircularBuffer(operation.historySize),
@@ -185,6 +189,7 @@ export function indexObject(
     dataMap,
     indexedSources: initialDataMapSize,
     incompleteChunks: new Set(),
+    deferredChunks: undefined, // Not a tree
     rootNodeKey,
     recycleTree: null,
     findParent: createParentLocator(dataMap),
@@ -319,6 +324,9 @@ function indexSourceObject(
   }
   if (typeName !== undefined) {
     accumulate(typeMap, typeName, chunk as NodeChunk);
+  }
+  if (context.deferredChunks && selection.deferredFragments) {
+    context.deferredChunks.push(chunk);
   }
   if (!selection.fieldsWithSelections?.length) {
     if (isRoot && selection.fieldQueue.length) {
@@ -463,6 +471,10 @@ function reIndexObject(
   }
   if (recyclable.key !== false) {
     accumulate(nodes, recyclable.key, recyclable);
+  }
+  // Recycled chunks are current chunks of this tree too
+  if (context.deferredChunks && recyclable.selection.deferredFragments) {
+    context.deferredChunks.push(recyclable);
   }
 
   for (const fieldRef of recyclable.fieldChunks.values()) {

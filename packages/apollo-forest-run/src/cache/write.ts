@@ -169,7 +169,7 @@ export function write(
     targetForest,
     modifiedIncomingResult,
     env,
-    splice && seedDifferences(incomingResult, splice.deliveredFields),
+    splice && seedDifferences(incomingResult, splice),
   );
 
   if (difference.errors.length) {

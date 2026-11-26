@@ -13,6 +13,7 @@ import type {
 } from "./types";
 import { ValueKind } from "./types";
 import type { FieldInfo, NormalizedFieldEntry } from "../descriptor/types";
+import type { Draft, Source } from "../forest/types";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import * as Predicates from "./predicates";
 import * as ResolveValue from "./resolve";
@@ -321,4 +322,92 @@ export function isNodeRef(ref: GraphValueReference): boolean {
   }
   const value = resolveGraphValueReference(ref[0]);
   return Predicates.isNodeValue(value);
+}
+
+/**
+ * Copies sources of `from` and of all its parents up to the root (copies in `copies` are reused: copy-on-write)
+ * and links every copy into the copy of its parent. Returns the (original) source of `from`.
+ *
+ * `enter` is called for every chunk on the path, from `from` up to the root (before copying).
+ * `visit` is called for every chunk on the path, from the root down to `from`, after its copy is linked
+ * (`existingCopy` is the copy made before this call, if any).
+ */
+export function copySourcesUpToRoot(
+  dataMap: DataMap,
+  copies: Map<Source, Draft>,
+  from: ObjectChunk | CompositeListChunk,
+  visit?: (
+    chunk: ObjectChunk | CompositeListChunk,
+    parentRef: GraphChunkReference | undefined,
+    copy: Draft,
+    existingCopy: Draft | undefined,
+    isFrom: boolean,
+  ) => void,
+  enter?: (chunk: ObjectChunk | CompositeListChunk, isFrom: boolean) => void,
+  isFrom = true,
+): Source {
+  enter?.(from, isFrom);
+  const parent = dataMap.get(from.data);
+
+  if (!parent || Predicates.isRootRef(parent)) {
+    assert(Predicates.isObjectValue(from));
+    const data = from.data;
+    const existingCopy = copies.get(data);
+    const copy = existingCopy ?? { ...data };
+    if (!existingCopy) {
+      copies.set(data, copy);
+    }
+    visit?.(from, parent, copy, existingCopy, isFrom);
+    return data;
+  }
+  const parentSource = copySourcesUpToRoot(
+    dataMap,
+    copies,
+    parent.parent,
+    visit,
+    enter,
+    false,
+  );
+  const parentCopy = copies.get(parentSource);
+  assert(parentCopy);
+
+  const dataKey = Predicates.isParentObjectRef(parent)
+    ? parent.field.dataKey
+    : parent.index;
+  const value = (parentSource as any)[dataKey];
+
+  const existingCopy = copies.get(value);
+  const copy =
+    existingCopy ??
+    ((Array.isArray(value) ? [...value] : { ...value }) as Draft);
+  if (!existingCopy) {
+    copies.set(value, copy);
+  }
+  (parentCopy as any)[dataKey] = copy;
+  visit?.(from, parent, copy, existingCopy, isFrom);
+  return value;
+}
+
+// Whether the chunk is still a part of the tree (e.g. not under a field deleted in place by cache.modify)
+export function isReachable(
+  dataMap: DataMap,
+  chunk: ObjectChunk | CompositeListChunk,
+): boolean {
+  let value: ObjectChunk | CompositeListChunk = chunk;
+  for (;;) {
+    const ref = dataMap.get(value.data);
+    if (!ref || ref.value !== value) {
+      return false;
+    }
+    if (Predicates.isRootRef(ref)) {
+      return !ref.detached;
+    }
+    const current = Predicates.isParentObjectRef(ref)
+      ? ref.parent.fieldChunks.get(ref.field.dataKey)
+      : ref.parent.itemChunks[ref.index];
+    if (current !== ref) {
+      return false;
+    }
+    value = ref.parent;
+  }
 }

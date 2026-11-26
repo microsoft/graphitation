@@ -1,7 +1,9 @@
 import type { Cache, InMemoryCacheConfig, TypePolicies } from "@apollo/client";
 import type {
+  Draft,
   IndexedForest,
   IndexedTree,
+  Source,
   UpdateForestStats,
 } from "../forest/types";
 import type {
@@ -24,8 +26,10 @@ import type {
 } from "../descriptor/types";
 import type { DocumentNode, OperationDefinitionNode } from "graphql";
 import type {
+  CompositeListChunk,
   Key,
   KeySpecifier,
+  ObjectChunk,
   ObjectKey,
   MissingFieldsMap,
   SourceCompositeList,
@@ -38,7 +42,11 @@ import type {
 import type { TelemetryEvent } from "../telemetry/types";
 import { ExtendedLogger, Logger } from "../jsutils/logger";
 import { GraphDifference, GraphDiffError } from "../diff/diffTree";
-import { ObjectDifference } from "../diff/types";
+import {
+  CompositeListDifference,
+  NodeDifferenceMap,
+  ObjectDifference,
+} from "../diff/types";
 
 export type PartitionOptions = {
   maxOperationCount: number;
@@ -377,6 +385,8 @@ export type IncrementalExecution = {
  * (e.g. items are prepended to a list, see apollographql/apollo-client#13530).
  */
 export type DeferPlaceholder = {
+  // The chunk of the object (fast path while it is a part of the stored result, see IndexedTree.deferredChunks)
+  chunk: ObjectChunk;
   nodeKey: NodeKey;
   nodeSelections: PossibleSelections;
   // Response keys and list indexes from the node to the object
@@ -390,32 +400,40 @@ export type DeferPlaceholder = {
  * Other objects of a spliced result are either objects of the stored result (no delivered fields)
  * or objects of incremental results (all fields are delivered).
  */
-export type DeliveredFields = Map<object, Set<DataKey>>;
+export type DeliveredFields = Map<SourceObject, Set<DataKey>>;
 
 // Subsequent results of incremental delivery spliced into a copy of the stored result
 export type SplicedResult = {
   incremental: IncrementalExecution;
-  data: ResultData;
+  data: SourceObject;
   deliveredFields: DeliveredFields;
   missingFields: MissingFieldsMap;
-  // Objects of the spliced result data was delivered to -> (server) response paths of incremental results
+  // Initial differences of nodes, restricted to delivered fields and paths to them (see seedDifferences)
+  seed: NodeDifferenceMap;
+  // Copies of objects results were delivered to -> (server) response paths of the results
   //   (locates objects with deferred fragments in delivered data)
-  targets: Map<ResultData, ResponsePath>;
+  targets: Map<SourceObject, ResponsePath>;
 };
 
 // Result of a deferred fragment with data
 export type DeferredResult = {
   path: ResponsePath;
-  data: ResultData;
+  data: SourceObject;
 };
 
 export type SpliceState = {
   tree: IndexedTree;
-  // Objects and lists of the stored result (and copies themselves) -> copies
-  copies: Map<object, ResultData | unknown[]>;
+  // Objects and lists of the stored result -> copies
+  copies: Map<Source, Draft>;
   deliveredFields: DeliveredFields;
   // Missing fields of copied objects (not delivered)
   missingFields: MissingFieldsMap;
+  seed: NodeDifferenceMap;
+  // Chunks of the stored result on paths to delivered objects -> their (seed) differences
+  differences: Map<
+    ObjectChunk | CompositeListChunk,
+    ObjectDifference | CompositeListDifference
+  >;
 };
 
 export type ResultData = Record<string, unknown>;
