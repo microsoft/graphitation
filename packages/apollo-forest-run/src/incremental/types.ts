@@ -15,6 +15,7 @@ import type {
   ObjectChunk,
   SourceObject,
 } from "../values/types";
+import type { TraverseEnv } from "../values/traverse";
 import type {
   CompositeListDifference,
   NodeDifferenceMap,
@@ -150,10 +151,11 @@ export type ResponsePathKey = string;
 export type IncrementalExecution = {
   // A new execution of the operation replaces the previous one (late results of the previous one are ignored)
   key: ExecutionKey | undefined;
-  // Objects with deferred fragments by their (server) response paths
-  placeholders: Map<ResponsePathKey, DeferPlaceholder>;
-  // Data delivered by subsequent results so far (at their response paths), e.g. incoming values of merge policies
-  delivered: SourceObject | undefined;
+  // Addresses of objects with deferred fragments by their (server) response paths
+  placeholders: Map<ResponsePathKey, ObjectAddress>;
+  // Data received from the server so far (in the server view), at defer sites and below:
+  //   identifies delivered objects and data delivered already (see spliceData). Sparse, references (copy-on-write)
+  serverData: SourceObject | undefined;
   // The latest result of an operation which is not stored in the forest (e.g. a mutation): results are spliced into it
   transientTree: IndexedTree | undefined;
   // Pending results announced by results in the incremental delivery format (see convertIncrementalDeliveryResult)
@@ -167,15 +169,6 @@ export type IncrementalExecution = {
  */
 export type TrackedPendingResult = PendingResult & {
   data: SourceObject | undefined;
-};
-
-/**
- * An object with deferred fragments: its address in the stored result, and its data as received from the server
- * (references, e.g. to deliver objects in the server view: with key fields, see spliceData).
- */
-export type DeferPlaceholder = {
-  address: ObjectAddress;
-  data: SourceObject;
 };
 
 /**
@@ -210,12 +203,12 @@ export type SplicedIncrementalResult = {
   missingFields: MissingFieldsMap;
   // Initial differences of nodes, restricted to delivered fields and paths to them (see seedDifferences)
   seed: NodeDifferenceMap;
-  // Spliced results (locate objects with deferred fragments in delivered data)
+  // Objects data was spliced into (locate objects with deferred fragments in delivered data)
   results: SplicedIncrementalResultEntry[];
 };
 
 export type SplicedIncrementalResultEntry = DeferredResult & {
-  // Path to the object the result was delivered to in the stored result (may differ from the response path)
+  // Path to the object data was delivered to in the stored result (may differ from the response path)
   localPath: ResponsePath;
 };
 
@@ -234,11 +227,14 @@ export type SpliceState = {
   incremental: IncrementalExecution;
   // Whether a field of the type has a merge policy (delivered values of such fields are incoming values as is)
   hasMergePolicy: (typeName: TypeName, fieldName: FieldName) => boolean;
-  // Key of an object with the selection of the chunk (identifies server objects)
+  // Key of an object with the selection (identifies server objects)
   objectKey: (
     data: SourceObject,
-    chunk: ObjectChunk,
+    selections: PossibleSelections,
   ) => string | false | undefined;
+  pathEnv: TraverseEnv;
+  // Objects data was spliced into
+  results: SplicedIncrementalResultEntry[];
   // Objects and lists of the stored result -> copies (sources of a stored result are unique per location)
   copies: Map<Source, Draft>;
   deliveredFields: DeliveredFields;

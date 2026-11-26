@@ -1046,7 +1046,8 @@ describe("@defer: subsequent results", () => {
     },
   );
 
-  it("passes only delivered data of embedded objects to merge policies of non-cacheable operations", () => {
+  // `profile` was received in the initial result: a container (deferred data is spliced into it, not merged)
+  it("splices delivered data of embedded objects of non-cacheable operations (without merge policies)", () => {
     const merge = jest.fn((existing, incoming) => ({
       ...existing,
       ...incoming,
@@ -1096,8 +1097,7 @@ describe("@defer: subsequent results", () => {
     expect(cache.readQuery({ query })).toEqual({
       user: { ...user, profile: { ...profile, title: "local", bio: "new" } },
     });
-    expect(merge).toHaveBeenCalledTimes(1);
-    expect(merge.mock.calls[0][1]).not.toHaveProperty("title");
+    expect(merge).not.toHaveBeenCalled();
   });
 });
 
@@ -1407,7 +1407,7 @@ describe("@defer: results in the incremental delivery format", () => {
     });
   });
 
-  // The result carries the server view of the list: a local reorder is overwritten (as by a refetch)
+  // Items are paired by indexes in the server view and resolved by keys: a local reorder is kept
   it("resolves a list index in subPath against the server's original order", () => {
     const cache = new TestCache();
     const query = gql`
@@ -1441,7 +1441,7 @@ describe("@defer: results in the incremental delivery format", () => {
 
     expect(cache.readQuery({ query, returnPartialData: true })).toEqual({
       __typename: "Query",
-      messages: [message("1", "one"), message("2")],
+      messages: [message("2"), message("1", "one")],
     });
   });
 
@@ -1481,6 +1481,129 @@ describe("@defer: results in the incremental delivery format", () => {
       __typename: "Query",
       messages: [{ ...item, info: { ...info, more: "more" } }],
     });
+  });
+
+  it.each([true, false])(
+    "retains data delivered above a pending path (in separate payloads: %s)",
+    (split) => {
+      const query = gql`
+        query {
+          viewer {
+            id
+            profile {
+              id
+              ... @defer(label: "inner") {
+                settings {
+                  language
+                }
+              }
+            }
+            ... @defer(label: "outer") {
+              profile {
+                settings {
+                  theme
+                }
+              }
+            }
+          }
+        }
+      `;
+      const cache = new TestCache();
+      const execution = executeIncrementalDelivery(cache, query);
+      const profile = { __typename: "Profile", id: "p" };
+      execution.initial({ viewer: { ...user, profile } }, [
+        { id: "inner", path: ["viewer", "profile"], label: "inner" },
+        { id: "outer", path: ["viewer"], label: "outer" },
+      ]);
+      const outer = {
+        id: "outer",
+        data: { profile: { settings: { theme: "dark" } } },
+      };
+      const inner = {
+        id: "inner",
+        subPath: ["settings"],
+        data: { language: "en" },
+      };
+      if (split) {
+        execution.subsequent({
+          incremental: [outer],
+          completed: [{ id: "outer" }],
+          hasNext: true,
+        });
+      }
+      execution.subsequent({
+        incremental: split ? [inner] : [outer, inner],
+        completed: split
+          ? [{ id: "inner" }]
+          : [{ id: "outer" }, { id: "inner" }],
+        hasNext: false,
+      });
+
+      expect(cache.diff({ query, optimistic: false })).toMatchObject({
+        complete: true,
+        result: {
+          viewer: {
+            ...user,
+            profile: {
+              ...profile,
+              settings: { theme: "dark", language: "en" },
+            },
+          },
+        },
+      });
+    },
+  );
+
+  it("does not deliver a list again when a sub-path delivers a field of its item", () => {
+    const merge = jest.fn((existing: unknown[] = [], incoming: unknown[]) => [
+      ...existing,
+      ...incoming,
+    ]);
+    const mergeTags = jest.fn((_, incoming) => incoming);
+    const cache = new TestCache({
+      typePolicies: {
+        Query: { fields: { messages: { merge } } },
+        Message: { fields: { tags: { merge: mergeTags } } },
+      },
+    });
+    const query = gql`
+      query {
+        messages {
+          id
+          text
+        }
+        ... @defer {
+          messages {
+            name
+            tags
+          }
+        }
+      }
+    `;
+    const execution = executeIncrementalDelivery(cache, query);
+    execution.initial({ messages: [message("1"), message("2")] }, [
+      { id: "name", path: [] },
+    ]);
+    merge.mockClear();
+
+    execution.subsequent({
+      incremental: [
+        {
+          id: "name",
+          subPath: ["messages", 0],
+          data: { name: "one", tags: ["new"] },
+        },
+      ],
+      completed: [{ id: "name" }],
+      hasNext: false,
+    });
+
+    expect(cache.readQuery({ query, returnPartialData: true })).toEqual({
+      __typename: "Query",
+      messages: [{ ...message("1", "one"), tags: ["new"] }, message("2")],
+    });
+    expect(merge).not.toHaveBeenCalled();
+    expect(mergeTags).toHaveBeenCalledTimes(1);
   });
 
   it("converts results of pending fragments announced by subsequent results", () => {
@@ -1815,7 +1938,8 @@ describe("@defer: merge policies of subsequent results", () => {
     });
   });
 
-  it("merges an explicitly delivered object but not one traversed by a result", () => {
+  // `profile` was received in the initial result: a container (deferred data is spliced into it, not merged)
+  it("does not merge objects received already (containers)", () => {
     const merge = jest.fn((_, incoming) =>
       incoming.bio ? { ...incoming, title: "merged" } : incoming,
     );
@@ -1852,9 +1976,259 @@ describe("@defer: merge policies of subsequent results", () => {
     expect(merge).not.toHaveBeenCalled();
     execution.subsequent([{ path: ["user"], data: { profile: { bio: "b" } } }]);
 
-    expect(merge).toHaveBeenCalledTimes(1);
+    expect(merge).not.toHaveBeenCalled();
     expect(cache.readQuery({ query })).toEqual({
-      user: { ...user, profile: { title: "merged", language: "en", bio: "b" } },
+      user: { ...user, profile: { title: "a", language: "en", bio: "b" } },
     });
   });
+
+  it("keeps a local edit when another deferred fragment delivers to the same object", () => {
+    const merge = jest.fn((existing, incoming) => ({
+      ...existing,
+      ...incoming,
+    }));
+    const cache = new TestCache({
+      typePolicies: { User: { fields: { profile: { merge } } } },
+    });
+    const query = gql`
+      query {
+        viewer {
+          id
+          profile {
+            title
+          }
+          ... @defer(label: "a") {
+            profile {
+              bio
+            }
+          }
+          ... @defer(label: "b") {
+            profile {
+              lang
+            }
+          }
+        }
+      }
+    `;
+    const user = { __typename: "User", id: "u" };
+    const profile = { __typename: "Profile", title: "title" };
+    const execution = execute(cache, query);
+    execution.initial({ viewer: { ...user, profile } });
+    execution.subsequent(
+      [{ path: ["viewer"], label: "a", data: { profile: { bio: "old bio" } } }],
+      { hasNext: true },
+    );
+    cache.writeQuery({
+      query: gql`
+        {
+          viewer {
+            id
+            profile {
+              bio
+            }
+          }
+        }
+      `,
+      data: {
+        viewer: { ...user, profile: { __typename: "Profile", bio: "edited" } },
+      },
+    });
+    merge.mockClear();
+
+    execution.subsequent([
+      { path: ["viewer"], label: "b", data: { profile: { lang: "en" } } },
+    ]);
+
+    expect(cache.readQuery({ query })).toEqual({
+      viewer: { ...user, profile: { ...profile, bio: "edited", lang: "en" } },
+    });
+    // `profile` was received in the initial result: a container, deferred data is not an incoming value of merge
+    expect(merge).not.toHaveBeenCalled();
+  });
+
+  it("applies merge policies of fields delivered by multiple fragments once", () => {
+    const merge = jest.fn((existing: unknown[] = [], incoming: unknown[]) => [
+      ...existing,
+      ...incoming,
+    ]);
+    const cache = new TestCache({
+      typePolicies: { User: { fields: { tags: { merge } } } },
+    });
+    const query = gql`
+      query {
+        viewer {
+          id
+          ... @defer(label: "a") {
+            tags
+          }
+          ... @defer(label: "b") {
+            name
+            tags
+          }
+        }
+      }
+    `;
+    const user = { __typename: "User", id: "u" };
+    const execution = execute(cache, query);
+    execution.initial({ viewer: user });
+
+    execution.subsequent(
+      [{ path: ["viewer"], label: "a", data: { tags: ["x"] } }],
+      { hasNext: true },
+    );
+    execution.subsequent([
+      { path: ["viewer"], label: "b", data: { name: "name", tags: ["x"] } },
+    ]);
+
+    expect(merge).toHaveBeenCalledTimes(1);
+    expect(cache.readQuery({ query })).toEqual({
+      viewer: { ...user, tags: ["x"], name: "name" },
+    });
+  });
+
+  describe.each(["2022", "incremental delivery"])(
+    "a deferred fragment re-selecting a list with a merge policy (%s format)",
+    (format) => {
+      const queries = {
+        site: gql`
+          query {
+            messages {
+              id
+              text
+            }
+            ... @defer {
+              messages {
+                name
+              }
+            }
+          }
+        `,
+        item: gql`
+          query {
+            messages {
+              id
+              text
+              ... @defer {
+                name
+              }
+            }
+          }
+        `,
+      };
+      const list = gql`
+        query {
+          messages {
+            id
+            text
+          }
+        }
+      `;
+      const name = gql`
+        fragment Name on Message {
+          id
+          name
+        }
+      `;
+      const page = (prefix: string) =>
+        Array.from({ length: 40 }, (_, i) => message(`${prefix}${i}`));
+
+      it.each(["site", "item"] as const)(
+        "routes deferred data to items by keys (defer at the %s)",
+        (kind) => {
+          const merge = jest.fn(
+            (existing: unknown[] = [], incoming: unknown[]) => [
+              ...existing,
+              ...incoming,
+            ],
+          );
+          const cache = new TestCache({
+            typePolicies: { Query: { fields: { messages: { merge } } } },
+          });
+          const query = queries[kind];
+          cache.writeQuery({ query: list, data: { messages: page("old") } });
+          const paths =
+            kind === "site"
+              ? [{ id: "0", path: [] }]
+              : page("new").map((_, i) => ({
+                  id: String(i),
+                  path: ["messages", i],
+                }));
+          cache.writeExecutionResult({
+            query,
+            execution: {
+              data: { messages: page("new") },
+              ...(format === "incremental delivery" && { pending: paths }),
+              hasNext: true,
+            },
+          });
+          expect(
+            cache.readQuery<{ messages: unknown[] }>({ query: list })?.messages,
+          ).toHaveLength(80);
+          // Another write inserts an item
+          cache.modify({
+            fields: {
+              messages(existing: readonly unknown[]) {
+                const ref = cache.writeFragment({
+                  fragment: gql`
+                    fragment Inserted on Message {
+                      id
+                      text
+                    }
+                  `,
+                  data: message("inserted"),
+                });
+                return [...existing.slice(0, 40), ref, ...existing.slice(40)];
+              },
+            },
+          });
+          merge.mockClear();
+
+          const names = page("new").map((_, i) => ({ name: `name ${i}` }));
+          cache.writeExecutionResult({
+            query,
+            execution:
+              format === "2022"
+                ? {
+                    incremental:
+                      kind === "site"
+                        ? [{ path: [], data: { messages: names } }]
+                        : names.map((data, i) => ({
+                            path: ["messages", i],
+                            data,
+                          })),
+                    hasNext: false,
+                  }
+                : {
+                    incremental: names.map((data, i) =>
+                      kind === "site"
+                        ? { id: "0", subPath: ["messages", i], data }
+                        : { id: String(i), data },
+                    ),
+                    completed: paths.map(({ id }) => ({ id })),
+                    hasNext: false,
+                  },
+          });
+
+          const messages = cache.readQuery<{ messages: unknown[] }>({
+            query: list,
+          })?.messages;
+          expect(messages).toHaveLength(81);
+          expect(messages?.[40]).toEqual(message("inserted"));
+          expect(merge).not.toHaveBeenCalled();
+          for (let i = 0; i < 40; i++) {
+            expect(
+              cache.readFragment({ id: `Message:new${i}`, fragment: name }),
+            ).toEqual({
+              __typename: "Message",
+              id: `new${i}`,
+              name: `name ${i}`,
+            });
+          }
+          expect(
+            cache.readFragment({ id: "Message:old0", fragment: name }),
+          ).toBeNull();
+        },
+      );
+    },
+  );
 });

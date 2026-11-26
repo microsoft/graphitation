@@ -32,6 +32,8 @@ import type {
 } from "./types";
 import type {
   FieldInfo,
+  NodeKey,
+  PossibleSelections,
   OperationDescriptor,
   ResponsePath,
 } from "../descriptor/types";
@@ -54,7 +56,10 @@ import {
   resolveListItemChunk,
 } from "../values";
 import * as Difference from "../diff/difference";
-import { resolveNormalizedField } from "../descriptor/resolvedSelection";
+import {
+  resolveNormalizedField,
+  resolveSelection,
+} from "../descriptor/resolvedSelection";
 import { accumulate } from "../jsutils/map";
 import {
   convertIncrementalDeliveryResult,
@@ -66,9 +71,10 @@ import {
   isPathPrefix,
   isSourceData,
   mergeAt,
+  mergeServerData,
   mergeSourceData,
-  setAt,
 } from "./data";
+import { equal } from "@wry/equality";
 
 /**
  * Subsequent results of incremental delivery (`@defer`, the 2022 draft format) are written as a regular result
@@ -118,7 +124,16 @@ export function spliceSubsequentResult(
         incremental,
         result,
         (type, field) => Boolean(mergePolicies.get(type)?.has(field)),
-        (data, chunk) => objectKey(data, chunk.selection, chunk.operation),
+        (data, selections) =>
+          objectKey(
+            data,
+            resolveSelection(
+              tree.operation,
+              selections,
+              data.__typename ?? null,
+            ),
+            tree.operation,
+          ),
       )
     : undefined;
   if (result.hasNext === false) {
@@ -235,11 +250,6 @@ function spliceIncrementalResults(
   if (!results.length) {
     return undefined;
   }
-  for (const { path, data } of results) {
-    const delivered = setAt(incremental.delivered, path, 0, data);
-    assert(isSourceData(delivered));
-    incremental.delivered = delivered;
-  }
   const state: SpliceState = {
     tree,
     incremental,
@@ -250,18 +260,27 @@ function spliceIncrementalResults(
     missingFields: new Map(),
     seed: new Map(),
     differences: new Map(),
+    pathEnv: { findParent: createParentLocator(tree.dataMap) },
+    results: [],
   };
-  const pathEnv = { findParent: createParentLocator(tree.dataMap) };
-  const entries: SplicedIncrementalResultEntry[] = [];
+  const { serverData } = incremental;
   for (const { path, data } of results) {
-    const placeholder = incremental.placeholders.get(getPathKey(path));
-    const chunk = placeholder && resolveAddress(tree, placeholder.address);
+    const address = incremental.placeholders.get(getPathKey(path));
+    const chunk = address && resolveAddress(tree, address);
     if (chunk) {
-      spliceData(state, chunk, path, data, placeholder.data);
-      entries.push({ path, data, localPath: getDataPath(pathEnv, chunk) });
+      const server = serverData && getDataAt(serverData, path);
+      spliceData(state, chunk, path, data, server);
     }
   }
-  if (!entries.length) {
+  // Data received from the server (after splicing: data is spliced against data received before)
+  for (const { path, data } of results) {
+    incremental.serverData = mergeServerData(
+      incremental.serverData,
+      path,
+      data,
+    );
+  }
+  if (!state.results.length) {
     return undefined;
   }
   const data = state.copies.get(tree.result.data);
@@ -274,7 +293,7 @@ function spliceIncrementalResults(
     deliveredFields: state.deliveredFields,
     missingFields: state.missingFields,
     seed: state.seed,
-    results: entries,
+    results: state.results,
   };
 }
 
@@ -336,14 +355,18 @@ function resolveAddress(
 }
 
 /**
- * Splices data into a copy of the object (copying objects on the path to it), returns the copy.
- * `path` is the response path of the object (in the server view), `server` - its data received from the server.
+ * Splices data into a copy of the object (copying objects on the path to it).
+ * `path` is the response path of the object (in the server view), `server` - its data received from the server so far.
  *
- * Object values are delivered:
- * - into the existing object (recursively), when it is the same object as on the server;
- * - in the server view (with data received from the server, e.g. key fields), when the existing object is
- *   another object (e.g. replaced by another write) or missing: normalization finds it by identity;
- * - as delivered so far for fields with merge policies (incoming values of merge policies).
+ * Data is spliced against data received from the server (results of the same execution):
+ * - values received already are not delivered again (e.g. fields selected by multiple fragments);
+ * - objects and lists received already are containers: their data is spliced into the objects (recursively),
+ *   they are not delivered as a whole (e.g. not incoming values of merge policies). Objects of lists are
+ *   paired by indexes in the server view and resolved by keys in the stored result (local lists may differ,
+ *   e.g. after merge policies or other writes), objects without keys - by indexes in the stored list;
+ * - an object received already, but replaced by another object in the stored result (another identity),
+ *   is delivered in the server view (with its key fields): the server view of the fragment wins;
+ * - other values are delivered (as is for fields with merge policies, incoming values of merge policies).
  */
 function spliceData(
   state: SpliceState,
@@ -351,8 +374,8 @@ function spliceData(
   path: ResponsePath,
   data: SourceObject,
   server: SourceObject | undefined,
-): SourceObject {
-  const { copies, deliveredFields, differences, incremental } = state;
+) {
+  const { copies, deliveredFields, differences, missingFields } = state;
   copySourcesUpToRoot(
     state.tree.dataMap,
     copies,
@@ -364,37 +387,73 @@ function spliceData(
   assert(target && !Array.isArray(target));
   const delivered = deliveredFields.get(target);
   assert(delivered);
+  const localPath = getDataPath(state.pathEnv, chunk);
+  state.results.push({ path, data, localPath });
+
   for (const key of Object.keys(data)) {
     const incoming = data[key];
+    const received = server?.[key];
     const ref = chunk.fieldChunks.get(key);
-    if (isSourceData(incoming) && ref && isParentObjectRef(ref)) {
-      const valuePath = [...path, key];
-      const serverValue = server && getDataAt(server, [key]);
-      const deliveredValue =
-        (incremental.delivered &&
-          getDataAt(incremental.delivered, valuePath)) ??
-        incoming;
-      const existing = ref.value;
-      if (chunk.type && state.hasMergePolicy(chunk.type, ref.field.name)) {
-        target[key] = deliveredValue;
-      } else if (
-        isObjectValue(existing) &&
-        (!serverValue || isSameObject(state, existing, serverValue))
-      ) {
-        // E.g. a field selected by multiple fragments
-        spliceData(state, existing, valuePath, incoming, serverValue);
+    const field = ref && isParentObjectRef(ref) ? ref.field : undefined;
+    if (received !== undefined && received !== null && field?.selection) {
+      // A container
+      const existing = ref?.value;
+      if (isSourceData(incoming) && isSourceData(received)) {
+        if (
+          existing !== undefined &&
+          isObjectValue(existing) &&
+          isSameObject(state, existing, received, field.selection)
+        ) {
+          spliceData(state, existing, [...path, key], incoming, received);
+          continue;
+        }
+        // Another object in the stored result: the server view wins
+        const value = mergeSourceData(received, incoming);
+        target[key] = value;
+        state.results.push({
+          path: [...path, key],
+          data: value,
+          localPath: [...localPath, key],
+        });
+      } else if (Array.isArray(incoming) && Array.isArray(received)) {
+        spliceList(
+          state,
+          existing !== undefined && isCompositeListValue(existing)
+            ? existing
+            : undefined,
+          [...path, key],
+          incoming,
+          received,
+          field.selection,
+        );
+        continue;
       } else {
-        target[key] = serverValue
-          ? mergeSourceData(serverValue, deliveredValue)
-          : incoming;
+        target[key] = incoming;
       }
+    } else if (
+      received !== undefined &&
+      equal(received, incoming) &&
+      !isMissingField(missingFields.get(target), key)
+    ) {
+      // Received already
+      continue;
+    } else if (
+      field?.selection &&
+      isSourceData(incoming) &&
+      ref?.value !== undefined &&
+      isObjectValue(ref.value) &&
+      !(chunk.type && state.hasMergePolicy(chunk.type, field.name))
+    ) {
+      // E.g. an object of the stored result (written by another operation)
+      spliceData(state, ref.value, [...path, key], incoming, undefined);
     } else {
       target[key] = incoming;
     }
     delivered.add(key);
-    for (const field of state.missingFields.get(target) ?? EMPTY_ARRAY) {
+    const missing = missingFields.get(target);
+    for (const field of missing ?? EMPTY_ARRAY) {
       if (field.dataKey === key) {
-        state.missingFields.get(target)?.delete(field);
+        missing?.delete(field);
       }
     }
   }
@@ -416,7 +475,74 @@ function spliceData(
       );
     }
   }
-  return target;
+}
+
+// Splices items of a list received already (a container), paired by indexes in the server view
+function spliceList(
+  state: SpliceState,
+  list: CompositeListChunk | undefined,
+  path: ResponsePath,
+  data: unknown[],
+  server: unknown[],
+  selections: PossibleSelections,
+) {
+  for (let index = 0; index < data.length; index++) {
+    const incoming = data[index];
+    const received = server[index];
+    const local = list && resolveListItem(list, index);
+    if (isSourceData(incoming)) {
+      const receivedObject = isSourceData(received) ? received : undefined;
+      const key = state.objectKey(receivedObject ?? incoming, selections);
+      const chunk =
+        typeof key === "string"
+          ? findNodeChunk(state.tree, key, selections)
+          : local !== undefined && isObjectValue(local)
+          ? local
+          : undefined;
+      if (chunk) {
+        spliceData(state, chunk, [...path, index], incoming, receivedObject);
+      }
+      // Note: objects missing in the stored result (e.g. removed from the list by another write) are not written
+    } else if (Array.isArray(incoming) && Array.isArray(received)) {
+      spliceList(
+        state,
+        local !== undefined && isCompositeListValue(local) ? local : undefined,
+        [...path, index],
+        incoming,
+        received,
+        selections,
+      );
+    }
+  }
+}
+
+// A chunk of the node with the selection, which is a part of the stored result
+function findNodeChunk(
+  tree: IndexedTree,
+  key: NodeKey,
+  selections: PossibleSelections,
+): ObjectChunk | undefined {
+  for (const chunk of tree.nodes.get(key) ?? EMPTY_ARRAY) {
+    if (
+      chunk.possibleSelections === selections &&
+      isReachable(tree.dataMap, chunk)
+    ) {
+      return chunk;
+    }
+  }
+  return undefined;
+}
+
+function isMissingField(
+  missing: Set<FieldInfo> | undefined,
+  key: string,
+): boolean {
+  for (const field of missing ?? EMPTY_ARRAY) {
+    if (field.dataKey === key) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // Objects without keys have no identity: they are the same at the same location
@@ -424,8 +550,11 @@ function isSameObject(
   state: SpliceState,
   chunk: ObjectChunk,
   server: SourceObject,
+  selections: PossibleSelections,
 ): boolean {
-  return chunk.key === false || state.objectKey(server, chunk) === chunk.key;
+  return (
+    chunk.key === false || state.objectKey(server, selections) === chunk.key
+  );
 }
 
 // Collects state of a copied object and seed differences on the path to it (from the root down)
@@ -520,7 +649,7 @@ function updateIncrementalExecution(
   const incremental: IncrementalExecution = {
     key: execution.key,
     placeholders: new Map(),
-    delivered: undefined,
+    serverData: undefined,
     // Results of operations which are not stored (e.g. mutations) are spliced into their latest result
     transientTree: shouldCache(targetForest, operation) ? undefined : merged,
     pendingResults: undefined,
@@ -535,14 +664,24 @@ function updateIncrementalExecution(
   const findParent = createParentLocator(indexed.dataMap);
   const findMergedParent = createParentLocator(merged.dataMap);
   for (const chunk of indexed.deferredChunks ?? EMPTY_ARRAY) {
+    const path = getDataPath({ findParent }, chunk);
     addPlaceholder(
       incremental,
       merged,
       findParent,
       findMergedParent,
       chunk,
-      getDataPath({ findParent }, chunk),
+      path,
     );
+    // Data of the indexed result is as received from the server (merge policies don't change it).
+    //   Deferred chunks are in pre-order: data of nested ones is within data of their ancestors
+    if (!incremental.serverData || !getDataAt(incremental.serverData, path)) {
+      incremental.serverData = mergeServerData(
+        incremental.serverData,
+        path,
+        chunk.data,
+      );
+    }
   }
   if (incremental.placeholders.size) {
     store.incrementalExecutions.set(operation, incremental);
@@ -611,14 +750,12 @@ function addPlaceholder(
   path: ResponsePath,
 ) {
   const mergedChunk = merged.dataMap.get(chunk.data)?.value;
-  incremental.placeholders.set(getPathKey(path), {
-    address:
-      mergedChunk && isObjectValue(mergedChunk)
-        ? createAddress(findMergedParent, mergedChunk)
-        : createAddress(findParent, chunk),
-    // Data of the indexed result is as received from the server (merge policies don't change it)
-    data: chunk.data,
-  });
+  incremental.placeholders.set(
+    getPathKey(path),
+    mergedChunk && isObjectValue(mergedChunk)
+      ? createAddress(findMergedParent, mergedChunk)
+      : createAddress(findParent, chunk),
+  );
 }
 
 function createAddress(

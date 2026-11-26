@@ -1,5 +1,6 @@
 import type { ResponsePath } from "../descriptor/types";
 import type { SourceObject } from "../values/types";
+import { assert } from "../jsutils/assert";
 
 // JSON helpers for results of incremental delivery (copy-on-write)
 
@@ -30,20 +31,37 @@ export function mergeAt(
   return undefined;
 }
 
+/**
+ * Deep merge of objects (copy-on-write). Lists are merged item by item: results of the same execution
+ * (the server view) have the same lists at the same paths.
+ */
 export function mergeSourceData(
   target: SourceObject,
   source: SourceObject,
 ): SourceObject {
   const result: SourceObject = { ...target };
   for (const key of Object.keys(source)) {
-    const existing = result[key];
-    const incoming = source[key];
-    result[key] =
-      isSourceData(existing) && isSourceData(incoming)
-        ? mergeSourceData(existing, incoming)
-        : incoming;
+    result[key] = mergeValues(result[key], source[key]) as SourceObject;
   }
   return result;
+}
+
+function mergeValues(existing: unknown, incoming: unknown): unknown {
+  if (isSourceData(existing) && isSourceData(incoming)) {
+    return mergeSourceData(existing, incoming);
+  }
+  if (Array.isArray(existing) && Array.isArray(incoming)) {
+    const length = Math.max(existing.length, incoming.length);
+    const result: unknown[] = new Array(length);
+    for (let index = 0; index < length; index++) {
+      result[index] =
+        incoming[index] === undefined
+          ? existing[index]
+          : mergeValues(existing[index], incoming[index]);
+    }
+    return result;
+  }
+  return incoming;
 }
 
 export function isPathPrefix(
@@ -79,12 +97,26 @@ export function getDataAt(
   return isSourceData(value) ? value : undefined;
 }
 
-// Copy-on-write deep merge of data at the path, creating missing objects and lists on the path
-export function setAt(
+/**
+ * Merges data received from the server at the path (copy-on-write, see mergeSourceData),
+ * creating missing objects and lists on the path (sparse).
+ */
+export function mergeServerData(
   value: unknown,
   path: ResponsePath,
-  index: number,
   data: SourceObject,
+  index = 0,
+): SourceObject {
+  const result = mergeServerDataAt(value, path, data, index);
+  assert(isSourceData(result));
+  return result;
+}
+
+function mergeServerDataAt(
+  value: unknown,
+  path: ResponsePath,
+  data: SourceObject,
+  index: number,
 ): unknown {
   if (index === path.length) {
     return isSourceData(value) ? mergeSourceData(value, data) : data;
@@ -92,12 +124,17 @@ export function setAt(
   const step = path[index];
   if (typeof step === "number") {
     const copy: unknown[] = Array.isArray(value) ? [...value] : [];
-    copy[step] = setAt(copy[step], path, index + 1, data);
+    copy[step] = mergeServerDataAt(copy[step], path, data, index + 1);
     return copy;
   }
   const object: SourceObject = isSourceData(value)
     ? { ...value }
     : ({} as SourceObject);
-  object[step] = setAt(object[step], path, index + 1, data) as SourceObject;
+  object[step] = mergeServerDataAt(
+    object[step],
+    path,
+    data,
+    index + 1,
+  ) as SourceObject;
   return object;
 }

@@ -136,14 +136,22 @@ function resolveRetainedData(
     : undefined;
 }
 
-// Merges delivered data into data retained by pending results at (or above) its path
+// Merges delivered data into data retained by pending results at, above, or below its path
+//   (e.g. a nested pending result completes after its ancestor)
 function retainDeliveredData(
   pendingResults: Map<string, TrackedPendingResult>,
   path: ResponsePath,
   data: SourceObject,
 ) {
   for (const pending of pendingResults.values()) {
-    if (pending.data && isPathPrefix(pending.path, path)) {
+    if (isPathPrefix(path, pending.path)) {
+      const atPending = getDataAt(data, pending.path, path.length);
+      if (atPending) {
+        pending.data = pending.data
+          ? mergeSourceData(pending.data, atPending)
+          : atPending;
+      }
+    } else if (pending.data && isPathPrefix(pending.path, path)) {
       const merged = mergeAt(pending.data, path, pending.path.length, data);
       if (isSourceData(merged)) {
         pending.data = merged;
