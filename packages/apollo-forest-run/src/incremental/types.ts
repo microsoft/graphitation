@@ -122,6 +122,8 @@ export type ObjectAddress = {
   nodeSelections: PossibleSelections;
   // Response keys and list indexes from the node to the object
   pathFromNode: ResponsePath;
+  // Type of the object (an object of another type at the address is another object)
+  type: TypeName | false;
 };
 
 // Result of a deferred fragment with data

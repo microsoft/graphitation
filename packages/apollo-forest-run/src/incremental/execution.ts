@@ -262,10 +262,22 @@ function spliceIncrementalResults(
   const { serverData } = incremental;
   for (const { path, data } of results) {
     const address = incremental.placeholders.get(getPathKey(path));
-    const chunk = address && resolveAddress(tree, address);
+    if (!address) {
+      continue;
+    }
+    const chunk = resolveAddress(tree, address);
     if (chunk) {
       const server = serverData && getDataAt(serverData, path);
       spliceData(state, chunk, path, data, server);
+      continue;
+    }
+    // The object is not in the stored result (or replaced): the local object at the response path didn't receive data.
+    //   Note: positional (e.g. lists may have changed), only marks missing fields (a refetch at worst, never a write)
+    const root = tree.dataMap.get(tree.result.data)?.value;
+    const local =
+      root && isObjectValue(root) && resolveResponsePath(root, path);
+    if (local) {
+      state.skipped.push({ chunk: local, data });
     }
   }
   markSkippedFieldsMissing(state);
@@ -277,7 +289,7 @@ function spliceIncrementalResults(
       data,
     );
   }
-  if (!state.results.length) {
+  if (!state.results.length && !state.missingBaseFields.length) {
     return undefined;
   }
   const data = state.copies.get(tree.result.data);
@@ -336,7 +348,7 @@ function mergeNestedResults(
 // Resolves the object in the current stored result
 function resolveAddress(
   tree: IndexedTree,
-  { nodeKey, nodeSelections, pathFromNode }: ObjectAddress,
+  { nodeKey, nodeSelections, pathFromNode, type }: ObjectAddress,
 ): ObjectChunk | undefined {
   // Any chunk of the node with the same selection (the same node at multiple locations has the same data)
   for (const node of tree.nodes.get(nodeKey) ?? EMPTY_ARRAY) {
@@ -346,7 +358,8 @@ function resolveAddress(
         : undefined;
     // Values deleted in place by cache.modify stay in `tree.nodes` (and `tree.dataMap`)
     if (chunk && isReachable(tree.dataMap, chunk)) {
-      return chunk;
+      // An object of another type (e.g. an unkeyed object replaced by another write) is another object
+      return isOfType(chunk, type) ? chunk : undefined;
     }
   }
   return undefined;
@@ -404,6 +417,7 @@ function spliceData(
           state,
           existing,
           received,
+          incoming,
           field.selection,
         );
         if (object) {
@@ -488,39 +502,78 @@ function spliceData(
 /**
  * Fields delivered to other objects (with another identity) than the local objects at their locations are missing
  * in the local objects (unless they have them): reads of the operation are incomplete (e.g. refetch the result).
- * Note: list items are resolved by keys (local lists may legitimately differ), so only object fields are marked.
+ * Missing fields are marked down to leaves through local objects and lists (positionally: marking only).
+ * Note: list items are resolved by keys (local lists may legitimately differ), so items skipped there are not marked.
  */
 function markSkippedFieldsMissing(state: SpliceState) {
   for (const { chunk, data } of state.skipped) {
-    let missingFields: FieldInfo[] | undefined;
-    for (const field of chunk.selection.fieldQueue) {
-      if (
-        data[field.dataKey] !== undefined &&
-        chunk.data[field.dataKey] === undefined
-      ) {
-        missingFields ??= [];
-        missingFields.push(field);
-      }
-    }
-    if (!missingFields) {
+    markMissingFields(state, chunk, data);
+  }
+}
+
+function markMissingFields(
+  state: SpliceState,
+  chunk: ObjectChunk,
+  data: SourceObject,
+) {
+  let missingFields: FieldInfo[] | undefined;
+  for (const field of chunk.selection.fieldQueue) {
+    const value = data[field.dataKey];
+    if (value === undefined) {
       continue;
     }
-    // Same values (missing) are not compared when diffing: report missing fields of the stored result explicitly
-    state.missingBaseFields.push({
-      kind: DiffErrorKind.MissingBaseFields,
-      chunk,
-      missingFields,
-    });
-    copySourcesUpToRoot(
-      state.tree.dataMap,
-      state.copies,
-      chunk,
-      (value, ref, copy, existing) =>
-        visitCopy(state, value, ref, copy, existing),
-    );
-    const copy = state.copies.get(chunk.data);
-    assert(copy && !Array.isArray(copy));
-    state.missingFields.set(copy, new Set(missingFields));
+    if (
+      chunk.data[field.dataKey] === undefined ||
+      chunk.missingFields?.has(field)
+    ) {
+      missingFields ??= [];
+      missingFields.push(field);
+    } else if (field.selection && value !== null && typeof value === "object") {
+      markMissingValueFields(state, resolveFieldChunk(chunk, field), value);
+    }
+  }
+  if (!missingFields) {
+    return;
+  }
+  // Same values (missing) are not compared when diffing: report missing fields of the stored result explicitly
+  state.missingBaseFields.push({
+    kind: DiffErrorKind.MissingBaseFields,
+    chunk,
+    missingFields,
+  });
+  copySourcesUpToRoot(
+    state.tree.dataMap,
+    state.copies,
+    chunk,
+    (value, ref, copy, existing) =>
+      visitCopy(state, value, ref, copy, existing),
+  );
+  const copy = state.copies.get(chunk.data);
+  assert(copy && !Array.isArray(copy));
+  let missing = state.missingFields.get(copy);
+  if (!missing) {
+    missing = new Set();
+    state.missingFields.set(copy, missing);
+  }
+  for (const field of missingFields) {
+    missing.add(field);
+  }
+}
+
+function markMissingValueFields(
+  state: SpliceState,
+  value: GraphChunk,
+  data: unknown,
+) {
+  if (isObjectValue(value) && isSourceData(data)) {
+    markMissingFields(state, value, data);
+  } else if (isCompositeListValue(value) && Array.isArray(data)) {
+    for (let index = 0; index < data.length; index++) {
+      const item = resolveListItem(value, index);
+      if (item) {
+        markMissingValueFields(state, item, data[index]);
+      }
+    }
   }
 }
 
@@ -566,6 +619,7 @@ function spliceList(
         state,
         local,
         receivedObject ?? incoming,
+        incoming,
         selections,
       );
       if (object) {
@@ -613,6 +667,11 @@ function isMissingField(
   return false;
 }
 
+// Whether the object is of the type (when both are known)
+function isOfType(chunk: ObjectChunk, type: unknown): boolean {
+  return !type || !chunk.type || chunk.type === type;
+}
+
 // Whether the delivered object is the local object (never splice fields of an object into another identity)
 function isSameObject(
   state: SpliceState,
@@ -629,7 +688,7 @@ function isSameObject(
 /**
  * The object of the stored result data received from the server is delivered to: by its key (the object
  * may be elsewhere in the stored result, e.g. a local write replaced a link or moved a list item),
- * or (objects without keys) the local object at the same location.
+ * or (objects without keys) the local object of the same type at the same location.
  * Objects not in the stored result are skipped (their deferred fields stay missing, e.g. refetched by reads).
  *
  * Limitation: objects reachable in the result only under a different selection (e.g. another field with other
@@ -640,13 +699,16 @@ function resolveReceivedObject(
   state: SpliceState,
   local: GraphChunk | undefined,
   received: SourceObject,
+  incoming: SourceObject,
   selections: PossibleSelections,
 ): ObjectChunk | undefined {
   const localObject =
     local !== undefined && isObjectValue(local) ? local : undefined;
   const key = state.objectKey(received, selections);
   if (typeof key !== "string") {
-    return localObject;
+    // A known different type rules out a match by location
+    const type = received.__typename ?? incoming.__typename;
+    return localObject && isOfType(localObject, type) ? localObject : undefined;
   }
   return localObject?.key === key
     ? localObject
@@ -859,6 +921,7 @@ function createAddress(
     nodeKey: node.key,
     nodeSelections: node.possibleSelections,
     pathFromNode: getDataPath({ findParent }, chunk, node),
+    type: chunk.type,
   };
 }
 

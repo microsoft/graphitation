@@ -1322,6 +1322,207 @@ describe("@defer: subsequent results", () => {
     });
   });
 
+  describe("reports results incomplete when deferred data is not delivered to the local object", () => {
+    // The local object at the location didn't receive deferred data: no write, the result is incomplete (refetched)
+    function deliver(
+      query: DocumentNode,
+      initial: Record<string, unknown>,
+      replace: { query: DocumentNode; data: Record<string, unknown> },
+      incremental: IncrementalDeferResult[],
+    ) {
+      const cache = new TestCache();
+      const execution = execute(cache, query);
+      execution.initial(initial);
+      cache.writeQuery(replace);
+      const watch = jest.fn();
+      cache.watch({ query, optimistic: false, callback: watch });
+      execution.subsequent(incremental);
+      const diff = cache.diff({
+        query,
+        optimistic: false,
+        returnPartialData: true,
+      });
+      return { cache, watch, diff };
+    }
+
+    const pet = (__typename: string, name: string) => ({ __typename, name });
+    const petQueries = {
+      direct: gql`
+        query {
+          viewer {
+            id
+            pet {
+              name
+              ... @defer {
+                nickname
+              }
+            }
+          }
+        }
+      `,
+      parent: gql`
+        query {
+          viewer {
+            id
+            pet {
+              name
+            }
+            ... @defer {
+              pet {
+                nickname
+              }
+            }
+          }
+        }
+      `,
+    };
+
+    it.each(["direct", "parent"] as const)(
+      "does not deliver data of an unkeyed object to an object of another type (%s)",
+      (shape) => {
+        const query = petQueries[shape];
+        const { cache, watch, diff } = deliver(
+          query,
+          { viewer: { ...user, pet: pet("Cat", "Tom") } },
+          // A write of the same operation (without deferred fields)
+          { query, data: { viewer: { ...user, pet: pet("Dog", "Rex") } } },
+          shape === "direct"
+            ? [{ path: ["viewer", "pet"], data: { nickname: "for Cat" } }]
+            : [{ path: ["viewer"], data: { pet: { nickname: "for Cat" } } }],
+        );
+
+        expect(diff.result).toEqual({
+          viewer: { ...user, pet: pet("Dog", "Rex") },
+        });
+        expect(diff.complete).toBe(false);
+        expect(diff.missing?.map((error) => error.path)).toEqual([
+          ["viewer", "pet", "nickname"],
+        ]);
+        expect(watch).toHaveBeenCalledTimes(1);
+        expect(watch.mock.calls[0][0]).toMatchObject({ complete: false });
+
+        const complete = {
+          ...user,
+          pet: { ...pet("Dog", "Rex"), nickname: "R" },
+        };
+        cache.writeQuery({ query, data: { viewer: complete } });
+        expect(cache.diff({ query, optimistic: false })).toMatchObject({
+          complete: true,
+          result: { viewer: complete },
+        });
+      },
+    );
+
+    const profile = (id: string, fields = {}) => ({
+      __typename: "Profile",
+      id,
+      title: id,
+      ...fields,
+    });
+    const cases = {
+      direct: {
+        query: gql`
+          query {
+            viewer {
+              id
+              profile {
+                id
+                title
+                settings {
+                  theme
+                }
+                ... @defer {
+                  bio
+                }
+              }
+            }
+          }
+        `,
+        incremental: [{ path: ["viewer", "profile"], data: { bio: "for A" } }],
+        missing: ["viewer", "profile", "bio"],
+        complete: { bio: "for B" },
+      },
+      parent: {
+        query: gql`
+          query {
+            viewer {
+              id
+              profile {
+                id
+                title
+                settings {
+                  theme
+                }
+              }
+              ... @defer {
+                profile {
+                  settings {
+                    lang
+                  }
+                }
+              }
+            }
+          }
+        `,
+        incremental: [
+          {
+            path: ["viewer"],
+            data: { profile: { settings: { lang: "en" } } },
+          },
+        ],
+        missing: ["viewer", "profile", "settings", "lang"],
+        complete: { settings: { theme: "light", lang: "de" } },
+      },
+    };
+
+    it.each(["direct", "parent"] as const)(
+      "reports missing fields of a replaced object (%s)",
+      (shape) => {
+        const { query, incremental, missing, complete } = cases[shape];
+        const profileB = profile("B", { settings: { theme: "light" } });
+        const { cache, watch, diff } = deliver(
+          query,
+          {
+            viewer: {
+              ...user,
+              profile: profile("A", { settings: { theme: "dark" } }),
+            },
+          },
+          // A write of the same operation (without deferred fields)
+          { query, data: { viewer: { ...user, profile: profileB } } },
+          incremental,
+        );
+
+        // Neither A (not in the result) nor B received the deferred data
+        expect(diff.result).toEqual({ viewer: { ...user, profile: profileB } });
+        expect(diff.complete).toBe(false);
+        expect(diff.missing?.map((error) => error.path)).toEqual([missing]);
+        expect(watch).toHaveBeenCalledTimes(1);
+        expect(watch.mock.calls[0][0]).toMatchObject({ complete: false });
+        expect(
+          cache.readFragment({
+            id: "Profile:A",
+            fragment: gql`
+              fragment A on Profile {
+                bio
+                settings {
+                  lang
+                }
+              }
+            `,
+          }),
+        ).toBeNull();
+
+        const viewer = { ...user, profile: { ...profileB, ...complete } };
+        cache.writeQuery({ query, data: { viewer } });
+        expect(cache.diff({ query, optimistic: false })).toMatchObject({
+          complete: true,
+          result: { viewer },
+        });
+      },
+    );
+  });
+
   // `profile` was received in the initial result: a container (deferred data is spliced into it, not merged)
   it("splices delivered data of embedded objects of non-cacheable operations (without merge policies)", () => {
     const merge = jest.fn((existing, incoming) => ({
