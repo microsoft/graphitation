@@ -7,11 +7,10 @@ import type {
   OptimisticLayer,
   Store,
   Transaction,
-  WriteOptions,
+  ExecutionWriteOptions,
   WriteResult,
 } from "./types";
 import type { NodeKey, OperationDescriptor } from "../descriptor/types";
-import type { SplicedResult } from "../incremental/types";
 import { assert } from "../jsutils/assert";
 import {
   resolveOperationDescriptor,
@@ -36,7 +35,7 @@ import { createParentLocator, markAsPartial, TraverseEnv } from "../values";
 import { NodeDifferenceMap } from "../forest/updateTree";
 import {
   captureIncrementalExecution,
-  isSubsequentResult,
+  isSplicedIncrementalResult,
   seedDifferences,
 } from "../incremental/execution";
 import { getNodeChunks } from "./draftHelpers";
@@ -47,17 +46,16 @@ export function write(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
-  options: WriteOptions,
-  splice?: SplicedResult,
+  options: ExecutionWriteOptions,
 ): WriteResult {
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
   const targetForest = getActiveForest(store, activeTransaction);
 
-  // Subsequent results of incremental delivery are spliced into the stored result first (see spliceSubsequentResult)
+  // An initial result of incremental delivery is written as a regular (partial) result,
+  //   subsequent results are spliced into the stored result first (see spliceSubsequentResult)
   const { execution } = options;
-  assert(!execution || !isSubsequentResult(execution));
-
-  // An initial result of incremental delivery is written as a regular (partial) result
+  const splicedResult =
+    execution && isSplicedIncrementalResult(execution) ? execution : undefined;
   const result = execution ? execution.data : options.result;
   const writeData = typeof result === "object" && result !== null ? result : {};
   const rootNodeKey = options.dataId ?? objectKey(writeData);
@@ -133,7 +131,7 @@ export function write(
     env,
     operationDescriptor,
     operationResult,
-    splice?.missingFields,
+    splicedResult?.missingFields,
     existingResult,
   );
 
@@ -152,7 +150,7 @@ export function write(
     mergePolicies,
     incomingResult,
     options.overwrite ?? false,
-    splice?.deliveredFields,
+    splicedResult?.deliveredFields,
   );
 
   captureIncrementalExecution(
@@ -160,7 +158,6 @@ export function write(
     targetForest,
     operationDescriptor,
     execution,
-    splice,
     incomingResult,
     modifiedIncomingResult,
   );
@@ -169,7 +166,7 @@ export function write(
     targetForest,
     modifiedIncomingResult,
     env,
-    splice && seedDifferences(incomingResult, splice),
+    splicedResult && seedDifferences(incomingResult, splicedResult),
   );
 
   if (difference.errors.length) {

@@ -128,6 +128,13 @@ export type ExecutionResult = (
   | IncrementalDeliverySubsequentResult
 ) & { key?: ExecutionKey };
 
+// Results written as a whole (subsequent results are spliced into the stored result first)
+export type InitialExecutionResult = (
+  | CompleteExecutionResult
+  | InitialIncrementalExecutionResult
+  | IncrementalDeliveryInitialResult
+) & { key?: ExecutionKey };
+
 export type SubsequentExecutionResult = (
   | SubsequentIncrementalExecutionResult
   | IncrementalDeliverySubsequentResult
@@ -168,8 +175,9 @@ export type DeferredResult = {
   data: SourceObject;
 };
 
-// Subsequent results of incremental delivery spliced into a copy of the stored result
-export type SplicedResult = {
+// Subsequent results of incremental delivery spliced into a copy of the stored result (written as a whole)
+export type SplicedIncrementalResult = {
+  readonly kind: "SplicedIncrementalResult";
   incremental: IncrementalExecution;
   data: SourceObject;
   deliveredFields: DeliveredFields;
@@ -177,10 +185,10 @@ export type SplicedResult = {
   // Initial differences of nodes, restricted to delivered fields and paths to them (see seedDifferences)
   seed: NodeDifferenceMap;
   // Spliced results (locate objects with deferred fragments in delivered data)
-  results: SplicedResultEntry[];
+  results: SplicedIncrementalResultEntry[];
 };
 
-export type SplicedResultEntry = DeferredResult & {
+export type SplicedIncrementalResultEntry = DeferredResult & {
   // Path to the object the result was delivered to in the stored result (may differ from the response path)
   localPath: ResponsePath;
 };

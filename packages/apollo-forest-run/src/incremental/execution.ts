@@ -18,13 +18,14 @@ import type {
 import type {
   DeferredResult,
   ExecutionResult,
+  InitialExecutionResult,
   IncrementalDeferResult,
   IncrementalExecution,
   IncrementalStreamResult,
   ObjectAddress,
   ResponsePathKey,
-  SplicedResult,
-  SplicedResultEntry,
+  SplicedIncrementalResult,
+  SplicedIncrementalResultEntry,
   SpliceState,
   SubsequentExecutionResult,
   SubsequentIncrementalExecutionResult,
@@ -85,7 +86,7 @@ export function spliceSubsequentResult(
   activeTransaction: Transaction,
   options: WriteOptions,
   execution: SubsequentExecutionResult,
-): SplicedResult | undefined {
+): SplicedIncrementalResult | undefined {
   assert(typeof execution.hasNext === "boolean");
   const operation = resolveOperationDescriptor(
     env,
@@ -104,13 +105,13 @@ export function spliceSubsequentResult(
     : execution;
   const targetForest = getActiveForest(store, activeTransaction);
   const tree = getExistingResult(env, store, targetForest, operation);
-  const splice = tree
+  const spliced = tree
     ? spliceIncrementalResults(tree, incremental, result)
     : undefined;
   if (result.hasNext === false) {
     store.incrementalExecutions.delete(operation);
   }
-  return splice;
+  return spliced;
 }
 
 /**
@@ -121,14 +122,16 @@ export function captureIncrementalExecution(
   store: Store,
   targetForest: DataForest | OptimisticLayer,
   operation: OperationDescriptor,
-  execution: ExecutionResult | undefined,
-  splice: SplicedResult | undefined,
+  execution: InitialExecutionResult | SplicedIncrementalResult | undefined,
   indexed: IndexedTree,
   merged: IndexedTree,
 ) {
-  if (splice) {
-    captureDeliveredPlaceholders(splice, indexed, merged);
-  } else if (execution) {
+  if (!execution) {
+    return;
+  }
+  if (isSplicedIncrementalResult(execution)) {
+    captureDeliveredPlaceholders(execution, indexed, merged);
+  } else {
     updateIncrementalExecution(
       store,
       targetForest,
@@ -146,7 +149,7 @@ export function captureIncrementalExecution(
  */
 export function seedDifferences(
   indexed: IndexedTree,
-  { deliveredFields, seed }: SplicedResult,
+  { deliveredFields, seed }: SplicedIncrementalResult,
 ): NodeDifferenceMap | undefined {
   for (const copy of deliveredFields.keys()) {
     if (!indexed.dataMap.has(copy)) {
@@ -173,7 +176,7 @@ function spliceIncrementalResults(
   tree: IndexedTree,
   incremental: IncrementalExecution,
   execution: SubsequentIncrementalExecutionResult,
-): SplicedResult | undefined {
+): SplicedIncrementalResult | undefined {
   const results = mergeNestedResults(execution);
   if (!results.length) {
     return undefined;
@@ -187,27 +190,28 @@ function spliceIncrementalResults(
     differences: new Map(),
   };
   const pathEnv = { findParent: createParentLocator(tree.dataMap) };
-  const spliced: SplicedResultEntry[] = [];
+  const entries: SplicedIncrementalResultEntry[] = [];
   for (const { path, data } of results) {
     const address = incremental.placeholders.get(getPathKey(path));
     const chunk = address && resolveAddress(tree, address);
     if (chunk) {
       spliceData(state, chunk, data);
-      spliced.push({ path, data, localPath: getDataPath(pathEnv, chunk) });
+      entries.push({ path, data, localPath: getDataPath(pathEnv, chunk) });
     }
   }
-  if (!spliced.length) {
+  if (!entries.length) {
     return undefined;
   }
   const data = state.copies.get(tree.result.data);
   assert(data && !Array.isArray(data));
   return {
+    kind: "SplicedIncrementalResult",
     incremental,
     data,
     deliveredFields: state.deliveredFields,
     missingFields: state.missingFields,
     seed: state.seed,
-    results: spliced,
+    results: entries,
   };
 }
 
@@ -439,7 +443,7 @@ function updateIncrementalExecution(
   store: Store,
   targetForest: DataForest | OptimisticLayer,
   operation: OperationDescriptor,
-  execution: ExecutionResult,
+  execution: InitialExecutionResult,
   indexed: IndexedTree,
   merged: IndexedTree,
 ) {
@@ -486,14 +490,14 @@ function updateIncrementalExecution(
  * of the spliced result + the path within its data.
  */
 function captureDeliveredPlaceholders(
-  { incremental, results }: SplicedResult,
+  { incremental, results }: SplicedIncrementalResult,
   indexed: IndexedTree,
   merged: IndexedTree,
 ) {
   const root = indexed.dataMap.get(indexed.result.data)?.value;
   assert(root && isObjectValue(root));
   // Objects results were delivered to (by chunks: unlike sources, chunks are unique per location)
-  const targets = new Map<ObjectChunk, SplicedResultEntry[]>();
+  const targets = new Map<ObjectChunk, SplicedIncrementalResultEntry[]>();
   for (const result of results) {
     const chunk = resolveResponsePath(root, result.localPath);
     if (chunk) {
@@ -642,6 +646,12 @@ function isDeferResult(
   result: IncrementalDeferResult | IncrementalStreamResult,
 ): result is IncrementalDeferResult {
   return "data" in result;
+}
+
+export function isSplicedIncrementalResult(
+  execution: InitialExecutionResult | SplicedIncrementalResult,
+): execution is SplicedIncrementalResult {
+  return "kind" in execution && execution.kind === "SplicedIncrementalResult";
 }
 
 export function isSubsequentResult(

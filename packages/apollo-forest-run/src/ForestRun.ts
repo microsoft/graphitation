@@ -221,27 +221,27 @@ export class ForestRun<
     const { execution } = options;
     if (execution && isSubsequentResult(execution)) {
       // Written as a regular result of the operation, with incremental results spliced in
-      const splice = spliceSubsequentResult(
+      const spliced = spliceSubsequentResult(
         this.env,
         this.store,
         transaction,
         options,
         execution,
       );
-      if (splice) {
+      if (spliced) {
         transaction.changelog.push(
-          write(
-            this.env,
-            this.store,
-            transaction,
-            { ...options, result: splice.data, execution: undefined },
-            splice,
-          ),
+          write(this.env, this.store, transaction, {
+            ...options,
+            execution: spliced,
+          }),
         );
       }
       return undefined;
     }
-    const result = write(this.env, this.store, transaction, options);
+    const result = write(this.env, this.store, transaction, {
+      ...options,
+      execution,
+    });
     transaction.changelog.push(result);
 
     const incoming = result.incoming;
