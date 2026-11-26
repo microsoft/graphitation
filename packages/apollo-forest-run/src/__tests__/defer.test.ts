@@ -961,6 +961,210 @@ describe("@defer: subsequent results", () => {
   });
 
   describe("delivers data of objects by identity", () => {
+    const profileA = { __typename: "Profile", id: "A", title: "A only" };
+    const profileB = { __typename: "Profile", id: "B", title: "B only" };
+    const localViewerQuery = gql`
+      query {
+        viewer {
+          id
+          profile {
+            id
+            title
+          }
+        }
+      }
+    `;
+
+    it("does not recapture a nested defer site on a replacement link", () => {
+      const cache = new TestCache();
+      const query = gql`
+        query {
+          viewer {
+            id
+            profile {
+              id
+              title
+              ... @defer(label: "inner") {
+                note
+              }
+            }
+            ... @defer(label: "outer") {
+              name
+              profile {
+                bio
+              }
+            }
+          }
+        }
+      `;
+      const execution = execute(cache, query);
+      execution.initial({ viewer: { ...user, profile: profileA } });
+      cache.writeQuery({
+        query: localViewerQuery,
+        data: { viewer: { ...user, profile: profileB } },
+      });
+      execution.subsequent(
+        [
+          {
+            label: "outer",
+            path: ["viewer"],
+            data: {
+              name: "N",
+              profile: { __typename: "Profile", bio: "for A" },
+            },
+          },
+        ],
+        { hasNext: true },
+      );
+      execution.subsequent([
+        {
+          label: "inner",
+          path: ["viewer", "profile"],
+          data: { note: "for A" },
+        },
+      ]);
+
+      const fragment = gql`
+        fragment Note on Profile {
+          note
+        }
+      `;
+      expect(cache.readFragment({ id: "Profile:B", fragment })).toBeNull();
+      expect(
+        cache.diff({ query, optimistic: false, returnPartialData: true })
+          .result,
+      ).toEqual({
+        viewer: { ...user, name: "N", profile: profileB },
+      });
+    });
+
+    it("does not copy local fields across keys on first delivery of a link", () => {
+      const cache = new TestCache();
+      const query = gql`
+        query {
+          viewer {
+            id
+            ... @defer(label: "outer") {
+              profile {
+                id
+                bio
+                ... @defer(label: "inner") {
+                  title
+                }
+              }
+            }
+          }
+        }
+      `;
+      const execution = execute(cache, query);
+      execution.initial({ viewer: user });
+      cache.writeQuery({
+        query: gql`
+          query {
+            viewer {
+              id
+              profile {
+                id
+                title
+              }
+            }
+            savedProfile {
+              id
+              title
+            }
+          }
+        `,
+        data: {
+          viewer: { ...user, profile: profileB },
+          savedProfile: profileB,
+        },
+      });
+      const incoming = { __typename: "Profile", id: "A", bio: "for A" };
+      execution.subsequent(
+        [{ label: "outer", path: ["viewer"], data: { profile: incoming } }],
+        { hasNext: true },
+      );
+
+      const fragment = gql`
+        fragment Title on Profile {
+          title
+        }
+      `;
+      expect(cache.readFragment({ id: "Profile:A", fragment })).toBeNull();
+      execution.subsequent([
+        {
+          label: "inner",
+          path: ["viewer", "profile"],
+          data: { title: "new A" },
+        },
+      ]);
+      expect(cache.readQuery({ query })).toEqual({
+        viewer: { ...user, profile: { ...incoming, title: "new A" } },
+      });
+      expect(cache.readFragment({ id: "Profile:B", fragment })).toEqual({
+        __typename: "Profile",
+        title: "B only",
+      });
+    });
+
+    // Limitation: objects reachable only under a different selection are not updated (see resolveReceivedObject)
+    it("skips a node reachable in the result only under another selection", () => {
+      const cache = new TestCache();
+      const query = gql`
+        query {
+          viewer {
+            id
+            profile {
+              id
+              title
+            }
+            ... @defer {
+              profile {
+                bio
+                caption: bio(locale: "en")
+              }
+            }
+          }
+          savedProfile {
+            id
+            title
+            bio
+            english: bio(locale: "en")
+          }
+        }
+      `;
+      const execution = execute(cache, query);
+      execution.initial({
+        viewer: { ...user, profile: profileA },
+        savedProfile: null,
+      });
+      const saved = { ...profileA, bio: "cached", english: "old" };
+      cache.writeQuery({
+        query,
+        data: { viewer: { ...user, profile: profileB }, savedProfile: saved },
+      });
+      execution.subsequent([
+        {
+          path: ["viewer"],
+          data: {
+            profile: { __typename: "Profile", bio: "fresh", caption: "new" },
+          },
+        },
+      ]);
+
+      // A is not updated (and nothing is written to B), the result is incomplete (B lacks the deferred fields)
+      const diff = cache.diff({
+        query,
+        optimistic: false,
+        returnPartialData: true,
+      });
+      expect(diff.complete).toBe(false);
+      expect(diff.result).toEqual({
+        viewer: { ...user, profile: profileB },
+        savedProfile: saved,
+      });
+    });
+
     it.each([true, false])(
       "after another write replaced the link (the original object is still in the result: %s)",
       (reachable) => {

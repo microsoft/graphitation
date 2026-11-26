@@ -384,11 +384,12 @@ function spliceData(
   assert(target && !Array.isArray(target));
   const delivered = deliveredFields.get(target);
   assert(delivered);
-  state.results.push({
+  const result: SplicedIncrementalResultEntry = {
     path,
-    data,
     localPath: getDataPath(state.pathEnv, chunk),
-  });
+    wholeFields: undefined,
+  };
+  state.results.push(result);
 
   for (const key of Object.keys(data)) {
     const incoming = data[key];
@@ -429,10 +430,9 @@ function spliceData(
           field.selection,
         );
         continue;
-      } else {
-        target[key] = incoming;
       }
-    } else if (
+    }
+    if (
       received !== undefined &&
       equal(received, incoming) &&
       !isMissingField(missingFields.get(target), key)
@@ -440,16 +440,22 @@ function spliceData(
       // Received already
       continue;
     } else if (
+      received == null &&
       field?.selection &&
       isSourceData(incoming) &&
       ref?.value !== undefined &&
       isObjectValue(ref.value) &&
-      !(chunk.type && state.hasMergePolicy(chunk.type, field.name))
+      !(chunk.type && state.hasMergePolicy(chunk.type, field.name)) &&
+      isSameObject(state, ref.value, incoming, field.selection)
     ) {
-      // E.g. an object of the stored result (written by another operation)
+      // First delivery of an object the stored result has already (e.g. written by another operation)
       spliceData(state, ref.value, [...path, key], incoming, undefined);
     } else {
       target[key] = incoming;
+      if (isSourceData(incoming) || Array.isArray(incoming)) {
+        // Nested placeholders are only captured within values written as a whole (see captureDeliveredPlaceholders)
+        (result.wholeFields ??= new Set()).add(key);
+      }
     }
     delivered.add(key);
     const missing = missingFields.get(target);
@@ -607,11 +613,28 @@ function isMissingField(
   return false;
 }
 
+// Whether the delivered object is the local object (never splice fields of an object into another identity)
+function isSameObject(
+  state: SpliceState,
+  local: ObjectChunk,
+  incoming: SourceObject,
+  selections: PossibleSelections,
+): boolean {
+  return (
+    (state.objectKey(incoming, selections) ?? false) === local.key &&
+    (!incoming.__typename || incoming.__typename === local.type)
+  );
+}
+
 /**
  * The object of the stored result data received from the server is delivered to: by its key (the object
  * may be elsewhere in the stored result, e.g. a local write replaced a link or moved a list item),
  * or (objects without keys) the local object at the same location.
  * Objects not in the stored result are skipped (their deferred fields stay missing, e.g. refetched by reads).
+ *
+ * Limitation: objects reachable in the result only under a different selection (e.g. another field with other
+ * aliases or arguments) are not updated: skipped, the operation reports incomplete if applicable
+ * (see markSkippedFieldsMissing).
  */
 function resolveReceivedObject(
   state: SpliceState,
@@ -792,9 +815,13 @@ function captureDeliveredPlaceholders(
     const pathFromTarget = entries
       ? getDataPath({ findParent }, chunk, target)
       : EMPTY_ARRAY;
-    // Only objects within delivered data: paths of other objects in the stored result may differ from server paths
-    const result = entries?.find(({ data }) =>
-      isWithinData(data, pathFromTarget),
+    // Only objects spliced or within values written as a whole: paths of other objects in the stored result
+    //   may differ from server paths (e.g. a local write replaced a link)
+    const step = pathFromTarget[0];
+    const result = entries?.find(
+      ({ wholeFields }) =>
+        !pathFromTarget.length ||
+        (typeof step === "string" && Boolean(wholeFields?.has(step))),
     );
     if (result) {
       addPlaceholder(incremental, merged, findParent, findMergedParent, chunk, [
@@ -880,21 +907,6 @@ function resolveListItem(
     !value.missingItems?.has(index)
     ? resolveListItemChunk(value, index)
     : undefined;
-}
-
-// Whether the path (response keys and list indexes) is within the data
-function isWithinData(data: unknown, path: ResponsePath): boolean {
-  let value = data;
-  for (const step of path) {
-    if (Array.isArray(value) && typeof step === "number") {
-      value = value[step];
-    } else if (isSourceData(value) && typeof step === "string") {
-      value = value[step];
-    } else {
-      return false;
-    }
-  }
-  return isSourceData(value);
 }
 
 function getPathKey(path: ResponsePath): ResponsePathKey {
