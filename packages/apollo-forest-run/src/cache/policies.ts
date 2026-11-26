@@ -183,7 +183,7 @@ export function applyMergePolicies(
   mergePoliciesMap: Map<TypeName, Map<FieldName, FieldMergeFunction>>,
   incomingTree: IndexedTree,
   overwrite: boolean,
-  // Restricts merge policies to some fields. Existing values of those fields are read from the forest
+  // Restricts merge policies to some fields
   applyToField?: (parent: ObjectChunk, field: FieldInfo) => boolean,
 ): IndexedTree {
   const findChunkInfo = (value: ApolloStoreValue | SourceObject) => {
@@ -258,11 +258,20 @@ export function applyMergePolicies(
             findExistingChunk(pathEnv, incomingTree, parent) ??
             findChunk(pathEnv, layers, parent);
 
-          // Restricted fields may be missing in the previous result, so their existing values are read from the forest
-          existingChunk =
-            existingParent && !applyToField
-              ? resolveFieldChunk(existingParent, field)
-              : materializeFromForest(env, pathEnv, layers, parent, field);
+          existingChunk = existingParent
+            ? resolveFieldChunk(existingParent, field)
+            : undefined;
+
+          // Falls back to the forest when the field is missing in the existing parent (or there is no parent)
+          if (existingChunk === undefined || isMissingValue(existingChunk)) {
+            existingChunk = materializeFromForest(
+              env,
+              pathEnv,
+              layers,
+              parent,
+              field,
+            );
+          }
 
           if (existingChunk !== undefined) {
             assert(isCompatibleValue(fieldValue, existingChunk));
