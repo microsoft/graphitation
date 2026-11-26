@@ -96,13 +96,11 @@ export type ResolvedSelection = PossibleSelection & {
  * - `DetachedFragment`: Apollo fragment document (`query { ...Fragment }` + fragment definitions)
  *   used with `writeFragment` / `readFragment` / `watchFragment`. Its root is usually a regular node
  *   (identified by `dataId` / `id`), not an operation root.
- * - `OperationFragment`: sub-selection of an operation (e.g. data of a deferred fragment).
- *   Points to the actual operation descriptor and is never stored on its own (see OperationFragmentDescriptor).
+ *
+ * Note: a third kind (`OperationFragment`) is reserved for sub-selections of operations (e.g. @defer chunks).
+ *   Those will point to the actual operation descriptor and will never be stored on their own.
  */
-export type DescriptorKind =
-  | "Operation"
-  | "DetachedFragment"
-  | "OperationFragment";
+export type DescriptorKind = "Operation" | "DetachedFragment";
 
 type DescriptorBase = {
   id: OperationId;
@@ -139,27 +137,6 @@ export type DetachedFragmentDescriptor = {
 export type OperationDescriptor =
   | RegularOperationDescriptor
   | DetachedFragmentDescriptor;
-
-/**
- * Sub-selection of an operation, e.g. a deferred fragment (a selection of objects within the operation result).
- *
- * Its trees are indexed in the context of the actual `operation` (all chunks reference it), starting from
- * the selection of the root object within this operation. Never stored in the forest.
- *
- * A descriptor is not tied to a specific object: it may be shared by trees of all objects with this selection
- * (e.g. all list items with a deferred fragment). Per-object data (e.g. root node key) belongs to trees.
- * Identity (e.g. for memoization) is: operation + possibleSelections + fragmentName / typeCondition.
- */
-export type OperationFragmentDescriptor = {
-  readonly kind: "OperationFragment";
-  operation: OperationDescriptor;
-  possibleSelections: PossibleSelections; // Selection of the root object within the operation
-  fragmentName: FragmentName | undefined; // Named fragment (`...Foo`), see operation.fragmentMap
-  typeCondition: TypeName | undefined; // Type condition of an inline fragment (`... on Foo`)
-};
-
-// Descriptor of any result tree, including transient trees which are never stored
-export type TreeDescriptor = OperationDescriptor | OperationFragmentDescriptor;
 
 export type FormattedError = GraphQLFormattedError;
 
