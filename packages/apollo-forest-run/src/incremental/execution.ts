@@ -63,7 +63,6 @@ import {
 } from "./format";
 import {
   getDataAt,
-  isPathPrefix,
   isSourceData,
   mergeAt,
   mergeSourceData,
@@ -294,15 +293,14 @@ function mergeNestedResults(
   }
   results.sort((a, b) => a.path.length - b.path.length);
   const merged: DeferredResult[] = [];
+  // Merged results by path keys: the closest enclosing result has the longest path prefix (the path itself included)
+  const byPathKey = new Map<ResponsePathKey, DeferredResult>();
   for (const result of results) {
-    let parent: DeferredResult | undefined;
-    for (const candidate of merged) {
-      if (
-        (!parent || candidate.path.length > parent.path.length) &&
-        isPathPrefix(candidate.path, result.path)
-      ) {
-        parent = candidate;
-      }
+    let key = "";
+    let parent = byPathKey.get(key);
+    for (let i = 0; i < result.path.length; i++) {
+      key = i === 0 ? String(result.path[i]) : `${key}.${result.path[i]}`;
+      parent = byPathKey.get(key) ?? parent;
     }
     const data = parent
       ? mergeAt(parent.data, result.path, parent.path.length, result.data)
@@ -311,6 +309,9 @@ function mergeNestedResults(
       parent.data = data;
     } else {
       merged.push(result);
+      if (!byPathKey.has(key)) {
+        byPathKey.set(key, result);
+      }
     }
   }
   return merged;
