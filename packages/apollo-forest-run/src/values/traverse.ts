@@ -10,6 +10,7 @@ import type {
   GraphChunkReference,
   ParentLocator,
   DataMap,
+  SourceObject,
 } from "./types";
 import { ValueKind } from "./types";
 import type { FieldInfo, NormalizedFieldEntry } from "../descriptor/types";
@@ -331,6 +332,7 @@ export function isNodeRef(ref: GraphValueReference): boolean {
  * `enter` is called for every chunk on the path, from `from` up to the root (before copying).
  * `visit` is called for every chunk on the path, from the root down to `from`, after its copy is linked
  * (`existingCopy` is the copy made before this call, if any).
+ * `copyFrom` copies the source of `from` if it is an object (defaults to a shallow copy, as sources of its parents).
  */
 export function copySourcesUpToRoot(
   dataMap: DataMap,
@@ -344,6 +346,7 @@ export function copySourcesUpToRoot(
     isFrom: boolean,
   ) => void,
   enter?: (chunk: ObjectChunk | CompositeListChunk, isFrom: boolean) => void,
+  copyFrom?: (source: SourceObject) => SourceObject,
   isFrom = true,
 ): Source {
   enter?.(from, isFrom);
@@ -353,7 +356,8 @@ export function copySourcesUpToRoot(
     assert(Predicates.isObjectValue(from));
     const data = from.data;
     const existingCopy = copies.get(data);
-    const copy = existingCopy ?? { ...data };
+    const copy =
+      existingCopy ?? (isFrom && copyFrom ? copyFrom(data) : { ...data });
     if (!existingCopy) {
       copies.set(data, copy);
     }
@@ -366,6 +370,7 @@ export function copySourcesUpToRoot(
     parent.parent,
     visit,
     enter,
+    copyFrom,
     false,
   );
   const parentCopy = copies.get(parentSource);
@@ -379,7 +384,9 @@ export function copySourcesUpToRoot(
   const existingCopy = copies.get(value);
   const copy =
     existingCopy ??
-    ((Array.isArray(value) ? [...value] : { ...value }) as Draft);
+    (isFrom && copyFrom && !Array.isArray(value)
+      ? copyFrom(value)
+      : ((Array.isArray(value) ? [...value] : { ...value }) as Draft));
   if (!existingCopy) {
     copies.set(value, copy);
   }

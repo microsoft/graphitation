@@ -359,6 +359,8 @@ function spliceData(
     chunk,
     (value, ref, copy, existing) =>
       visitCopy(state, value, ref, copy, existing),
+    undefined,
+    copyExtensible,
   );
   const target = copies.get(chunk.data);
   assert(target && !Array.isArray(target));
@@ -426,6 +428,15 @@ function isSameObject(
   server: SourceObject,
 ): boolean {
   return chunk.key === false || state.objectKey(server, chunk) === chunk.key;
+}
+
+/**
+ * Copies an object that gets new properties (delivered fields).
+ * Note: adding properties to an object created by object spread is very slow in V8 of Node 20 (~1µs per property),
+ * unlike adding them to an object created by Object.assign.
+ */
+function copyExtensible(source: SourceObject): SourceObject {
+  return Object.assign({}, source);
 }
 
 // Collects state of a copied object and seed differences on the path to it (from the root down)
