@@ -1236,6 +1236,7 @@ describe("@defer: results in the incremental delivery format", () => {
     });
   });
 
+  // The result carries the server view of the list: a local reorder is overwritten (as by a refetch)
   it("resolves a list index in subPath against the server's original order", () => {
     const cache = new TestCache();
     const query = gql`
@@ -1269,7 +1270,45 @@ describe("@defer: results in the incremental delivery format", () => {
 
     expect(cache.readQuery({ query, returnPartialData: true })).toEqual({
       __typename: "Query",
-      messages: [message("2"), message("1", "one")],
+      messages: [message("1", "one"), message("2")],
+    });
+  });
+
+  it("keeps data of list items when a subPath crosses a list", () => {
+    const cache = new TestCache();
+    const query = gql`
+      query {
+        messages {
+          id
+          info {
+            size
+          }
+        }
+        ... @defer {
+          messages {
+            info {
+              more
+            }
+          }
+        }
+      }
+    `;
+    const info = { __typename: "Info", size: 1 };
+    const item = { __typename: "Message", id: "1", info };
+    const execution = executeIncrementalDelivery(cache, query);
+    execution.initial({ messages: [item] }, [{ id: "0", path: [] }]);
+
+    execution.subsequent({
+      incremental: [
+        { id: "0", subPath: ["messages", 0, "info"], data: { more: "more" } },
+      ],
+      completed: [{ id: "0" }],
+      hasNext: false,
+    });
+
+    expect(cache.readQuery({ query })).toEqual({
+      __typename: "Query",
+      messages: [{ ...item, info: { ...info, more: "more" } }],
     });
   });
 

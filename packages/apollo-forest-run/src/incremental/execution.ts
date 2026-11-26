@@ -65,6 +65,7 @@ import {
   isIncrementalDeliveryResult,
   trackPendingResults,
 } from "./format";
+import { isPathPrefix, isSourceData, mergeAt } from "./data";
 
 /**
  * Subsequent results of incremental delivery (`@defer`, the 2022 draft format) are written as a regular result
@@ -237,7 +238,8 @@ function spliceIncrementalResults(
   const pathEnv = { findParent: createParentLocator(tree.dataMap) };
   const entries: SplicedIncrementalResultEntry[] = [];
   for (const { path, data } of results) {
-    const chunk = resolvePlaceholder(tree, incremental, path);
+    const address = incremental.placeholders.get(getPathKey(path));
+    const chunk = address && resolveAddress(tree, address);
     if (chunk) {
       spliceData(state, chunk, data);
       entries.push({ path, data, localPath: getDataPath(pathEnv, chunk) });
@@ -295,49 +297,6 @@ function mergeNestedResults(
     }
   }
   return merged;
-}
-
-// Copy-on-write merge of data at the path (undefined when the path is not in the value)
-function mergeAt(
-  value: unknown,
-  path: ResponsePath,
-  index: number,
-  data: SourceObject,
-): unknown {
-  if (index === path.length) {
-    return isSourceData(value) ? mergeSourceData(value, data) : undefined;
-  }
-  const step = path[index];
-  if (Array.isArray(value) && typeof step === "number") {
-    const item = mergeAt(value[step], path, index + 1, data);
-    if (item === undefined) {
-      return undefined;
-    }
-    const copy: unknown[] = [...value];
-    copy[step] = item;
-    return copy;
-  }
-  if (isSourceData(value) && typeof step === "string") {
-    const item = mergeAt(value[step], path, index + 1, data);
-    return item === undefined ? undefined : { ...value, [step]: item };
-  }
-  return undefined;
-}
-
-function mergeSourceData(
-  target: SourceObject,
-  source: SourceObject,
-): SourceObject {
-  const result: SourceObject = { ...target };
-  for (const key of Object.keys(source)) {
-    const existing = result[key];
-    const incoming = source[key];
-    result[key] =
-      isSourceData(existing) && isSourceData(incoming)
-        ? mergeSourceData(existing, incoming)
-        : incoming;
-  }
-  return result;
 }
 
 // Resolves the object in the current stored result
@@ -516,37 +475,23 @@ function updateIncrementalExecution(
     pendingResults: undefined,
   };
   if ("pending" in execution) {
-    trackPendingResults(incremental, execution.pending);
+    trackPendingResults(
+      incremental,
+      execution.pending,
+      isSourceData(execution.data) ? execution.data : undefined,
+    );
   }
   const findParent = createParentLocator(indexed.dataMap);
   const findMergedParent = createParentLocator(merged.dataMap);
-  const deferredChunks = indexed.deferredChunks ?? EMPTY_ARRAY;
-  // Deferred chunks capture list items below them (in the incremental delivery format), nested ones on their own
-  const nestedDeferredChunks = incremental.pendingResults
-    ? new Set(deferredChunks)
-    : undefined;
-  for (const chunk of deferredChunks) {
-    const path = getDataPath({ findParent }, chunk);
+  for (const chunk of indexed.deferredChunks ?? EMPTY_ARRAY) {
     addPlaceholder(
       incremental,
       merged,
       findParent,
       findMergedParent,
       chunk,
-      path,
+      getDataPath({ findParent }, chunk),
     );
-    if (incremental.pendingResults) {
-      captureListItems(
-        incremental,
-        merged,
-        findParent,
-        findMergedParent,
-        chunk,
-        path,
-        chunk.data,
-        nestedDeferredChunks,
-      );
-    }
   }
   if (incremental.placeholders.size) {
     store.incrementalExecutions.set(operation, incremental);
@@ -569,26 +514,14 @@ function captureDeliveredPlaceholders(
   assert(root && isObjectValue(root));
   // Objects results were delivered to (by chunks: unlike sources, chunks are unique per location)
   const targets = new Map<ObjectChunk, SplicedIncrementalResultEntry[]>();
-  const findParent = createParentLocator(indexed.dataMap);
-  const findMergedParent = createParentLocator(merged.dataMap);
   for (const result of results) {
     const chunk = resolveResponsePath(root, result.localPath);
     if (chunk) {
       accumulate(targets, chunk, result);
-      if (incremental.pendingResults) {
-        captureListItems(
-          incremental,
-          merged,
-          findParent,
-          findMergedParent,
-          chunk,
-          result.path,
-          result.data,
-          undefined,
-        );
-      }
     }
   }
+  const findParent = createParentLocator(indexed.dataMap);
+  const findMergedParent = createParentLocator(merged.dataMap);
   for (const chunk of indexed.deferredChunks ?? EMPTY_ARRAY) {
     // The closest object results were delivered to
     let target: ObjectChunk | CompositeListChunk = chunk;
@@ -633,140 +566,6 @@ function addPlaceholder(
       ? createAddress(findMergedParent, mergedChunk)
       : createAddress(findParent, chunk),
   );
-}
-
-/**
- * In the incremental delivery format, `subPath` may target any object below an object with deferred fragments
- * delivered earlier. Object fields are stable (walked by response keys when resolving, see resolvePlaceholder),
- * list indexes are not (lists may change, e.g. be reordered): captures addresses of list items within `data`
- * (in the server view) while their indexes are known.
- */
-function captureListItems(
-  incremental: IncrementalExecution,
-  merged: IndexedTree,
-  findParent: ParentLocator,
-  findMergedParent: ParentLocator,
-  chunk: ObjectChunk,
-  path: ResponsePath,
-  data: SourceObject,
-  skip: Set<ObjectChunk> | undefined,
-) {
-  for (const field of chunk.selection.fieldQueue) {
-    const value = field.selection ? data[field.dataKey] : undefined;
-    if (value === undefined || value === null) {
-      continue;
-    }
-    const fieldChunk = resolveObjectField(chunk, field);
-    if (!fieldChunk) {
-      continue;
-    }
-    const fieldPath = [...path, field.dataKey];
-    if (isObjectValue(fieldChunk) && isSourceData(value)) {
-      if (!skip?.has(fieldChunk)) {
-        captureListItems(
-          incremental,
-          merged,
-          findParent,
-          findMergedParent,
-          fieldChunk,
-          fieldPath,
-          value,
-          skip,
-        );
-      }
-    } else if (isCompositeListValue(fieldChunk) && Array.isArray(value)) {
-      captureListValueItems(
-        incremental,
-        merged,
-        findParent,
-        findMergedParent,
-        fieldChunk,
-        fieldPath,
-        value,
-        skip,
-      );
-    }
-  }
-}
-
-function captureListValueItems(
-  incremental: IncrementalExecution,
-  merged: IndexedTree,
-  findParent: ParentLocator,
-  findMergedParent: ParentLocator,
-  list: CompositeListChunk,
-  path: ResponsePath,
-  data: unknown[],
-  skip: Set<ObjectChunk> | undefined,
-) {
-  for (let index = 0; index < data.length; index++) {
-    const item = resolveListItem(list, index);
-    if (!item) {
-      continue;
-    }
-    const value = data[index];
-    const itemPath = [...path, index];
-    if (isObjectValue(item) && isSourceData(value)) {
-      addPlaceholder(
-        incremental,
-        merged,
-        findParent,
-        findMergedParent,
-        item,
-        itemPath,
-      );
-      if (!skip?.has(item)) {
-        captureListItems(
-          incremental,
-          merged,
-          findParent,
-          findMergedParent,
-          item,
-          itemPath,
-          value,
-          skip,
-        );
-      }
-    } else if (isCompositeListValue(item) && Array.isArray(value)) {
-      captureListValueItems(
-        incremental,
-        merged,
-        findParent,
-        findMergedParent,
-        item,
-        itemPath,
-        value,
-        skip,
-      );
-    }
-  }
-}
-
-/**
- * Resolves the object of the response path in the current stored result: by its placeholder, or
- * (in the incremental delivery format, see captureListItems) by object fields below the closest placeholder.
- */
-function resolvePlaceholder(
-  tree: IndexedTree,
-  incremental: IncrementalExecution,
-  path: ResponsePath,
-): ObjectChunk | undefined {
-  const address = incremental.placeholders.get(getPathKey(path));
-  if (address || !incremental.pendingResults) {
-    return address && resolveAddress(tree, address);
-  }
-  for (let length = path.length - 1; length >= 0; length--) {
-    const prefix = path.slice(0, length);
-    const prefixAddress = incremental.placeholders.get(getPathKey(prefix));
-    if (prefixAddress) {
-      const rest = path.slice(length);
-      const chunk = rest.every((step) => typeof step === "string")
-        ? resolveAddress(tree, prefixAddress)
-        : undefined;
-      return chunk && resolveResponsePath(chunk, rest);
-    }
-  }
-  return undefined;
 }
 
 function createAddress(
@@ -826,18 +625,6 @@ function resolveListItem(
     !value.missingItems?.has(index)
     ? resolveListItemChunk(value, index)
     : undefined;
-}
-
-function isPathPrefix(prefix: ResponsePath, path: ResponsePath): boolean {
-  return (
-    prefix.length <= path.length &&
-    prefix.every((step, index) => path[index] === step)
-  );
-}
-
-// Unlike isSourceObject, excludes lists
-function isSourceData(value: unknown): value is SourceObject {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 // Whether the path (response keys and list indexes) is within the data

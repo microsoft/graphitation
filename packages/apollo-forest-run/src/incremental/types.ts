@@ -151,12 +151,20 @@ export type IncrementalExecution = {
   // A new execution of the operation replaces the previous one (late results of the previous one are ignored)
   key: ExecutionKey | undefined;
   // Placeholders: addresses of objects with deferred fragments by their (server) response paths
-  //   (and of list items below them in the incremental delivery format, see `subPath`)
   placeholders: Map<ResponsePathKey, ObjectAddress>;
   // The latest result of an operation which is not stored in the forest (e.g. a mutation): results are spliced into it
   transientTree: IndexedTree | undefined;
   // Pending results announced by results in the incremental delivery format (see convertIncrementalDeliveryResult)
-  pendingResults: Map<PendingId, PendingResult> | undefined;
+  pendingResults: Map<PendingId, TrackedPendingResult> | undefined;
+};
+
+/**
+ * A pending result of the incremental delivery format with data received at its path so far (in the server view):
+ * results with `subPath` are converted to results at the pending path with this data (see format.ts).
+ * Retained until the pending result is completed.
+ */
+export type TrackedPendingResult = PendingResult & {
+  data: SourceObject | undefined;
 };
 
 /**
