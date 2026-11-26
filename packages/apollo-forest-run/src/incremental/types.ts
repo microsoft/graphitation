@@ -141,27 +141,18 @@ export type ResponsePathKey = string;
 export type IncrementalExecution = {
   // A new execution of the operation replaces the previous one (late results of the previous one are ignored)
   key: ExecutionKey | undefined;
-  // Objects with deferred fragments by their (server) response paths
-  placeholders: Map<ResponsePathKey, DeferPlaceholder>;
+  // Placeholders: addresses of objects with deferred fragments by their (server) response paths
+  placeholders: Map<ResponsePathKey, ObjectAddress>;
   // Pending results announced by results in the incremental delivery format (see convertIncrementalDeliveryResult)
   pendingResults: Map<PendingId, PendingResult> | undefined;
 };
 
 /**
- * Placeholder of an object with deferred fragments: the object their data is delivered to.
- *
- * The object is its chunk while the chunk is a part of the stored result (see IndexedTree.deferredChunks),
- * otherwise (e.g. the stored result was replaced by another write) it is resolved by its address.
- */
-export type DeferPlaceholder = {
-  chunk: ObjectChunk;
-  address: ObjectAddress;
-};
-
-/**
  * Address of an object: its closest node and the path from that node (not the response path),
  * so it stays valid when other writes change the stored result (e.g. items are prepended to a list,
- * see apollographql/apollo-client#13530).
+ * see apollographql/apollo-client#13530). Resolved in the current stored result via `tree.nodes`.
+ *
+ * Note: list indexes of embedded (unkeyed) lists between the node and the object are not stable.
  */
 export type ObjectAddress = {
   nodeKey: NodeKey;

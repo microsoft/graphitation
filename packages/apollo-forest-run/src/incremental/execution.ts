@@ -16,12 +16,12 @@ import type {
   WriteOptions,
 } from "../cache/types";
 import type {
-  DeferPlaceholder,
   DeferredResult,
   ExecutionResult,
   IncrementalDeferResult,
   IncrementalExecution,
   IncrementalStreamResult,
+  ObjectAddress,
   ResponsePathKey,
   SplicedResult,
   SplicedResultEntry,
@@ -51,6 +51,7 @@ import {
   isNodeValue,
   isObjectValue,
   isParentObjectRef,
+  isReachable,
   isRootRef,
   resolveFieldChunk,
   resolveListItemChunk,
@@ -69,7 +70,7 @@ import {
  * of the operation: data of all results of the payload is spliced into a copy of the stored result of the operation
  * (only objects on the path to delivered objects are copied), and the copy is written as a whole (see `write`).
  *
- * Objects data is delivered to are located by placeholders (see `DeferPlaceholder`), keyed by response paths
+ * Objects data is delivered to are located by placeholders (addresses, see `ObjectAddress`), keyed by response paths
  * of incremental results. Placeholders are captured for chunks with deferred fragments (`tree.deferredChunks`)
  * of the initial result and of delivered data.
  * Merge policies only run for delivered fields (see `DeliveredFields`), diffing is restricted to them too (`seed`).
@@ -185,12 +186,11 @@ function spliceIncrementalResults(
     seed: new Map(),
     differences: new Map(),
   };
-  const current = new Set(tree.deferredChunks);
   const pathEnv = { findParent: createParentLocator(tree.dataMap) };
   const spliced: SplicedResultEntry[] = [];
   for (const { path, data } of results) {
-    const placeholder = incremental.placeholders.get(getPathKey(path));
-    const chunk = placeholder && resolveTarget(tree, current, placeholder);
+    const address = incremental.placeholders.get(getPathKey(path));
+    const chunk = address && resolveAddress(tree, address);
     if (chunk) {
       spliceData(state, chunk, data);
       spliced.push({ path, data, localPath: getDataPath(pathEnv, chunk) });
@@ -292,26 +292,19 @@ function mergeSourceData(
   return result;
 }
 
-/**
- * The object of the current stored result the placeholder points to: its chunk if it is still a part of the tree,
- * otherwise resolved by the address (e.g. the tree was replaced by another write).
- */
-function resolveTarget(
+// Resolves the object in the current stored result
+function resolveAddress(
   tree: IndexedTree,
-  current: Set<ObjectChunk>,
-  placeholder: DeferPlaceholder,
+  { nodeKey, nodeSelections, pathFromNode }: ObjectAddress,
 ): ObjectChunk | undefined {
-  if (current.has(placeholder.chunk)) {
-    return placeholder.chunk;
-  }
-  const { nodeKey, nodeSelections, pathFromNode } = placeholder.address;
+  // Any chunk of the node with the same selection (the same node at multiple locations has the same data)
   for (const node of tree.nodes.get(nodeKey) ?? EMPTY_ARRAY) {
     const chunk =
       node.possibleSelections === nodeSelections
         ? resolveResponsePath(node, pathFromNode)
         : undefined;
-    if (chunk && current.has(chunk)) {
-      placeholder.chunk = chunk;
+    // Values deleted in place by cache.modify stay in `tree.nodes` (and `tree.dataMap`)
+    if (chunk && isReachable(tree.dataMap, chunk)) {
       return chunk;
     }
   }
@@ -550,23 +543,20 @@ function addPlaceholder(
   incremental.placeholders.set(
     getPathKey(path),
     mergedChunk && isObjectValue(mergedChunk)
-      ? createPlaceholder(findMergedParent, mergedChunk)
-      : createPlaceholder(findParent, chunk),
+      ? createAddress(findMergedParent, mergedChunk)
+      : createAddress(findParent, chunk),
   );
 }
 
-function createPlaceholder(
+function createAddress(
   findParent: ParentLocator,
   chunk: ObjectChunk,
-): DeferPlaceholder {
+): ObjectAddress {
   const node = findClosestNode(chunk, findParent);
   return {
-    chunk,
-    address: {
-      nodeKey: node.key,
-      nodeSelections: node.possibleSelections,
-      pathFromNode: getDataPath({ findParent }, chunk, node),
-    },
+    nodeKey: node.key,
+    nodeSelections: node.possibleSelections,
+    pathFromNode: getDataPath({ findParent }, chunk, node),
   };
 }
 
