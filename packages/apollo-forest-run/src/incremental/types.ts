@@ -7,6 +7,7 @@ import type {
   ResponsePath,
 } from "../descriptor/types";
 import type { Draft, IndexedTree, Source } from "../forest/types";
+import type { CacheEnv } from "../cache/types";
 import type {
   CompositeListChunk,
   MissingFieldsMap,
@@ -146,9 +147,11 @@ export type SubsequentExecutionResult = (
 export type ResponsePathKey = string;
 
 export type IncrementalExecution = {
+  // Splice base for results that are never retained in the forest (e.g. mutations).
+  transientTree?: IndexedTree;
   // A new execution of the operation replaces the previous one (late results of the previous one are ignored)
   key: ExecutionKey | undefined;
-  // Placeholders: addresses of objects with deferred fragments by their (server) response paths
+  // Server paths of defer sites, and delivered descendants addressable by modern subPath.
   placeholders: Map<ResponsePathKey, ObjectAddress>;
   // Pending results announced by results in the incremental delivery format (see convertIncrementalDeliveryResult)
   pendingResults: Map<PendingId, PendingResult> | undefined;
@@ -205,6 +208,7 @@ export type DeliveredFields = Map<SourceObject, Set<DataKey>>;
 
 export type SpliceState = {
   tree: IndexedTree;
+  mergePolicies: CacheEnv["mergePolicies"];
   // Objects and lists of the stored result -> copies (sources of a stored result are unique per location)
   copies: Map<Source, Draft>;
   deliveredFields: DeliveredFields;

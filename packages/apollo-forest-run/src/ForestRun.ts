@@ -255,15 +255,30 @@ export class ForestRun<
       );
       if (spliced) {
         transaction.changelog.push(
-          write(this.env, this.store, transaction, {
-            ...options,
-            execution: spliced,
-          }),
+          write(
+            this.env,
+            this.store,
+            transaction,
+            {
+              ...options,
+              result: spliced.data,
+            },
+            spliced,
+          ),
         );
       }
       return undefined;
     }
-    const result = write(this.env, this.store, transaction, options);
+    const result = write(
+      this.env,
+      this.store,
+      transaction,
+      {
+        ...options,
+        result: options.execution.data,
+      },
+      options.execution,
+    );
     transaction.changelog.push(result);
 
     const incoming = result.incoming;

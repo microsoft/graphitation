@@ -8,7 +8,6 @@ import type {
   OptimisticLayer,
   Store,
   Transaction,
-  WriteOptionsInternal,
   WriteResult,
 } from "./types";
 import type { NodeKey, OperationDescriptor } from "../descriptor/types";
@@ -52,21 +51,15 @@ export function write(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
-  options: WriteOptionsInternal,
+  options: Cache.WriteOptions,
+  execution?: InitialExecutionResult | SplicedIncrementalResult,
 ): WriteResult {
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
   const targetForest = getActiveForest(store, activeTransaction);
 
   // An initial result of incremental delivery is written as a regular (partial) result,
   //   subsequent results are spliced into the stored result first (see spliceSubsequentResult)
-  let execution: InitialExecutionResult | SplicedIncrementalResult | undefined;
-  let result: Cache.WriteOptions["result"];
-  if (isExecutionWrite(options)) {
-    execution = options.execution;
-    result = execution.data;
-  } else {
-    result = options.result;
-  }
+  const { result } = options;
   const splicedResult =
     execution && isSplicedIncrementalResult(execution) ? execution : undefined;
   const writeData = typeof result === "object" && result !== null ? result : {};
@@ -112,6 +105,14 @@ export function write(
   assert(!existingResult?.prev);
 
   if (writeData === existingData && existingResult) {
+    captureIncrementalExecution(
+      store,
+      targetForest,
+      operationDescriptor,
+      execution,
+      existingResult,
+      existingResult,
+    );
     return {
       options,
       incoming: existingResult,
@@ -144,7 +145,7 @@ export function write(
     operationDescriptor,
     operationResult,
     splicedResult?.missingFields,
-    existingResult,
+    existingResult ?? splicedResult?.incremental.transientTree,
   );
 
   // ApolloCompat: necessary for fragment writes with custom ids
@@ -362,12 +363,6 @@ function resolveExtraRootNodeType(
     return chunk.type;
   }
   return undefined;
-}
-
-function isExecutionWrite(
-  options: WriteOptionsInternal,
-): options is Exclude<WriteOptionsInternal, Cache.WriteOptions> {
-  return "execution" in options;
 }
 
 const inspect = JSON.stringify.bind(JSON);
