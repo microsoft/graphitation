@@ -92,6 +92,16 @@ describe("writeExecutionResult", () => {
 });
 
 describe("write", () => {
+  it.each([undefined, { data: initialData }])(
+    "writes the result even when the options carry execution: %p",
+    (execution) => {
+      const cache = new ForestRun();
+      const options = { query, result: completeData, execution };
+      expect(cache.write(options)).toEqual({ __ref: "ROOT_QUERY" });
+      expect(cache.readQuery({ query })).toEqual(completeData);
+    },
+  );
+
   it("writes the result (Apollo Cache.WriteOptions)", () => {
     const cache = new ForestRun();
     const ref = cache.write({ query, result: completeData });

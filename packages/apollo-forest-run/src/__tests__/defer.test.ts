@@ -1046,6 +1046,102 @@ describe("@defer: subsequent results", () => {
     },
   );
 
+  it("keeps a local edit when another deferred fragment merges the same embedded field", () => {
+    const merge = jest.fn((existing, incoming) => ({
+      ...existing,
+      ...incoming,
+    }));
+    const cache = new TestCache({
+      typePolicies: { User: { fields: { profile: { merge } } } },
+    });
+    const query = gql`
+      query {
+        viewer {
+          id
+          profile {
+            title
+          }
+          ... @defer(label: "a") {
+            profile {
+              bio
+            }
+          }
+          ... @defer(label: "b") {
+            profile {
+              lang
+            }
+          }
+        }
+      }
+    `;
+    const execution = execute(cache, query);
+    const profile = { __typename: "Profile", title: "title" };
+    execution.initial({ viewer: { ...user, profile } });
+    execution.subsequent(
+      [{ path: ["viewer"], label: "a", data: { profile: { bio: "old bio" } } }],
+      { hasNext: true },
+    );
+    cache.writeQuery({
+      query: gql`
+        {
+          viewer {
+            id
+            profile {
+              bio
+            }
+          }
+        }
+      `,
+      data: {
+        viewer: { ...user, profile: { __typename: "Profile", bio: "edited" } },
+      },
+    });
+    merge.mockClear();
+    execution.subsequent([
+      { path: ["viewer"], label: "b", data: { profile: { lang: "en" } } },
+    ]);
+    expect(cache.readQuery({ query })).toEqual({
+      viewer: { ...user, profile: { ...profile, bio: "edited", lang: "en" } },
+    });
+    expect(merge).toHaveBeenCalledTimes(1);
+    expect(merge.mock.calls[0][1]).not.toHaveProperty("bio");
+  });
+
+  it("keeps the tree needed by a pending execution through gc, but releases it after completion", () => {
+    const cache = new TestCache({ maxOperationCount: 1, autoEvict: false });
+    const query = gql`
+      query Stream {
+        viewer {
+          id
+          ... @defer {
+            bio
+          }
+        }
+      }
+    `;
+    const other = gql`
+      query Profile {
+        user {
+          id
+          bio
+        }
+      }
+    `;
+    const execution = execute(cache, query);
+    execution.initial({ viewer: user });
+    cache.writeQuery({
+      query: other,
+      data: { user: { ...user, bio: "previous" } },
+    });
+    cache.gc();
+    execution.subsequent([{ path: ["viewer"], data: { bio: "from patch" } }]);
+    expect(cache.readQuery({ query: other })).toEqual({
+      user: { ...user, bio: "from patch" },
+    });
+    cache.gc();
+    expect(cache.storedTree(query)).toBeUndefined();
+  });
+
   it("passes only delivered data of embedded objects to merge policies of non-cacheable operations", () => {
     const merge = jest.fn((existing, incoming) => ({
       ...existing,
@@ -1405,6 +1501,116 @@ describe("@defer: results in the incremental delivery format", () => {
         profile: { ...profile, settings: { theme: "dark", language: "en" } },
       },
     });
+  });
+
+  it.each([true, false])(
+    "retains data delivered above a pending sub-path (split: %s)",
+    (split) => {
+      const query = gql`
+        query {
+          viewer {
+            id
+            profile {
+              id
+              ... @defer(label: "inner") {
+                settings {
+                  language
+                }
+              }
+            }
+            ... @defer(label: "outer") {
+              profile {
+                settings {
+                  theme
+                }
+              }
+            }
+          }
+        }
+      `;
+      const cache = new TestCache();
+      const execution = executeIncrementalDelivery(cache, query);
+      const profile = { __typename: "Profile", id: "p" };
+      execution.initial({ viewer: { ...user, profile } }, [
+        { id: "inner", path: ["viewer", "profile"], label: "inner" },
+        { id: "outer", path: ["viewer"], label: "outer" },
+      ]);
+      const outer = {
+        id: "outer",
+        data: { profile: { settings: { theme: "dark" } } },
+      };
+      const inner = {
+        id: "inner",
+        subPath: ["settings"],
+        data: { language: "en" },
+      };
+      if (split) {
+        execution.subsequent({
+          incremental: [outer],
+          completed: [{ id: "outer" }],
+          hasNext: true,
+        });
+      }
+      execution.subsequent({
+        incremental: split ? [inner] : [outer, inner],
+        completed: split
+          ? [{ id: "inner" }]
+          : [{ id: "outer" }, { id: "inner" }],
+        hasNext: false,
+      });
+      expect(cache.diff({ query, optimistic: false })).toMatchObject({
+        complete: true,
+        result: {
+          viewer: {
+            ...user,
+            profile: {
+              ...profile,
+              settings: { theme: "dark", language: "en" },
+            },
+          },
+        },
+      });
+    },
+  );
+
+  it("does not append a reconstructed list when a sub-path delivers one item field", () => {
+    const merge = jest.fn((existing: unknown[] = [], incoming: unknown[]) => [
+      ...existing,
+      ...incoming,
+    ]);
+    const cache = new TestCache({
+      typePolicies: { Query: { fields: { messages: { merge } } } },
+    });
+    const query = gql`
+      query {
+        messages {
+          id
+          text
+        }
+        ... @defer {
+          messages {
+            name
+          }
+        }
+      }
+    `;
+    const execution = executeIncrementalDelivery(cache, query);
+    execution.initial({ messages: [message("1"), message("2")] }, [
+      { id: "name", path: [] },
+    ]);
+    merge.mockClear();
+    execution.subsequent({
+      incremental: [
+        { id: "name", subPath: ["messages", 0], data: { name: "one" } },
+      ],
+      completed: [{ id: "name" }],
+      hasNext: false,
+    });
+    expect(cache.readQuery({ query, returnPartialData: true })).toEqual({
+      __typename: "Query",
+      messages: [message("1", "one"), message("2")],
+    });
+    expect(merge).not.toHaveBeenCalled();
   });
 
   // The result carries the server view of the list: a local reorder is overwritten (as by a refetch)
