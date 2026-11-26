@@ -550,6 +550,7 @@ function updateIncrementalExecution(
   const findParent = createParentLocator(indexed.dataMap);
   const findMergedParent =
     merged === indexed ? findParent : createParentLocator(merged.dataMap);
+  const pathKeys = new Map<ObjectChunk | CompositeListChunk, ResponsePathKey>();
   for (const chunk of indexed.deferredChunks ?? EMPTY_ARRAY) {
     addPlaceholder(
       incremental,
@@ -557,7 +558,7 @@ function updateIncrementalExecution(
       findParent,
       findMergedParent,
       chunk,
-      getDataPath({ findParent }, chunk),
+      getChunkPathKey(findParent, pathKeys, chunk),
     );
   }
   if (incremental.placeholders.size) {
@@ -604,10 +605,14 @@ function captureDeliveredPlaceholders(
       isWithinData(data, pathFromTarget),
     );
     if (result) {
-      addPlaceholder(incremental, merged, findParent, findMergedParent, chunk, [
-        ...result.path,
-        ...pathFromTarget,
-      ]);
+      addPlaceholder(
+        incremental,
+        merged,
+        findParent,
+        findMergedParent,
+        chunk,
+        getPathKey([...result.path, ...pathFromTarget]),
+      );
     }
   }
 }
@@ -650,10 +655,10 @@ function addPlaceholder(
   findParent: ParentLocator,
   findMergedParent: ParentLocator,
   chunk: ObjectChunk,
-  path: ResponsePath,
+  pathKey: ResponsePathKey,
 ) {
   const mergedChunk = merged.dataMap.get(chunk.data)?.value;
-  incremental.placeholders.set(getPathKey(path), {
+  incremental.placeholders.set(pathKey, {
     address:
       mergedChunk && isObjectValue(mergedChunk)
         ? createAddress(findMergedParent, mergedChunk)
@@ -746,6 +751,27 @@ function isWithinData(data: unknown, path: ResponsePath): boolean {
 
 function getPathKey(path: ResponsePath): ResponsePathKey {
   return path.join(".");
+}
+
+// The same as getPathKey of the data path of the chunk. Keys of chunks are memoized: chunks share parents (e.g. list items)
+function getChunkPathKey(
+  findParent: ParentLocator,
+  keys: Map<ObjectChunk | CompositeListChunk, ResponsePathKey>,
+  chunk: ObjectChunk | CompositeListChunk,
+): ResponsePathKey {
+  let key = keys.get(chunk);
+  if (key === undefined) {
+    const ref = findParent(chunk);
+    if (isRootRef(ref)) {
+      key = "";
+    } else {
+      const parentKey = getChunkPathKey(findParent, keys, ref.parent);
+      const step = isParentObjectRef(ref) ? ref.field.dataKey : ref.index;
+      key = parentKey === "" ? String(step) : `${parentKey}.${step}`;
+    }
+    keys.set(chunk, key);
+  }
+  return key;
 }
 
 function isDeferResult(
