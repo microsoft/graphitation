@@ -1,0 +1,23 @@
+query DeferList($feedId: ID!) {
+  feed(id: $feedId) {
+    __typename
+    id
+    title
+    items {
+      __typename
+      id
+      title
+      ... @defer(label: "FeedItemDetails") {
+        summary
+        commentCount
+        updatedAt
+        author {
+          __typename
+          id
+          name
+          avatarUrl
+        }
+      }
+    }
+  }
+}
