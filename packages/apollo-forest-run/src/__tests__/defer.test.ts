@@ -116,6 +116,153 @@ const friend = (id: string, bio?: string) => ({
 });
 
 describe("@defer: subsequent results", () => {
+  describe.each(["subPath", "parent patch"])("%s", (format) => {
+    it.each([true, false])(
+      "never delivers A's fields to its replacement (A still reachable: %s)",
+      (reachable) => {
+        const cache = new TestCache();
+        const query = gql`
+          query {
+            viewers {
+              id
+              profile {
+                id
+                title
+              }
+              ... @defer {
+                name
+                profile {
+                  bio
+                }
+              }
+            }
+          }
+        `;
+        const profile = (id: string) => ({
+          __typename: "Profile",
+          id,
+          title: id,
+        });
+        const viewer = { ...user, profile: profile("A") };
+        const other = { ...user, id: "other", profile: profile("A") };
+        const peers = reachable ? [other] : [];
+        const path = ["viewers", 0];
+        cache.writeExecutionResult({
+          query,
+          execution: {
+            data: { viewers: [viewer, ...peers] },
+            ...(format === "subPath" && { pending: [{ id: "0", path }] }),
+            hasNext: true,
+          },
+        });
+        const replacement = { ...user, profile: profile("B") };
+        cache.writeQuery({ query, data: { viewers: [replacement, ...peers] } });
+        const name = "delivered sibling";
+        const bio = "for A";
+        cache.writeExecutionResult({
+          query,
+          execution:
+            format === "subPath"
+              ? {
+                  incremental: [
+                    { id: "0", data: { name } },
+                    { id: "0", subPath: ["profile"], data: { bio } },
+                  ],
+                  completed: [{ id: "0" }],
+                  hasNext: false,
+                }
+              : {
+                  incremental: [{ path, data: { name, profile: { bio } } }],
+                  hasNext: false,
+                },
+        });
+        expect(
+          cache.readQuery<{ viewers: unknown[] }>({
+            query,
+            returnPartialData: true,
+          })?.viewers,
+        ).toEqual([
+          { ...replacement, name },
+          ...(reachable
+            ? [{ ...other, profile: { ...other.profile, bio } }]
+            : []),
+        ]);
+      },
+    );
+  });
+
+  it("does not close a base execution when an optimistic execution completes", () => {
+    const cache = new TestCache();
+    const execution = execute(cache, messagesQuery, { key: "base" });
+    execution.initial({ messages: [message("1")] });
+    cache.batch({
+      optimistic: "preview",
+      update: () =>
+        cache.writeExecutionResult({
+          query: messagesQuery,
+          execution: { data: { messages: [message("1", "optimistic")] } },
+        }),
+    });
+    cache.removeOptimistic("preview");
+    execution.subsequent([{ path: ["messages", 0], data: { name: "final" } }]);
+    expect(cache.readQuery({ query: messagesQuery })).toEqual({
+      messages: [message("1", "final")],
+    });
+  });
+
+  it("passes only delivered embedded fields to a non-cacheable mutation's merge policy", () => {
+    const merge = jest.fn((existing, incoming) => ({
+      ...existing,
+      ...incoming,
+    }));
+    const cache = new TestCache({
+      typePolicies: { User: { fields: { profile: { merge } } } },
+    });
+    const mutation = gql`
+      mutation {
+        edit {
+          id
+          profile {
+            title
+          }
+          ... @defer {
+            profile {
+              bio
+            }
+          }
+        }
+      }
+    `;
+    const query = gql`
+      query {
+        user {
+          id
+          profile {
+            title
+            bio
+          }
+        }
+      }
+    `;
+    const profile = { __typename: "Profile", title: "initial" };
+    const execution = execute(cache, mutation);
+    execution.initial({ edit: { ...user, profile } });
+    cache.writeQuery({
+      query,
+      data: { user: { ...user, profile: { ...profile, title: "local" } } },
+    });
+    merge.mockClear();
+    execution.subsequent([
+      { path: ["edit"], data: { profile: { bio: "new" } } },
+    ]);
+
+    expect(cache.readQuery({ query })).toEqual({
+      user: { ...user, profile: { ...profile, title: "local", bio: "new" } },
+    });
+    expect(merge).toHaveBeenCalledTimes(1);
+    expect(merge.mock.calls[0][1]).not.toHaveProperty("title");
+  });
+
   it("writes a deferred fragment to its node", () => {
     const cache = new TestCache();
     const execution = execute(cache, messagesQuery);

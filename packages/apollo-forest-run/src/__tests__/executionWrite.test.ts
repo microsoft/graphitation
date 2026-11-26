@@ -92,6 +92,16 @@ describe("writeExecutionResult", () => {
 });
 
 describe("write", () => {
+  it.each([undefined, { data: initialData }])(
+    "uses result even if legacy options contain execution: %p",
+    (execution) => {
+      const cache = new ForestRun();
+      const options = { query, result: completeData, execution };
+      cache.write(options);
+      expect(cache.readQuery({ query })).toEqual(completeData);
+    },
+  );
+
   it("writes the result (Apollo Cache.WriteOptions)", () => {
     const cache = new ForestRun();
     const ref = cache.write({ query, result: completeData });
