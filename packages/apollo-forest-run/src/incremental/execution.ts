@@ -72,7 +72,6 @@ import {
   isSourceData,
   mergeAt,
   mergeServerData,
-  mergeSourceData,
 } from "./data";
 import { equal } from "@wry/equality";
 
@@ -360,12 +359,11 @@ function resolveAddress(
  *
  * Data is spliced against data received from the server (results of the same execution):
  * - values received already are not delivered again (e.g. fields selected by multiple fragments);
- * - objects and lists received already are containers: their data is spliced into the objects (recursively),
- *   they are not delivered as a whole (e.g. not incoming values of merge policies). Objects of lists are
- *   paired by indexes in the server view and resolved by keys in the stored result (local lists may differ,
- *   e.g. after merge policies or other writes), objects without keys - by indexes in the stored list;
- * - an object received already, but replaced by another object in the stored result (another identity),
- *   is delivered in the server view (with its key fields): the server view of the fragment wins;
+ * - objects and lists received already are containers: the structure is local (links and lists are never changed),
+ *   data goes by identity. Objects are resolved by keys in the stored result (local links and lists may differ,
+ *   e.g. after merge policies or other writes), objects of lists are paired by indexes in the server view,
+ *   objects without keys are resolved by the local location (see resolveReceivedObject).
+ *   Containers are not delivered as a whole (e.g. not incoming values of merge policies);
  * - other values are delivered (as is for fields with merge policies, incoming values of merge policies).
  */
 function spliceData(
@@ -387,8 +385,11 @@ function spliceData(
   assert(target && !Array.isArray(target));
   const delivered = deliveredFields.get(target);
   assert(delivered);
-  const localPath = getDataPath(state.pathEnv, chunk);
-  state.results.push({ path, data, localPath });
+  state.results.push({
+    path,
+    data,
+    localPath: getDataPath(state.pathEnv, chunk),
+  });
 
   for (const key of Object.keys(data)) {
     const incoming = data[key];
@@ -399,22 +400,16 @@ function spliceData(
       // A container
       const existing = ref?.value;
       if (isSourceData(incoming) && isSourceData(received)) {
-        if (
-          existing !== undefined &&
-          isObjectValue(existing) &&
-          isSameObject(state, existing, received, field.selection)
-        ) {
-          spliceData(state, existing, [...path, key], incoming, received);
-          continue;
+        const object = resolveReceivedObject(
+          state,
+          existing,
+          received,
+          field.selection,
+        );
+        if (object) {
+          spliceData(state, object, [...path, key], incoming, received);
         }
-        // Another object in the stored result: the server view wins
-        const value = mergeSourceData(received, incoming);
-        target[key] = value;
-        state.results.push({
-          path: [...path, key],
-          data: value,
-          localPath: [...localPath, key],
-        });
+        continue;
       } else if (Array.isArray(incoming) && Array.isArray(received)) {
         spliceList(
           state,
@@ -492,17 +487,15 @@ function spliceList(
     const local = list && resolveListItem(list, index);
     if (isSourceData(incoming)) {
       const receivedObject = isSourceData(received) ? received : undefined;
-      const key = state.objectKey(receivedObject ?? incoming, selections);
-      const chunk =
-        typeof key === "string"
-          ? findNodeChunk(state.tree, key, selections)
-          : local !== undefined && isObjectValue(local)
-          ? local
-          : undefined;
-      if (chunk) {
-        spliceData(state, chunk, [...path, index], incoming, receivedObject);
+      const object = resolveReceivedObject(
+        state,
+        local,
+        receivedObject ?? incoming,
+        selections,
+      );
+      if (object) {
+        spliceData(state, object, [...path, index], incoming, receivedObject);
       }
-      // Note: objects missing in the stored result (e.g. removed from the list by another write) are not written
     } else if (Array.isArray(incoming) && Array.isArray(received)) {
       spliceList(
         state,
@@ -545,16 +538,27 @@ function isMissingField(
   return false;
 }
 
-// Objects without keys have no identity: they are the same at the same location
-function isSameObject(
+/**
+ * The object of the stored result data received from the server is delivered to: by its key (the object
+ * may be elsewhere in the stored result, e.g. a local write replaced a link or moved a list item),
+ * or (objects without keys) the local object at the same location.
+ * Objects not in the stored result are skipped (their deferred fields stay missing, e.g. refetched by reads).
+ */
+function resolveReceivedObject(
   state: SpliceState,
-  chunk: ObjectChunk,
-  server: SourceObject,
+  local: GraphChunk | undefined,
+  received: SourceObject,
   selections: PossibleSelections,
-): boolean {
-  return (
-    chunk.key === false || state.objectKey(server, selections) === chunk.key
-  );
+): ObjectChunk | undefined {
+  const localObject =
+    local !== undefined && isObjectValue(local) ? local : undefined;
+  const key = state.objectKey(received, selections);
+  if (typeof key !== "string") {
+    return localObject;
+  }
+  return localObject?.key === key
+    ? localObject
+    : findNodeChunk(state.tree, key, selections);
 }
 
 // Collects state of a copied object and seed differences on the path to it (from the root down)

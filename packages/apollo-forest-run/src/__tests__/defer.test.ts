@@ -963,10 +963,10 @@ describe("@defer: subsequent results", () => {
   });
 
   describe.each(["subPath", "parent result"])(
-    "delivers objects in the server view (%s)",
+    "delivers data of objects by identity (%s)",
     (format) => {
       it.each([true, false])(
-        "after another write replaced the object (the original is still reachable: %s)",
+        "after another write replaced the link (the original object is still in the result: %s)",
         (reachable) => {
           const cache = new TestCache();
           const query = gql`
@@ -1029,18 +1029,31 @@ describe("@defer: subsequent results", () => {
                   },
           });
 
-          // The server view of the delivered fragment wins (as with a refetch): A gets `bio` and is linked again
-          expect(
-            cache.readQuery<{ viewers: unknown[] }>({
-              query,
-              returnPartialData: true,
-            })?.viewers,
-          ).toEqual([
-            { ...user, profile: { ...profile("A"), bio }, name },
+          // The structure is local (the link stays B), data goes by identity: A gets `bio` (when in the result)
+          const diff = cache.diff<{ viewers: unknown[] }>({
+            query,
+            optimistic: false,
+            returnPartialData: true,
+          });
+          expect(diff.result?.viewers).toEqual([
+            { ...replacement, name },
             ...(reachable
               ? [{ ...other, profile: { ...profile("A"), bio } }]
               : []),
           ]);
+          // B didn't receive deferred data: its deferred field stays missing (e.g. refetched by reads)
+          //   Note: missing scalar fields are not reported by `diff.complete` (also for regular writes)
+          const bioFragment = gql`
+            fragment Bio on Profile {
+              bio
+            }
+          `;
+          expect(
+            cache.readFragment({ id: "Profile:B", fragment: bioFragment }),
+          ).toBeNull();
+          expect(
+            cache.readFragment({ id: "Profile:A", fragment: bioFragment }),
+          ).toEqual(reachable ? { __typename: "Profile", bio } : null);
         },
       );
     },
