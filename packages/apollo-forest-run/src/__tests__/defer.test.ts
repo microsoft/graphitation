@@ -1133,7 +1133,7 @@ describe("@defer: subsequent results", () => {
       query: other,
       data: { user: { ...user, bio: "previous" } },
     });
-    cache.gc();
+    expect(cache.gc()).toEqual([]);
     execution.subsequent([{ path: ["viewer"], data: { bio: "from patch" } }]);
     expect(cache.readQuery({ query: other })).toEqual({
       user: { ...user, bio: "from patch" },
@@ -1578,8 +1578,12 @@ describe("@defer: results in the incremental delivery format", () => {
       ...existing,
       ...incoming,
     ]);
+    const mergeTags = jest.fn((_, incoming) => incoming);
     const cache = new TestCache({
-      typePolicies: { Query: { fields: { messages: { merge } } } },
+      typePolicies: {
+        Query: { fields: { messages: { merge } } },
+        Message: { fields: { tags: { merge: mergeTags } } },
+      },
     });
     const query = gql`
       query {
@@ -1590,6 +1594,7 @@ describe("@defer: results in the incremental delivery format", () => {
         ... @defer {
           messages {
             name
+            tags
           }
         }
       }
@@ -1601,16 +1606,21 @@ describe("@defer: results in the incremental delivery format", () => {
     merge.mockClear();
     execution.subsequent({
       incremental: [
-        { id: "name", subPath: ["messages", 0], data: { name: "one" } },
+        {
+          id: "name",
+          subPath: ["messages", 0],
+          data: { name: "one", tags: ["new"] },
+        },
       ],
       completed: [{ id: "name" }],
       hasNext: false,
     });
     expect(cache.readQuery({ query, returnPartialData: true })).toEqual({
       __typename: "Query",
-      messages: [message("1", "one"), message("2")],
+      messages: [{ ...message("1", "one"), tags: ["new"] }, message("2")],
     });
     expect(merge).not.toHaveBeenCalled();
+    expect(mergeTags).toHaveBeenCalledTimes(1);
   });
 
   // The result carries the server view of the list: a local reorder is overwritten (as by a refetch)

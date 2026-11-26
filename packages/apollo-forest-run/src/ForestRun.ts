@@ -42,6 +42,10 @@ import {
   transformDocument,
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
+import type {
+  InitialExecutionResult,
+  SplicedIncrementalResult,
+} from "./incremental/types";
 import {
   isInitialExecutionWrite,
   isSubsequentResult,
@@ -227,10 +231,13 @@ export class ForestRun<
         });
   }
 
-  private runWrite(options: Cache.WriteOptions): Reference | undefined {
+  private runWrite(
+    options: Cache.WriteOptions,
+    execution?: InitialExecutionResult | SplicedIncrementalResult,
+  ): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
-    const result = write(this.env, this.store, transaction, options);
+    const result = write(this.env, this.store, transaction, options, execution);
     transaction.changelog.push(result);
 
     const incoming = result.incoming;
@@ -256,20 +263,14 @@ export class ForestRun<
         execution,
       );
       if (spliced) {
-        transaction.changelog.push(
-          write(this.env, this.store, transaction, {
-            ...options,
-            execution: spliced,
-          }),
-        );
+        this.runWrite({ ...options, result: spliced.data }, spliced);
       }
       return undefined;
     }
-    const result = write(this.env, this.store, transaction, options);
-    transaction.changelog.push(result);
-
-    const incoming = result.incoming;
-    return incoming.nodes.size ? getRef(incoming.rootNodeKey) : undefined;
+    return this.runWrite(
+      { ...options, result: options.execution.data },
+      options.execution,
+    );
   }
 
   private collectAffectedOperationsAndNodes(transaction: Transaction) {

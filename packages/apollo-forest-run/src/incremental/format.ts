@@ -1,11 +1,12 @@
 import type {
+  ConvertedResult,
+  DeferredResult,
   IncrementalDeliverySubsequentResult,
   IncrementalDeferResult,
   IncrementalExecution,
   IncrementalStreamResult,
   PendingResult,
   SubsequentExecutionResult,
-  SubsequentIncrementalExecutionResult,
   TrackedPendingResult,
 } from "./types";
 import type { ResponsePath } from "../descriptor/types";
@@ -33,10 +34,18 @@ import {
 export function convertIncrementalDeliveryResult(
   incremental: IncrementalExecution,
   execution: IncrementalDeliverySubsequentResult,
-): SubsequentIncrementalExecutionResult {
+): ConvertedResult {
   // Data of pending results announced by this payload may be delivered by this payload (nested @defer)
   const announced = trackPendingResults(incremental, execution.pending);
   const pendingResults = incremental.pendingResults;
+  const listPolicySources: DeferredResult[] | undefined =
+    execution.incremental?.some(
+      (patch) =>
+        "subPath" in patch &&
+        patch.subPath?.some((step) => typeof step === "number"),
+    )
+      ? []
+      : undefined;
   const results: (IncrementalDeferResult | IncrementalStreamResult)[] = [];
   for (const result of execution.incremental ?? EMPTY_ARRAY) {
     const pending = pendingResults?.get(result.id);
@@ -68,7 +77,9 @@ export function convertIncrementalDeliveryResult(
           },
     );
     if (data && pendingResults) {
-      retainDeliveredData(pendingResults, [...path, ...subPath], data);
+      const fullPath = [...path, ...subPath];
+      listPolicySources?.push({ path: fullPath, data });
+      retainDeliveredData(pendingResults, fullPath, data);
     }
   }
   for (const pending of announced) {
@@ -91,6 +102,7 @@ export function convertIncrementalDeliveryResult(
     incremental: results,
     hasNext: execution.hasNext,
     extensions: execution.extensions,
+    listPolicySources,
   };
 }
 
@@ -136,14 +148,21 @@ function resolveRetainedData(
     : undefined;
 }
 
-// Merges delivered data into data retained by pending results at (or above) its path
+// Pending paths can overlap in either direction, even when completed in different payloads.
 function retainDeliveredData(
   pendingResults: Map<string, TrackedPendingResult>,
   path: ResponsePath,
   data: SourceObject,
 ) {
   for (const pending of pendingResults.values()) {
-    if (pending.data && isPathPrefix(pending.path, path)) {
+    if (isPathPrefix(path, pending.path)) {
+      const atPending = getDataAt(data, pending.path, path.length);
+      if (atPending) {
+        pending.data = pending.data
+          ? mergeSourceData(pending.data, atPending)
+          : atPending;
+      }
+    } else if (pending.data && isPathPrefix(pending.path, path)) {
       const merged = mergeAt(pending.data, path, pending.path.length, data);
       if (isSourceData(merged)) {
         pending.data = merged;

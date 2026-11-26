@@ -161,16 +161,18 @@ export function evictOldData(
         continue; // Skip non-evictable operations entirely
       }
       removeDataTree(store, tree, partition);
+      evictedIds.push(opId);
     }
-
-    evictedIds.push(...evictableOperationIds);
   }
 
   return evictedIds;
 }
 
 function canEvict(env: CacheEnv, store: Store, resultTree: DataTree) {
-  if (store.watches.has(resultTree.operation)) {
+  if (
+    store.watches.has(resultTree.operation) ||
+    store.incrementalExecutions.has(resultTree.operation)
+  ) {
     return false;
   }
   if (!env.nonEvictableQueries?.size) {

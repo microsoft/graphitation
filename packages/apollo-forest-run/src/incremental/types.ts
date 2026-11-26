@@ -152,7 +152,7 @@ export type IncrementalExecution = {
   key: ExecutionKey | undefined;
   // Objects with deferred fragments by their (server) response paths
   placeholders: Map<ResponsePathKey, DeferPlaceholder>;
-  // Data delivered by subsequent results so far (at their response paths), e.g. incoming values of merge policies
+  // Data delivered so far, for reconstructing a server object that a different cache write replaced.
   delivered: SourceObject | undefined;
   // The latest result of an operation which is not stored in the forest (e.g. a mutation): results are spliced into it
   transientTree: IndexedTree | undefined;
@@ -199,6 +199,12 @@ export type DeferredResult = {
   data: SourceObject;
 };
 
+export type ConvertedResult = SubsequentIncrementalExecutionResult & {
+  // When a subPath crosses a list, retain the original patches for this write only.
+  // Reassembly includes list fields which were not delivered by this payload.
+  listPolicySources?: DeferredResult[];
+};
+
 // Subsequent results of incremental delivery spliced into a copy of the stored result (written as a whole)
 export type SplicedIncrementalResult = {
   readonly kind: "SplicedIncrementalResult";
@@ -212,6 +218,7 @@ export type SplicedIncrementalResult = {
   seed: NodeDifferenceMap;
   // Spliced results (locate objects with deferred fragments in delivered data)
   results: SplicedIncrementalResultEntry[];
+  listPolicySources?: DeferredResult[];
 };
 
 export type SplicedIncrementalResultEntry = DeferredResult & {

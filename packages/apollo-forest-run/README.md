@@ -23,6 +23,18 @@ Expected benefits over InMemoryCache:
 - Improved observability and traceability (easy to track how an incoming operation affects cached operations)
 - Ready for live-queries
 
+### Deferred results
+
+Use `writeExecutionResult({ query, execution })` for `@defer` payloads; ordinary
+Apollo `write({ query, result })` always writes `result`. A pending execution
+keeps its operation tree out of LRU eviction so later patches can update other
+cached queries. Send a terminal payload (`hasNext: false`, even with no data)
+when delivery ends; an abandoned execution can otherwise keep the tree alive.
+
+When a `subPath` crosses a list, ForestRun reconstructs the server's list
+order, so the patch can overwrite a local reorder. Reconstructing that list is
+not a new list delivery and does not invoke its merge policy.
+
 # A different view on GraphQL client caches
 
 We view GraphQL clients as basically emulations of ["live queries"][2] running locally.

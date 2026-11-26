@@ -16,6 +16,7 @@ import type {
   ExecutionWriteOptions,
 } from "../cache/types";
 import type {
+  ConvertedResult,
   DeferredResult,
   ExecutionResult,
   InitialExecutionResult,
@@ -167,16 +168,40 @@ export function captureIncrementalExecution(
  * Merge policies of a spliced result only run for delivered fields (other fields already went through them):
  * listed fields of copies of stored objects and all fields of delivered objects (not objects of the stored result).
  */
-export function createDeliveredFieldFilter({
-  deliveredFields,
-  tree,
-}: SplicedIncrementalResult): (
-  parent: ObjectChunk,
-  field: FieldInfo,
-) => boolean {
-  return (parent, field) =>
-    deliveredFields.get(parent.data)?.has(field.dataKey) ??
-    !tree.dataMap.has(parent.data);
+export function createDeliveredFieldFilter(
+  {
+    deliveredFields,
+    tree,
+    results,
+    listPolicySources,
+  }: SplicedIncrementalResult,
+  indexed: IndexedTree,
+): (parent: ObjectChunk, field: FieldInfo) => boolean {
+  const pathEnv = { findParent: createParentLocator(indexed.dataMap) };
+  return (parent, field) => {
+    const delivered =
+      deliveredFields.get(parent.data)?.has(field.dataKey) ??
+      !tree.dataMap.has(parent.data);
+    if (
+      !delivered ||
+      !listPolicySources ||
+      !Array.isArray(parent.data[field.dataKey])
+    ) {
+      return delivered;
+    }
+    // Reassembled lists use the server order, but only explicitly delivered lists are policy inputs.
+    // Placeholders can move in the cache, so translate the parent path back to its server path.
+    const local = getDataPath(pathEnv, parent);
+    return results.some(({ localPath, path }) => {
+      if (!isPathPrefix(localPath, local)) return false;
+      const server = [...path, ...local.slice(localPath.length)];
+      return listPolicySources.some(
+        ({ path, data }) =>
+          isPathPrefix(path, server) &&
+          Array.isArray(getDataAt(data, server, path.length)?.[field.dataKey]),
+      );
+    });
+  };
 }
 
 /**
@@ -227,7 +252,7 @@ function isRecycled(tree: IndexedTree, chunks: ObjectChunk[]): boolean {
 function spliceIncrementalResults(
   tree: IndexedTree,
   incremental: IncrementalExecution,
-  execution: SubsequentIncrementalExecutionResult,
+  execution: ConvertedResult,
   hasMergePolicy: SpliceState["hasMergePolicy"],
   objectKey: SpliceState["objectKey"],
 ): SplicedIncrementalResult | undefined {
@@ -275,6 +300,7 @@ function spliceIncrementalResults(
     missingFields: state.missingFields,
     seed: state.seed,
     results: entries,
+    listPolicySources: execution.listPolicySources,
   };
 }
 
@@ -343,7 +369,7 @@ function resolveAddress(
  * - into the existing object (recursively), when it is the same object as on the server;
  * - in the server view (with data received from the server, e.g. key fields), when the existing object is
  *   another object (e.g. replaced by another write) or missing: normalization finds it by identity;
- * - as delivered so far for fields with merge policies (incoming values of merge policies).
+ * - as delivered by this payload for fields with merge policies (the existing value may contain later edits).
  */
 function spliceData(
   state: SpliceState,
@@ -370,13 +396,9 @@ function spliceData(
     if (isSourceData(incoming) && ref && isParentObjectRef(ref)) {
       const valuePath = [...path, key];
       const serverValue = server && getDataAt(server, [key]);
-      const deliveredValue =
-        (incremental.delivered &&
-          getDataAt(incremental.delivered, valuePath)) ??
-        incoming;
       const existing = ref.value;
       if (chunk.type && state.hasMergePolicy(chunk.type, ref.field.name)) {
-        target[key] = deliveredValue;
+        target[key] = incoming;
       } else if (
         isObjectValue(existing) &&
         (!serverValue || isSameObject(state, existing, serverValue))
@@ -385,7 +407,12 @@ function spliceData(
         spliceData(state, existing, valuePath, incoming, serverValue);
       } else {
         target[key] = serverValue
-          ? mergeSourceData(serverValue, deliveredValue)
+          ? mergeSourceData(
+              serverValue,
+              (incremental.delivered &&
+                getDataAt(incremental.delivered, valuePath)) ??
+                incoming,
+            )
           : incoming;
       }
     } else {
