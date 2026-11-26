@@ -1,3 +1,4 @@
+import type { Cache } from "@apollo/client";
 import type { IndexedTree, UpdateTreeResult } from "../forest/types";
 import type { OperationResult } from "../values/types";
 import type {
@@ -7,10 +8,14 @@ import type {
   OptimisticLayer,
   Store,
   Transaction,
-  WriteOptionsInternal,
+  ExecutionWriteOptions,
   WriteResult,
 } from "./types";
 import type { NodeKey, OperationDescriptor } from "../descriptor/types";
+import type {
+  InitialExecutionResult,
+  SplicedIncrementalResult,
+} from "../incremental/types";
 import { assert } from "../jsutils/assert";
 import {
   resolveOperationDescriptor,
@@ -47,14 +52,15 @@ export function write(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
-  options: WriteOptionsInternal,
+  options: Cache.WriteOptions | ExecutionWriteOptions,
+  // An initial (or complete) execution result, or subsequent results spliced into the stored result
+  execution?: InitialExecutionResult | SplicedIncrementalResult,
 ): WriteResult {
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
   const targetForest = getActiveForest(store, activeTransaction);
 
   // An initial result of incremental delivery is written as a regular (partial) result,
   //   subsequent results are spliced into the stored result first (see spliceSubsequentResult)
-  const { execution } = options;
   const splicedResult =
     execution && isSplicedIncrementalResult(execution) ? execution : undefined;
   const result = execution ? execution.data : options.result;

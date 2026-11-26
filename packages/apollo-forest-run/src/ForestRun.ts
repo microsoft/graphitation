@@ -229,13 +229,7 @@ export class ForestRun<
   private runWrite(options: Cache.WriteOptions): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
-    // Only `result` is written (execution results are written by writeExecutionResult)
-    const result = write(
-      this.env,
-      this.store,
-      transaction,
-      "execution" in options ? { ...options, execution: undefined } : options,
-    );
+    const result = write(this.env, this.store, transaction, options);
     transaction.changelog.push(result);
 
     const incoming = result.incoming;
@@ -259,18 +253,12 @@ export class ForestRun<
       );
       if (spliced) {
         transaction.changelog.push(
-          write(this.env, this.store, transaction, {
-            ...options,
-            execution: spliced,
-          }),
+          write(this.env, this.store, transaction, options, spliced),
         );
       }
       return undefined;
     }
-    const result = write(this.env, this.store, transaction, {
-      ...options,
-      execution,
-    });
+    const result = write(this.env, this.store, transaction, options, execution);
     transaction.changelog.push(result);
 
     const incoming = result.incoming;
