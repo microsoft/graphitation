@@ -7,7 +7,7 @@ import type {
   OptimisticLayer,
   Store,
   Transaction,
-  ExecutionWriteOptions,
+  WriteOptionsInternal,
   WriteResult,
 } from "./types";
 import type { NodeKey, OperationDescriptor } from "../descriptor/types";
@@ -46,7 +46,7 @@ export function write(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
-  options: ExecutionWriteOptions,
+  options: WriteOptionsInternal,
 ): WriteResult {
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
   const targetForest = getActiveForest(store, activeTransaction);

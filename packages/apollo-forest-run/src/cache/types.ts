@@ -152,7 +152,7 @@ export type Transaction = {
 };
 
 export type WriteResult = {
-  options: ExecutionWriteOptions;
+  options: WriteOptionsInternal;
   incoming: DataTree;
   affected: Iterable<OperationDescriptor>;
   affectedNodes: Set<NodeKey>; // contains directly updated nodes + parent nodes indirectly affected by nested node update
@@ -359,7 +359,7 @@ export type WriteOptions = Omit<Cache.WriteOptions, "result"> & {
   execution?: ExecutionResult;
 };
 
-// Options of writes of results as a whole (subsequent results are spliced into the stored result first, see ForestRun)
-export type ExecutionWriteOptions = Omit<WriteOptions, "execution"> & {
+// Internal options of `write` (subsequent results are spliced into the stored result by ForestRun first)
+export type WriteOptionsInternal = Omit<WriteOptions, "execution"> & {
   execution?: InitialExecutionResult | SplicedIncrementalResult;
 };
