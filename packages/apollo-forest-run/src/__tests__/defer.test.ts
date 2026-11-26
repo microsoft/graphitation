@@ -1376,6 +1376,39 @@ describe("@defer: merge policies of subsequent results", () => {
     });
   });
 
+  it("does not re-apply merge policies within stored values of fields outside of delivered data", () => {
+    const { cache, mergeItems } = createCache();
+    const nested = gql`
+      query {
+        user {
+          id
+          feed {
+            id
+            items {
+              id
+            }
+          }
+          ... @defer {
+            name
+          }
+        }
+      }
+    `;
+    const user = { __typename: "User", id: "u" };
+    const execution = execute(cache, nested);
+    execution.initial({
+      user: { ...user, feed: { ...feed, items: [item("a")] } },
+    });
+    expect(mergeItems).toHaveBeenCalledTimes(1);
+
+    execution.subsequent([{ path: ["user"], data: { name: "user" } }]);
+
+    expect(mergeItems).toHaveBeenCalledTimes(1);
+    expect(cache.readQuery({ query: nested })).toEqual({
+      user: { ...user, feed: { ...feed, items: [item("a")] }, name: "user" },
+    });
+  });
+
   it("applies merge policies of objects delivered as a whole", () => {
     const { cache, mergeItems } = createCache();
     const nested = gql`

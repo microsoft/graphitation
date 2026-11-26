@@ -196,9 +196,8 @@ export type SplicedIncrementalResultEntry = DeferredResult & {
 /**
  * Copies of objects of the stored result with incremental results spliced in -> data keys of delivered fields.
  *
- * Merge policies of a spliced result only run for delivered fields (other fields already went through them).
- * Other objects of a spliced result are either objects of the stored result (no delivered fields)
- * or objects of incremental results (all fields are delivered).
+ * Merge policies of a spliced result only run for delivered fields (other fields already went through them):
+ * used as the field scope of merge policies (FieldScope), which also covers everything within delivered values.
  *
  * Note: keyed by copies, which are unique per location (as sources of a stored result: shared references
  *   are cloned when indexing, see indexTree).

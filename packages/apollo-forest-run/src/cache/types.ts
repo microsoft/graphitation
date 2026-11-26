@@ -16,6 +16,7 @@ import type {
   OperationId,
   NormalizedFieldEntry,
   VariableValues,
+  DataKey,
 } from "../descriptor/types";
 import type { DocumentNode, OperationDefinitionNode } from "graphql";
 import type {
@@ -358,6 +359,12 @@ export type WriteOptions = Omit<Cache.WriteOptions, "result"> & {
   result?: Cache.WriteOptions["result"];
   execution?: ExecutionResult;
 };
+
+/**
+ * Fields of objects (by data keys), including everything within their values, e.g. to restrict merge policies.
+ * Fields of other objects are in scope if those objects lie within the value of a field in scope.
+ */
+export type FieldScope = Map<SourceObject, Set<DataKey>>;
 
 // Internal options of `write` (subsequent results are spliced into the stored result by ForestRun first)
 export type WriteOptionsInternal = Omit<WriteOptions, "execution"> & {
