@@ -24,12 +24,11 @@ import type {
 } from "../diff/types";
 
 /**
- * Results of incremental delivery (`@defer`) in two formats:
+ * Results of incremental delivery (`@defer`) in the 2022-09-17 draft of the `@defer` / `@stream` RFC
+ * (deferred fragments addressed by `path` and `label`), as in Apollo Client 4 `Defer20220917Handler`.
  *
- * - The 2022-09-17 draft of the `@defer` / `@stream` RFC (deferred fragments addressed by `path` and `label`),
- *   as in Apollo Client 4 `Defer20220917Handler`. Results in this format are written as is.
- * - The current incremental delivery format of the spec proposal (`pending`, `id`, `subPath`, `completed`),
- *   as in Apollo Client 4 `GraphQL17Alpha9Handler`. Converted to the 2022 draft format when written (see format.ts).
+ * TODO: support the current incremental delivery format (graphql-js 17: `pending`, `id`, `subPath`, `completed`),
+ *   see spliceSubsequentResult
  */
 
 export type ResultData = Record<string, unknown>;
@@ -69,52 +68,6 @@ export type IncrementalStreamResult = {
   label?: DeferLabel;
 };
 
-// The incremental delivery format (`pending`, `id`, `subPath`, `completed`)
-
-// Identifies a pending result within an incremental execution
-export type PendingId = string;
-
-export type PendingResult = {
-  id: PendingId;
-  path: ResponsePath;
-  label?: DeferLabel;
-};
-
-export type CompletedResult = {
-  id: PendingId;
-  errors?: ReadonlyArray<FormattedError>;
-};
-
-export type IncrementalDeliveryInitialResult = CompleteExecutionResult & {
-  pending: ReadonlyArray<PendingResult>;
-  hasNext: boolean;
-};
-
-export type IncrementalDeliverySubsequentResult = {
-  pending?: ReadonlyArray<PendingResult>;
-  incremental?: ReadonlyArray<
-    IncrementalDeliveryDeferResult | IncrementalDeliveryStreamResult
-  >;
-  completed?: ReadonlyArray<CompletedResult>;
-  hasNext: boolean;
-  extensions?: ResultExtensions;
-};
-
-export type IncrementalDeliveryDeferResult = {
-  id: PendingId;
-  subPath?: ResponsePath;
-  data: ResultData;
-  errors?: ReadonlyArray<FormattedError>;
-  extensions?: ResultExtensions;
-};
-
-export type IncrementalDeliveryStreamResult = {
-  id: PendingId;
-  items: ReadonlyArray<unknown>;
-  errors?: ReadonlyArray<FormattedError>;
-  extensions?: ResultExtensions;
-};
-
 // Identifies an incremental execution (e.g. a request id), compared by equality.
 //   Only needed to ignore late results of a superseded execution of the same operation (with the same variables)
 export type ExecutionKey = string | number | object;
@@ -128,21 +81,17 @@ export type ExecutionResult = (
   | CompleteExecutionResult
   | InitialIncrementalExecutionResult
   | SubsequentIncrementalExecutionResult
-  | IncrementalDeliveryInitialResult
-  | IncrementalDeliverySubsequentResult
 ) & { key?: ExecutionKey };
 
 // Results written as a whole (subsequent results are spliced into the stored result first)
 export type InitialExecutionResult = (
   | CompleteExecutionResult
   | InitialIncrementalExecutionResult
-  | IncrementalDeliveryInitialResult
 ) & { key?: ExecutionKey };
 
-export type SubsequentExecutionResult = (
-  | SubsequentIncrementalExecutionResult
-  | IncrementalDeliverySubsequentResult
-) & { key?: ExecutionKey };
+export type SubsequentExecutionResult = SubsequentIncrementalExecutionResult & {
+  key?: ExecutionKey;
+};
 
 // State of incremental executions
 
@@ -159,17 +108,6 @@ export type IncrementalExecution = {
   serverData: SourceObject | undefined;
   // The latest result of an operation which is not stored in the forest (e.g. a mutation): results are spliced into it
   transientTree: IndexedTree | undefined;
-  // Pending results announced by results in the incremental delivery format (see convertIncrementalDeliveryResult)
-  pendingResults: Map<PendingId, TrackedPendingResult> | undefined;
-};
-
-/**
- * A pending result of the incremental delivery format with data received at its path so far (in the server view):
- * results with `subPath` are converted to results at the pending path with this data (see format.ts).
- * Retained until the pending result is completed.
- */
-export type TrackedPendingResult = PendingResult & {
-  data: SourceObject | undefined;
 };
 
 /**

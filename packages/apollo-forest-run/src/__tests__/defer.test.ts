@@ -6,8 +6,6 @@ import { canReleaseOperationDescriptor } from "../cache/store";
 import type {
   ExecutionKey,
   IncrementalDeferResult,
-  IncrementalDeliverySubsequentResult,
-  PendingResult,
 } from "../incremental/types";
 import type { IndexedTree } from "../forest/types";
 import type { GraphChunk, ObjectChunk } from "../values/types";
@@ -962,102 +960,88 @@ describe("@defer: subsequent results", () => {
     });
   });
 
-  describe.each(["subPath", "parent result"])(
-    "delivers data of objects by identity (%s)",
-    (format) => {
-      it.each([true, false])(
-        "after another write replaced the link (the original object is still in the result: %s)",
-        (reachable) => {
-          const cache = new TestCache();
-          const query = gql`
-            query {
-              viewers {
+  describe("delivers data of objects by identity", () => {
+    it.each([true, false])(
+      "after another write replaced the link (the original object is still in the result: %s)",
+      (reachable) => {
+        const cache = new TestCache();
+        const query = gql`
+          query {
+            viewers {
+              id
+              profile {
                 id
+                title
+              }
+              ... @defer {
+                name
                 profile {
-                  id
-                  title
-                }
-                ... @defer {
-                  name
-                  profile {
-                    bio
-                  }
+                  bio
                 }
               }
             }
-          `;
-          const profile = (id: string) => ({
-            __typename: "Profile",
-            id,
-            title: id,
-          });
-          const viewer = { ...user, profile: profile("A") };
-          const other = { ...user, id: "other", profile: profile("A") };
-          const peers = reachable ? [other] : [];
-          const path = ["viewers", 0];
-          cache.writeExecutionResult({
-            query,
-            execution: {
-              data: { viewers: [viewer, ...peers] },
-              ...(format === "subPath" && { pending: [{ id: "0", path }] }),
-              hasNext: true,
-            },
-          });
-          const replacement = { ...user, profile: profile("B") };
-          cache.writeQuery({
-            query,
-            data: { viewers: [replacement, ...peers] },
-          });
-          const name = "delivered";
-          const bio = "for A";
+          }
+        `;
+        const profile = (id: string) => ({
+          __typename: "Profile",
+          id,
+          title: id,
+        });
+        const viewer = { ...user, profile: profile("A") };
+        const other = { ...user, id: "other", profile: profile("A") };
+        const peers = reachable ? [other] : [];
+        const path = ["viewers", 0];
+        cache.writeExecutionResult({
+          query,
+          execution: {
+            data: { viewers: [viewer, ...peers] },
+            hasNext: true,
+          },
+        });
+        const replacement = { ...user, profile: profile("B") };
+        cache.writeQuery({
+          query,
+          data: { viewers: [replacement, ...peers] },
+        });
+        const name = "delivered";
+        const bio = "for A";
 
-          cache.writeExecutionResult({
-            query,
-            execution:
-              format === "subPath"
-                ? {
-                    incremental: [
-                      { id: "0", data: { name } },
-                      { id: "0", subPath: ["profile"], data: { bio } },
-                    ],
-                    completed: [{ id: "0" }],
-                    hasNext: false,
-                  }
-                : {
-                    incremental: [{ path, data: { name, profile: { bio } } }],
-                    hasNext: false,
-                  },
-          });
+        cache.writeExecutionResult({
+          query,
+          execution: {
+            incremental: [{ path, data: { name, profile: { bio } } }],
+            hasNext: false,
+          },
+        });
 
-          // The structure is local (the link stays B), data goes by identity: A gets `bio` (when in the result)
-          const diff = cache.diff<{ viewers: unknown[] }>({
-            query,
-            optimistic: false,
-            returnPartialData: true,
-          });
-          expect(diff.result?.viewers).toEqual([
-            { ...replacement, name },
-            ...(reachable
-              ? [{ ...other, profile: { ...profile("A"), bio } }]
-              : []),
-          ]);
-          // B didn't receive deferred data: its deferred field is missing, the result is incomplete (refetched)
-          expect(diff.complete).toBe(false);
-          const bioFragment = gql`
-            fragment Bio on Profile {
-              bio
-            }
-          `;
-          expect(
-            cache.readFragment({ id: "Profile:B", fragment: bioFragment }),
-          ).toBeNull();
-          expect(
-            cache.readFragment({ id: "Profile:A", fragment: bioFragment }),
-          ).toEqual(reachable ? { __typename: "Profile", bio } : null);
-        },
-      );
-    },
-  );
+        // The structure is local (the link stays B), data goes by identity: A gets `bio` (when in the result)
+        const diff = cache.diff<{ viewers: unknown[] }>({
+          query,
+          optimistic: false,
+          returnPartialData: true,
+        });
+        expect(diff.result?.viewers).toEqual([
+          { ...replacement, name },
+          ...(reachable
+            ? [{ ...other, profile: { ...profile("A"), bio } }]
+            : []),
+        ]);
+        // B didn't receive deferred data: its deferred field is missing, the result is incomplete (refetched)
+        expect(diff.complete).toBe(false);
+        const bioFragment = gql`
+          fragment Bio on Profile {
+            bio
+          }
+        `;
+        expect(
+          cache.readFragment({ id: "Profile:B", fragment: bioFragment }),
+        ).toBeNull();
+        expect(
+          cache.readFragment({ id: "Profile:A", fragment: bioFragment }),
+        ).toEqual(reachable ? { __typename: "Profile", bio } : null);
+      },
+    );
+  });
 
   it("reports results incomplete when deferred data was delivered to a replaced object", () => {
     const cache = new TestCache();
@@ -1374,416 +1358,6 @@ describe("@defer: deferred chunks of trees", () => {
     expect(cache.storedTree(messagesQuery)?.result.data.messages).toEqual([
       message("1"),
     ]);
-  });
-});
-
-describe("@defer: results in the incremental delivery format", () => {
-  // Incremental execution in the incremental delivery format (`pending`, `id`, `subPath`, `completed`)
-  function executeIncrementalDelivery(cache: ForestRun, query: DocumentNode) {
-    return {
-      initial(data: Record<string, unknown>, pending: PendingResult[]) {
-        cache.writeExecutionResult({
-          query,
-          execution: { data, pending, hasNext: true },
-        });
-      },
-      subsequent(execution: IncrementalDeliverySubsequentResult) {
-        cache.writeExecutionResult({ query, execution });
-      },
-    };
-  }
-
-  it("converts results with ids and sub-paths", () => {
-    const cache = new TestCache();
-    const query = gql`
-      query {
-        user {
-          id
-          profile {
-            id
-            ... @defer(label: "outer") {
-              settings {
-                theme
-              }
-            }
-          }
-          ... @defer(label: "inner") {
-            profile {
-              id
-              settings {
-                language
-              }
-            }
-          }
-        }
-      }
-    `;
-    const profile = { __typename: "Profile", id: "p" };
-    const execution = executeIncrementalDelivery(cache, query);
-    execution.initial({ user: { ...user, profile } }, [
-      { id: "0", path: ["user"], label: "inner" },
-      { id: "1", path: ["user", "profile"], label: "outer" },
-    ]);
-
-    execution.subsequent({
-      incremental: [
-        { id: "1", data: { settings: { theme: "dark" } } },
-        { id: "0", subPath: ["profile", "settings"], data: { language: "en" } },
-      ],
-      completed: [{ id: "0" }, { id: "1" }],
-      hasNext: false,
-    });
-
-    expect(cache.readQuery({ query })).toEqual({
-      user: {
-        ...user,
-        profile: { ...profile, settings: { theme: "dark", language: "en" } },
-      },
-    });
-  });
-
-  it("converts results with sub-paths of objects delivered by earlier payloads", () => {
-    const cache = new TestCache();
-    const query = gql`
-      query {
-        user {
-          id
-          profile {
-            id
-            ... @defer(label: "outer") {
-              settings {
-                theme
-              }
-            }
-          }
-          ... @defer(label: "inner") {
-            profile {
-              id
-              settings {
-                language
-              }
-            }
-          }
-        }
-      }
-    `;
-    const profile = { __typename: "Profile", id: "p" };
-    const execution = executeIncrementalDelivery(cache, query);
-    execution.initial({ user: { ...user, profile } }, [
-      { id: "0", path: ["user"], label: "inner" },
-      { id: "1", path: ["user", "profile"], label: "outer" },
-    ]);
-
-    execution.subsequent({
-      incremental: [{ id: "1", data: { settings: { theme: "dark" } } }],
-      completed: [{ id: "1" }],
-      hasNext: true,
-    });
-    execution.subsequent({
-      incremental: [
-        { id: "0", subPath: ["profile", "settings"], data: { language: "en" } },
-      ],
-      completed: [{ id: "0" }],
-      hasNext: false,
-    });
-
-    expect(cache.readQuery({ query })).toEqual({
-      user: {
-        ...user,
-        profile: { ...profile, settings: { theme: "dark", language: "en" } },
-      },
-    });
-  });
-
-  // Items are paired by indexes in the server view and resolved by keys: a local reorder is kept
-  it("resolves a list index in subPath against the server's original order", () => {
-    const cache = new TestCache();
-    const query = gql`
-      query {
-        messages {
-          id
-          text
-        }
-        ... @defer {
-          messages {
-            name
-          }
-        }
-      }
-    `;
-    const execution = executeIncrementalDelivery(cache, query);
-    execution.initial({ messages: [message("1"), message("2")] }, [
-      { id: "0", path: [] },
-    ]);
-    cache.modify({
-      fields: { messages: (existing) => [...existing].reverse() },
-    });
-
-    execution.subsequent({
-      incremental: [
-        { id: "0", subPath: ["messages", 0], data: { name: "one" } },
-      ],
-      completed: [{ id: "0" }],
-      hasNext: false,
-    });
-
-    expect(cache.readQuery({ query, returnPartialData: true })).toEqual({
-      __typename: "Query",
-      messages: [message("2"), message("1", "one")],
-    });
-  });
-
-  it("keeps data of list items when a subPath crosses a list", () => {
-    const cache = new TestCache();
-    const query = gql`
-      query {
-        messages {
-          id
-          info {
-            size
-          }
-        }
-        ... @defer {
-          messages {
-            info {
-              more
-            }
-          }
-        }
-      }
-    `;
-    const info = { __typename: "Info", size: 1 };
-    const item = { __typename: "Message", id: "1", info };
-    const execution = executeIncrementalDelivery(cache, query);
-    execution.initial({ messages: [item] }, [{ id: "0", path: [] }]);
-
-    execution.subsequent({
-      incremental: [
-        { id: "0", subPath: ["messages", 0, "info"], data: { more: "more" } },
-      ],
-      completed: [{ id: "0" }],
-      hasNext: false,
-    });
-
-    expect(cache.readQuery({ query })).toEqual({
-      __typename: "Query",
-      messages: [{ ...item, info: { ...info, more: "more" } }],
-    });
-  });
-
-  it.each([true, false])(
-    "retains data delivered above a pending path (in separate payloads: %s)",
-    (split) => {
-      const query = gql`
-        query {
-          viewer {
-            id
-            profile {
-              id
-              ... @defer(label: "inner") {
-                settings {
-                  language
-                }
-              }
-            }
-            ... @defer(label: "outer") {
-              profile {
-                settings {
-                  theme
-                }
-              }
-            }
-          }
-        }
-      `;
-      const cache = new TestCache();
-      const execution = executeIncrementalDelivery(cache, query);
-      const profile = { __typename: "Profile", id: "p" };
-      execution.initial({ viewer: { ...user, profile } }, [
-        { id: "inner", path: ["viewer", "profile"], label: "inner" },
-        { id: "outer", path: ["viewer"], label: "outer" },
-      ]);
-      const outer = {
-        id: "outer",
-        data: { profile: { settings: { theme: "dark" } } },
-      };
-      const inner = {
-        id: "inner",
-        subPath: ["settings"],
-        data: { language: "en" },
-      };
-      if (split) {
-        execution.subsequent({
-          incremental: [outer],
-          completed: [{ id: "outer" }],
-          hasNext: true,
-        });
-      }
-      execution.subsequent({
-        incremental: split ? [inner] : [outer, inner],
-        completed: split
-          ? [{ id: "inner" }]
-          : [{ id: "outer" }, { id: "inner" }],
-        hasNext: false,
-      });
-
-      expect(cache.diff({ query, optimistic: false })).toMatchObject({
-        complete: true,
-        result: {
-          viewer: {
-            ...user,
-            profile: {
-              ...profile,
-              settings: { theme: "dark", language: "en" },
-            },
-          },
-        },
-      });
-    },
-  );
-
-  it("does not deliver a list again when a sub-path delivers a field of its item", () => {
-    const merge = jest.fn((existing: unknown[] = [], incoming: unknown[]) => [
-      ...existing,
-      ...incoming,
-    ]);
-    const mergeTags = jest.fn((_, incoming) => incoming);
-    const cache = new TestCache({
-      typePolicies: {
-        Query: { fields: { messages: { merge } } },
-        Message: { fields: { tags: { merge: mergeTags } } },
-      },
-    });
-    const query = gql`
-      query {
-        messages {
-          id
-          text
-        }
-        ... @defer {
-          messages {
-            name
-            tags
-          }
-        }
-      }
-    `;
-    const execution = executeIncrementalDelivery(cache, query);
-    execution.initial({ messages: [message("1"), message("2")] }, [
-      { id: "name", path: [] },
-    ]);
-    merge.mockClear();
-
-    execution.subsequent({
-      incremental: [
-        {
-          id: "name",
-          subPath: ["messages", 0],
-          data: { name: "one", tags: ["new"] },
-        },
-      ],
-      completed: [{ id: "name" }],
-      hasNext: false,
-    });
-
-    expect(cache.readQuery({ query, returnPartialData: true })).toEqual({
-      __typename: "Query",
-      messages: [{ ...message("1", "one"), tags: ["new"] }, message("2")],
-    });
-    expect(merge).not.toHaveBeenCalled();
-    expect(mergeTags).toHaveBeenCalledTimes(1);
-  });
-
-  it("converts results of pending fragments announced by subsequent results", () => {
-    const cache = new TestCache();
-    const execution = executeIncrementalDelivery(cache, nestedQuery);
-    execution.initial({ user }, [{ id: "0", path: ["user"], label: "outer" }]);
-
-    execution.subsequent({
-      incremental: [
-        { id: "0", data: { name: "user", friends: [friend("1")] } },
-      ],
-      pending: [{ id: "1", path: ["user", "friends", 0], label: "inner" }],
-      completed: [{ id: "0" }],
-      hasNext: true,
-    });
-    expect([
-      ...(cache.execution(nestedQuery)?.pendingResults?.keys() ?? []),
-    ]).toEqual(["1"]);
-
-    execution.subsequent({
-      incremental: [{ id: "1", data: { bio: "first" } }],
-      completed: [{ id: "1" }],
-      hasNext: false,
-    });
-
-    expect(cache.execution(nestedQuery)).toBeUndefined();
-    expect(cache.readQuery({ query: nestedQuery })).toEqual({
-      user: { ...user, name: "user", friends: [friend("1", "first")] },
-    });
-  });
-
-  it("writes results of fragments nested in omitted fragments", () => {
-    const cache = new TestCache();
-    const query = gql`
-      query {
-        user {
-          id
-          friends {
-            id
-          }
-          ... @defer(label: "outer") {
-            friends {
-              id
-              ... @defer(label: "inner") {
-                bio
-              }
-            }
-          }
-        }
-      }
-    `;
-    const execution = executeIncrementalDelivery(cache, query);
-    execution.initial({ user: { ...user, friends: [friend("1")] } }, [
-      { id: "0", path: ["user"], label: "outer" },
-    ]);
-
-    // All fields of the outer fragment were delivered: the fragment is omitted
-    execution.subsequent({
-      pending: [{ id: "1", path: ["user", "friends", 0], label: "inner" }],
-      completed: [{ id: "0" }],
-      hasNext: true,
-    });
-    execution.subsequent({
-      incremental: [{ id: "1", data: { bio: "first" } }],
-      completed: [{ id: "1" }],
-      hasNext: false,
-    });
-
-    expect(cache.readQuery({ query })).toEqual({
-      user: { ...user, friends: [friend("1", "first")] },
-    });
-  });
-
-  it("ignores failed fragments and results of unknown ids", () => {
-    const cache = new TestCache();
-    const execution = executeIncrementalDelivery(cache, messagesQuery);
-    execution.initial({ messages: [message("1"), message("2")] }, [
-      { id: "0", path: ["messages", 0], label: "name" },
-      { id: "1", path: ["messages", 1], label: "name" },
-    ]);
-    const before = cache.extract();
-
-    execution.subsequent({
-      incremental: [{ id: "unknown", data: { name: "unknown" } }],
-      completed: [{ id: "0", errors: [{ message: "failed" }] }],
-      hasNext: true,
-    });
-
-    expect(cache.extract()).toEqual(before);
-    expect([
-      ...(cache.execution(messagesQuery)?.pendingResults?.keys() ?? []),
-    ]).toEqual(["1"]);
   });
 });
 
@@ -2174,149 +1748,124 @@ describe("@defer: merge policies of subsequent results", () => {
     });
   });
 
-  describe.each(["2022", "incremental delivery"])(
-    "a deferred fragment re-selecting a list with a merge policy (%s format)",
-    (format) => {
-      const queries = {
-        site: gql`
-          query {
-            messages {
-              id
-              text
-            }
-            ... @defer {
-              messages {
-                name
-              }
-            }
-          }
-        `,
-        item: gql`
-          query {
-            messages {
-              id
-              text
-              ... @defer {
-                name
-              }
-            }
-          }
-        `,
-      };
-      const list = gql`
+  describe("a deferred fragment re-selecting a list with a merge policy", () => {
+    const queries = {
+      site: gql`
         query {
           messages {
             id
             text
           }
-        }
-      `;
-      const name = gql`
-        fragment Name on Message {
-          id
-          name
-        }
-      `;
-      const page = (prefix: string) =>
-        Array.from({ length: 40 }, (_, i) => message(`${prefix}${i}`));
-
-      it.each(["site", "item"] as const)(
-        "routes deferred data to items by keys (defer at the %s)",
-        (kind) => {
-          const merge = jest.fn(
-            (existing: unknown[] = [], incoming: unknown[]) => [
-              ...existing,
-              ...incoming,
-            ],
-          );
-          const cache = new TestCache({
-            typePolicies: { Query: { fields: { messages: { merge } } } },
-          });
-          const query = queries[kind];
-          cache.writeQuery({ query: list, data: { messages: page("old") } });
-          const paths =
-            kind === "site"
-              ? [{ id: "0", path: [] }]
-              : page("new").map((_, i) => ({
-                  id: String(i),
-                  path: ["messages", i],
-                }));
-          cache.writeExecutionResult({
-            query,
-            execution: {
-              data: { messages: page("new") },
-              ...(format === "incremental delivery" && { pending: paths }),
-              hasNext: true,
-            },
-          });
-          expect(
-            cache.readQuery<{ messages: unknown[] }>({ query: list })?.messages,
-          ).toHaveLength(80);
-          // Another write inserts an item
-          cache.modify({
-            fields: {
-              messages(existing: readonly unknown[]) {
-                const ref = cache.writeFragment({
-                  fragment: gql`
-                    fragment Inserted on Message {
-                      id
-                      text
-                    }
-                  `,
-                  data: message("inserted"),
-                });
-                return [...existing.slice(0, 40), ref, ...existing.slice(40)];
-              },
-            },
-          });
-          merge.mockClear();
-
-          const names = page("new").map((_, i) => ({ name: `name ${i}` }));
-          cache.writeExecutionResult({
-            query,
-            execution:
-              format === "2022"
-                ? {
-                    incremental:
-                      kind === "site"
-                        ? [{ path: [], data: { messages: names } }]
-                        : names.map((data, i) => ({
-                            path: ["messages", i],
-                            data,
-                          })),
-                    hasNext: false,
-                  }
-                : {
-                    incremental: names.map((data, i) =>
-                      kind === "site"
-                        ? { id: "0", subPath: ["messages", i], data }
-                        : { id: String(i), data },
-                    ),
-                    completed: paths.map(({ id }) => ({ id })),
-                    hasNext: false,
-                  },
-          });
-
-          const messages = cache.readQuery<{ messages: unknown[] }>({
-            query: list,
-          })?.messages;
-          expect(messages).toHaveLength(81);
-          expect(messages?.[40]).toEqual(message("inserted"));
-          expect(merge).not.toHaveBeenCalled();
-          for (let i = 0; i < 40; i++) {
-            expect(
-              cache.readFragment({ id: `Message:new${i}`, fragment: name }),
-            ).toEqual({
-              __typename: "Message",
-              id: `new${i}`,
-              name: `name ${i}`,
-            });
+          ... @defer {
+            messages {
+              name
+            }
           }
+        }
+      `,
+      item: gql`
+        query {
+          messages {
+            id
+            text
+            ... @defer {
+              name
+            }
+          }
+        }
+      `,
+    };
+    const list = gql`
+      query {
+        messages {
+          id
+          text
+        }
+      }
+    `;
+    const name = gql`
+      fragment Name on Message {
+        id
+        name
+      }
+    `;
+    const page = (prefix: string) =>
+      Array.from({ length: 40 }, (_, i) => message(`${prefix}${i}`));
+
+    it.each(["site", "item"] as const)(
+      "routes deferred data to items by keys (defer at the %s)",
+      (kind) => {
+        const merge = jest.fn(
+          (existing: unknown[] = [], incoming: unknown[]) => [
+            ...existing,
+            ...incoming,
+          ],
+        );
+        const cache = new TestCache({
+          typePolicies: { Query: { fields: { messages: { merge } } } },
+        });
+        const query = queries[kind];
+        cache.writeQuery({ query: list, data: { messages: page("old") } });
+        cache.writeExecutionResult({
+          query,
+          execution: {
+            data: { messages: page("new") },
+            hasNext: true,
+          },
+        });
+        expect(
+          cache.readQuery<{ messages: unknown[] }>({ query: list })?.messages,
+        ).toHaveLength(80);
+        // Another write inserts an item
+        cache.modify({
+          fields: {
+            messages(existing: readonly unknown[]) {
+              const ref = cache.writeFragment({
+                fragment: gql`
+                  fragment Inserted on Message {
+                    id
+                    text
+                  }
+                `,
+                data: message("inserted"),
+              });
+              return [...existing.slice(0, 40), ref, ...existing.slice(40)];
+            },
+          },
+        });
+        merge.mockClear();
+
+        const names = page("new").map((_, i) => ({ name: `name ${i}` }));
+        cache.writeExecutionResult({
+          query,
+          execution: {
+            incremental:
+              kind === "site"
+                ? [{ path: [], data: { messages: names } }]
+                : names.map((data, i) => ({ path: ["messages", i], data })),
+            hasNext: false,
+          },
+        });
+
+        const messages = cache.readQuery<{ messages: unknown[] }>({
+          query: list,
+        })?.messages;
+        expect(messages).toHaveLength(81);
+        expect(messages?.[40]).toEqual(message("inserted"));
+        expect(merge).not.toHaveBeenCalled();
+        for (let i = 0; i < 40; i++) {
           expect(
-            cache.readFragment({ id: "Message:old0", fragment: name }),
-          ).toBeNull();
-        },
-      );
-    },
-  );
+            cache.readFragment({ id: `Message:new${i}`, fragment: name }),
+          ).toEqual({
+            __typename: "Message",
+            id: `new${i}`,
+            name: `name ${i}`,
+          });
+        }
+        expect(
+          cache.readFragment({ id: "Message:old0", fragment: name }),
+        ).toBeNull();
+      },
+    );
+  });
 });

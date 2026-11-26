@@ -64,11 +64,6 @@ import {
 } from "../descriptor/resolvedSelection";
 import { accumulate } from "../jsutils/map";
 import {
-  convertIncrementalDeliveryResult,
-  isIncrementalDeliveryResult,
-  trackPendingResults,
-} from "./format";
-import {
   getDataAt,
   isPathPrefix,
   isSourceData,
@@ -76,6 +71,9 @@ import {
   mergeServerData,
 } from "./data";
 import { equal } from "@wry/equality";
+
+// TODO: support the incremental delivery format (graphql-js 17: pending/id/subPath/completed);
+//   a converter to the 2022 format existed in db17a309 (incremental/format.ts)
 
 /**
  * Subsequent results of incremental delivery (`@defer`, the 2022 draft format) are written as a regular result
@@ -87,8 +85,6 @@ import { equal } from "@wry/equality";
  * of the initial result and of delivered data.
  * Merge policies only run for delivered fields (see `DeliveredFields`), diffing is restricted to them too (`seed`).
  *
- * Results in the incremental delivery format are converted to the 2022 draft format first
- * (see `convertIncrementalDeliveryResult`).
  * Returns undefined when there is nothing to write.
  */
 export function spliceSubsequentResult(
@@ -111,9 +107,6 @@ export function spliceSubsequentResult(
     // Results of an unknown or a superseded execution
     return undefined;
   }
-  const result = isIncrementalDeliveryResult(execution)
-    ? convertIncrementalDeliveryResult(incremental, execution)
-    : execution;
   // Execution results are written to the base forest only
   const tree =
     getExistingResult(env, store, store.dataForest, operation) ??
@@ -123,7 +116,7 @@ export function spliceSubsequentResult(
     ? spliceIncrementalResults(
         tree,
         incremental,
-        result,
+        execution,
         (type, field) => Boolean(mergePolicies.get(type)?.has(field)),
         (data, selections) =>
           objectKey(
@@ -137,7 +130,7 @@ export function spliceSubsequentResult(
           ),
       )
     : undefined;
-  if (result.hasNext === false) {
+  if (execution.hasNext === false) {
     store.incrementalExecutions.delete(operation);
     if (!operation.cache) {
       // The descriptor was retained while the execution was pending (see canReleaseOperationDescriptor)
@@ -732,15 +725,7 @@ function updateIncrementalExecution(
     serverData: undefined,
     // Results of operations which are not stored (e.g. mutations) are spliced into their latest result
     transientTree: shouldCache(targetForest, operation) ? undefined : merged,
-    pendingResults: undefined,
   };
-  if ("pending" in execution) {
-    trackPendingResults(
-      incremental,
-      execution.pending,
-      isSourceData(execution.data) ? execution.data : undefined,
-    );
-  }
   const findParent = createParentLocator(indexed.dataMap);
   const findMergedParent = createParentLocator(merged.dataMap);
   for (const chunk of indexed.deferredChunks ?? EMPTY_ARRAY) {

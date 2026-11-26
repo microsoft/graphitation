@@ -14,8 +14,6 @@ export type {
   CompleteExecutionResult,
   ExecutionKey,
   ExecutionResult,
-  IncrementalDeliveryInitialResult,
-  IncrementalDeliverySubsequentResult,
   InitialIncrementalExecutionResult,
   SubsequentIncrementalExecutionResult,
 } from "./incremental/types";
