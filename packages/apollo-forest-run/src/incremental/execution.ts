@@ -545,7 +545,8 @@ function updateIncrementalExecution(
     );
   }
   const findParent = createParentLocator(indexed.dataMap);
-  const findMergedParent = createParentLocator(merged.dataMap);
+  const findMergedParent =
+    merged === indexed ? findParent : createParentLocator(merged.dataMap);
   for (const chunk of indexed.deferredChunks ?? EMPTY_ARRAY) {
     addPlaceholder(
       incremental,
@@ -630,10 +631,12 @@ function resolveDelivery(
       accumulate(targets, chunk, result);
     }
   }
+  const findParent = createParentLocator(indexed.dataMap);
   return {
     targets,
-    findParent: createParentLocator(indexed.dataMap),
-    findMergedParent: createParentLocator(merged.dataMap),
+    findParent,
+    findMergedParent:
+      merged === indexed ? findParent : createParentLocator(merged.dataMap),
   };
 }
 
@@ -661,6 +664,13 @@ function createAddress(
   findParent: ParentLocator,
   chunk: ObjectChunk,
 ): ObjectAddress {
+  if (isNodeValue(chunk)) {
+    return {
+      nodeKey: chunk.key,
+      nodeSelections: chunk.possibleSelections,
+      pathFromNode: EMPTY_ARRAY,
+    };
+  }
   const node = findClosestNode(chunk, findParent);
   return {
     nodeKey: node.key,
