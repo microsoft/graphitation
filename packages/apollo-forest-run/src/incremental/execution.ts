@@ -144,6 +144,19 @@ export function captureIncrementalExecution(
 }
 
 /**
+ * Merge policies of a spliced result only run for delivered fields (other fields already went through them):
+ * listed fields of copies of stored objects and all fields of delivered objects (not objects of the stored result).
+ */
+export function createDeliveredFieldFilter(
+  { deliveredFields }: SplicedIncrementalResult,
+  indexed: IndexedTree,
+): (parent: ObjectChunk, field: FieldInfo) => boolean {
+  return (parent, field) =>
+    deliveredFields.get(parent.data)?.has(field.dataKey) ??
+    !indexed.prev?.dataMap.has(parent.data);
+}
+
+/**
  * Initial differences of nodes with spliced data (see diffTree), collected when splicing:
  * restricted to delivered fields and paths to them (other fields of copies are the same as in the stored result).
  */

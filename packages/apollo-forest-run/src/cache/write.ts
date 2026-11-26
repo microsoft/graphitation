@@ -35,6 +35,7 @@ import { createParentLocator, markAsPartial, TraverseEnv } from "../values";
 import { NodeDifferenceMap } from "../forest/updateTree";
 import {
   captureIncrementalExecution,
+  createDeliveredFieldFilter,
   isSplicedIncrementalResult,
   seedDifferences,
 } from "../incremental/execution";
@@ -150,7 +151,7 @@ export function write(
     mergePolicies,
     incomingResult,
     options.overwrite ?? false,
-    splicedResult?.deliveredFields,
+    splicedResult && createDeliveredFieldFilter(splicedResult, incomingResult),
   );
 
   captureIncrementalExecution(

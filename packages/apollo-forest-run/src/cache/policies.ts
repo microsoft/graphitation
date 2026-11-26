@@ -20,7 +20,6 @@ import type {
   TypeName,
 } from "../descriptor/types";
 import type {
-  CompositeListChunk,
   FieldName,
   GraphChunk,
   IncompleteValues,
@@ -42,8 +41,6 @@ import {
   isCompositeUndefinedValue,
   isMissingValue,
   isObjectValue,
-  isParentObjectRef,
-  isRootRef,
   isScalarValue,
   isSourceObject,
   resolveFieldChunk,
@@ -51,7 +48,7 @@ import {
   retrieveEmbeddedChunk,
   TraverseEnv,
 } from "../values";
-import { CacheEnv, DataForest, FieldScope, OptimisticLayer } from "./types";
+import { CacheEnv, DataForest, OptimisticLayer } from "./types";
 import {
   createChunkMatcher,
   createChunkProvider,
@@ -186,8 +183,8 @@ export function applyMergePolicies(
   mergePoliciesMap: Map<TypeName, Map<FieldName, FieldMergeFunction>>,
   incomingTree: IndexedTree,
   overwrite: boolean,
-  // Restricts merge policies to fields in scope (see FieldScope). Existing values of those are read from the forest
-  applyToFields?: FieldScope,
+  // Restricts merge policies to some fields. Existing values of those fields are read from the forest
+  applyToField?: (parent: ObjectChunk, field: FieldInfo) => boolean,
 ): IndexedTree {
   const findChunkInfo = (value: ApolloStoreValue | SourceObject) => {
     if (typeof value !== "object" || value === null) {
@@ -227,7 +224,6 @@ export function applyMergePolicies(
       return result;
     },
   };
-  const objectsInScope = new Map<SourceObject, boolean>();
   return transformTree(
     env,
     incomingTree,
@@ -252,10 +248,7 @@ export function applyMergePolicies(
         if (isMissingValue(fieldValue)) {
           return undefined;
         }
-        if (
-          applyToFields &&
-          !isFieldInScope(applyToFields, objectsInScope, pathEnv, parent, field)
-        ) {
+        if (applyToField && !applyToField(parent, field)) {
           return fieldDiff;
         }
         let existingChunk: GraphChunk | undefined;
@@ -265,9 +258,9 @@ export function applyMergePolicies(
             findExistingChunk(pathEnv, incomingTree, parent) ??
             findChunk(pathEnv, layers, parent);
 
-          // Fields in scope may be missing in the previous result, so their existing values are read from the forest
+          // Restricted fields may be missing in the previous result, so their existing values are read from the forest
           existingChunk =
-            existingParent && !applyToFields
+            existingParent && !applyToField
               ? resolveFieldChunk(existingParent, field)
               : materializeFromForest(env, pathEnv, layers, parent, field);
 
@@ -312,55 +305,6 @@ export function applyMergePolicies(
       },
     },
   );
-}
-
-// A field is in scope if it is listed for its object, or if its object lies within the value of a field in scope
-function isFieldInScope(
-  scope: FieldScope,
-  objectsInScope: Map<SourceObject, boolean>,
-  env: TraverseEnv,
-  parent: ObjectChunk,
-  field: FieldInfo,
-): boolean {
-  const listed = scope.get(parent.data);
-  return listed
-    ? listed.has(field.dataKey)
-    : isObjectInScope(scope, objectsInScope, env, parent);
-}
-
-function isObjectInScope(
-  scope: FieldScope,
-  objectsInScope: Map<SourceObject, boolean>,
-  env: TraverseEnv,
-  object: ObjectChunk,
-): boolean {
-  const known = objectsInScope.get(object.data);
-  if (known !== undefined) {
-    return known;
-  }
-  let value: ObjectChunk | CompositeListChunk = object;
-  let inScope = false;
-  for (;;) {
-    const ref = env.findParent(value);
-    if (isRootRef(ref)) {
-      break;
-    }
-    if (isParentObjectRef(ref)) {
-      const listed = scope.get(ref.parent.data);
-      if (listed) {
-        inScope = listed.has(ref.field.dataKey);
-        break;
-      }
-      const parentInScope = objectsInScope.get(ref.parent.data);
-      if (parentInScope !== undefined) {
-        inScope = parentInScope;
-        break;
-      }
-    }
-    value = ref.parent;
-  }
-  objectsInScope.set(object.data, inScope);
-  return inScope;
 }
 
 function materializeFromForest(
