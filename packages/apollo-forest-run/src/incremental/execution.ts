@@ -568,23 +568,18 @@ function updateIncrementalExecution(
  * of the spliced result + the path within its data.
  */
 function captureDeliveredPlaceholders(
-  { incremental, results }: SplicedIncrementalResult,
+  { incremental, results, deliveredFields, tree }: SplicedIncrementalResult,
   indexed: IndexedTree,
   merged: IndexedTree,
 ) {
-  const root = indexed.dataMap.get(indexed.result.data)?.value;
-  assert(root && isObjectValue(root));
-  // Objects results were delivered to (by chunks: unlike sources, chunks are unique per location)
-  const targets = new Map<ObjectChunk, SplicedIncrementalResultEntry[]>();
-  for (const result of results) {
-    const chunk = resolveResponsePath(root, result.localPath);
-    if (chunk) {
-      accumulate(targets, chunk, result);
-    }
-  }
-  const findParent = createParentLocator(indexed.dataMap);
-  const findMergedParent = createParentLocator(merged.dataMap);
+  let delivery: Delivery | undefined;
   for (const chunk of indexed.deferredChunks ?? EMPTY_ARRAY) {
+    // Objects of the stored result (and their copies) already have placeholders: only delivered objects are new
+    if (deliveredFields.has(chunk.data) || tree.dataMap.has(chunk.data)) {
+      continue;
+    }
+    delivery ??= resolveDelivery(results, indexed, merged);
+    const { targets, findParent, findMergedParent } = delivery;
     // The closest object results were delivered to
     let target: ObjectChunk | CompositeListChunk = chunk;
     let entries = targets.get(chunk);
@@ -610,6 +605,35 @@ function captureDeliveredPlaceholders(
       ]);
     }
   }
+}
+
+// Created on demand: only when there are new chunks with deferred fragments
+type Delivery = {
+  // Objects results were delivered to (by chunks: unlike sources, chunks are unique per location)
+  targets: Map<ObjectChunk, SplicedIncrementalResultEntry[]>;
+  findParent: ParentLocator;
+  findMergedParent: ParentLocator;
+};
+
+function resolveDelivery(
+  results: SplicedIncrementalResultEntry[],
+  indexed: IndexedTree,
+  merged: IndexedTree,
+): Delivery {
+  const root = indexed.dataMap.get(indexed.result.data)?.value;
+  assert(root && isObjectValue(root));
+  const targets = new Map<ObjectChunk, SplicedIncrementalResultEntry[]>();
+  for (const result of results) {
+    const chunk = resolveResponsePath(root, result.localPath);
+    if (chunk) {
+      accumulate(targets, chunk, result);
+    }
+  }
+  return {
+    targets,
+    findParent: createParentLocator(indexed.dataMap),
+    findMergedParent: createParentLocator(merged.dataMap),
+  };
 }
 
 // The address is captured in the result with merge policies applied (merge policies may move objects)
