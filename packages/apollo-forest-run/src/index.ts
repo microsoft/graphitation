@@ -9,7 +9,7 @@ export type {
   TelemetryEvent,
 } from "./telemetry/types";
 export type { ForestRunAdditionalConfig } from "./cache/types";
-export type { WriteOptions } from "./cache/types";
+export type { ExecutionWriteOptions } from "./cache/types";
 export type {
   CompleteExecutionResult,
   ExecutionKey,

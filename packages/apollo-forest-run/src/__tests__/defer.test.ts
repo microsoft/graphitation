@@ -53,7 +53,7 @@ function execute(
 ) {
   return {
     initial(data: Record<string, unknown>) {
-      cache.write({
+      cache.writeExecutionResult({
         query,
         variables,
         execution: { data, hasNext: true, key },
@@ -63,7 +63,7 @@ function execute(
       incremental: IncrementalDeferResult[],
       { hasNext = false }: { hasNext?: boolean } = {},
     ) {
-      return cache.write({
+      return cache.writeExecutionResult({
         query,
         variables,
         execution: { incremental, hasNext, key },
@@ -759,7 +759,7 @@ describe("@defer: subsequent results", () => {
     const cache = new TestCache();
     const execution = execute(cache, messagesQuery);
     execution.initial({ messages: [message("1")] });
-    cache.write({
+    cache.writeExecutionResult({
       query: messagesQuery,
       execution: { data: { messages: [message("1", "complete")] } },
     });
@@ -774,7 +774,7 @@ describe("@defer: subsequent results", () => {
 
   it("does not track results with deferred data resolved inline (a complete result)", () => {
     const cache = new TestCache();
-    cache.write({
+    cache.writeExecutionResult({
       query: messagesQuery,
       execution: { data: { messages: [message("1", "inline")] } },
     });
@@ -811,7 +811,7 @@ describe("@defer: subsequent results", () => {
       }
     `;
     const variables = { defer: false };
-    cache.write({
+    cache.writeExecutionResult({
       query,
       variables,
       execution: { data: { messages: [message("1")] }, hasNext: true },
@@ -1051,10 +1051,13 @@ describe("@defer: results in the incremental delivery format", () => {
   function executeIncrementalDelivery(cache: ForestRun, query: DocumentNode) {
     return {
       initial(data: Record<string, unknown>, pending: PendingResult[]) {
-        cache.write({ query, execution: { data, pending, hasNext: true } });
+        cache.writeExecutionResult({
+          query,
+          execution: { data, pending, hasNext: true },
+        });
       },
       subsequent(execution: IncrementalDeliverySubsequentResult) {
-        cache.write({ query, execution });
+        cache.writeExecutionResult({ query, execution });
       },
     };
   }

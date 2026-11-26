@@ -21,10 +21,13 @@ const completeData = {
   message: { ...initialData.message, details: "World" },
 };
 
-describe("write with options.execution", () => {
+describe("writeExecutionResult", () => {
   it("writes a complete result", () => {
     const cache = new ForestRun();
-    const ref = cache.write({ query, execution: { data: completeData } });
+    const ref = cache.writeExecutionResult({
+      query,
+      execution: { data: completeData },
+    });
     const diff = cache.diff({ query, optimistic: false });
 
     expect(ref).toEqual({ __ref: "ROOT_QUERY" });
@@ -34,7 +37,7 @@ describe("write with options.execution", () => {
   it("writes an initial result like a regular result with missing deferred fields", () => {
     const cache = new ForestRun();
     const legacyCache = new ForestRun();
-    cache.write({
+    cache.writeExecutionResult({
       query,
       execution: {
         data: initialData,
@@ -51,26 +54,66 @@ describe("write with options.execution", () => {
     expect(diff).toEqual(legacyDiff);
   });
 
-  it("prefers execution over the deprecated result", () => {
+  it("returns the root reference like write", () => {
     const cache = new ForestRun();
-    cache.write({
+    const legacyCache = new ForestRun();
+    const ref = cache.writeExecutionResult({
       query,
-      result: initialData,
       execution: { data: completeData },
     });
+    const legacyRef = legacyCache.write({ query, result: completeData });
 
-    expect(cache.diff({ query, optimistic: false }).result).toEqual(
-      completeData,
-    );
+    expect(ref).toEqual(legacyRef);
+    expect(cache.extract()).toEqual(legacyCache.extract());
   });
 
-  it("still writes the deprecated result", () => {
+  it("writes subsequent results only via writeExecutionResult", () => {
     const cache = new ForestRun();
-    cache.write({ query, result: completeData });
+    cache.writeExecutionResult({
+      query,
+      execution: { data: initialData, hasNext: true },
+    });
+    const ref = cache.writeExecutionResult({
+      query,
+      execution: {
+        incremental: [{ path: ["message"], data: { details: "World" } }],
+        hasNext: false,
+      },
+    });
 
+    expect(ref).toBeUndefined();
     expect(cache.diff({ query, optimistic: false })).toMatchObject({
       complete: true,
       result: completeData,
     });
+    // @ts-expect-error write accepts results only (Apollo Cache.WriteOptions)
+    cache.write({ query, execution: { incremental: [], hasNext: false } });
+  });
+});
+
+describe("write", () => {
+  it("writes the result (Apollo Cache.WriteOptions)", () => {
+    const cache = new ForestRun();
+    const ref = cache.write({ query, result: completeData });
+
+    expect(ref).toEqual({ __ref: "ROOT_QUERY" });
+    expect(cache.diff({ query, optimistic: false })).toMatchObject({
+      complete: true,
+      result: completeData,
+    });
+  });
+
+  it("ignores execution results", () => {
+    const cache = new ForestRun();
+    const options = {
+      query,
+      result: initialData,
+      execution: { data: completeData },
+    };
+    cache.write(options);
+
+    expect(cache.diff({ query, optimistic: false }).result).toEqual(
+      initialData,
+    );
   });
 });

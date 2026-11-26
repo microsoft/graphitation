@@ -17,7 +17,7 @@ import type {
   SerializedOperationInfo,
   Store,
   Transaction,
-  WriteOptions,
+  ExecutionWriteOptions,
 } from "./cache/types";
 import { ApolloCache } from "@apollo/client";
 import { assert } from "./jsutils/assert";
@@ -204,10 +204,7 @@ export class ForestRun<
     return result.dirty;
   }
 
-  /**
-   * Writes a complete result, or results of incremental delivery (`@defer`) via `options.execution`.
-   */
-  public write(options: WriteOptions): Reference | undefined {
+  public write(options: Cache.WriteOptions): Reference | undefined {
     return this.transactionStack.length
       ? this.runWrite(options)
       : this.runTransaction({
@@ -215,11 +212,43 @@ export class ForestRun<
         });
   }
 
-  private runWrite(options: WriteOptions): Reference | undefined {
+  /**
+   * Writes an execution result: a complete result, or results of incremental delivery (`@defer`).
+   * Complete and initial results are written as with `write`, subsequent results are spliced into the stored result.
+   */
+  public writeExecutionResult(
+    options: ExecutionWriteOptions,
+  ): Reference | undefined {
+    return this.transactionStack.length
+      ? this.runWriteExecutionResult(options)
+      : this.runTransaction({
+          update: () => this.runWriteExecutionResult(options),
+        });
+  }
+
+  private runWrite(options: Cache.WriteOptions): Reference | undefined {
+    const transaction = peek(this.transactionStack);
+    assert(transaction);
+    // Only `result` is written (execution results are written by writeExecutionResult)
+    const result = write(
+      this.env,
+      this.store,
+      transaction,
+      "execution" in options ? { ...options, execution: undefined } : options,
+    );
+    transaction.changelog.push(result);
+
+    const incoming = result.incoming;
+    return incoming.nodes.size ? getRef(incoming.rootNodeKey) : undefined;
+  }
+
+  private runWriteExecutionResult(
+    options: ExecutionWriteOptions,
+  ): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
     const { execution } = options;
-    if (execution && isSubsequentResult(execution)) {
+    if (isSubsequentResult(execution)) {
       // Written as a regular result of the operation, with incremental results spliced in
       const spliced = spliceSubsequentResult(
         this.env,

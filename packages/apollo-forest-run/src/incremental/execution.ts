@@ -13,7 +13,7 @@ import type {
   OptimisticLayer,
   Store,
   Transaction,
-  WriteOptions,
+  ExecutionWriteOptions,
 } from "../cache/types";
 import type {
   DeferredResult,
@@ -84,7 +84,7 @@ export function spliceSubsequentResult(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
-  options: WriteOptions,
+  options: ExecutionWriteOptions,
   execution: SubsequentExecutionResult,
 ): SplicedIncrementalResult | undefined {
   assert(typeof execution.hasNext === "boolean");

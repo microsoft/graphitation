@@ -353,13 +353,13 @@ export type SerializedCache = Record<
   SerializedOperationInfo
 >;
 
-export type WriteOptions = Omit<Cache.WriteOptions, "result"> & {
-  /** @deprecated Use `execution` (the result data is written as a complete result) */
-  result?: Cache.WriteOptions["result"];
-  execution?: ExecutionResult;
+// Options of ForestRun.writeExecutionResult: the same as of `write`, but with an execution result (instead of `result`)
+export type ExecutionWriteOptions = Omit<Cache.WriteOptions, "result"> & {
+  execution: ExecutionResult;
 };
 
 // Internal options of `write` (subsequent results are spliced into the stored result by ForestRun first)
-export type WriteOptionsInternal = Omit<WriteOptions, "execution"> & {
+export type WriteOptionsInternal = Omit<Cache.WriteOptions, "result"> & {
+  result?: Cache.WriteOptions["result"];
   execution?: InitialExecutionResult | SplicedIncrementalResult;
 };
