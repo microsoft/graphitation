@@ -908,10 +908,13 @@ describe("@defer: subsequent results", () => {
     });
   });
 
-  it("keeps the operation descriptor while results are pending", () => {
-    const cache = new TestCache({ autoEvict: false });
+  it("keeps the descriptor of a non-cacheable operation while results are pending", () => {
+    const cache = new TestCache({
+      autoEvict: false,
+      cleanupNonCacheableOperations: true,
+    });
     const mutation = gql`
-      mutation Send @cache {
+      mutation Send {
         send {
           id
           ... @defer {
@@ -921,12 +924,180 @@ describe("@defer: subsequent results", () => {
       }
     `;
     const execution = execute(cache, mutation);
-    cache.recordOptimisticTransaction(() => {
-      execution.initial({ send: message("1") });
-    }, "layer");
-    cache.removeOptimistic("layer");
+    execution.initial({ send: message("1") });
     expect(cache.placeholders(mutation)).toEqual(["send"]);
     expect(cache.canRelease(mutation)).toBe(false);
+
+    execution.subsequent([{ path: ["send"], data: { name: "one" } }]);
+
+    expect(cache.execution(mutation)).toBeUndefined();
+    expect(cache.canRelease(mutation)).toBe(true);
+  });
+
+  it("writes execution results to the base forest only", () => {
+    const cache = new TestCache();
+    expect(() =>
+      cache.recordOptimisticTransaction(() => {
+        execute(cache, messagesQuery).initial({ messages: [message("1")] });
+      }, "layer"),
+    ).toThrow();
+  });
+
+  it("writes results after an optimistic write of the operation is rolled back", () => {
+    const cache = new TestCache();
+    const execution = execute(cache, messagesQuery);
+    execution.initial({ messages: [message("1")] });
+    cache.recordOptimisticTransaction(() => {
+      cache.writeQuery({
+        query: messagesQuery,
+        data: { messages: [message("1", "optimistic")] },
+      });
+    }, "layer");
+    cache.removeOptimistic("layer");
+
+    execution.subsequent([{ path: ["messages", 0], data: { name: "final" } }]);
+
+    expect(cache.readQuery({ query: messagesQuery })).toEqual({
+      messages: [message("1", "final")],
+    });
+  });
+
+  describe.each(["subPath", "parent result"])(
+    "delivers objects in the server view (%s)",
+    (format) => {
+      it.each([true, false])(
+        "after another write replaced the object (the original is still reachable: %s)",
+        (reachable) => {
+          const cache = new TestCache();
+          const query = gql`
+            query {
+              viewers {
+                id
+                profile {
+                  id
+                  title
+                }
+                ... @defer {
+                  name
+                  profile {
+                    bio
+                  }
+                }
+              }
+            }
+          `;
+          const profile = (id: string) => ({
+            __typename: "Profile",
+            id,
+            title: id,
+          });
+          const viewer = { ...user, profile: profile("A") };
+          const other = { ...user, id: "other", profile: profile("A") };
+          const peers = reachable ? [other] : [];
+          const path = ["viewers", 0];
+          cache.writeExecutionResult({
+            query,
+            execution: {
+              data: { viewers: [viewer, ...peers] },
+              ...(format === "subPath" && { pending: [{ id: "0", path }] }),
+              hasNext: true,
+            },
+          });
+          const replacement = { ...user, profile: profile("B") };
+          cache.writeQuery({
+            query,
+            data: { viewers: [replacement, ...peers] },
+          });
+          const name = "delivered";
+          const bio = "for A";
+
+          cache.writeExecutionResult({
+            query,
+            execution:
+              format === "subPath"
+                ? {
+                    incremental: [
+                      { id: "0", data: { name } },
+                      { id: "0", subPath: ["profile"], data: { bio } },
+                    ],
+                    completed: [{ id: "0" }],
+                    hasNext: false,
+                  }
+                : {
+                    incremental: [{ path, data: { name, profile: { bio } } }],
+                    hasNext: false,
+                  },
+          });
+
+          // The server view of the delivered fragment wins (as with a refetch): A gets `bio` and is linked again
+          expect(
+            cache.readQuery<{ viewers: unknown[] }>({
+              query,
+              returnPartialData: true,
+            })?.viewers,
+          ).toEqual([
+            { ...user, profile: { ...profile("A"), bio }, name },
+            ...(reachable
+              ? [{ ...other, profile: { ...profile("A"), bio } }]
+              : []),
+          ]);
+        },
+      );
+    },
+  );
+
+  it("passes only delivered data of embedded objects to merge policies of non-cacheable operations", () => {
+    const merge = jest.fn((existing, incoming) => ({
+      ...existing,
+      ...incoming,
+    }));
+    const cache = new TestCache({
+      typePolicies: { User: { fields: { profile: { merge } } } },
+    });
+    const mutation = gql`
+      mutation {
+        edit {
+          id
+          profile {
+            title
+          }
+          ... @defer {
+            profile {
+              bio
+            }
+          }
+        }
+      }
+    `;
+    const query = gql`
+      query {
+        user {
+          id
+          profile {
+            title
+            bio
+          }
+        }
+      }
+    `;
+    const profile = { __typename: "Profile", title: "initial" };
+    const execution = execute(cache, mutation);
+    execution.initial({ edit: { ...user, profile } });
+    cache.writeQuery({
+      query,
+      data: { user: { ...user, profile: { ...profile, title: "local" } } },
+    });
+    merge.mockClear();
+
+    execution.subsequent([
+      { path: ["edit"], data: { profile: { bio: "new" } } },
+    ]);
+
+    expect(cache.readQuery({ query })).toEqual({
+      user: { ...user, profile: { ...profile, title: "local", bio: "new" } },
+    });
+    expect(merge).toHaveBeenCalledTimes(1);
+    expect(merge.mock.calls[0][1]).not.toHaveProperty("title");
   });
 });
 

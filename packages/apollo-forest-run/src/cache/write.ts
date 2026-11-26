@@ -155,6 +155,10 @@ export function write(
     splicedResult?.missingFields,
     existingResult ?? splicedResult?.incremental.transientTree,
   );
+  if (splicedResult && !existingResult) {
+    // A transient tree is only a source of recycled chunks (existing values are resolved from the forest)
+    incomingResult.prev = null;
+  }
 
   // ApolloCompat: necessary for fragment writes with custom ids
   if (options.dataId && incomingResult.rootNodeKey !== options.dataId) {
@@ -171,7 +175,7 @@ export function write(
     mergePolicies,
     incomingResult,
     options.overwrite ?? false,
-    splicedResult && createDeliveredFieldFilter(splicedResult, incomingResult),
+    splicedResult && createDeliveredFieldFilter(splicedResult),
   );
 
   captureIncrementalExecution(

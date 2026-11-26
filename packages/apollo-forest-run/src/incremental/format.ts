@@ -10,7 +10,13 @@ import type {
 } from "./types";
 import type { ResponsePath } from "../descriptor/types";
 import type { SourceObject } from "../values/types";
-import { isPathPrefix, isSourceData, mergeAt, mergeSourceData } from "./data";
+import {
+  getDataAt,
+  isPathPrefix,
+  isSourceData,
+  mergeAt,
+  mergeSourceData,
+} from "./data";
 
 /**
  * Subsequent results in the incremental delivery format (`pending`, `id`, `subPath`, `completed`) are converted
@@ -193,24 +199,6 @@ function reassemble(
     return object;
   }
   return undefined;
-}
-
-function getDataAt(
-  data: SourceObject,
-  path: ResponsePath,
-  index: number,
-): SourceObject | undefined {
-  let value: unknown = data;
-  for (let i = index; i < path.length; i++) {
-    const step = path[i];
-    value =
-      Array.isArray(value) && typeof step === "number"
-        ? value[step]
-        : isSourceData(value) && typeof step === "string"
-        ? value[step]
-        : undefined;
-  }
-  return isSourceData(value) ? value : undefined;
 }
 
 // Only results of the incremental delivery format have `pending`, `completed`, or results with `id`

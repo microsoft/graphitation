@@ -242,6 +242,8 @@ export class ForestRun<
   ): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
+    // Execution results are written to the base forest only (never optimistic)
+    assert(!transaction.optimisticLayer && !transaction.forceOptimistic);
     if (!isInitialExecutionWrite(options)) {
       const { execution } = options;
       assert(isSubsequentResult(execution));

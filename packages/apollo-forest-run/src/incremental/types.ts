@@ -150,8 +150,10 @@ export type ResponsePathKey = string;
 export type IncrementalExecution = {
   // A new execution of the operation replaces the previous one (late results of the previous one are ignored)
   key: ExecutionKey | undefined;
-  // Placeholders: addresses of objects with deferred fragments by their (server) response paths
-  placeholders: Map<ResponsePathKey, ObjectAddress>;
+  // Objects with deferred fragments by their (server) response paths
+  placeholders: Map<ResponsePathKey, DeferPlaceholder>;
+  // Data delivered by subsequent results so far (at their response paths), e.g. incoming values of merge policies
+  delivered: SourceObject | undefined;
   // The latest result of an operation which is not stored in the forest (e.g. a mutation): results are spliced into it
   transientTree: IndexedTree | undefined;
   // Pending results announced by results in the incremental delivery format (see convertIncrementalDeliveryResult)
@@ -165,6 +167,15 @@ export type IncrementalExecution = {
  */
 export type TrackedPendingResult = PendingResult & {
   data: SourceObject | undefined;
+};
+
+/**
+ * An object with deferred fragments: its address in the stored result, and its data as received from the server
+ * (references, e.g. to deliver objects in the server view: with key fields, see spliceData).
+ */
+export type DeferPlaceholder = {
+  address: ObjectAddress;
+  data: SourceObject;
 };
 
 /**
@@ -192,6 +203,8 @@ export type DeferredResult = {
 export type SplicedIncrementalResult = {
   readonly kind: "SplicedIncrementalResult";
   incremental: IncrementalExecution;
+  // The result data was spliced into (stored or transient, see IncrementalExecution.transientTree)
+  tree: IndexedTree;
   data: SourceObject;
   deliveredFields: DeliveredFields;
   missingFields: MissingFieldsMap;
@@ -218,8 +231,14 @@ export type DeliveredFields = Map<SourceObject, Set<DataKey>>;
 
 export type SpliceState = {
   tree: IndexedTree;
-  // Whether a field of the type has a merge policy (such fields are compared as a whole when delivered)
+  incremental: IncrementalExecution;
+  // Whether a field of the type has a merge policy (delivered values of such fields are incoming values as is)
   hasMergePolicy: (typeName: TypeName, fieldName: FieldName) => boolean;
+  // Key of an object with the selection of the chunk (identifies server objects)
+  objectKey: (
+    data: SourceObject,
+    chunk: ObjectChunk,
+  ) => string | false | undefined;
   // Objects and lists of the stored result -> copies (sources of a stored result are unique per location)
   copies: Map<Source, Draft>;
   deliveredFields: DeliveredFields;

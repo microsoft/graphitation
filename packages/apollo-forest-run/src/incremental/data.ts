@@ -60,3 +60,44 @@ export function isPathPrefix(
 export function isSourceData(value: unknown): value is SourceObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
+
+export function getDataAt(
+  data: SourceObject,
+  path: ResponsePath,
+  index = 0,
+): SourceObject | undefined {
+  let value: unknown = data;
+  for (let i = index; i < path.length && value !== undefined; i++) {
+    const step = path[i];
+    value =
+      Array.isArray(value) && typeof step === "number"
+        ? value[step]
+        : isSourceData(value) && typeof step === "string"
+        ? value[step]
+        : undefined;
+  }
+  return isSourceData(value) ? value : undefined;
+}
+
+// Copy-on-write deep merge of data at the path, creating missing objects and lists on the path
+export function setAt(
+  value: unknown,
+  path: ResponsePath,
+  index: number,
+  data: SourceObject,
+): unknown {
+  if (index === path.length) {
+    return isSourceData(value) ? mergeSourceData(value, data) : data;
+  }
+  const step = path[index];
+  if (typeof step === "number") {
+    const copy: unknown[] = Array.isArray(value) ? [...value] : [];
+    copy[step] = setAt(copy[step], path, index + 1, data);
+    return copy;
+  }
+  const object: SourceObject = isSourceData(value)
+    ? { ...value }
+    : ({} as SourceObject);
+  object[step] = setAt(object[step], path, index + 1, data) as SourceObject;
+  return object;
+}

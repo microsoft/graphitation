@@ -38,11 +38,7 @@ import type {
 import type { NodeDifferenceMap } from "../diff/types";
 import { assert } from "../jsutils/assert";
 import { resolveOperationDescriptor } from "../cache/descriptor";
-import {
-  getActiveForest,
-  getExistingResult,
-  shouldCache,
-} from "../cache/store";
+import { getExistingResult, shouldCache } from "../cache/store";
 import {
   copySourcesUpToRoot,
   createParentLocator,
@@ -65,7 +61,14 @@ import {
   isIncrementalDeliveryResult,
   trackPendingResults,
 } from "./format";
-import { isPathPrefix, isSourceData, mergeAt } from "./data";
+import {
+  getDataAt,
+  isPathPrefix,
+  isSourceData,
+  mergeAt,
+  mergeSourceData,
+  setAt,
+} from "./data";
 
 /**
  * Subsequent results of incremental delivery (`@defer`, the 2022 draft format) are written as a regular result
@@ -104,14 +107,18 @@ export function spliceSubsequentResult(
   const result = isIncrementalDeliveryResult(execution)
     ? convertIncrementalDeliveryResult(incremental, execution)
     : execution;
-  const targetForest = getActiveForest(store, activeTransaction);
+  // Execution results are written to the base forest only
   const tree =
-    getExistingResult(env, store, targetForest, operation) ??
+    getExistingResult(env, store, store.dataForest, operation) ??
     incremental.transientTree;
-  const { mergePolicies } = env;
+  const { mergePolicies, objectKey } = env;
   const spliced = tree
-    ? spliceIncrementalResults(tree, incremental, result, (type, field) =>
-        Boolean(mergePolicies.get(type)?.has(field)),
+    ? spliceIncrementalResults(
+        tree,
+        incremental,
+        result,
+        (type, field) => Boolean(mergePolicies.get(type)?.has(field)),
+        (data, chunk) => objectKey(data, chunk.selection, chunk.operation),
       )
     : undefined;
   if (result.hasNext === false) {
@@ -160,13 +167,16 @@ export function captureIncrementalExecution(
  * Merge policies of a spliced result only run for delivered fields (other fields already went through them):
  * listed fields of copies of stored objects and all fields of delivered objects (not objects of the stored result).
  */
-export function createDeliveredFieldFilter(
-  { deliveredFields }: SplicedIncrementalResult,
-  indexed: IndexedTree,
-): (parent: ObjectChunk, field: FieldInfo) => boolean {
+export function createDeliveredFieldFilter({
+  deliveredFields,
+  tree,
+}: SplicedIncrementalResult): (
+  parent: ObjectChunk,
+  field: FieldInfo,
+) => boolean {
   return (parent, field) =>
     deliveredFields.get(parent.data)?.has(field.dataKey) ??
-    !indexed.prev?.dataMap.has(parent.data);
+    !tree.dataMap.has(parent.data);
 }
 
 /**
@@ -175,7 +185,7 @@ export function createDeliveredFieldFilter(
  */
 export function seedDifferences(
   indexed: IndexedTree,
-  { deliveredFields, seed, incremental }: SplicedIncrementalResult,
+  { deliveredFields, seed, incremental, tree }: SplicedIncrementalResult,
 ): NodeDifferenceMap | undefined {
   for (const copy of deliveredFields.keys()) {
     if (!indexed.dataMap.has(copy)) {
@@ -186,10 +196,7 @@ export function seedDifferences(
   // Nodes with other chunks (e.g. in delivered data) are diffed in full
   for (const nodeKey of seed.keys()) {
     for (const chunk of indexed.nodes.get(nodeKey) ?? EMPTY_ARRAY) {
-      if (
-        !deliveredFields.has(chunk.data) &&
-        !indexed.prev?.dataMap.has(chunk.data)
-      ) {
+      if (!deliveredFields.has(chunk.data) && !tree.dataMap.has(chunk.data)) {
         seed.delete(nodeKey);
         break;
       }
@@ -199,7 +206,7 @@ export function seedDifferences(
     // Unlike stored trees, a transient tree doesn't receive other writes: its untouched nodes are not compared
     //   (otherwise they would revert writes made since its previous state)
     for (const [nodeKey, chunks] of indexed.nodes) {
-      if (!seed.has(nodeKey) && isRecycled(indexed, chunks)) {
+      if (!seed.has(nodeKey) && isRecycled(tree, chunks)) {
         seed.set(nodeKey, Difference.createObjectDifference());
       }
     }
@@ -207,9 +214,10 @@ export function seedDifferences(
   return seed;
 }
 
+// Whether all chunks are recycled from the tree
 function isRecycled(tree: IndexedTree, chunks: ObjectChunk[]): boolean {
   for (const chunk of chunks) {
-    if (!tree.prev?.dataMap.has(chunk.data)) {
+    if (!tree.dataMap.has(chunk.data)) {
       return false;
     }
   }
@@ -221,14 +229,22 @@ function spliceIncrementalResults(
   incremental: IncrementalExecution,
   execution: SubsequentIncrementalExecutionResult,
   hasMergePolicy: SpliceState["hasMergePolicy"],
+  objectKey: SpliceState["objectKey"],
 ): SplicedIncrementalResult | undefined {
   const results = mergeNestedResults(execution);
   if (!results.length) {
     return undefined;
   }
+  for (const { path, data } of results) {
+    const delivered = setAt(incremental.delivered, path, 0, data);
+    assert(isSourceData(delivered));
+    incremental.delivered = delivered;
+  }
   const state: SpliceState = {
     tree,
+    incremental,
     hasMergePolicy,
+    objectKey,
     copies: new Map(),
     deliveredFields: new Map(),
     missingFields: new Map(),
@@ -238,10 +254,10 @@ function spliceIncrementalResults(
   const pathEnv = { findParent: createParentLocator(tree.dataMap) };
   const entries: SplicedIncrementalResultEntry[] = [];
   for (const { path, data } of results) {
-    const address = incremental.placeholders.get(getPathKey(path));
-    const chunk = address && resolveAddress(tree, address);
+    const placeholder = incremental.placeholders.get(getPathKey(path));
+    const chunk = placeholder && resolveAddress(tree, placeholder.address);
     if (chunk) {
-      spliceData(state, chunk, data);
+      spliceData(state, chunk, path, data, placeholder.data);
       entries.push({ path, data, localPath: getDataPath(pathEnv, chunk) });
     }
   }
@@ -253,6 +269,7 @@ function spliceIncrementalResults(
   return {
     kind: "SplicedIncrementalResult",
     incremental,
+    tree,
     data,
     deliveredFields: state.deliveredFields,
     missingFields: state.missingFields,
@@ -320,14 +337,22 @@ function resolveAddress(
 
 /**
  * Splices data into a copy of the object (copying objects on the path to it), returns the copy.
- * Data of fields with objects of the stored result is spliced into copies of those objects.
+ * `path` is the response path of the object (in the server view), `server` - its data received from the server.
+ *
+ * Object values are delivered:
+ * - into the existing object (recursively), when it is the same object as on the server;
+ * - in the server view (with data received from the server, e.g. key fields), when the existing object is
+ *   another object (e.g. replaced by another write) or missing: normalization finds it by identity;
+ * - as delivered so far for fields with merge policies (incoming values of merge policies).
  */
 function spliceData(
   state: SpliceState,
   chunk: ObjectChunk,
+  path: ResponsePath,
   data: SourceObject,
+  server: SourceObject | undefined,
 ): SourceObject {
-  const { copies, deliveredFields, differences } = state;
+  const { copies, deliveredFields, differences, incremental } = state;
   copySourcesUpToRoot(
     state.tree.dataMap,
     copies,
@@ -341,12 +366,28 @@ function spliceData(
   assert(delivered);
   for (const key of Object.keys(data)) {
     const incoming = data[key];
-    const existing = isSourceData(incoming)
-      ? chunk.fieldChunks.get(key)?.value
-      : undefined;
-    if (isSourceData(incoming) && existing && isObjectValue(existing)) {
-      // E.g. a field selected by multiple fragments
-      spliceData(state, existing, incoming);
+    const ref = chunk.fieldChunks.get(key);
+    if (isSourceData(incoming) && ref && isParentObjectRef(ref)) {
+      const valuePath = [...path, key];
+      const serverValue = server && getDataAt(server, [key]);
+      const deliveredValue =
+        (incremental.delivered &&
+          getDataAt(incremental.delivered, valuePath)) ??
+        incoming;
+      const existing = ref.value;
+      if (chunk.type && state.hasMergePolicy(chunk.type, ref.field.name)) {
+        target[key] = deliveredValue;
+      } else if (
+        isObjectValue(existing) &&
+        (!serverValue || isSameObject(state, existing, serverValue))
+      ) {
+        // E.g. a field selected by multiple fragments
+        spliceData(state, existing, valuePath, incoming, serverValue);
+      } else {
+        target[key] = serverValue
+          ? mergeSourceData(serverValue, deliveredValue)
+          : incoming;
+      }
     } else {
       target[key] = incoming;
     }
@@ -376,6 +417,15 @@ function spliceData(
     }
   }
   return target;
+}
+
+// Objects without keys have no identity: they are the same at the same location
+function isSameObject(
+  state: SpliceState,
+  chunk: ObjectChunk,
+  server: SourceObject,
+): boolean {
+  return chunk.key === false || state.objectKey(server, chunk) === chunk.key;
 }
 
 // Collects state of a copied object and seed differences on the path to it (from the root down)
@@ -470,6 +520,7 @@ function updateIncrementalExecution(
   const incremental: IncrementalExecution = {
     key: execution.key,
     placeholders: new Map(),
+    delivered: undefined,
     // Results of operations which are not stored (e.g. mutations) are spliced into their latest result
     transientTree: shouldCache(targetForest, operation) ? undefined : merged,
     pendingResults: undefined,
@@ -560,12 +611,14 @@ function addPlaceholder(
   path: ResponsePath,
 ) {
   const mergedChunk = merged.dataMap.get(chunk.data)?.value;
-  incremental.placeholders.set(
-    getPathKey(path),
-    mergedChunk && isObjectValue(mergedChunk)
-      ? createAddress(findMergedParent, mergedChunk)
-      : createAddress(findParent, chunk),
-  );
+  incremental.placeholders.set(getPathKey(path), {
+    address:
+      mergedChunk && isObjectValue(mergedChunk)
+        ? createAddress(findMergedParent, mergedChunk)
+        : createAddress(findParent, chunk),
+    // Data of the indexed result is as received from the server (merge policies don't change it)
+    data: chunk.data,
+  });
 }
 
 function createAddress(
