@@ -41,7 +41,6 @@ describe("writeExecutionResult", () => {
       query,
       execution: {
         data: initialData,
-        pending: [{ id: "0", path: ["message"], label: "details" }],
         hasNext: true,
       },
     });
@@ -102,4 +101,20 @@ describe("write", () => {
       result: completeData,
     });
   });
+
+  it.each([undefined, null])(
+    "writes the result with execution: %s",
+    (execution) => {
+      const cache = new ForestRun();
+      // Untyped options (not Cache.WriteOptions)
+      const options = { query, result: completeData, execution };
+      const ref = cache.write(options);
+
+      expect(ref).toEqual({ __ref: "ROOT_QUERY" });
+      expect(cache.diff({ query, optimistic: false })).toMatchObject({
+        complete: true,
+        result: completeData,
+      });
+    },
+  );
 });

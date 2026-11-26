@@ -384,7 +384,8 @@ function resolveExtraRootNodeType(
 function isExecutionWrite(
   options: WriteOptionsInternal,
 ): options is Exclude<WriteOptionsInternal, Cache.WriteOptions> {
-  return "execution" in options;
+  // An explicit nullish `execution` (e.g. untyped options of `write`) is a regular write of `result`
+  return "execution" in options && options.execution != null;
 }
 
 const inspect = JSON.stringify.bind(JSON);
