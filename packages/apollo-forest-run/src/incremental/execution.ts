@@ -260,6 +260,8 @@ function spliceIncrementalResults(
     missingBaseFields: [],
   };
   const { serverData } = incremental;
+  const root = tree.dataMap.get(tree.result.data)?.value;
+  assert(root && isObjectValue(root));
   for (const { path, data } of results) {
     const address = incremental.placeholders.get(getPathKey(path));
     if (!address) {
@@ -269,14 +271,11 @@ function spliceIncrementalResults(
     if (chunk) {
       const server = serverData && getDataAt(serverData, path);
       spliceData(state, chunk, path, data, server);
-      continue;
     }
-    // The object is not in the stored result (or replaced): the local object at the response path didn't receive data.
+    // Another object at the response path (e.g. a link replaced by another write) didn't receive data.
     //   Note: positional (e.g. lists may have changed), only marks missing fields (a refetch at worst, never a write)
-    const root = tree.dataMap.get(tree.result.data)?.value;
-    const local =
-      root && isObjectValue(root) && resolveResponsePath(root, path);
-    if (local) {
+    const local = resolveResponsePath(root, path);
+    if (local && local !== chunk && !(local.key && local.key === chunk?.key)) {
       state.skipped.push({ chunk: local, data });
     }
   }

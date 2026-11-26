@@ -1475,6 +1475,57 @@ describe("@defer: subsequent results", () => {
       },
     };
 
+    it("reports missing fields of a replaced object when a direct patch goes to the original object elsewhere", () => {
+      const query = gql`
+        query {
+          viewers {
+            id
+            profile {
+              id
+              title
+              ... @defer {
+                bio
+              }
+            }
+          }
+        }
+      `;
+      const other = { ...user, id: "other", profile: profile("A") };
+      const { cache, watch, diff } = deliver(
+        query,
+        { viewers: [{ ...user, profile: profile("A") }, other] },
+        // A write of the same operation (without deferred fields): A is still in the result
+        {
+          query,
+          data: { viewers: [{ ...user, profile: profile("B") }, other] },
+        },
+        [{ path: ["viewers", 0, "profile"], data: { bio: "for A" } }],
+      );
+
+      expect(diff.result).toEqual({
+        viewers: [
+          { ...user, profile: profile("B") },
+          { ...other, profile: profile("A", { bio: "for A" }) },
+        ],
+      });
+      expect(diff.complete).toBe(false);
+      expect(diff.missing?.map((error) => error.path)).toEqual([
+        ["viewers", 0, "profile", "bio"],
+      ]);
+      expect(watch).toHaveBeenCalledTimes(1);
+      expect(watch.mock.calls[0][0]).toMatchObject({ complete: false });
+
+      const viewers = [
+        { ...user, profile: profile("B", { bio: "for B" }) },
+        { ...other, profile: profile("A", { bio: "for A" }) },
+      ];
+      cache.writeQuery({ query, data: { viewers } });
+      expect(cache.diff({ query, optimistic: false })).toMatchObject({
+        complete: true,
+        result: { viewers },
+      });
+    });
+
     it.each(["direct", "parent"] as const)(
       "reports missing fields of a replaced object (%s)",
       (shape) => {
