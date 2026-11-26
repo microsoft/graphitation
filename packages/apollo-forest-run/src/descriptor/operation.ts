@@ -3,12 +3,8 @@ import { valueFromASTUntyped } from "graphql";
 import type {
   DetachedFragmentDescriptor,
   DocumentDescriptor,
-  FragmentName,
   OperationDescriptor,
-  OperationFragmentDescriptor,
-  PossibleSelections,
   RegularOperationDescriptor,
-  TreeDescriptor,
   ResultTreeDescriptor,
   OperationEnv,
   TypeName,
@@ -16,7 +12,7 @@ import type {
   VariableName,
 } from "./types";
 import { sortKeys } from "../jsutils/normalize";
-import { assert, assertNever } from "../jsutils/assert";
+import { assert } from "../jsutils/assert";
 
 const defaultOperationTypes: Record<
   OperationDefinitionNode["operation"],
@@ -171,61 +167,6 @@ function createDescriptor(
     historySize,
     covers,
   };
-}
-
-/**
- * Describes a fragment of the operation (e.g. a deferred fragment), written to objects with the given
- * `possibleSelections` (selection of the object within the operation).
- *
- * `fragmentName` is set for named fragments (`...Foo`), `typeCondition` - for inline fragments with a type
- * condition (`... on Foo`). Both are undefined for inline fragments without a type condition.
- *
- * The descriptor is not tied to a specific object: all objects with the same fragment may share it.
- */
-export function describeOperationFragment(
-  env: OperationEnv,
-  operation: OperationDescriptor,
-  possibleSelections: PossibleSelections,
-  fragmentName?: FragmentName,
-  typeCondition?: TypeName,
-): OperationFragmentDescriptor {
-  assert(operation.env === env);
-  assert(!fragmentName || !typeCondition);
-  return {
-    kind: "OperationFragment",
-    operation,
-    possibleSelections,
-    fragmentName,
-    typeCondition,
-  };
-}
-
-// e.g. `query Foo ...Bar`, `query Foo ... on Bar` or just `query Foo` (for inline fragments without type condition)
-export function getOperationFragmentDebugName({
-  operation,
-  fragmentName,
-  typeCondition,
-}: OperationFragmentDescriptor): string {
-  return fragmentName
-    ? `${operation.debugName} ...${fragmentName}`
-    : typeCondition
-    ? `${operation.debugName} ... on ${typeCondition}`
-    : operation.debugName;
-}
-
-// Operation which owns the selection of the descriptor
-export function resolveOperation(
-  descriptor: TreeDescriptor,
-): OperationDescriptor {
-  switch (descriptor.kind) {
-    case "Operation":
-    case "DetachedFragment":
-      return descriptor;
-    case "OperationFragment":
-      return descriptor.operation;
-    default:
-      assertNever(descriptor);
-  }
 }
 
 function resolveVariablesWithDefaults(

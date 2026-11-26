@@ -4,19 +4,10 @@ import { describeResultTree } from "../possibleSelection";
 import {
   describeOperation,
   describeDetachedFragment,
-  describeOperationFragment,
-  getOperationFragmentDebugName,
-  resolveOperation,
   applyDefaultValues,
 } from "../operation";
 import type { VariableDefinitionNode } from "graphql";
-import type {
-  OperationDescriptor,
-  OperationEnv,
-  PossibleSelections,
-} from "../types";
-import { createTestOperation } from "../../__tests__/helpers/descriptor";
-import { assert } from "../../jsutils/assert";
+import type { OperationEnv } from "../types";
 
 describe(describeOperation, () => {
   it("applies default rootTypeName and rootNodeKey for queries", () => {
@@ -732,114 +723,5 @@ describe("optimizeDescriptorShape", () => {
       "Operation",
       "DetachedFragment",
     ]);
-  });
-});
-
-describe(describeOperationFragment, () => {
-  const query = `
-    {
-      users {
-        __typename
-        id
-        ... @defer { bio }
-      }
-    }
-  `;
-
-  function getUsersSelection(
-    operation: OperationDescriptor,
-  ): PossibleSelections {
-    const selection = operation.possibleSelections
-      .get(null)
-      ?.fields.get("users")?.[0].selection;
-    assert(selection);
-    return selection;
-  }
-
-  it("describes an inline fragment without type condition", () => {
-    const operation = createTestOperation(query);
-    const selection = getUsersSelection(operation);
-    const descriptor = describeOperationFragment(
-      operation.env,
-      operation,
-      selection,
-    );
-    expect(descriptor).toEqual({
-      kind: "OperationFragment",
-      operation,
-      possibleSelections: selection,
-      fragmentName: undefined,
-      typeCondition: undefined,
-    });
-    expect(Object.keys(descriptor)).toEqual([
-      "kind",
-      "operation",
-      "possibleSelections",
-      "fragmentName",
-      "typeCondition",
-    ]);
-    expect(resolveOperation(descriptor)).toBe(operation);
-    expect(resolveOperation(operation)).toBe(operation);
-    expect(getOperationFragmentDebugName(descriptor)).toBe(operation.debugName);
-  });
-
-  it("describes an inline fragment with type condition", () => {
-    const operation = createTestOperation(query);
-    const descriptor = describeOperationFragment(
-      operation.env,
-      operation,
-      getUsersSelection(operation),
-      undefined,
-      "User",
-    );
-    expect(descriptor.fragmentName).toBe(undefined);
-    expect(descriptor.typeCondition).toBe("User");
-    expect(getOperationFragmentDebugName(descriptor)).toBe(
-      `${operation.debugName} ... on User`,
-    );
-  });
-
-  it("describes a named fragment", () => {
-    const operation = createTestOperation(`
-      query UsersQuery {
-        users { id ...UserDetails @defer }
-      }
-      fragment UserDetails on User { bio }
-    `);
-    const descriptor = describeOperationFragment(
-      operation.env,
-      operation,
-      getUsersSelection(operation),
-      "UserDetails",
-    );
-    expect(descriptor.fragmentName).toBe("UserDetails");
-    expect(descriptor.typeCondition).toBe(undefined);
-    expect(
-      operation.fragmentMap.get(descriptor.fragmentName ?? "")?.typeCondition
-        .name.value,
-    ).toBe("User");
-    expect(getOperationFragmentDebugName(descriptor)).toBe(
-      `${operation.debugName} ...UserDetails`,
-    );
-  });
-
-  it("requires the operation env", () => {
-    const operation = createTestOperation(query);
-    expect(() =>
-      describeOperationFragment({}, operation, getUsersSelection(operation)),
-    ).toThrow();
-  });
-
-  it("rejects both fragment name and type condition", () => {
-    const operation = createTestOperation(query);
-    expect(() =>
-      describeOperationFragment(
-        operation.env,
-        operation,
-        getUsersSelection(operation),
-        "UserDetails",
-        "User",
-      ),
-    ).toThrow();
   });
 });
