@@ -56,9 +56,11 @@ import {
   isRootRef,
   resolveFieldChunk,
   resolveListItemChunk,
+  resolveMatchingFieldAliases,
 } from "../values";
 import * as Difference from "../diff/difference";
 import {
+  getFieldArgs,
   resolveNormalizedField,
   resolveSelection,
 } from "../descriptor/resolvedSelection";
@@ -361,7 +363,7 @@ function resolveAddress(
  * - objects and lists received already are containers: the structure is local (links and lists are never changed),
  *   data goes by identity. Objects are resolved by keys in the stored result (local links and lists may differ,
  *   e.g. after merge policies or other writes), objects of lists are paired by indexes in the server view,
- *   objects without keys are resolved by the local location (see resolveReceivedObject).
+ *   objects without keys are resolved by the local location (see spliceReceivedObject).
  *   Containers are not delivered as a whole (e.g. not incoming values of merge policies);
  * - other values are delivered (as is for fields with merge policies, incoming values of merge policies).
  */
@@ -371,6 +373,7 @@ function spliceData(
   path: ResponsePath,
   data: SourceObject,
   server: SourceObject | undefined,
+  capture = true,
 ) {
   const { copies, deliveredFields, differences, missingFields } = state;
   copySourcesUpToRoot(
@@ -384,11 +387,12 @@ function spliceData(
   assert(target && !Array.isArray(target));
   const delivered = deliveredFields.get(target);
   assert(delivered);
-  state.results.push({
-    path,
-    data,
-    localPath: getDataPath(state.pathEnv, chunk),
-  });
+  const result: SplicedIncrementalResultEntry | undefined = capture
+    ? { path, localPath: getDataPath(state.pathEnv, chunk) }
+    : undefined;
+  if (result) {
+    state.results.push(result);
+  }
 
   for (const key of Object.keys(data)) {
     const incoming = data[key];
@@ -399,15 +403,14 @@ function spliceData(
       // A container
       const existing = ref?.value;
       if (isSourceData(incoming) && isSourceData(received)) {
-        const object = resolveReceivedObject(
+        const object = spliceReceivedObject(
           state,
           existing,
+          [...path, key],
+          incoming,
           received,
           field.selection,
         );
-        if (object) {
-          spliceData(state, object, [...path, key], incoming, received);
-        }
         if (
           object !== existing &&
           existing !== undefined &&
@@ -429,8 +432,6 @@ function spliceData(
           field.selection,
         );
         continue;
-      } else {
-        target[key] = incoming;
       }
     } else if (
       received !== undefined &&
@@ -439,17 +440,24 @@ function spliceData(
     ) {
       // Received already
       continue;
-    } else if (
+    }
+    if (
+      received == null &&
       field?.selection &&
       isSourceData(incoming) &&
       ref?.value !== undefined &&
       isObjectValue(ref.value) &&
-      !(chunk.type && state.hasMergePolicy(chunk.type, field.name))
+      !(chunk.type && state.hasMergePolicy(chunk.type, field.name)) &&
+      (state.objectKey(incoming, field.selection) ?? false) === ref.value.key &&
+      (!incoming.__typename || incoming.__typename === ref.value.type)
     ) {
-      // E.g. an object of the stored result (written by another operation)
+      // A local write supplied the same object before first delivery. Never copy fields across keys.
       spliceData(state, ref.value, [...path, key], incoming, undefined);
     } else {
       target[key] = incoming;
+      if (result && (isSourceData(incoming) || Array.isArray(incoming))) {
+        (result.wholeFields ??= new Set()).add(key);
+      }
     }
     delivered.add(key);
     const missing = missingFields.get(target);
@@ -556,15 +564,14 @@ function spliceList(
     const local = list && resolveListItem(list, index);
     if (isSourceData(incoming)) {
       const receivedObject = isSourceData(received) ? received : undefined;
-      const object = resolveReceivedObject(
+      spliceReceivedObject(
         state,
         local,
-        receivedObject ?? incoming,
+        [...path, index],
+        incoming,
+        receivedObject,
         selections,
       );
-      if (object) {
-        spliceData(state, object, [...path, index], incoming, receivedObject);
-      }
     } else if (Array.isArray(incoming) && Array.isArray(received)) {
       spliceList(
         state,
@@ -613,21 +620,94 @@ function isMissingField(
  * or (objects without keys) the local object at the same location.
  * Objects not in the stored result are skipped (their deferred fields stay missing, e.g. refetched by reads).
  */
-function resolveReceivedObject(
+function spliceReceivedObject(
   state: SpliceState,
   local: GraphChunk | undefined,
-  received: SourceObject,
+  path: ResponsePath,
+  incoming: SourceObject,
+  received: SourceObject | undefined,
   selections: PossibleSelections,
 ): ObjectChunk | undefined {
   const localObject =
     local !== undefined && isObjectValue(local) ? local : undefined;
-  const key = state.objectKey(received, selections);
-  if (typeof key !== "string") {
-    return localObject;
+  const key = state.objectKey(received ?? incoming, selections);
+  const object =
+    typeof key !== "string" || localObject?.key === key
+      ? localObject
+      : findNodeChunk(state.tree, key, selections);
+  if (object) {
+    spliceData(state, object, path, incoming, received);
+    return object;
   }
-  return localObject?.key === key
-    ? localObject
-    : findNodeChunk(state.tree, key, selections);
+  if (typeof key === "string") {
+    // The same node can remain reachable with a different response shape.
+    const type = received?.__typename ?? incoming.__typename;
+    for (const chunk of state.tree.nodes.get(key) ?? EMPTY_ARRAY) {
+      if (
+        (type && chunk.type !== type) ||
+        !isReachable(state.tree.dataMap, chunk)
+      ) {
+        continue;
+      }
+      const projected = projectLeafFields(
+        chunk,
+        selections,
+        incoming,
+        received,
+      );
+      if (projected) {
+        // A different selection cannot establish defer sites for the server path.
+        spliceData(state, chunk, path, projected.data, projected.server, false);
+        return chunk;
+      }
+    }
+  }
+  return undefined;
+}
+
+// A fallback chunk must represent every delivered field. Don't reinterpret nested response keys,
+// or split a patch between partially matching chunks.
+function projectLeafFields(
+  chunk: ObjectChunk,
+  selections: PossibleSelections,
+  incoming: SourceObject,
+  received: SourceObject | undefined,
+): { data: SourceObject; server: SourceObject } | undefined {
+  const source = resolveSelection(
+    chunk.operation,
+    selections,
+    chunk.type || null,
+  );
+  const data = Object.create(null) as SourceObject;
+  const server = Object.create(null) as SourceObject;
+  for (const key of Object.keys(incoming)) {
+    const field = source.fieldQueue.find((entry) => entry.dataKey === key);
+    if (!field || field.selection) {
+      return undefined;
+    }
+    const entry = resolveNormalizedField(source, field);
+    const aliases = resolveMatchingFieldAliases(chunk, entry);
+    let matched = false;
+    for (const alias of aliases) {
+      // keyArgs can collapse multiple argument sets. A merge policy would receive the target's args.
+      if (
+        !alias.selection &&
+        !chunk.selection.skippedFields?.has(alias) &&
+        equal(
+          getFieldArgs(entry),
+          getFieldArgs(resolveNormalizedField(chunk.selection, alias)),
+        )
+      ) {
+        data[alias.dataKey] = incoming[key];
+        server[alias.dataKey] = received?.[key];
+        matched = true;
+      }
+    }
+    if (!matched) {
+      return undefined;
+    }
+  }
+  return { data, server };
 }
 
 // Collects state of a copied object and seed differences on the path to it (from the root down)
@@ -793,8 +873,11 @@ function captureDeliveredPlaceholders(
       ? getDataPath({ findParent }, chunk, target)
       : EMPTY_ARRAY;
     // Only objects within delivered data: paths of other objects in the stored result may differ from server paths
-    const result = entries?.find(({ data }) =>
-      isWithinData(data, pathFromTarget),
+    const field = pathFromTarget[0];
+    const result = entries?.find(
+      ({ wholeFields }) =>
+        !pathFromTarget.length ||
+        (typeof field === "string" && wholeFields?.has(field)),
     );
     if (result) {
       addPlaceholder(incremental, merged, findParent, findMergedParent, chunk, [
@@ -880,21 +963,6 @@ function resolveListItem(
     !value.missingItems?.has(index)
     ? resolveListItemChunk(value, index)
     : undefined;
-}
-
-// Whether the path (response keys and list indexes) is within the data
-function isWithinData(data: unknown, path: ResponsePath): boolean {
-  let value = data;
-  for (const step of path) {
-    if (Array.isArray(value) && typeof step === "number") {
-      value = value[step];
-    } else if (isSourceData(value) && typeof step === "string") {
-      value = value[step];
-    } else {
-      return false;
-    }
-  }
-  return isSourceData(value);
 }
 
 function getPathKey(path: ResponsePath): ResponsePathKey {

@@ -148,9 +148,12 @@ export type SplicedIncrementalResult = {
   results: SplicedIncrementalResultEntry[];
 };
 
-export type SplicedIncrementalResultEntry = DeferredResult & {
+export type SplicedIncrementalResultEntry = {
+  path: ResponsePath;
   // Path to the object data was delivered to in the stored result (may differ from the response path)
   localPath: ResponsePath;
+  // Children delivered as a whole. Containers spliced by identity have their own entries.
+  wholeFields?: Set<DataKey>;
 };
 
 /**
