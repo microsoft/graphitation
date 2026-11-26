@@ -40,6 +40,7 @@ import { createParentLocator, markAsPartial, TraverseEnv } from "../values";
 import { NodeDifferenceMap } from "../forest/updateTree";
 import {
   captureIncrementalExecution,
+  addMissingBaseFields,
   createDeliveredFieldFilter,
   isSplicedIncrementalResult,
   seedDifferences,
@@ -194,6 +195,9 @@ export function write(
     splicedResult && seedDifferences(incomingResult, splicedResult),
   );
 
+  if (splicedResult && splicedResult.tree === existingResult) {
+    addMissingBaseFields(difference, splicedResult);
+  }
   if (difference.errors.length) {
     processDiffErrors(targetForest, modifiedIncomingResult, difference);
   }

@@ -38,6 +38,8 @@ import type {
   ResponsePath,
 } from "../descriptor/types";
 import type { NodeDifferenceMap } from "../diff/types";
+import type { GraphDifference } from "../diff/diffTree";
+import { DiffErrorKind } from "../diff/types";
 import { assert } from "../jsutils/assert";
 import { resolveOperationDescriptor } from "../cache/descriptor";
 import { getExistingResult, shouldCache } from "../cache/store";
@@ -261,6 +263,8 @@ function spliceIncrementalResults(
     differences: new Map(),
     pathEnv: { findParent: createParentLocator(tree.dataMap) },
     results: [],
+    skipped: [],
+    missingBaseFields: [],
   };
   const { serverData } = incremental;
   for (const { path, data } of results) {
@@ -271,6 +275,7 @@ function spliceIncrementalResults(
       spliceData(state, chunk, path, data, server);
     }
   }
+  markSkippedFieldsMissing(state);
   // Data received from the server (after splicing: data is spliced against data received before)
   for (const { path, data } of results) {
     incremental.serverData = mergeServerData(
@@ -291,6 +296,7 @@ function spliceIncrementalResults(
     data,
     deliveredFields: state.deliveredFields,
     missingFields: state.missingFields,
+    missingBaseFields: state.missingBaseFields,
     seed: state.seed,
     results: state.results,
   };
@@ -409,6 +415,14 @@ function spliceData(
         if (object) {
           spliceData(state, object, [...path, key], incoming, received);
         }
+        if (
+          object !== existing &&
+          existing !== undefined &&
+          isObjectValue(existing)
+        ) {
+          // Another object at the location (e.g. a link replaced by another write): it didn't receive the data
+          state.skipped.push({ chunk: existing, data: incoming });
+        }
         continue;
       } else if (Array.isArray(incoming) && Array.isArray(received)) {
         spliceList(
@@ -470,6 +484,68 @@ function spliceData(
       );
     }
   }
+}
+
+/**
+ * Fields delivered to other objects (with another identity) than the local objects at their locations are missing
+ * in the local objects (unless they have them): reads of the operation are incomplete (e.g. refetch the result).
+ * Note: list items are resolved by keys (local lists may legitimately differ), so only object fields are marked.
+ */
+function markSkippedFieldsMissing(state: SpliceState) {
+  for (const { chunk, data } of state.skipped) {
+    let missingFields: FieldInfo[] | undefined;
+    for (const field of chunk.selection.fieldQueue) {
+      if (
+        data[field.dataKey] !== undefined &&
+        chunk.data[field.dataKey] === undefined
+      ) {
+        missingFields ??= [];
+        missingFields.push(field);
+      }
+    }
+    if (!missingFields) {
+      continue;
+    }
+    // Same values (missing) are not compared when diffing: report missing fields of the stored result explicitly
+    state.missingBaseFields.push({
+      kind: DiffErrorKind.MissingBaseFields,
+      chunk,
+      missingFields,
+    });
+    copySourcesUpToRoot(
+      state.tree.dataMap,
+      state.copies,
+      chunk,
+      (value, ref, copy, existing) =>
+        visitCopy(state, value, ref, copy, existing),
+    );
+    const copy = state.copies.get(chunk.data);
+    assert(copy && !Array.isArray(copy));
+    state.missingFields.set(copy, new Set(missingFields));
+  }
+}
+
+/**
+ * Fields of local objects delivered to other objects (see markSkippedFieldsMissing) are missing in the stored result:
+ *   reported as diff errors (marks stored chunks incomplete, so reads report missing data)
+ */
+export function addMissingBaseFields(
+  difference: GraphDifference,
+  { missingBaseFields }: SplicedIncrementalResult,
+) {
+  if (!missingBaseFields.length) {
+    return;
+  }
+  // A single error of this kind is expected (see processDiffErrors)
+  for (const error of difference.errors) {
+    if (error.kind === "MissingFields") {
+      error.base = error.base
+        ? [...error.base, ...missingBaseFields]
+        : missingBaseFields;
+      return;
+    }
+  }
+  difference.errors.push({ kind: "MissingFields", base: missingBaseFields });
 }
 
 // Splices items of a list received already (a container), paired by indexes in the server view

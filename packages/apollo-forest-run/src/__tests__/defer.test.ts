@@ -1041,8 +1041,8 @@ describe("@defer: subsequent results", () => {
               ? [{ ...other, profile: { ...profile("A"), bio } }]
               : []),
           ]);
-          // B didn't receive deferred data: its deferred field stays missing (e.g. refetched by reads)
-          //   Note: missing scalar fields are not reported by `diff.complete` (also for regular writes)
+          // B didn't receive deferred data: its deferred field is missing, the result is incomplete (refetched)
+          expect(diff.complete).toBe(false);
           const bioFragment = gql`
             fragment Bio on Profile {
               bio
@@ -1058,6 +1058,81 @@ describe("@defer: subsequent results", () => {
       );
     },
   );
+
+  it("reports results incomplete when deferred data was delivered to a replaced object", () => {
+    const cache = new TestCache();
+    const query = gql`
+      query {
+        viewer {
+          id
+          profile {
+            id
+            title
+          }
+          ... @defer {
+            profile {
+              bio
+            }
+          }
+        }
+      }
+    `;
+    const profile = (id: string, fields = {}) => ({
+      __typename: "Profile",
+      id,
+      title: id,
+      ...fields,
+    });
+    const execution = execute(cache, query);
+    execution.initial({ viewer: { ...user, profile: profile("A") } });
+    cache.writeQuery({
+      query,
+      data: { viewer: { ...user, profile: profile("B") } },
+    });
+    const watch = jest.fn();
+    cache.watch({ query, optimistic: false, callback: watch });
+
+    execution.subsequent([
+      { path: ["viewer"], data: { profile: { bio: "for A" } } },
+    ]);
+
+    const diff = cache.diff({
+      query,
+      optimistic: false,
+      returnPartialData: true,
+    });
+    expect(diff).toMatchObject({
+      complete: false,
+      result: { viewer: { ...user, profile: profile("B") } },
+    });
+    expect(diff.result).not.toHaveProperty(["viewer", "profile", "bio"]);
+    expect(diff.missing?.map((error) => error.path)).toEqual([
+      ["viewer", "profile", "bio"],
+    ]);
+    expect(watch).toHaveBeenCalledTimes(1);
+    expect(watch.mock.calls[0][0]).toMatchObject({ complete: false });
+
+    // E.g. a refetch provides the field
+    cache.writeQuery({
+      query: gql`
+        query {
+          viewer {
+            id
+            profile {
+              id
+              bio
+            }
+          }
+        }
+      `,
+      data: { viewer: { ...user, profile: profile("B", { bio: "for B" }) } },
+    });
+
+    expect(cache.diff({ query, optimistic: false })).toMatchObject({
+      complete: true,
+      result: { viewer: { ...user, profile: profile("B", { bio: "for B" }) } },
+    });
+  });
 
   // `profile` was received in the initial result: a container (deferred data is spliced into it, not merged)
   it("splices delivered data of embedded objects of non-cacheable operations (without merge policies)", () => {

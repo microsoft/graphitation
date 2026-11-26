@@ -18,6 +18,7 @@ import type {
 import type { TraverseEnv } from "../values/traverse";
 import type {
   CompositeListDifference,
+  MissingBaseFieldsError,
   NodeDifferenceMap,
   ObjectDifference,
 } from "../diff/types";
@@ -201,6 +202,8 @@ export type SplicedIncrementalResult = {
   data: SourceObject;
   deliveredFields: DeliveredFields;
   missingFields: MissingFieldsMap;
+  // Fields of stored objects delivered to other objects (see addMissingBaseFields)
+  missingBaseFields: MissingBaseFieldsError[];
   // Initial differences of nodes, restricted to delivered fields and paths to them (see seedDifferences)
   seed: NodeDifferenceMap;
   // Objects data was spliced into (locate objects with deferred fragments in delivered data)
@@ -235,6 +238,9 @@ export type SpliceState = {
   pathEnv: TraverseEnv;
   // Objects data was spliced into
   results: SplicedIncrementalResultEntry[];
+  // Local objects data was not delivered to (another object received it, see markSkippedFieldsMissing)
+  skipped: { chunk: ObjectChunk; data: SourceObject }[];
+  missingBaseFields: MissingBaseFieldsError[];
   // Objects and lists of the stored result -> copies (sources of a stored result are unique per location)
   copies: Map<Source, Draft>;
   deliveredFields: DeliveredFields;
