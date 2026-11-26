@@ -77,13 +77,16 @@ export function write(
   if (rootNodeKey !== undefined && options.dataId) {
     keyMap?.set(writeData, rootNodeKey);
   }
-  const operationDescriptor = resolveOperationDescriptor(
-    env,
-    store,
-    options.query,
-    options.variables,
-    rootNodeKey,
-  );
+  // A spliced result is written for the operation it was spliced for (resolved by spliceSubsequentResult)
+  const operationDescriptor =
+    splicedResult?.operation ??
+    resolveOperationDescriptor(
+      env,
+      store,
+      options.query,
+      options.variables,
+      rootNodeKey,
+    );
   touchOperation(env, store, operationDescriptor);
   if (!operationDescriptor.cache) {
     // Results of this operation are never stored, so nothing will ever evict its descriptor.

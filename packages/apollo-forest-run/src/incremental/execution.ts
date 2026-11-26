@@ -113,6 +113,7 @@ export function spliceSubsequentResult(
   const { mergePolicies, objectKey } = env;
   const spliced = tree
     ? spliceIncrementalResults(
+        operation,
         tree,
         incremental,
         result,
@@ -224,6 +225,7 @@ function isRecycled(tree: IndexedTree, chunks: ObjectChunk[]): boolean {
 }
 
 function spliceIncrementalResults(
+  operation: OperationDescriptor,
   tree: IndexedTree,
   incremental: IncrementalExecution,
   execution: SubsequentIncrementalExecutionResult,
@@ -267,6 +269,7 @@ function spliceIncrementalResults(
   assert(data && !Array.isArray(data));
   return {
     kind: "SplicedIncrementalResult",
+    operation,
     incremental,
     tree,
     data,

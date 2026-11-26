@@ -5,6 +5,7 @@ import type {
   DeferLabel,
   FormattedError,
   NodeKey,
+  OperationDescriptor,
   PossibleSelections,
   ResponsePath,
 } from "../descriptor/types";
@@ -202,6 +203,8 @@ export type DeferredResult = {
 // Subsequent results of incremental delivery spliced into a copy of the stored result (written as a whole)
 export type SplicedIncrementalResult = {
   readonly kind: "SplicedIncrementalResult";
+  // The operation the result was spliced for (written as its result, without resolving the operation again)
+  operation: OperationDescriptor;
   incremental: IncrementalExecution;
   // The result data was spliced into (stored or transient, see IncrementalExecution.transientTree)
   tree: IndexedTree;
