@@ -10,21 +10,24 @@ import type {
 import type {
   CacheEnv,
   DataForest,
+  OptimisticLayer,
+  Store,
+  Transaction,
+  WriteOptions,
+} from "../cache/types";
+import type {
   DeferPlaceholder,
   DeferredResult,
   ExecutionResult,
   IncrementalDeferResult,
   IncrementalExecution,
   IncrementalStreamResult,
-  OptimisticLayer,
   ResponsePathKey,
   SplicedResult,
+  SplicedResultEntry,
   SpliceState,
-  Store,
   SubsequentExecutionResult,
   SubsequentIncrementalExecutionResult,
-  Transaction,
-  WriteOptions,
 } from "./types";
 import type {
   FieldInfo,
@@ -33,8 +36,12 @@ import type {
 } from "../descriptor/types";
 import type { NodeDifferenceMap } from "../diff/types";
 import { assert } from "../jsutils/assert";
-import { resolveOperationDescriptor } from "./descriptor";
-import { getActiveForest, getExistingResult, shouldCache } from "./store";
+import { resolveOperationDescriptor } from "../cache/descriptor";
+import {
+  getActiveForest,
+  getExistingResult,
+  shouldCache,
+} from "../cache/store";
 import {
   copySourcesUpToRoot,
   createParentLocator,
@@ -50,11 +57,12 @@ import {
 } from "../values";
 import * as Difference from "../diff/difference";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
+import { accumulate } from "../jsutils/map";
 import {
-  convertSubsequentResult,
-  isGraphQL17Result,
+  convertIncrementalDeliveryResult,
+  isIncrementalDeliveryResult,
   trackPendingResults,
-} from "./incrementalFormat";
+} from "./format";
 
 /**
  * Subsequent results of incremental delivery (`@defer`, the 2022 draft format) are written as a regular result
@@ -66,7 +74,8 @@ import {
  * of the initial result and of delivered data.
  * Merge policies only run for delivered fields (see `DeliveredFields`), diffing is restricted to them too (`seed`).
  *
- * Results in the GraphQL 17 format are converted to the 2022 format first (see `convertSubsequentResult`).
+ * Results in the incremental delivery format are converted to the 2022 draft format first
+ * (see `convertIncrementalDeliveryResult`).
  * Returns undefined when there is nothing to write.
  */
 export function spliceSubsequentResult(
@@ -76,6 +85,7 @@ export function spliceSubsequentResult(
   options: WriteOptions,
   execution: SubsequentExecutionResult,
 ): SplicedResult | undefined {
+  assert(typeof execution.hasNext === "boolean");
   const operation = resolveOperationDescriptor(
     env,
     store,
@@ -88,15 +98,15 @@ export function spliceSubsequentResult(
     // Results of an unknown or a superseded execution
     return undefined;
   }
-  const result = isGraphQL17Result(execution)
-    ? convertSubsequentResult(incremental, execution)
+  const result = isIncrementalDeliveryResult(execution)
+    ? convertIncrementalDeliveryResult(incremental, execution)
     : execution;
   const targetForest = getActiveForest(store, activeTransaction);
   const tree = getExistingResult(env, store, targetForest, operation);
   const splice = tree
     ? spliceIncrementalResults(tree, incremental, result)
     : undefined;
-  if (!result.hasNext) {
+  if (result.hasNext === false) {
     store.incrementalExecutions.delete(operation);
   }
   return splice;
@@ -176,15 +186,17 @@ function spliceIncrementalResults(
     differences: new Map(),
   };
   const current = new Set(tree.deferredChunks);
-  const targets = new Map<SourceObject, ResponsePath>();
+  const pathEnv = { findParent: createParentLocator(tree.dataMap) };
+  const spliced: SplicedResultEntry[] = [];
   for (const { path, data } of results) {
     const placeholder = incremental.placeholders.get(getPathKey(path));
     const chunk = placeholder && resolveTarget(tree, current, placeholder);
     if (chunk) {
-      targets.set(spliceData(state, chunk, data), path);
+      spliceData(state, chunk, data);
+      spliced.push({ path, data, localPath: getDataPath(pathEnv, chunk) });
     }
   }
-  if (!targets.size) {
+  if (!spliced.length) {
     return undefined;
   }
   const data = state.copies.get(tree.result.data);
@@ -195,7 +207,7 @@ function spliceIncrementalResults(
     deliveredFields: state.deliveredFields,
     missingFields: state.missingFields,
     seed: state.seed,
-    targets,
+    results: spliced,
   };
 }
 
@@ -292,10 +304,11 @@ function resolveTarget(
   if (current.has(placeholder.chunk)) {
     return placeholder.chunk;
   }
-  for (const node of tree.nodes.get(placeholder.nodeKey) ?? EMPTY_ARRAY) {
+  const { nodeKey, nodeSelections, pathFromNode } = placeholder.address;
+  for (const node of tree.nodes.get(nodeKey) ?? EMPTY_ARRAY) {
     const chunk =
-      node.possibleSelections === placeholder.nodeSelections
-        ? resolveResponsePath(node, placeholder.pathFromNode)
+      node.possibleSelections === nodeSelections
+        ? resolveResponsePath(node, pathFromNode)
         : undefined;
     if (chunk && current.has(chunk)) {
       placeholder.chunk = chunk;
@@ -477,37 +490,48 @@ function updateIncrementalExecution(
 
 /**
  * Captures placeholders of chunks with deferred fragments in delivered data (nested `@defer`), keyed by the response path
- * of the incremental result + the path within its data (copies of objects of the stored result already have theirs).
+ * of the spliced result + the path within its data.
  */
 function captureDeliveredPlaceholders(
-  { incremental, deliveredFields, targets }: SplicedResult,
+  { incremental, results }: SplicedResult,
   indexed: IndexedTree,
   merged: IndexedTree,
 ) {
+  const root = indexed.dataMap.get(indexed.result.data)?.value;
+  assert(root && isObjectValue(root));
+  // Objects results were delivered to (by chunks: unlike sources, chunks are unique per location)
+  const targets = new Map<ObjectChunk, SplicedResultEntry[]>();
+  for (const result of results) {
+    const chunk = resolveResponsePath(root, result.localPath);
+    if (chunk) {
+      accumulate(targets, chunk, result);
+    }
+  }
   const findParent = createParentLocator(indexed.dataMap);
   const findMergedParent = createParentLocator(merged.dataMap);
   for (const chunk of indexed.deferredChunks ?? EMPTY_ARRAY) {
-    if (
-      deliveredFields.has(chunk.data) ||
-      indexed.prev?.dataMap.has(chunk.data)
-    ) {
-      continue;
-    }
     // The closest object results were delivered to
-    let value: ObjectChunk | CompositeListChunk = chunk;
-    let path: ResponsePath | undefined;
-    while (!path) {
-      const ref = findParent(value);
+    let target: ObjectChunk | CompositeListChunk = chunk;
+    let entries = targets.get(chunk);
+    while (!entries) {
+      const ref = findParent(target);
       if (isRootRef(ref)) {
         break;
       }
-      value = ref.parent;
-      path = isObjectValue(value) ? targets.get(value.data) : undefined;
+      target = ref.parent;
+      entries = isObjectValue(target) ? targets.get(target) : undefined;
     }
-    if (path) {
+    const pathFromTarget = entries
+      ? getDataPath({ findParent }, chunk, target)
+      : EMPTY_ARRAY;
+    // Only objects within delivered data: paths of other objects in the stored result may differ from server paths
+    const result = entries?.find(({ data }) =>
+      isWithinData(data, pathFromTarget),
+    );
+    if (result) {
       addPlaceholder(incremental, merged, findParent, findMergedParent, chunk, [
-        ...path,
-        ...getDataPath({ findParent }, chunk, value),
+        ...result.path,
+        ...pathFromTarget,
       ]);
     }
   }
@@ -538,9 +562,11 @@ function createPlaceholder(
   const node = findClosestNode(chunk, findParent);
   return {
     chunk,
-    nodeKey: node.key,
-    nodeSelections: node.possibleSelections,
-    pathFromNode: getDataPath({ findParent }, chunk, node),
+    address: {
+      nodeKey: node.key,
+      nodeSelections: node.possibleSelections,
+      pathFromNode: getDataPath({ findParent }, chunk, node),
+    },
   };
 }
 
@@ -601,6 +627,21 @@ function isPathPrefix(prefix: ResponsePath, path: ResponsePath): boolean {
 // Unlike isSourceObject, excludes lists
 function isSourceData(value: unknown): value is SourceObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+// Whether the path (response keys and list indexes) is within the data
+function isWithinData(data: unknown, path: ResponsePath): boolean {
+  let value = data;
+  for (const step of path) {
+    if (Array.isArray(value) && typeof step === "number") {
+      value = value[step];
+    } else if (isSourceData(value) && typeof step === "string") {
+      value = value[step];
+    } else {
+      return false;
+    }
+  }
+  return isSourceData(value);
 }
 
 function getPathKey(path: ResponsePath): ResponsePathKey {

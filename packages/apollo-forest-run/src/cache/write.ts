@@ -5,13 +5,13 @@ import type {
   DataForest,
   ModifyResult,
   OptimisticLayer,
-  SplicedResult,
   Store,
   Transaction,
   WriteOptions,
   WriteResult,
 } from "./types";
 import type { NodeKey, OperationDescriptor } from "../descriptor/types";
+import type { SplicedResult } from "../incremental/types";
 import { assert } from "../jsutils/assert";
 import {
   resolveOperationDescriptor,
@@ -38,7 +38,7 @@ import {
   captureIncrementalExecution,
   isSubsequentResult,
   seedDifferences,
-} from "./incremental";
+} from "../incremental/execution";
 import { getNodeChunks } from "./draftHelpers";
 import { replaceTree } from "../forest/addTree";
 import { invalidateReadResults } from "./invalidate";

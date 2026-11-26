@@ -5,10 +5,10 @@ import { resolveOperationDescriptor } from "../cache/descriptor";
 import { canReleaseOperationDescriptor } from "../cache/store";
 import type {
   ExecutionKey,
-  GraphQL17SubsequentIncrementalExecutionResult,
   IncrementalDeferResult,
+  IncrementalDeliverySubsequentResult,
   PendingResult,
-} from "../cache/types";
+} from "../incremental/types";
 import type { IndexedTree } from "../forest/types";
 import type { GraphChunk, ObjectChunk } from "../values/types";
 import { assert } from "../jsutils/assert";
@@ -45,7 +45,7 @@ class TestCache extends ForestRun {
   }
 }
 
-// Incremental execution in the 2022 draft format
+// Incremental execution in the 2022-09-17 draft format
 function execute(
   cache: ForestRun,
   query: DocumentNode,
@@ -391,6 +391,108 @@ describe("@defer: subsequent results", () => {
           info: { __typename: "Info", size: 1, more: "deferred" },
         },
       ],
+    });
+  });
+
+  it("captures placeholders in data shared by multiple results", () => {
+    const cache = new TestCache();
+    const query = gql`
+      query {
+        messages {
+          id
+          ... @defer {
+            info {
+              size
+              ... @defer {
+                more
+              }
+            }
+          }
+        }
+      }
+    `;
+    const execution = execute(cache, query);
+    execution.initial({ messages: [message("1"), message("2")] });
+    const info = { __typename: "Info", size: 1 };
+
+    execution.subsequent(
+      [
+        { path: ["messages", 0], data: { info } },
+        { path: ["messages", 1], data: { info } },
+      ],
+      { hasNext: true },
+    );
+    expect(cache.placeholders(query)).toEqual([
+      "messages.0",
+      "messages.0.info",
+      "messages.1",
+      "messages.1.info",
+    ]);
+    execution.subsequent([
+      { path: ["messages", 1, "info"], data: { more: "b" } },
+      { path: ["messages", 0, "info"], data: { more: "a" } },
+    ]);
+
+    expect(cache.readQuery({ query })).toEqual({
+      messages: [
+        { ...message("1"), info: { ...info, more: "a" } },
+        { ...message("2"), info: { ...info, more: "b" } },
+      ],
+    });
+  });
+
+  it("does not re-capture placeholders of stored objects outside of delivered data", () => {
+    const cache = new TestCache();
+    const query = gql`
+      query {
+        user {
+          id
+          friends {
+            id
+            ... @defer {
+              bio
+            }
+          }
+          ... @defer {
+            name
+          }
+        }
+      }
+    `;
+    const execution = execute(cache, query);
+    execution.initial({ user: { ...user, friends: [friend("1")] } });
+    // A local prepend: the server path of the friend stays `user.friends.0`
+    cache.modify({
+      id: "User:u",
+      fields: {
+        friends(existing) {
+          const ref = cache.writeFragment({
+            fragment: gql`
+              fragment Friend on User {
+                id
+                bio
+              }
+            `,
+            data: friend("0", "local"),
+          });
+          return [ref, ...existing];
+        },
+      },
+    });
+
+    execution.subsequent([{ path: ["user"], data: { name: "user" } }], {
+      hasNext: true,
+    });
+    execution.subsequent([
+      { path: ["user", "friends", 0], data: { bio: "first" } },
+    ]);
+
+    expect(cache.readQuery({ query })).toEqual({
+      user: {
+        ...user,
+        name: "user",
+        friends: [friend("0", "local"), friend("1", "first")],
+      },
     });
   });
 
@@ -944,14 +1046,14 @@ describe("@defer: deferred chunks of trees", () => {
   });
 });
 
-describe("@defer: results in the GraphQL 17 format", () => {
-  // Incremental execution in the GraphQL 17 format (`pending`, `id`, `subPath`, `completed`)
-  function executeGraphQL17(cache: ForestRun, query: DocumentNode) {
+describe("@defer: results in the incremental delivery format", () => {
+  // Incremental execution in the incremental delivery format (`pending`, `id`, `subPath`, `completed`)
+  function executeIncrementalDelivery(cache: ForestRun, query: DocumentNode) {
     return {
       initial(data: Record<string, unknown>, pending: PendingResult[]) {
         cache.write({ query, execution: { data, pending, hasNext: true } });
       },
-      subsequent(execution: GraphQL17SubsequentIncrementalExecutionResult) {
+      subsequent(execution: IncrementalDeliverySubsequentResult) {
         cache.write({ query, execution });
       },
     };
@@ -983,7 +1085,7 @@ describe("@defer: results in the GraphQL 17 format", () => {
       }
     `;
     const profile = { __typename: "Profile", id: "p" };
-    const execution = executeGraphQL17(cache, query);
+    const execution = executeIncrementalDelivery(cache, query);
     execution.initial({ user: { ...user, profile } }, [
       { id: "0", path: ["user"], label: "inner" },
       { id: "1", path: ["user", "profile"], label: "outer" },
@@ -1008,7 +1110,7 @@ describe("@defer: results in the GraphQL 17 format", () => {
 
   it("converts results of pending fragments announced by subsequent results", () => {
     const cache = new TestCache();
-    const execution = executeGraphQL17(cache, nestedQuery);
+    const execution = executeIncrementalDelivery(cache, nestedQuery);
     execution.initial({ user }, [{ id: "0", path: ["user"], label: "outer" }]);
 
     execution.subsequent({
@@ -1055,7 +1157,7 @@ describe("@defer: results in the GraphQL 17 format", () => {
         }
       }
     `;
-    const execution = executeGraphQL17(cache, query);
+    const execution = executeIncrementalDelivery(cache, query);
     execution.initial({ user: { ...user, friends: [friend("1")] } }, [
       { id: "0", path: ["user"], label: "outer" },
     ]);
@@ -1079,7 +1181,7 @@ describe("@defer: results in the GraphQL 17 format", () => {
 
   it("ignores failed fragments and results of unknown ids", () => {
     const cache = new TestCache();
-    const execution = executeGraphQL17(cache, messagesQuery);
+    const execution = executeIncrementalDelivery(cache, messagesQuery);
     execution.initial({ messages: [message("1"), message("2")] }, [
       { id: "0", path: ["messages", 0], label: "name" },
       { id: "1", path: ["messages", 1], label: "name" },

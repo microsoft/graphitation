@@ -48,12 +48,8 @@ import {
   retrieveEmbeddedChunk,
   TraverseEnv,
 } from "../values";
-import {
-  CacheEnv,
-  DataForest,
-  DeliveredFields,
-  OptimisticLayer,
-} from "./types";
+import { CacheEnv, DataForest, OptimisticLayer } from "./types";
+import type { DeliveredFields } from "../incremental/types";
 import {
   createChunkMatcher,
   createChunkProvider,

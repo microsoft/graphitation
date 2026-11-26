@@ -9,16 +9,16 @@ export type {
   TelemetryEvent,
 } from "./telemetry/types";
 export type { ForestRunAdditionalConfig } from "./cache/types";
+export type { WriteOptions } from "./cache/types";
 export type {
   CompleteExecutionResult,
   ExecutionKey,
   ExecutionResult,
-  GraphQL17InitialIncrementalExecutionResult,
-  GraphQL17SubsequentIncrementalExecutionResult,
+  IncrementalDeliveryInitialResult,
+  IncrementalDeliverySubsequentResult,
   InitialIncrementalExecutionResult,
   SubsequentIncrementalExecutionResult,
-  WriteOptions,
-} from "./cache/types";
+} from "./incremental/types";
 
 export { OPERATION_HISTORY_SYMBOL } from "./descriptor/operation";
 

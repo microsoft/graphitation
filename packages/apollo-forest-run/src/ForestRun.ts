@@ -45,7 +45,7 @@ import { isWrite, write } from "./cache/write";
 import {
   isSubsequentResult,
   spliceSubsequentResult,
-} from "./cache/incremental";
+} from "./incremental/execution";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
