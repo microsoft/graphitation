@@ -1,8 +1,10 @@
 import type { VariableDefinitionNode, OperationDefinitionNode } from "graphql";
 import { valueFromASTUntyped } from "graphql";
 import type {
+  DetachedFragmentDescriptor,
   DocumentDescriptor,
   OperationDescriptor,
+  RegularOperationDescriptor,
   ResultTreeDescriptor,
   OperationEnv,
   TypeName,
@@ -10,6 +12,7 @@ import type {
   VariableName,
 } from "./types";
 import { sortKeys } from "../jsutils/normalize";
+import { assert } from "../jsutils/assert";
 
 const defaultOperationTypes: Record<
   OperationDefinitionNode["operation"],
@@ -39,48 +42,149 @@ export function describeOperation(
   variablesKey?: string,
   rootTypeName?: TypeName,
   rootNodeKey?: string,
-): OperationDescriptor {
-  const {
-    definition: { operation, variableDefinitions, directives },
-  } = documentDescriptor;
-
-  const effectiveRootTypeName =
-    rootTypeName ?? defaultOperationTypes[operation];
-
-  const effectiveRootNodeKey = rootNodeKey ?? defaultRootNodeKeys[operation];
-
-  if (!effectiveRootTypeName) {
+): RegularOperationDescriptor {
+  const operation = documentDescriptor.definition.operation;
+  const rootType = rootTypeName ?? defaultOperationTypes[operation];
+  if (!rootType) {
     throw new Error(`Unexpected operation type: ${operation}`);
   }
-
-  variablesWithDefaults ??= documentDescriptor.hasDefaultValues
-    ? applyDefaultValues(variables, variableDefinitions)
-    : variables;
-
-  return {
-    ...documentDescriptor,
-    ...resultTreeDescriptor,
-    id: env.genId?.() ?? 0,
-    name: documentDescriptor.definition.name?.value,
+  const descriptor = createDescriptor(
+    "Operation",
     env,
+    documentDescriptor,
+    resultTreeDescriptor,
     variables,
     variablesWithDefaults,
-    rootType: effectiveRootTypeName,
-    rootNodeKey: effectiveRootNodeKey,
+    variablesKey,
+    rootType,
+    rootNodeKey,
+  );
+  assert(descriptor.kind === "Operation");
+  return descriptor;
+}
+
+/**
+ * Describes Apollo fragment document (i.e. `query { ...Fragment }` + fragment definitions).
+ *
+ * `rootTypeName` is expected to be the type condition of the fragment,
+ * `rootNodeKey` - key of the node this fragment is read from / written to (if known).
+ */
+export function describeDetachedFragment(
+  env: OperationEnv,
+  documentDescriptor: DocumentDescriptor,
+  resultTreeDescriptor: ResultTreeDescriptor,
+  variables: VariableValues,
+  variablesWithDefaults: VariableValues | undefined,
+  variablesKey: string | undefined,
+  rootTypeName: TypeName,
+  rootNodeKey?: string,
+): DetachedFragmentDescriptor {
+  const descriptor = createDescriptor(
+    "DetachedFragment",
+    env,
+    documentDescriptor,
+    resultTreeDescriptor,
+    variables,
+    variablesWithDefaults,
+    variablesKey,
+    rootTypeName,
+    rootNodeKey,
+  );
+  assert(descriptor.kind === "DetachedFragment");
+  return descriptor;
+}
+
+function createDescriptor(
+  kind: OperationDescriptor["kind"],
+  env: OperationEnv,
+  documentDescriptor: DocumentDescriptor,
+  resultTreeDescriptor: ResultTreeDescriptor,
+  variables: VariableValues,
+  variablesWithDefaults: VariableValues | undefined,
+  variablesKey: string | undefined,
+  rootType: TypeName,
+  rootNodeKey: string | undefined,
+): OperationDescriptor {
+  const { definition } = documentDescriptor;
+  variablesWithDefaults ??= resolveVariablesWithDefaults(
+    documentDescriptor,
+    variables,
+  );
+  // Note: keeping evaluation order of helpers (some may throw or call user callbacks)
+  const id = env.genId?.() ?? 0;
+  const keyVariables = getKeyVars(definition);
+  const covers = getCovers(definition, variablesWithDefaults);
+  const historySize = env.historyConfig
+    ? getHistorySize(definition, variables, env)
+    : 0;
+  variablesKey ??= createVariablesKey(
+    definition.variableDefinitions,
+    variablesWithDefaults,
+  );
+
+  if (env.optimizeDescriptorShape === false) {
+    // Legacy construction (kept for A/B evaluation of optimizeDescriptorShape)
+    return {
+      kind,
+      ...documentDescriptor,
+      ...resultTreeDescriptor,
+      id,
+      name: definition.name?.value,
+      env,
+      variables,
+      variablesWithDefaults,
+      rootType,
+      rootNodeKey: rootNodeKey ?? defaultRootNodeKeys[definition.operation],
+      selections: new Map(),
+      keyVariables,
+      covers,
+      historySize,
+      variablesKey,
+      cache: isCacheable(definition),
+    };
+  }
+  // Note: explicit literal (vs spreads) keeps all properties in-object with a single shape for all descriptor kinds
+  return {
+    kind,
+    id,
+    name: definition.name?.value,
+    env,
+    document: documentDescriptor.document,
+    fragmentMap: documentDescriptor.fragmentMap,
+    debugName: documentDescriptor.debugName,
+    definition,
+    hasDefaultValues: documentDescriptor.hasDefaultValues,
+    possibleSelections: resultTreeDescriptor.possibleSelections,
+    variables,
+    variablesWithDefaults,
+    variablesKey,
+    keyVariables,
+    rootType,
+    rootNodeKey: rootNodeKey ?? defaultRootNodeKeys[definition.operation],
     selections: new Map(),
-    keyVariables: getKeyVars(documentDescriptor.definition),
-    covers: getCovers(documentDescriptor.definition, variablesWithDefaults),
-    historySize: env.historyConfig
-      ? getHistorySize(documentDescriptor.definition, variables, env)
-      : 0,
-    variablesKey:
-      variablesKey ??
-      createVariablesKey(variableDefinitions, variablesWithDefaults),
-    cache: Boolean(
-      operation !== "mutation" ||
-        directives?.some((d) => d.name.value === "cache"),
-    ),
+    cache: isCacheable(definition),
+    historySize,
+    covers,
   };
+}
+
+function resolveVariablesWithDefaults(
+  documentDescriptor: DocumentDescriptor,
+  variables: VariableValues,
+): VariableValues {
+  return documentDescriptor.hasDefaultValues
+    ? applyDefaultValues(
+        variables,
+        documentDescriptor.definition.variableDefinitions,
+      )
+    : variables;
+}
+
+function isCacheable(definition: OperationDefinitionNode): boolean {
+  return Boolean(
+    definition.operation !== "mutation" ||
+      definition.directives?.some((d) => d.name.value === "cache"),
+  );
 }
 
 export function applyDefaultValues(

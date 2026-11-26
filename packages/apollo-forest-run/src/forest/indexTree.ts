@@ -22,7 +22,8 @@ import type {
   OperationDescriptor,
   PossibleSelections,
 } from "../descriptor/types";
-import type { ForestEnv, IndexedTree } from "./types";
+import type { ForestEnv, IndexedTree, UncheckedIndexedTree } from "./types";
+import { isIndexedTree } from "./predicates";
 import { ValueKind } from "../values/types";
 import {
   getFieldName,
@@ -70,6 +71,10 @@ type Context = {
 const EMPTY_ARRAY = Object.freeze([]);
 const isArray = Array.isArray;
 
+/**
+ * Entry point for indexing of all tree kinds: tree kind is always the same as its descriptor kind.
+ * Callers that need a specific tree kind should assert or check `tree.kind`.
+ */
 export function indexTree(
   env: ForestEnv,
   operation: OperationDescriptor,
@@ -118,7 +123,9 @@ export function indexTree(
     operation.possibleSelections,
     rootRef,
   );
-  const tree: IndexedTree = {
+  // Note: explicit literal with the same fields for all tree kinds (keeps a single object shape)
+  const tree: UncheckedIndexedTree = {
+    kind: operation.kind,
     operation,
     result,
     rootNodeKey,
@@ -130,6 +137,7 @@ export function indexTree(
     history:
       previousTreeState?.history ?? new CircularBuffer(operation.historySize),
   };
+  assert(isIndexedTree(tree));
   // Every composite occurrence is counted, but dataMap keeps only unique sources.
   // This detects sharing without an additional map lookup or allocation per chunk.
   if (context.indexedSources === dataMap.size) {
