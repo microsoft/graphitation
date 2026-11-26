@@ -112,6 +112,15 @@ export function write(
   assert(!existingResult?.prev);
 
   if (writeData === existingData && existingResult) {
+    // E.g. a new execution (or a complete result) with data of the stored result
+    captureIncrementalExecution(
+      store,
+      targetForest,
+      operationDescriptor,
+      execution,
+      existingResult,
+      existingResult,
+    );
     return {
       options,
       incoming: existingResult,
@@ -144,7 +153,7 @@ export function write(
     operationDescriptor,
     operationResult,
     splicedResult?.missingFields,
-    existingResult,
+    existingResult ?? splicedResult?.incremental.transientTree,
   );
 
   // ApolloCompat: necessary for fragment writes with custom ids

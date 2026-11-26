@@ -104,12 +104,21 @@ export function spliceSubsequentResult(
     ? convertIncrementalDeliveryResult(incremental, execution)
     : execution;
   const targetForest = getActiveForest(store, activeTransaction);
-  const tree = getExistingResult(env, store, targetForest, operation);
+  const tree =
+    getExistingResult(env, store, targetForest, operation) ??
+    incremental.transientTree;
+  const { mergePolicies } = env;
   const spliced = tree
-    ? spliceIncrementalResults(tree, incremental, result)
+    ? spliceIncrementalResults(tree, incremental, result, (type, field) =>
+        Boolean(mergePolicies.get(type)?.has(field)),
+      )
     : undefined;
   if (result.hasNext === false) {
     store.incrementalExecutions.delete(operation);
+    if (!operation.cache) {
+      // The descriptor was retained while the execution was pending (see canReleaseOperationDescriptor)
+      activeTransaction.nonCacheableOperations?.add(operation);
+    }
   }
   return spliced;
 }
@@ -131,6 +140,9 @@ export function captureIncrementalExecution(
   }
   if (isSplicedIncrementalResult(execution)) {
     captureDeliveredPlaceholders(execution, indexed, merged);
+    if (execution.incremental.transientTree) {
+      execution.incremental.transientTree = merged;
+    }
   } else {
     updateIncrementalExecution(
       store,
@@ -162,7 +174,7 @@ export function createDeliveredFieldFilter(
  */
 export function seedDifferences(
   indexed: IndexedTree,
-  { deliveredFields, seed }: SplicedIncrementalResult,
+  { deliveredFields, seed, incremental }: SplicedIncrementalResult,
 ): NodeDifferenceMap | undefined {
   for (const copy of deliveredFields.keys()) {
     if (!indexed.dataMap.has(copy)) {
@@ -182,13 +194,32 @@ export function seedDifferences(
       }
     }
   }
+  if (incremental.transientTree) {
+    // Unlike stored trees, a transient tree doesn't receive other writes: its untouched nodes are not compared
+    //   (otherwise they would revert writes made since its previous state)
+    for (const [nodeKey, chunks] of indexed.nodes) {
+      if (!seed.has(nodeKey) && isRecycled(indexed, chunks)) {
+        seed.set(nodeKey, Difference.createObjectDifference());
+      }
+    }
+  }
   return seed;
+}
+
+function isRecycled(tree: IndexedTree, chunks: ObjectChunk[]): boolean {
+  for (const chunk of chunks) {
+    if (!tree.prev?.dataMap.has(chunk.data)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function spliceIncrementalResults(
   tree: IndexedTree,
   incremental: IncrementalExecution,
   execution: SubsequentIncrementalExecutionResult,
+  hasMergePolicy: SpliceState["hasMergePolicy"],
 ): SplicedIncrementalResult | undefined {
   const results = mergeNestedResults(execution);
   if (!results.length) {
@@ -196,6 +227,7 @@ function spliceIncrementalResults(
   }
   const state: SpliceState = {
     tree,
+    hasMergePolicy,
     copies: new Map(),
     deliveredFields: new Map(),
     missingFields: new Map(),
@@ -205,8 +237,7 @@ function spliceIncrementalResults(
   const pathEnv = { findParent: createParentLocator(tree.dataMap) };
   const entries: SplicedIncrementalResultEntry[] = [];
   for (const { path, data } of results) {
-    const address = incremental.placeholders.get(getPathKey(path));
-    const chunk = address && resolveAddress(tree, address);
+    const chunk = resolvePlaceholder(tree, incremental, path);
     if (chunk) {
       spliceData(state, chunk, data);
       entries.push({ path, data, localPath: getDataPath(pathEnv, chunk) });
@@ -357,9 +388,9 @@ function spliceData(
     if (isSourceData(incoming) && existing && isObjectValue(existing)) {
       // E.g. a field selected by multiple fragments
       spliceData(state, existing, incoming);
-      continue;
+    } else {
+      target[key] = incoming;
     }
-    target[key] = incoming;
     delivered.add(key);
     for (const field of state.missingFields.get(target) ?? EMPTY_ARRAY) {
       if (field.dataKey === key) {
@@ -371,6 +402,14 @@ function spliceData(
   assert(Difference.isObjectDifference(difference));
   for (const field of chunk.selection.fieldQueue) {
     if (delivered.has(field.dataKey)) {
+      if (
+        field.selection &&
+        chunk.type &&
+        state.hasMergePolicy(chunk.type, field.name)
+      ) {
+        // A merge policy may change the whole value (not only delivered fields of it): compare it as a whole
+        difference.fieldState.delete(field.name);
+      }
       Difference.enqueueField(
         difference,
         resolveNormalizedField(chunk.selection, field),
@@ -463,8 +502,7 @@ function updateIncrementalExecution(
   if (
     !("hasNext" in execution) ||
     !execution.hasNext ||
-    !operation.hasDeferSites ||
-    !shouldCache(targetForest, operation)
+    !operation.hasDeferSites
   ) {
     // E.g. deferred data was resolved inline by the server (a complete result)
     store.incrementalExecutions.delete(operation);
@@ -473,6 +511,8 @@ function updateIncrementalExecution(
   const incremental: IncrementalExecution = {
     key: execution.key,
     placeholders: new Map(),
+    // Results of operations which are not stored (e.g. mutations) are spliced into their latest result
+    transientTree: shouldCache(targetForest, operation) ? undefined : merged,
     pendingResults: undefined,
   };
   if ("pending" in execution) {
@@ -480,15 +520,33 @@ function updateIncrementalExecution(
   }
   const findParent = createParentLocator(indexed.dataMap);
   const findMergedParent = createParentLocator(merged.dataMap);
-  for (const chunk of indexed.deferredChunks ?? EMPTY_ARRAY) {
+  const deferredChunks = indexed.deferredChunks ?? EMPTY_ARRAY;
+  // Deferred chunks capture list items below them (in the incremental delivery format), nested ones on their own
+  const nestedDeferredChunks = incremental.pendingResults
+    ? new Set(deferredChunks)
+    : undefined;
+  for (const chunk of deferredChunks) {
+    const path = getDataPath({ findParent }, chunk);
     addPlaceholder(
       incremental,
       merged,
       findParent,
       findMergedParent,
       chunk,
-      getDataPath({ findParent }, chunk),
+      path,
     );
+    if (incremental.pendingResults) {
+      captureListItems(
+        incremental,
+        merged,
+        findParent,
+        findMergedParent,
+        chunk,
+        path,
+        chunk.data,
+        nestedDeferredChunks,
+      );
+    }
   }
   if (incremental.placeholders.size) {
     store.incrementalExecutions.set(operation, incremental);
@@ -511,14 +569,26 @@ function captureDeliveredPlaceholders(
   assert(root && isObjectValue(root));
   // Objects results were delivered to (by chunks: unlike sources, chunks are unique per location)
   const targets = new Map<ObjectChunk, SplicedIncrementalResultEntry[]>();
+  const findParent = createParentLocator(indexed.dataMap);
+  const findMergedParent = createParentLocator(merged.dataMap);
   for (const result of results) {
     const chunk = resolveResponsePath(root, result.localPath);
     if (chunk) {
       accumulate(targets, chunk, result);
+      if (incremental.pendingResults) {
+        captureListItems(
+          incremental,
+          merged,
+          findParent,
+          findMergedParent,
+          chunk,
+          result.path,
+          result.data,
+          undefined,
+        );
+      }
     }
   }
-  const findParent = createParentLocator(indexed.dataMap);
-  const findMergedParent = createParentLocator(merged.dataMap);
   for (const chunk of indexed.deferredChunks ?? EMPTY_ARRAY) {
     // The closest object results were delivered to
     let target: ObjectChunk | CompositeListChunk = chunk;
@@ -563,6 +633,140 @@ function addPlaceholder(
       ? createAddress(findMergedParent, mergedChunk)
       : createAddress(findParent, chunk),
   );
+}
+
+/**
+ * In the incremental delivery format, `subPath` may target any object below an object with deferred fragments
+ * delivered earlier. Object fields are stable (walked by response keys when resolving, see resolvePlaceholder),
+ * list indexes are not (lists may change, e.g. be reordered): captures addresses of list items within `data`
+ * (in the server view) while their indexes are known.
+ */
+function captureListItems(
+  incremental: IncrementalExecution,
+  merged: IndexedTree,
+  findParent: ParentLocator,
+  findMergedParent: ParentLocator,
+  chunk: ObjectChunk,
+  path: ResponsePath,
+  data: SourceObject,
+  skip: Set<ObjectChunk> | undefined,
+) {
+  for (const field of chunk.selection.fieldQueue) {
+    const value = field.selection ? data[field.dataKey] : undefined;
+    if (value === undefined || value === null) {
+      continue;
+    }
+    const fieldChunk = resolveObjectField(chunk, field);
+    if (!fieldChunk) {
+      continue;
+    }
+    const fieldPath = [...path, field.dataKey];
+    if (isObjectValue(fieldChunk) && isSourceData(value)) {
+      if (!skip?.has(fieldChunk)) {
+        captureListItems(
+          incremental,
+          merged,
+          findParent,
+          findMergedParent,
+          fieldChunk,
+          fieldPath,
+          value,
+          skip,
+        );
+      }
+    } else if (isCompositeListValue(fieldChunk) && Array.isArray(value)) {
+      captureListValueItems(
+        incremental,
+        merged,
+        findParent,
+        findMergedParent,
+        fieldChunk,
+        fieldPath,
+        value,
+        skip,
+      );
+    }
+  }
+}
+
+function captureListValueItems(
+  incremental: IncrementalExecution,
+  merged: IndexedTree,
+  findParent: ParentLocator,
+  findMergedParent: ParentLocator,
+  list: CompositeListChunk,
+  path: ResponsePath,
+  data: unknown[],
+  skip: Set<ObjectChunk> | undefined,
+) {
+  for (let index = 0; index < data.length; index++) {
+    const item = resolveListItem(list, index);
+    if (!item) {
+      continue;
+    }
+    const value = data[index];
+    const itemPath = [...path, index];
+    if (isObjectValue(item) && isSourceData(value)) {
+      addPlaceholder(
+        incremental,
+        merged,
+        findParent,
+        findMergedParent,
+        item,
+        itemPath,
+      );
+      if (!skip?.has(item)) {
+        captureListItems(
+          incremental,
+          merged,
+          findParent,
+          findMergedParent,
+          item,
+          itemPath,
+          value,
+          skip,
+        );
+      }
+    } else if (isCompositeListValue(item) && Array.isArray(value)) {
+      captureListValueItems(
+        incremental,
+        merged,
+        findParent,
+        findMergedParent,
+        item,
+        itemPath,
+        value,
+        skip,
+      );
+    }
+  }
+}
+
+/**
+ * Resolves the object of the response path in the current stored result: by its placeholder, or
+ * (in the incremental delivery format, see captureListItems) by object fields below the closest placeholder.
+ */
+function resolvePlaceholder(
+  tree: IndexedTree,
+  incremental: IncrementalExecution,
+  path: ResponsePath,
+): ObjectChunk | undefined {
+  const address = incremental.placeholders.get(getPathKey(path));
+  if (address || !incremental.pendingResults) {
+    return address && resolveAddress(tree, address);
+  }
+  for (let length = path.length - 1; length >= 0; length--) {
+    const prefix = path.slice(0, length);
+    const prefixAddress = incremental.placeholders.get(getPathKey(prefix));
+    if (prefixAddress) {
+      const rest = path.slice(length);
+      const chunk = rest.every((step) => typeof step === "string")
+        ? resolveAddress(tree, prefixAddress)
+        : undefined;
+      return chunk && resolveResponsePath(chunk, rest);
+    }
+  }
+  return undefined;
 }
 
 function createAddress(

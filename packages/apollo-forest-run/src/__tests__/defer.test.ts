@@ -772,6 +772,78 @@ describe("@defer: subsequent results", () => {
     });
   });
 
+  it("supersedes an execution even when its stored data is reused", () => {
+    const cache = new TestCache();
+    const first = execute(cache, messagesQuery, { key: "A" });
+    const second = execute(cache, messagesQuery, { key: "B" });
+    first.initial({ messages: [message("1")] });
+    const stored = cache.storedTree(messagesQuery);
+    assert(stored);
+    second.initial(stored.result.data);
+
+    first.subsequent([{ path: ["messages", 0], data: { name: "late" } }]);
+    second.subsequent([{ path: ["messages", 0], data: { name: "current" } }]);
+
+    expect(cache.readQuery({ query: messagesQuery })).toEqual({
+      messages: [message("1", "current")],
+    });
+  });
+
+  it("closes an execution when a complete write reuses its stored data", () => {
+    const cache = new TestCache();
+    const execution = execute(cache, messagesQuery);
+    execution.initial({ messages: [message("1", "inline")] });
+    const stored = cache.storedTree(messagesQuery);
+    assert(stored);
+    cache.writeExecutionResult({
+      query: messagesQuery,
+      execution: { data: stored.result.data },
+    });
+
+    execution.subsequent([{ path: ["messages", 0], data: { name: "late" } }]);
+
+    expect(cache.readQuery({ query: messagesQuery })).toEqual({
+      messages: [message("1", "inline")],
+    });
+  });
+
+  it("updates normalized data from @defer below a non-cacheable mutation field", () => {
+    const cache = new TestCache({ cleanupNonCacheableOperations: true });
+    const mutation = gql`
+      mutation {
+        send {
+          id
+          text
+          ... @defer {
+            name
+          }
+        }
+      }
+    `;
+    cache.writeQuery({
+      query: messagesQuery,
+      data: { messages: [message("1", "old"), message("2")] },
+    });
+    const execution = execute(cache, mutation);
+    execution.initial({ send: [message("1"), message("2")] });
+    expect(cache.getStats().treeCount).toBe(1);
+    const updated = { ...message("2"), text: "edited" };
+    cache.writeQuery({
+      query: messagesQuery,
+      data: { messages: [message("1", "old"), updated] },
+    });
+
+    execution.subsequent([{ path: ["send", 0], data: { name: "new" } }], {
+      hasNext: true,
+    });
+    execution.subsequent([]);
+
+    expect(cache.readQuery({ query: messagesQuery })).toEqual({
+      messages: [message("1", "new"), updated],
+    });
+    expect(cache.getStats()).toMatchObject({ treeCount: 1, operationCount: 1 });
+  });
+
   it("does not track results with deferred data resolved inline (a complete result)", () => {
     const cache = new TestCache();
     cache.writeExecutionResult({
@@ -1111,6 +1183,96 @@ describe("@defer: results in the incremental delivery format", () => {
     });
   });
 
+  it("converts results with sub-paths of objects delivered by earlier payloads", () => {
+    const cache = new TestCache();
+    const query = gql`
+      query {
+        user {
+          id
+          profile {
+            id
+            ... @defer(label: "outer") {
+              settings {
+                theme
+              }
+            }
+          }
+          ... @defer(label: "inner") {
+            profile {
+              id
+              settings {
+                language
+              }
+            }
+          }
+        }
+      }
+    `;
+    const profile = { __typename: "Profile", id: "p" };
+    const execution = executeIncrementalDelivery(cache, query);
+    execution.initial({ user: { ...user, profile } }, [
+      { id: "0", path: ["user"], label: "inner" },
+      { id: "1", path: ["user", "profile"], label: "outer" },
+    ]);
+
+    execution.subsequent({
+      incremental: [{ id: "1", data: { settings: { theme: "dark" } } }],
+      completed: [{ id: "1" }],
+      hasNext: true,
+    });
+    execution.subsequent({
+      incremental: [
+        { id: "0", subPath: ["profile", "settings"], data: { language: "en" } },
+      ],
+      completed: [{ id: "0" }],
+      hasNext: false,
+    });
+
+    expect(cache.readQuery({ query })).toEqual({
+      user: {
+        ...user,
+        profile: { ...profile, settings: { theme: "dark", language: "en" } },
+      },
+    });
+  });
+
+  it("resolves a list index in subPath against the server's original order", () => {
+    const cache = new TestCache();
+    const query = gql`
+      query {
+        messages {
+          id
+          text
+        }
+        ... @defer {
+          messages {
+            name
+          }
+        }
+      }
+    `;
+    const execution = executeIncrementalDelivery(cache, query);
+    execution.initial({ messages: [message("1"), message("2")] }, [
+      { id: "0", path: [] },
+    ]);
+    cache.modify({
+      fields: { messages: (existing) => [...existing].reverse() },
+    });
+
+    execution.subsequent({
+      incremental: [
+        { id: "0", subPath: ["messages", 0], data: { name: "one" } },
+      ],
+      completed: [{ id: "0" }],
+      hasNext: false,
+    });
+
+    expect(cache.readQuery({ query, returnPartialData: true })).toEqual({
+      __typename: "Query",
+      messages: [message("2"), message("1", "one")],
+    });
+  });
+
   it("converts results of pending fragments announced by subsequent results", () => {
     const cache = new TestCache();
     const execution = executeIncrementalDelivery(cache, nestedQuery);
@@ -1440,6 +1602,49 @@ describe("@defer: merge policies of subsequent results", () => {
     expect(mergeItems).toHaveBeenCalledTimes(1);
     expect(cache.readQuery({ query: nested })).toEqual({
       user: { ...user, feed: { ...feed, items: [item("a")] } },
+    });
+  });
+
+  it("merges an explicitly delivered object but not one traversed by a result", () => {
+    const merge = jest.fn((_, incoming) =>
+      incoming.bio ? { ...incoming, title: "merged" } : incoming,
+    );
+    const cache = new TestCache({
+      typePolicies: { User: { fields: { profile: { merge } } } },
+    });
+    const query = gql`
+      query {
+        user {
+          id
+          profile {
+            title
+            ... @defer {
+              language
+            }
+          }
+          ... @defer {
+            profile {
+              bio
+            }
+          }
+        }
+      }
+    `;
+    const user = { __typename: "User", id: "u" };
+    const execution = execute(cache, query);
+    execution.initial({ user: { ...user, profile: { title: "a" } } });
+    merge.mockClear();
+
+    execution.subsequent(
+      [{ path: ["user", "profile"], data: { language: "en" } }],
+      { hasNext: true },
+    );
+    expect(merge).not.toHaveBeenCalled();
+    execution.subsequent([{ path: ["user"], data: { profile: { bio: "b" } } }]);
+
+    expect(merge).toHaveBeenCalledTimes(1);
+    expect(cache.readQuery({ query })).toEqual({
+      user: { ...user, profile: { title: "merged", language: "en", bio: "b" } },
     });
   });
 });
