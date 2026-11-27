@@ -106,6 +106,8 @@ export function addExecution(
     key,
     layerTag: `@defer:${operation.debugName}:${++executionCount}`,
     data,
+    incoming: null,
+    tree: null,
   };
   store.executions.set(operation, execution);
   return execution;

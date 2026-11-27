@@ -128,6 +128,10 @@ export type Execution = {
   layerTag: string;
   // Data received so far (in the server view)
   data: ResultData;
+  // The last result written to the layer, and the tree of the operation it left there:
+  //   while the tree is the same, unchanged objects of the next result are shared with this result (see write)
+  incoming: IndexedTree | null;
+  tree: DataTree | null;
 };
 
 export type CacheKey = string;
