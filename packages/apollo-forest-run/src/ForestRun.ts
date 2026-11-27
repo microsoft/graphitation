@@ -588,6 +588,7 @@ export class ForestRun<
       nonCacheableOperations:
         parentTransaction?.nonCacheableOperations ??
         (this.env.cleanupNonCacheableOperations ? new Set() : null),
+      rereadOperations: null,
     };
     this.transactionStack.push(activeTransaction);
     let error;
@@ -666,10 +667,15 @@ export class ForestRun<
     //   so this may not only add watches, but also remove them from accumulator (depending on onWatchUpdated callback)
     const accumulator = transaction.watchesToNotify ?? new Set();
     for (const operation of transaction.affectedOperations) {
+      const reread = transaction.rereadOperations?.has(operation);
       for (const watch of this.store.watches.get(operation) ?? EMPTY_ARRAY) {
         const diff = this.diff(watch);
 
-        if (!this.shouldNotifyWatch(watch, diff, onWatchUpdated)) {
+        if (reread && isEqualDiff(watch.lastDiff, diff)) {
+          // The same data as notified already (new objects): keeps identity for later comparisons
+          watch.lastDiff = diff;
+          accumulator.delete(watch);
+        } else if (!this.shouldNotifyWatch(watch, diff, onWatchUpdated)) {
           accumulator.delete(watch);
         } else {
           accumulator.add(watch);
@@ -782,4 +788,15 @@ export class ForestRun<
 
 function peek<T>(stack: T[]): T | undefined {
   return stack[stack.length - 1];
+}
+
+function isEqualDiff(
+  lastDiff: Cache.DiffResult<unknown> | undefined,
+  diff: Cache.DiffResult<unknown>,
+): boolean {
+  return (
+    lastDiff !== undefined &&
+    lastDiff.complete === diff.complete &&
+    equal(lastDiff.result, diff.result)
+  );
 }

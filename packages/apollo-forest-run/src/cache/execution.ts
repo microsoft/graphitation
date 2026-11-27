@@ -195,8 +195,10 @@ function removeExecution(
   // Readers of the in-flight layer read from the data forest again
   const readers = removeInFlightExecution(store, execution);
   transaction.affectedOperations ??= new Set();
+  transaction.rereadOperations ??= new Set();
   for (const operation of readers) {
     transaction.affectedOperations.add(operation);
+    transaction.rereadOperations.add(operation);
   }
 }
 

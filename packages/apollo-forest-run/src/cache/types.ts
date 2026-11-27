@@ -166,6 +166,9 @@ export type Transaction = {
   // Owned by the outermost transaction: nested transactions share the same set by reference
   // and the outermost one releases everything at once when it completes.
   nonCacheableOperations: Set<OperationDescriptor> | null;
+  // Operations reading from another forest now (readers of dropped in-flight layers): results are new objects,
+  //   so their watches are only notified when results are not deeply equal
+  rereadOperations: Set<OperationDescriptor> | null;
 };
 
 export type WriteResult = {

@@ -839,6 +839,60 @@ describe("timeout and cancellation", () => {
     });
   });
 
+  it.each(["completion", "cancellation"] as const)(
+    "does not notify readers on %s when their data is the same",
+    (end) => {
+      const cache = new TestCache();
+      const watches = [preloaderQuery, chatQuery].map((query) => {
+        const watch = jest.fn();
+        cache.watch({
+          query,
+          optimistic: true,
+          immediate: true,
+          callback: watch,
+        });
+        return watch;
+      });
+      const execution = execute(cache, preloaderQuery);
+      execution.initial({ messages: [message("1")] });
+      execution.subsequent([{ path: ["messages", 0], data: { name: "one" } }]);
+      for (const watch of watches) {
+        watch.mockClear();
+      }
+
+      if (end === "completion") {
+        execution.complete();
+      } else {
+        execute(cache, preloaderQuery).initial({
+          messages: [message("1", "one")],
+        });
+      }
+      for (const watch of watches) {
+        expect(watch).not.toHaveBeenCalled();
+      }
+      // Completes the new execution (a no-op after completion)
+      cache.writeExecutionResult({
+        query: preloaderQuery,
+        execution: { hasNext: false },
+      });
+      for (const watch of watches) {
+        expect(watch).not.toHaveBeenCalled();
+      }
+
+      // Later changes are notified
+      cache.writeFragment({
+        id: "Message:1",
+        fragment: gql`
+          fragment Text on Message {
+            text
+          }
+        `,
+        data: { __typename: "Message", text: "edited" },
+      });
+      expect(watches[1]).toHaveBeenCalledTimes(1);
+    },
+  );
+
   it("is discarded on reset", async () => {
     const cache = new TestCache();
     execute(cache, preloaderQuery).initial({ messages: [message("1")] });
