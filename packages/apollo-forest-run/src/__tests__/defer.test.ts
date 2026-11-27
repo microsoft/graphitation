@@ -1419,6 +1419,7 @@ describe("@defer: fetchMore on a covered query while the preloader streams", () 
 
       // Pending texts read like fields missing in a regular write (complete)
       const page1Pending = { messages: ["m1:-", "m2:-"], complete: true };
+      const page1PendingRead = { ...page1Pending, complete: false };
       if (variant === "updateQuery") {
         expect(steps).toEqual([
           {
@@ -1428,9 +1429,10 @@ describe("@defer: fetchMore on a covered query while the preloader streams", () 
           },
           {
             // Its own write goes to the data forest only: hidden while streaming (page 2 is not visible)
-            list: page1Pending,
-            // Adapted: notified with an equal result (the data forest changed below the layer)
-            watch: [page1Pending],
+            // Adapted: re-hydrated through the layers, the pending `text` has no cached value (complete: false);
+            //   notified (the data forest changed below the layer)
+            list: page1PendingRead,
+            watch: [page1PendingRead],
             preloader: page1Pending,
           },
           {
@@ -1454,9 +1456,10 @@ describe("@defer: fetchMore on a covered query while the preloader streams", () 
           },
           {
             // Its own write goes to the data forest only (merged with nothing there): hidden while streaming
-            list: page1Pending,
-            // Adapted: notified with an equal result (the data forest changed below the layer)
-            watch: [page1Pending],
+            // Adapted: re-hydrated through the layers, the pending `text` has no cached value (complete: false);
+            //   notified (the data forest changed below the layer)
+            list: page1PendingRead,
+            watch: [page1PendingRead],
             preloader: page1Pending,
           },
           {
