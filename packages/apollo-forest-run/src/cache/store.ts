@@ -21,7 +21,7 @@ import { assert } from "../jsutils/assert";
 import { IndexedTree, DefaultPartition } from "../forest/types";
 import { NodeChunk } from "../values/types";
 import { operationCacheKey } from "./descriptor";
-import { addTree, replaceTree } from "../forest/addTree";
+import { addTree } from "../forest/addTree";
 
 const EMPTY_ARRAY = Object.freeze([]);
 const DEFAULT_PARTITION: DefaultPartition = "__default__";
@@ -657,29 +657,26 @@ export function removeInFlightExecution(
 }
 
 /**
- * When a covered operation gets its own result (in the data forest), it replaces its tree in in-flight layers too
+ * In-flight layers covering the operation (its own results are written to them too, see write)
  */
-export function updateCoveredInFlightTrees(
-  env: CacheEnv,
+export function getCoveringInFlightForests(
   store: Store,
-  tree: DataTree,
-) {
-  const { operation } = tree;
-  if (!store.inFlightExecutions.size || operation.name === undefined) {
-    return;
+  operation: OperationDescriptor,
+): DataForest[] {
+  const forests: DataForest[] = [];
+  if (operation.name === undefined) {
+    return forests;
   }
   for (const execution of store.inFlightExecutions.values()) {
     if (
-      execution.operation === operation ||
-      !execution.operation.covers.includes(operation.name)
+      execution.operation !== operation &&
+      execution.operation.covers.includes(operation.name)
     ) {
-      continue;
+      execution.incoming = null; // The layer changes by another write
+      forests.push(execution.forest);
     }
-    replaceTree(env, execution.forest, tree);
-    execution.forest.readResults.delete(operation);
-    execution.incoming = null; // The layer changed by another write
-    store.optimisticReadResults.delete(operation);
   }
+  return forests;
 }
 
 // Read results of readers of an in-flight layer, which are not stored in the layer itself
