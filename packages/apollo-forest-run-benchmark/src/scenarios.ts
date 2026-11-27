@@ -28,7 +28,6 @@ const chatTextsQuery = parse(
 const chatNamesQuery = parse(
   `query ChatNames { chat { id messages { id name } } }`,
 );
-const messageTextFragment = parse(`fragment MessageText on Message { text }`);
 const chatResult = (field: "text" | "name") => ({
   chat: {
     __typename: "Chat",
@@ -518,8 +517,7 @@ export const scenarios = [
     },
   },
   {
-    // Re-reads a list after a change of one item, while an optimistic layer holds all list items
-    //   (but with fields not selected by the reader)
+    // Reads a list while an optimistic layer holds all list items (but with fields not selected by the reader)
     name: "read-list-under-unrelated-optimistic-layer",
     prepare: (ctx: ScenarioContext) => {
       const { CacheFactory, configuration } = ctx;
@@ -529,16 +527,9 @@ export const scenarios = [
       cache.recordOptimisticTransaction((c) => {
         c.writeQuery({ query: chatNamesQuery, data: chatResult("name") });
       }, "optimistic");
-      cache.diff({ query: chatTextsQuery, optimistic: true });
-      let counter = 0;
 
       return {
         run() {
-          cache.writeFragment({
-            id: "Message:0",
-            fragment: messageTextFragment,
-            data: { __typename: "Message", text: `text ${counter++}` },
-          });
           return cache.diff({ query: chatTextsQuery, optimistic: true });
         },
       };
