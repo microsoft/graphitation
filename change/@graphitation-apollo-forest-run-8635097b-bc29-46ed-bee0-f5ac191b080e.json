@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Recycle chunks from lower layers when optimistic layers cannot change selected fields of a node",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}

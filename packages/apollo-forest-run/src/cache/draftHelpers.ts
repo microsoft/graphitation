@@ -11,6 +11,7 @@ import type {
   ParentLocator,
 } from "../values/types";
 import type {
+  FieldName,
   NodeKey,
   OperationDescriptor,
   OperationId,
@@ -177,6 +178,13 @@ export function* getNodeChunks(
   }
 }
 
+/**
+ * Finds a chunk with the same selection to recycle.
+ *
+ * Chunks from lower layers are recycled only when upper layers do not hold this node (in other operations).
+ * Except for checked chunks: chunks whose changes from upper layers (including changes of their descendants)
+ * are reflected in `dirtyNodes`. Those are also recycled when upper layer chunks have no conflicting fields.
+ */
 export function findRecyclableChunk(
   layers: IndexedForest[],
   operation: OperationDescriptor,
@@ -185,6 +193,7 @@ export function findRecyclableChunk(
   includeDeleted = false,
   dirtyNodes?: DirtyNodeMap,
   coveringIds?: Set<OperationId>,
+  isCheckedChunk?: (chunk: NodeChunk) => boolean,
 ): NodeChunk | undefined {
   if (typeof ref !== "string") {
     return undefined; // TODO?
@@ -192,35 +201,49 @@ export function findRecyclableChunk(
   if (dirtyNodes && isDirtyNode(ref, selection, dirtyNodes)) {
     return undefined;
   }
+  // Chunks from upper layers: their data has precedence over chunks from lower layers
+  let upperChunks: NodeChunk[][] | undefined;
+  let hasOtherUpperChunks = false;
   for (const layer of layers) {
     if (!includeDeleted && layer.deletedNodes.has(ref)) {
       // When a node is deleted in some layer - it is treated as deleted from lower layers too
       return undefined;
     }
     const opsWithNode = layer.operationsByNodes.get(ref);
-    const totalTreesWithNode = opsWithNode?.size ?? 0;
-    if (totalTreesWithNode === 0) {
+    if (!opsWithNode?.size) {
       // Can safely move to lower level
       continue;
     }
     const tree = layer.trees.get(operation.id);
-    let checkedInLayer = tree ? 1 : 0;
     for (const chunk of tree?.nodes.get(ref) ?? EMPTY_ARRAY) {
       if (resolvedSelectionsAreEqual(chunk.selection, selection)) {
-        return chunk;
+        return isRecyclableChunk(
+          chunk,
+          upperChunks,
+          hasOtherUpperChunks,
+          isCheckedChunk,
+        )
+          ? chunk
+          : undefined;
       }
     }
     // Check covering operations' trees for recyclable chunks
     if (coveringIds) {
       for (const coverId of coveringIds) {
         if (coverId === operation.id) continue;
-        if (!opsWithNode?.has(coverId)) continue;
+        if (!opsWithNode.has(coverId)) continue;
         const coverTree = layer.trees.get(coverId);
         if (!coverTree) continue;
-        checkedInLayer++;
         for (const chunk of coverTree.nodes.get(ref) ?? EMPTY_ARRAY) {
           if (resolvedSelectionsAreEqual(chunk.selection, selection)) {
-            return chunk;
+            return isRecyclableChunk(
+              chunk,
+              upperChunks,
+              hasOtherUpperChunks,
+              isCheckedChunk,
+            )
+              ? chunk
+              : undefined;
           }
         }
       }
@@ -231,13 +254,95 @@ export function findRecyclableChunk(
       //   If we move to lower layers - we may accidentally skip the actual data in this layer.
       return undefined;
     }
-    if (totalTreesWithNode - checkedInLayer > 0) {
+    for (const opId of opsWithNode) {
+      const otherTree = layer.trees.get(opId);
+      const chunks = otherTree?.nodes.get(ref);
+      const isOwnOrCovering =
+        otherTree !== undefined &&
+        (opId === operation.id || coveringIds?.has(opId) === true);
+      if (chunks?.length && (isOwnOrCovering || isCheckedChunk)) {
+        (upperChunks ??= []).push(chunks);
+        hasOtherUpperChunks ||= !isOwnOrCovering;
+        continue;
+      }
+      if (isOwnOrCovering) {
+        continue;
+      }
       // Cannot recycle chunks from lower layers if there is another partially matching chunks in this layer
       //   which may contain data having precedence over lower layers.
       return undefined;
     }
   }
   return undefined;
+}
+
+function isRecyclableChunk(
+  chunk: NodeChunk,
+  upperChunks: NodeChunk[][] | undefined,
+  hasOtherUpperChunks: boolean,
+  isCheckedChunk: ((chunk: NodeChunk) => boolean) | undefined,
+): boolean {
+  if (!upperChunks) {
+    return true;
+  }
+  if (!isCheckedChunk?.(chunk)) {
+    // Partially matching chunks of the same (or covering) operation in upper layers are ignored
+    return !hasOtherUpperChunks;
+  }
+  return !upperChunks.some((chunks) =>
+    chunks.some((upperChunk) => hasConflictingFields(chunk, upperChunk)),
+  );
+}
+
+/**
+ * Checks if reading `chunk` selection through layers where `upperChunk` has precedence
+ * may produce values different from `chunk` values.
+ *
+ * Conservative: any field selected by both chunks is conflicting, unless both chunks have
+ * the very same leaf value for it (e.g. equal scalars like `id` or `__typename`). Chunks of different types always conflict.
+ * When `conflicts` set is provided, adds all conflicting field names to it.
+ */
+export function hasConflictingFields(
+  chunk: NodeChunk,
+  upperChunk: NodeChunk,
+  conflicts?: Set<FieldName>,
+): boolean {
+  if (chunk.type !== upperChunk.type) {
+    return true;
+  }
+  const { selection, data } = chunk;
+  let found = false;
+  for (const [fieldName, upperAliases] of upperChunk.selection.fields) {
+    const aliases = selection.fields.get(fieldName);
+    if (!aliases || conflicts?.has(fieldName)) {
+      continue;
+    }
+    const isConflicting = aliases.some((alias) => {
+      if (selection.skippedFields?.has(alias)) {
+        return false;
+      }
+      const value = data[alias.dataKey];
+      return (
+        value === undefined ||
+        alias.selection !== undefined ||
+        chunk.missingFields?.has(alias) ||
+        upperAliases.some(
+          (upperAlias) =>
+            upperChunk.data[upperAlias.dataKey] !== value ||
+            upperChunk.missingFields?.has(upperAlias),
+        )
+      );
+    });
+    if (!isConflicting) {
+      continue;
+    }
+    if (!conflicts) {
+      return true;
+    }
+    conflicts.add(fieldName);
+    found = true;
+  }
+  return found;
 }
 
 function findParentInfo(
@@ -287,6 +392,7 @@ export function createChunkMatcher(
   layers: IndexedForest[],
   includeDeleted = false,
   dirtyNodes?: DirtyNodeMap | undefined,
+  isCheckedChunk?: (chunk: NodeChunk) => boolean,
 ): ChunkMatcher {
   let coveringIds: Set<OperationId> | undefined;
   let coveringIdsComputed = false;
@@ -307,6 +413,7 @@ export function createChunkMatcher(
       includeDeleted,
       dirtyNodes,
       coveringIds,
+      isCheckedChunk,
     );
   };
 }
