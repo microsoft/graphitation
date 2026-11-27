@@ -25,7 +25,6 @@ import {
   getEffectiveReadLayers,
   isInFlightForest,
   touchOperation,
-  updateCoveredInFlightTrees,
 } from "./store";
 import { diffTree, GraphDifference } from "../diff/diffTree";
 import { createObjectDifference } from "../diff/difference";
@@ -232,18 +231,6 @@ export function write(
   );
   incomingResult.prev = null;
   modifiedIncomingResult.prev = null;
-
-  if (targetForest === store.dataForest && store.inFlightExecutions.size) {
-    const tree = getExistingResult(
-      env,
-      store,
-      targetForest,
-      operationDescriptor,
-    );
-    if (tree) {
-      updateCoveredInFlightTrees(env, store, tree);
-    }
-  }
 
   return {
     options,

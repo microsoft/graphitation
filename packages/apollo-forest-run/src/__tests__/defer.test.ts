@@ -543,7 +543,7 @@ describe("covered operations (@cache(covers))", () => {
     });
   });
 
-  it("keep their own results written while streaming", () => {
+  it("do not see their own results written while streaming (the commit wins)", () => {
     const cache = new TestCache();
     cache.write({
       query: chatQuery,
@@ -552,19 +552,135 @@ describe("covered operations (@cache(covers))", () => {
     const execution = execute(cache, preloaderQuery);
     execution.initial({ messages: [message("1")] });
 
-    // Own (network) result of the covered operation
+    // Own (network) result of the covered operation: written to the data forest only
     cache.write({
       query: chatQuery,
       result: { messages: [message("1", "own"), message("2", "own")] },
     });
     expect(read(cache, chatQuery).result).toEqual({
-      messages: [message("1", "own"), message("2", "own")],
+      messages: [message("1", "old")],
     });
 
-    // Later results of the execution still update it (in the in-flight layer)
+    // Its tree in the layer (seeded) is updated by results of the execution
     execution.subsequent([{ path: ["messages", 0], data: { name: "new" } }]);
     expect(read(cache, chatQuery).result).toEqual({
-      messages: [message("1", "new"), message("2", "own")],
+      messages: [message("1", "new")],
+    });
+
+    // The commit is a later write to the data forest (last write wins)
+    execution.complete();
+    expect(read(cache, chatQuery).result).toEqual({
+      messages: [message("1", "new")],
+    });
+  });
+
+  it("read only the layer for data it holds, also with optimistic layers (no blending with their own results)", () => {
+    const cache = new TestCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            messages: {
+              merge: (existing: unknown[] = [], incoming: unknown[]) => [
+                ...existing,
+                ...incoming,
+              ],
+            },
+          },
+        },
+      },
+    });
+    const execution = execute(cache, preloaderQuery);
+    execution.initial({ messages: [message("1"), message("2")] });
+    // Own result of the covered operation: in the data forest only
+    cache.write({
+      query: chatQuery,
+      result: { messages: [message("3", "three"), message("4", "four")] },
+    });
+    // Optimistic layers make reads re-hydrate results from all layers
+    cache.recordOptimisticTransaction((c) => {
+      c.writeFragment({
+        id: "Message:2",
+        fragment: gql`
+          fragment Text on Message {
+            text
+          }
+        `,
+        data: { __typename: "Message", text: "optimistic" },
+      });
+    }, "layer");
+
+    expect(read(cache, chatQuery, true).result).toEqual({
+      messages: [message("1"), { ...message("2"), text: "optimistic" }],
+    });
+  });
+
+  it("read data the layer doesn't hold from the data forest (cache-first)", () => {
+    const cache = new TestCache();
+    cache.write({
+      query: nameQuery,
+      result: { messages: [{ __typename: "Message", id: "1", name: "old" }] },
+    });
+    execute(cache, preloaderQuery).initial({ messages: [message("1")] });
+    // Covered, another selection (chunks of the preloader are not recycled as a whole)
+    const chatNames = gql`
+      query Chat {
+        messages {
+          id
+          name
+        }
+      }
+    `;
+
+    expect(read(cache, chatNames)).toMatchObject({
+      complete: true,
+      result: { messages: [{ __typename: "Message", id: "1", name: "old" }] },
+    });
+  });
+
+  it("do not see their own results where the layer has data, without blending lists", () => {
+    const cache = new TestCache();
+    const namesQuery = gql`
+      query Names {
+        messages {
+          id
+          name
+        }
+      }
+    `;
+    const preloader = gql`
+      query Preloader @cache(covers: ["Names"]) {
+        messages {
+          id
+          text
+          ... @defer {
+            name
+          }
+        }
+      }
+    `;
+    execute(cache, preloader).initial({
+      messages: [message("1"), message("2")],
+    });
+    // Own result of the covered operation (another list): in the data forest only
+    cache.write({
+      query: namesQuery,
+      result: {
+        messages: [
+          { __typename: "Message", id: "3", name: "three" },
+          { __typename: "Message", id: "4", name: "four" },
+        ],
+      },
+    });
+
+    // The list of the layer, names of other items of the data forest list are not used
+    expect(read(cache, namesQuery)).toMatchObject({
+      complete: false,
+      result: {
+        messages: [
+          { __typename: "Message", id: "1" },
+          { __typename: "Message", id: "2" },
+        ],
+      },
     });
   });
 
@@ -1037,14 +1153,9 @@ describe("@defer: fetchMore on a covered query while the preloader streams", () 
             preloader: page1Pending,
           },
           {
-            // Its own write wins for itself (pending texts of page 1 as the write left them)
-            list: {
-              messages: ["m1:-", "m2:-", "m3:t3", "m4:t4"],
-              complete: true,
-            },
-            watch: [
-              { messages: ["m1:-", "m2:-", "m3:t3", "m4:t4"], complete: true },
-            ],
+            // Its own write goes to the data forest only: hidden while streaming (page 2 is not visible)
+            list: page1Pending,
+            watch: [],
             preloader: page1Pending,
           },
           {
@@ -1067,9 +1178,9 @@ describe("@defer: fetchMore on a covered query while the preloader streams", () 
             preloader: page1Pending,
           },
           {
-            // Its own write wins for itself: the data forest has no page 1 yet, so page 2 is merged with nothing
-            list: { messages: ["m3:t3", "m4:t4"], complete: true },
-            watch: [{ messages: ["m3:t3", "m4:t4"], complete: true }],
+            // Its own write goes to the data forest only (merged with nothing there): hidden while streaming
+            list: page1Pending,
+            watch: [],
             preloader: page1Pending,
           },
           {

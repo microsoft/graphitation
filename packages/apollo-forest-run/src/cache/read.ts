@@ -275,6 +275,10 @@ function growOutputTree(
   );
   let dataTree: IndexedTree | undefined = forest.trees.get(operation.id);
   for (const layer of dataLayers) {
+    if (inFlightLayers.length && layer === store.dataForest) {
+      // Readers of in-flight layers have trees there (a tree in the data forest only is shadowed by the layers)
+      break;
+    }
     dataTree = layer.trees.get(operation.id);
     if (dataTree) {
       break;

@@ -119,6 +119,7 @@ export type OptimisticLayer = ExtendedForest & {
  *
  * Its results are written to an isolated in-flight layer (a data forest of its own) until the execution completes:
  * only the operation itself and operations it covers (`@cache(covers: [...])`) read through the layer.
+ * Nothing else writes to the layer: other writes go to the data forest and are shadowed for readers of the layer.
  * On completion, the received data is written to the data forest as a single result.
  */
 export type InFlightExecution = {
