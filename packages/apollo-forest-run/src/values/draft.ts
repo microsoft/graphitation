@@ -141,12 +141,14 @@ export function hydrateDraft(
         return model.type;
       },
       isSameObject(model, other) {
-        // Unkeyed (embedded) objects of lists are identified by positions
-        return "key" in model && "key" in other
-          ? model.key === false ||
-              other.key === false ||
-              model.key === other.key
-          : true;
+        if (!("key" in model) || !("key" in other)) {
+          return true;
+        }
+        if (model.key !== false || other.key !== false) {
+          return model.key === other.key;
+        }
+        // Embedded objects of lists are identified by positions (unless of different types)
+        return !model.type || !other.type || model.type === other.type;
       },
       enterList(
         model: IterableListValue,

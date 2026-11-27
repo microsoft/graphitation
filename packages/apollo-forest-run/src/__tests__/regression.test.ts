@@ -3071,3 +3071,68 @@ test("does not overwrite list items with nulls of lists of lower layers", () => 
   );
   expect(diff.complete).toBe(false);
 });
+
+test("does not complete list items with values of items of other types at the same positions", () => {
+  const list = gql`
+    query ItemList {
+      conversation {
+        id
+        items {
+          ... on Message {
+            id
+            text
+          }
+          ... on Notice {
+            text
+          }
+          ... on Alert {
+            text
+          }
+        }
+      }
+    }
+  `;
+  const ids = gql`
+    query Ids {
+      conversation {
+        id
+        items {
+          ... on Message {
+            id
+          }
+        }
+      }
+    }
+  `;
+  const conversation = (items: object[]) => ({
+    conversation: { __typename: "Conversation", id: "c1", items },
+  });
+  const cache = new ForestRun({
+    possibleTypes: { Item: ["Message", "Notice", "Alert"] },
+  });
+  cache.writeQuery({
+    query: list,
+    data: conversation([
+      { __typename: "Message", id: "m1", text: "t1" },
+      { __typename: "Notice", text: "t2" },
+    ]),
+  });
+  cache.recordOptimisticTransaction((c) => {
+    c.writeQuery({
+      query: ids,
+      data: conversation([{ __typename: "Notice" }, { __typename: "Alert" }]),
+    });
+  }, "layer");
+
+  const diff = cache.diff({
+    query: list,
+    optimistic: true,
+    returnPartialData: true,
+  });
+
+  // Embedded objects are not matched with keyed objects, or with embedded objects of other types
+  expect(diff.result).toEqual(
+    conversation([{ __typename: "Notice" }, { __typename: "Alert" }]),
+  );
+  expect(diff.complete).toBe(false);
+});
