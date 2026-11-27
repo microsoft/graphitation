@@ -1034,8 +1034,8 @@ describe("@defer: subsequent results", () => {
     });
   });
 
-  it("does not open an execution when all sites are disabled", () => {
-    const cache = new TestCache();
+  it("writes the initial data immediately when all sites are disabled", () => {
+    const cache = new ForestRun();
     const query = gql`
       query ($defer: Boolean) {
         messages {
@@ -1047,13 +1047,71 @@ describe("@defer: subsequent results", () => {
       }
     `;
     const variables = { defer: false };
+    const data = {
+      messages: [{ __typename: "Message", id: "1", name: "one" }],
+    };
     cache.writeExecutionResult({
       query,
       variables,
-      execution: { data: { messages: [message("1")] }, hasNext: true },
+      execution: { data, hasNext: true },
     });
-    expect(cache.execution(query, variables)).toBeUndefined();
+    expect(cache.readQuery({ query, variables })).toEqual(data);
   });
+
+  it.each([
+    [{}, "patched"],
+    [{ enabled: false }, "initial"],
+    [{ include: false }, "initial"],
+    [{ skip: true }, "initial"],
+    [{ skip: true, alternate: true }, "patched"],
+  ] as const)(
+    "applies patches only at an enabled site of the runtime type: %j",
+    (variables, expected) => {
+      const cache = new ForestRun({ possibleTypes: { Named: ["User"] } });
+      const query = gql`
+        query (
+          $enabled: Boolean
+          $include: Boolean = true
+          $skip: Boolean = false
+          $alternate: Boolean = false
+        ) {
+          ... @defer {
+            done
+          }
+          rows: nodes {
+            id
+            name
+            ... @defer(if: false) {
+              ...Names @include(if: $include) @skip(if: $skip)
+              ...Names @include(if: $alternate)
+            }
+          }
+        }
+        fragment Names on Named {
+          ... @defer(if: $enabled) {
+            name
+          }
+        }
+      `;
+      const rows = ["User", "Other"].map((__typename) => ({
+        __typename,
+        id: "1",
+        name: "initial",
+      }));
+      const stream = execute(cache, query, { variables });
+      stream.initial({ rows });
+      stream.subsequent([
+        { path: ["rows", 0], data: { name: "patched" } },
+        { path: ["rows", 1], data: { name: "wrong type" } },
+        { path: [], data: { done: true } },
+      ]);
+      expect(cache.readQuery({ query, variables })).toEqual({
+        __typename: "Query",
+        done: true,
+        rows: [{ ...rows[0], name: expected }, rows[1]],
+      });
+    },
+  );
 
   it("forgets the execution without next results", () => {
     const cache = new TestCache();

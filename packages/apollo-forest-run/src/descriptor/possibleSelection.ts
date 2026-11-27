@@ -23,8 +23,7 @@ import type {
   FragmentMap,
   SpreadInfo,
   WatchBoundary,
-  DeferLabel,
-  DeferSite,
+  DeferCondition,
 } from "./types";
 import { accumulate, getOrCreate } from "../jsutils/map";
 import { assert, assertNever } from "../jsutils/assert";
@@ -42,8 +41,7 @@ export type Context = Readonly<{
   fieldsWithArgs: FieldInfo[];
   mergeMemo: Map<PossibleSelection, Set<PossibleSelection>>;
   copyOnWrite: Set<PossibleSelection | FieldInfo | SpreadInfo>;
-  deferSites: DeferSite[];
-}>;
+}> & { hasDeferSites?: boolean };
 
 const EMPTY_ARRAY = Object.freeze([]);
 
@@ -63,7 +61,6 @@ export function describeResultTree(
     fieldsWithArgs: [],
     mergeMemo: new Map(),
     copyOnWrite: new Set(),
-    deferSites: [],
   };
 
   const possibleSelections = collectPossibleSelections(
@@ -73,7 +70,7 @@ export function describeResultTree(
   return {
     possibleSelections,
     fieldsWithArgs: context.fieldsWithArgs,
-    hasDeferSites: context.deferSites.length > 0,
+    hasDeferSites: Boolean(context.hasDeferSites),
   };
 }
 
@@ -230,14 +227,12 @@ function collectDeferSite(
   type: TypeName | null | undefined,
   ancestors: SelectionNode[],
 ) {
-  const defer = findDirective(node, "defer");
-  if (!defer) return;
-  const conditions: DeferSite["conditions"] = [];
+  if (!findDirective(node, "defer")) return;
+  const conditions: DeferCondition[] = [];
   for (const ancestor of [...ancestors, node]) {
     for (const directive of ancestor.directives ?? EMPTY_ARRAY) {
       const name = directive.name.value;
-      // A site is registered whenever its object is indexed, regardless of enclosing deferred fragments
-      //   (e.g. its object may be delivered before the enclosing fragment, in the initial result)
+      // An enclosing @defer changes delivery timing, not inclusion of this site.
       if (
         name !== "include" &&
         name !== "skip" &&
@@ -245,31 +240,20 @@ function collectDeferSite(
       ) {
         continue;
       }
-      const expected = name !== "skip";
       const condition = findArgument(directive, "if")?.value;
       if (condition?.kind === "Variable") {
-        conditions.push({
-          variable: condition.name.value,
-          expected,
-          defer: name === "defer",
-        });
+        conditions.push({ variable: condition.name.value, directive: name });
       } else if (
-        (condition ? valueFromASTUntyped(condition) : true) !== expected
+        (condition ? valueFromASTUntyped(condition) : true) !==
+        (name !== "skip")
       ) {
         return;
       }
     }
   }
-  const site: DeferSite = { label: getStaticLabel(defer), conditions };
-  context.deferSites.push(site);
+  context.hasDeferSites = true;
   const target = getOrCreate(selections, type ?? null, createEmptySelection);
-  (target.deferSites ??= []).push(site);
-}
-
-// Labels must be static strings (GraphQL spec: "Defer And Stream Directive Labels Are Unique")
-function getStaticLabel(defer: DirectiveNode): DeferLabel | undefined {
-  const label = findArgument(defer, "label")?.value;
-  return label?.kind === "StringValue" ? label.value : undefined;
+  (target.deferConditions ??= []).push(conditions);
 }
 
 /**
@@ -316,7 +300,7 @@ function appendUntypedSelection(
   possibleSelections: PossibleSelections,
   untypedSelection: PossibleSelection,
 ) {
-  if (!untypedSelection.fields.size && !untypedSelection.deferSites?.length) {
+  if (!untypedSelection.fields.size && !untypedSelection.deferConditions) {
     return;
   }
   for (const [typeName, selection] of possibleSelections.entries()) {
@@ -539,8 +523,8 @@ function mergeSelectionsImpl(
   if (mutableTarget !== target) {
     context.mergeMemo.set(mutableTarget, new Set([source]));
   }
-  for (const site of source.deferSites ?? EMPTY_ARRAY) {
-    (mutableTarget.deferSites ??= []).push(site);
+  if (source.deferConditions) {
+    (mutableTarget.deferConditions ??= []).push(...source.deferConditions);
   }
 
   for (const [fieldName, sourceAliases] of source.fields.entries()) {
@@ -816,7 +800,8 @@ function copySelection(
     depth: selection.depth,
     structuralHash: UNINITIALIZED_HASH,
   };
-  if (selection.deferSites) copy.deferSites = [...selection.deferSites];
+  if (selection.deferConditions)
+    copy.deferConditions = [...selection.deferConditions];
   for (const [field, aliases] of selection.fields.entries()) {
     copy.fields.set(field, [...aliases]);
     for (const alias of aliases) {

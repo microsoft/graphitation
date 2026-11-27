@@ -4,6 +4,7 @@ import type { OperationResult } from "../values/types";
 import type {
   CacheEnv,
   DataForest,
+  DataTree,
   ModifyResult,
   OptimisticLayer,
   Store,
@@ -13,6 +14,7 @@ import type {
 import type { NodeKey, OperationDescriptor } from "../descriptor/types";
 import { assert } from "../jsutils/assert";
 import {
+  resolveResultDescriptor,
   resolveOperationDescriptor,
   ROOT_NODES,
   ROOT_TYPES,
@@ -21,8 +23,6 @@ import { applyMergePolicies } from "./policies";
 import {
   getActiveForest,
   getEffectiveReadLayers,
-  getExistingResult,
-  shouldCache,
   touchOperation,
 } from "./store";
 import { diffTree, GraphDifference } from "../diff/diffTree";
@@ -36,6 +36,7 @@ import { NodeDifferenceMap } from "../forest/updateTree";
 import { getNodeChunks } from "./draftHelpers";
 import { replaceTree } from "../forest/addTree";
 import { invalidateReadResults } from "./invalidate";
+import { IndexedForest } from "../forest/types";
 
 export function write(
   env: CacheEnv,
@@ -47,8 +48,10 @@ export function write(
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
   const targetForest = getActiveForest(store, activeTransaction);
 
-  const { result } = options;
-  const writeData = typeof result === "object" && result !== null ? result : {};
+  const writeData =
+    typeof options.result === "object" && options.result !== null
+      ? options.result
+      : {};
   const rootNodeKey = options.dataId ?? objectKey(writeData);
   assert(rootNodeKey !== false);
 
@@ -138,6 +141,7 @@ export function write(
   );
 
   const difference = diffTree(targetForest, modifiedIncomingResult, env);
+
   if (difference.errors.length) {
     processDiffErrors(targetForest, modifiedIncomingResult, difference);
   }
@@ -275,6 +279,27 @@ function processDiffErrors(
       }
     }
   }
+}
+
+export function getExistingResult(
+  env: CacheEnv,
+  store: Store,
+  targetForest: IndexedForest,
+  operation: OperationDescriptor,
+): DataTree | undefined {
+  const op = resolveResultDescriptor(env, store, operation);
+  return targetForest.trees.get(op.id);
+}
+
+function shouldCache(
+  targetForest: DataForest | OptimisticLayer,
+  operation: OperationDescriptor,
+) {
+  // Always cache results for optimistic layers (even if operation is not cacheable, e.g. it is a mutation)
+  if (targetForest.layerTag !== null) {
+    return true;
+  }
+  return operation.cache;
 }
 
 function aggregateAllAffectedNodes(

@@ -6,8 +6,9 @@ import type {
 } from "../cache/types";
 import { resolveOperationDescriptor, ROOT_NODES } from "../cache/descriptor";
 import { applyMergePolicies } from "../cache/policies";
-import { createDataForest, getExistingResult } from "../cache/store";
+import { createDataForest } from "../cache/store";
 import {
+  getExistingResult,
   resolveExtraRootNodeType,
   setExplicitRootId,
   write,
@@ -18,7 +19,7 @@ import { indexTree } from "../forest/indexTree";
 import { assert } from "../jsutils/assert";
 import { isObjectValue } from "../values";
 import type { SourceObject } from "../values/types";
-import { assemble } from "./data";
+import { assemble, isDeferTarget } from "./data";
 
 export function writeExecution(
   env: CacheEnv,
@@ -126,7 +127,8 @@ export function writeExecution(
 
 function hasDeferredFragment(tree: IndexedTree): boolean {
   for (const { value } of tree.dataMap.values()) {
-    if (isObjectValue(value) && value.selection.deferredFragments) return true;
+    if (isObjectValue(value) && isDeferTarget(tree.operation, value.selection))
+      return true;
   }
   return false;
 }

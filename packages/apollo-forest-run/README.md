@@ -59,9 +59,11 @@ A delivered `null` wins. If the response points to `User:2`, it cannot borrow
 `User:1.bio`. Fallback is for display only; it never becomes part of what the
 server is treated as having sent.
 
-Forest Run assembles patches in the server's original response order, even if
-a field policy reorders a list in the preview. Each preview applies policies
-against the current committed base, never against a previous preview. Merge
+Forest Run applies each patch at its response path, using the server's list
+indices even if a field policy reorders the preview. The target object must
+have an enabled `@defer` in its selection; a label is not used to locate it.
+Each preview applies policies against the current committed base, never
+against a previous preview. Merge
 functions can therefore run more than once and should be free of side effects.
 
 `hasNext: false` applies any last patches, then writes the assembled **server

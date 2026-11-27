@@ -1,11 +1,28 @@
 import type {
   OperationDescriptor,
+  PossibleSelection,
   PossibleSelections,
   ResponsePath,
 } from "../descriptor/types";
 import type { SourceObject } from "../values/types";
 import type { SubsequentIncrementalExecutionResult } from "./types";
 import { resolveSelection } from "../descriptor/resolvedSelection";
+
+export function isDeferTarget(
+  operation: OperationDescriptor,
+  selection: PossibleSelection,
+): boolean {
+  const variables = operation.variablesWithDefaults;
+  return (
+    selection.deferConditions?.some((conditions) =>
+      conditions.every(({ variable, directive }) =>
+        directive === "defer"
+          ? variables[variable] !== false
+          : Boolean(variables[variable]) === (directive === "include"),
+      ),
+    ) ?? false
+  );
+}
 
 // Parents may introduce a defer site targeted by another entry in the same payload.
 export function assemble(
@@ -52,7 +69,7 @@ export function assemble(
       value.__typename ?? (index === 0 ? operation.rootType : null),
     );
     if (index === path.length) {
-      return selection.deferredFragments
+      return isDeferTarget(operation, selection)
         ? mergeValues(value, incoming)
         : undefined;
     }

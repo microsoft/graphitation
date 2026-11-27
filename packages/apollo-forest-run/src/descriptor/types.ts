@@ -85,7 +85,6 @@ export type ResolvedSelection = PossibleSelection & {
   normalizedFields?: Map<FieldInfo, NormalizedFieldEntry>;
   skippedFields?: Set<FieldInfo>;
   skippedSpreads?: Set<SpreadInfo>;
-  deferredFragments?: DeferSite[]; // enabled for the operation variables
   resolvedHash?: number; // Structural hash + runtime-resolved state (args, skip/include)
 };
 
@@ -185,7 +184,8 @@ export type PossibleSelection = {
 
   spreads?: FragmentSpreadMap; // e.g. object with selection { foo, ...Bar, ... { ...Baz } } will have ["Bar", "Baz"] here
   spreadsWithDirectives?: SpreadInfo[];
-  deferSites?: DeferSite[];
+  // One set of variable conditions per potentially deferred fragment on this object.
+  deferConditions?: DeferCondition[][];
 
   experimentalAlias?: FragmentAlias;
   experimentalAliasedFragments?: Map<FragmentAlias, PossibleSelection>;
@@ -195,14 +195,9 @@ export type PossibleSelection = {
   structuralHash: number; // Order-independent hash of field structure (names, dataKeys, arg names, child hashes)
 };
 
-// A deferred fragment in the document (its data is written with the selection of the object it is deferred on)
-//
-// TODO: for defer-aware reads (`dataState: "streaming"`), add `deferBoundary` to `FieldInfo`: the closest enclosing
-//   `DeferSite` of a field (collected like `watchBoundaries`). A missing field is then pending if its boundary is
-//   a site still waiting for data on the object.
-export type DeferSite = {
-  label?: DeferLabel;
-  conditions: { variable: VariableName; expected: boolean; defer: boolean }[];
+export type DeferCondition = {
+  variable: VariableName;
+  directive: "defer" | "include" | "skip";
 };
 
 export type ResolvedSelections = Map<
