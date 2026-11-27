@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Fix optimistic reads within transactions (e.g. watch diffs) caching results computed differently from regular optimistic reads",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
