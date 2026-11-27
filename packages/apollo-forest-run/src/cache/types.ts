@@ -33,6 +33,10 @@ import type { TelemetryEvent } from "../telemetry/types";
 import { ExtendedLogger, Logger } from "../jsutils/logger";
 import { GraphDifference, GraphDiffError } from "../diff/diffTree";
 import { ObjectDifference } from "../diff/types";
+import type {
+  ExecutionResult,
+  IncrementalExecution,
+} from "../incremental/types";
 
 export type PartitionOptions = {
   maxOperationCount: number;
@@ -127,10 +131,13 @@ export type Store = {
   partitions: WeakMap<IndexedTree, ResolvedPartition>;
   // Pending scheduled auto-eviction
   pendingEviction: ScheduledEvictionHandle | null;
+  // The latest incremental execution (`@defer`) of an operation, while it has pending results
+  incrementalExecutions: Map<OperationDescriptor, IncrementalExecution>;
 };
 
 export type Transaction = {
   optimisticLayer: OptimisticLayer | null;
+  previewOperations?: Set<OperationDescriptor>;
   affectedOperations: Set<OperationDescriptor> | null;
   affectedNodes: Set<NodeKey> | null;
   watchesToNotify: Set<Cache.WatchOptions> | null;
@@ -344,3 +351,8 @@ export type SerializedCache = Record<
   SerializedOperationKey,
   SerializedOperationInfo
 >;
+
+// Options of ForestRun.writeExecutionResult: the same as of `write`, but with an execution result (instead of `result`)
+export type ExecutionWriteOptions = Omit<Cache.WriteOptions, "result"> & {
+  execution: ExecutionResult;
+};

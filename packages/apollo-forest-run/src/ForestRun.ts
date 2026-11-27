@@ -17,6 +17,7 @@ import type {
   SerializedOperationInfo,
   Store,
   Transaction,
+  ExecutionWriteOptions,
 } from "./cache/types";
 import { ApolloCache } from "@apollo/client";
 import { assert } from "./jsutils/assert";
@@ -37,10 +38,14 @@ import {
 } from "./cache/store";
 import {
   getDiffDescriptor,
+  getReadDescriptor,
+  resolveResultDescriptor,
   isFragmentDocument,
   transformDocument,
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
+import { writeExecution } from "./incremental/execution";
+import { readInFlight } from "./incremental/preview";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -112,6 +117,7 @@ export class ForestRun<
   };
 
   protected invalidatedDiffs = new WeakSet<Cache.DiffResult<any>>();
+  private previewWatches?: WeakSet<Cache.WatchOptions>;
   protected extractedObjects = new WeakMap<any, SerializedOperationInfo>();
 
   public constructor(public config?: CacheConfig<TPartitions>) {
@@ -207,6 +213,20 @@ export class ForestRun<
         });
   }
 
+  /**
+   * Writes an execution result: a complete result, or results of incremental delivery (`@defer`).
+   * Pending data is visible to reads and watches of this operation and its @cache(covers) consumers.
+   */
+  public writeExecutionResult(
+    options: ExecutionWriteOptions,
+  ): Reference | undefined {
+    return this.transactionStack.length
+      ? this.runWriteExecutionResult(options)
+      : this.runTransaction({
+          update: () => this.runWriteExecutionResult(options),
+        });
+  }
+
   private runWrite(options: Cache.WriteOptions): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
@@ -215,6 +235,15 @@ export class ForestRun<
 
     const incoming = result.incoming;
     return incoming.nodes.size ? getRef(incoming.rootNodeKey) : undefined;
+  }
+
+  private runWriteExecutionResult(
+    options: ExecutionWriteOptions,
+  ): Reference | undefined {
+    const transaction = peek(this.transactionStack);
+    assert(transaction);
+    const key = writeExecution(this.env, this.store, transaction, options);
+    return key === undefined ? undefined : getRef(key);
   }
 
   private collectAffectedOperationsAndNodes(transaction: Transaction) {
@@ -277,7 +306,7 @@ export class ForestRun<
     const errors = new Map<Cache.WatchOptions, Error>();
     for (const watch of watchesToNotify) {
       try {
-        const newDiff = this.diff(watch);
+        const newDiff = this.diffWatch(watch);
         // ApolloCompat: expected by QueryManager (and looks like only for watches???) :/
         if (fromOptimisticTransaction && watch.optimistic) {
           newDiff.fromOptimisticTransaction = true;
@@ -310,6 +339,39 @@ export class ForestRun<
     watch.callback(diff, lastDiff);
   }
 
+  private diffWatch(watch: Cache.WatchOptions): Cache.DiffResult<any> {
+    if (this.store.incrementalExecutions.size) {
+      const preview = this.previewWatch(watch);
+      if (preview) return preview;
+    }
+    this.previewWatches?.delete(watch);
+    return this.runRead(watch, false);
+  }
+
+  private previewWatch(
+    watch: Cache.WatchOptions,
+    onlyIfChangedFromBase = false,
+  ): Cache.DiffResult<unknown> | undefined {
+    const diff = readInFlight(
+      this.env,
+      this.store,
+      watch,
+      peek(this.transactionStack),
+      onlyIfChangedFromBase,
+    );
+    if (!diff) return;
+    (this.previewWatches ??= new WeakSet()).add(watch);
+    // Different chunks/streams can change without changing this consumer's projection.
+    if (
+      watch.lastDiff &&
+      watch.lastDiff.complete === diff.complete &&
+      equal(watch.lastDiff.result, diff.result)
+    ) {
+      diff.result = watch.lastDiff.result;
+    }
+    return diff;
+  }
+
   public read<T>(options: Cache.ReadOptions): T | null {
     const diff = this.runRead(options);
     return diff.complete || options.returnPartialData ? diff.result : null;
@@ -323,14 +385,15 @@ export class ForestRun<
 
   private runRead<TData, TVariables = any>(
     options: Cache.DiffOptions<TData, TVariables>,
+    includeInFlight = true,
   ): Cache.DiffResult<TData> {
     const activeTransaction = peek(this.transactionStack);
-    const result = read<TData>(
-      this.env,
-      this.store,
-      activeTransaction,
-      options,
-    );
+    const preview =
+      includeInFlight && this.store.incrementalExecutions.size
+        ? readInFlight<TData>(this.env, this.store, options, activeTransaction)
+        : undefined;
+    const result =
+      preview ?? read<TData>(this.env, this.store, activeTransaction, options);
     if (options.returnPartialData === false && result.dangling?.size) {
       const [ref] = result.dangling;
       throw new Error(`Dangling reference to missing ${ref} object`);
@@ -355,7 +418,7 @@ export class ForestRun<
     const operationDescriptor = getDiffDescriptor(this.env, this.store, watch);
 
     if (watch.immediate /* && !this.transactionStack.length */) {
-      const diff = this.diff(watch);
+      const diff = this.diffWatch(watch);
       if (this.shouldNotifyWatch(watch, diff)) {
         this.notifyWatch(watch, diff);
       }
@@ -619,35 +682,89 @@ export class ForestRun<
     transaction: Transaction,
     onWatchUpdated?: Cache.BatchOptions<any>["onWatchUpdated"],
   ): Set<Cache.WatchOptions> | null {
-    if (!transaction.affectedOperations?.size) {
+    if (
+      !transaction.affectedOperations?.size &&
+      !transaction.previewOperations?.size
+    ) {
       return transaction.watchesToNotify ?? null;
     }
     // Note: activeTransaction.watchesToNotify may already contain watches delegated by completed nested transactions
     //   so this may not only add watches, but also remove them from accumulator (depending on onWatchUpdated callback)
     const accumulator = transaction.watchesToNotify ?? new Set();
-    for (const operation of transaction.affectedOperations) {
+    if (transaction.previewOperations?.size) {
+      this.collectPreviewWatches(transaction, accumulator, onWatchUpdated);
+    }
+    for (const operation of transaction.affectedOperations ?? EMPTY_ARRAY) {
       for (const watch of this.store.watches.get(operation) ?? EMPTY_ARRAY) {
-        const diff = this.diff(watch);
-
-        if (!this.shouldNotifyWatch(watch, diff, onWatchUpdated)) {
-          accumulator.delete(watch);
-        } else {
+        if (
+          this.shouldNotifyWatch(watch, this.diffWatch(watch), onWatchUpdated)
+        ) {
           accumulator.add(watch);
+        } else {
+          accumulator.delete(watch);
         }
       }
     }
     for (const nodeKey of transaction.affectedNodes ?? EMPTY_ARRAY) {
-      const fragmentWatches = this.store.fragmentWatches.get(nodeKey);
-      for (const watch of fragmentWatches ?? EMPTY_ARRAY) {
-        const diff = this.diff(watch);
-        if (!this.shouldNotifyWatch(watch, diff, onWatchUpdated)) {
-          accumulator.delete(watch);
-        } else {
+      for (const watch of this.store.fragmentWatches.get(nodeKey) ??
+        EMPTY_ARRAY) {
+        if (this.shouldNotifyWatch(watch, this.diff(watch), onWatchUpdated)) {
           accumulator.add(watch);
+        } else {
+          accumulator.delete(watch);
         }
       }
     }
     return accumulator;
+  }
+
+  private collectPreviewWatches(
+    transaction: Transaction,
+    accumulator: Set<Cache.WatchOptions>,
+    onWatchUpdated?: Cache.BatchOptions<this>["onWatchUpdated"],
+  ) {
+    const consider = (watch: Cache.WatchOptions) => {
+      const preview = this.previewWatch(watch, !watch.lastDiff);
+      if (!preview && !this.previewWatches?.delete(watch)) return;
+      this.newWatches.delete(watch);
+      const diff = preview ?? this.runRead(watch, false);
+      if (this.shouldNotifyWatch(watch, diff, onWatchUpdated)) {
+        accumulator.add(watch);
+      } else {
+        accumulator.delete(watch);
+      }
+    };
+    let coveredNames: Set<string> | undefined;
+    for (const operation of transaction.previewOperations ?? EMPTY_ARRAY) {
+      for (const name of operation.covers)
+        (coveredNames ??= new Set()).add(name);
+      const group = resolveResultDescriptor(this.env, this.store, operation);
+      if (transaction.affectedOperations?.has(group)) continue;
+      for (const watch of this.store.watches.get(group) ?? EMPTY_ARRAY) {
+        if (getReadDescriptor(this.env, this.store, watch) !== operation)
+          continue;
+        consider(watch);
+      }
+    }
+    if (coveredNames) {
+      for (const [group, watches] of this.store.watches) {
+        if (
+          !group.name ||
+          !coveredNames.has(group.name) ||
+          transaction.affectedOperations?.has(group)
+        )
+          continue;
+        for (const watch of watches) {
+          if (
+            transaction.previewOperations?.has(
+              getReadDescriptor(this.env, this.store, watch),
+            )
+          )
+            continue;
+          consider(watch);
+        }
+      }
+    }
   }
 
   private shouldNotifyWatch(

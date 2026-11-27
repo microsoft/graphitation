@@ -195,6 +195,18 @@ export function getDiffDescriptor(
   store: Store,
   options: Cache.WatchOptions | Cache.DiffOptions,
 ): OperationDescriptor {
+  return resolveResultDescriptor(
+    env,
+    store,
+    getReadDescriptor(env, store, options),
+  );
+}
+
+export function getReadDescriptor(
+  env: CacheEnv,
+  store: Store,
+  options: Cache.WatchOptions | Cache.DiffOptions,
+): OperationDescriptor {
   // Diff / watch options could be used interchangeably multiple times with the same watch | diff object
   let operationDescriptor = diffDescriptors.get(options);
   if (!operationDescriptor) {
@@ -207,7 +219,7 @@ export function getDiffDescriptor(
     );
     diffDescriptors.set(options, operationDescriptor);
   }
-  return resolveResultDescriptor(env, store, operationDescriptor);
+  return operationDescriptor;
 }
 
 /**

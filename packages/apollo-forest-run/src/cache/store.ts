@@ -22,8 +22,8 @@ import { operationCacheKey } from "./descriptor";
 const EMPTY_ARRAY = Object.freeze([]);
 const DEFAULT_PARTITION: DefaultPartition = "__default__";
 
-export function createStore(_: CacheEnv): Store {
-  const dataForest: DataForest = {
+export function createDataForest(): DataForest {
+  return {
     trees: new Map(),
     operationsByNodes: new Map<NodeKey, Set<OperationId>>(),
     operationsByName: new Map(),
@@ -37,7 +37,9 @@ export function createStore(_: CacheEnv): Store {
     operationsWithDanglingRefs: new Map(),
     deletedNodes: new Set(),
   };
+}
 
+export function createStore(_: CacheEnv): Store {
   const optimisticReadResults = new Map<
     OperationDescriptor,
     TransformedResult
@@ -47,7 +49,7 @@ export function createStore(_: CacheEnv): Store {
   const optimisticLayers: OptimisticLayer[] = [];
   const store: Store = {
     operations: new Map(),
-    dataForest,
+    dataForest: createDataForest(),
     optimisticLayers,
     optimisticReadResults,
     partialReadResults,
@@ -56,6 +58,7 @@ export function createStore(_: CacheEnv): Store {
     atime: new Map(),
     partitions: new WeakMap(),
     pendingEviction: null,
+    incrementalExecutions: new Map(),
   };
   return store;
 }
@@ -207,6 +210,7 @@ export function canReleaseOperationDescriptor(
   }
   if (
     store.watches.has(operation) ||
+    store.incrementalExecutions.has(operation) ||
     store.optimisticReadResults.has(operation) ||
     store.partialReadResults.has(operation)
   ) {
@@ -461,6 +465,7 @@ function removeDataTree(
     optimisticReadResults,
     partialReadResults,
     operations,
+    incrementalExecutions,
     watches,
     atime,
   }: Store,
@@ -478,7 +483,10 @@ function removeDataTree(
   dataForest.operationsByPartitions.get(partition)?.delete(operation.id);
   optimisticReadResults.delete(operation);
   partialReadResults.delete(operation);
-  operations.get(operation.document)?.delete(operationCacheKey(operation));
+  // The execution still needs the same descriptor for subsequent payloads, even without a base tree.
+  if (!incrementalExecutions.has(operation)) {
+    operations.get(operation.document)?.delete(operationCacheKey(operation));
+  }
   atime.delete(operation.id);
   // Notes:
   // - Not deleting from optimistic layers because they are meant to be short-lived anyway
@@ -500,6 +508,7 @@ export function resetStore(store: Store): void {
   operations.clear();
   optimisticReadResults.clear();
   optimisticLayers.length = 0;
+  store.incrementalExecutions.clear();
 }
 
 const getRootNode = (result: IndexedTree): NodeChunk | undefined =>

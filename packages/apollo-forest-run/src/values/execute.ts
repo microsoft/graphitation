@@ -38,6 +38,10 @@ export type ObjectChunkQueue<TModel> = Iterable<TModel> & {
 
 export type Resolver<TModel, TListModel = NestedIterable<TModel>> = {
   resolveType(model: TModel): TypeName | false;
+  canAmend?(
+    draft: SourceCompositeValue,
+    candidate: TModel | TListModel | null,
+  ): boolean;
 
   enterObject(
     object: TModel,
@@ -262,6 +266,18 @@ function executeObjectChunkSelection<TModel, TListModel>(
       continue;
     }
     const dataKey = fieldInfo.dataKey;
+    if (
+      resolver.canAmend &&
+      fieldInfo.selection &&
+      draft[dataKey] !== undefined
+    ) {
+      const current = draft[dataKey];
+      assert(isSourceCompositeValue(current, fieldInfo));
+      if (!resolver.canAmend(current, value as TModel | TListModel | null)) {
+        (nextIncompleteFields ??= []).push(fieldInfo);
+        continue;
+      }
+    }
 
     if (!fieldInfo.selection || value === null) {
       draft[dataKey] = value as SourceLeafValue | SourceNull;
@@ -326,11 +342,19 @@ function executeCompositeListSelection<TModel, TListModel>(
       index++;
       continue;
     }
+    const currentValue = firstEnter ? undefined : draft[index];
+    if (
+      currentValue !== undefined &&
+      resolver.canAmend &&
+      !resolver.canAmend(currentValue, item)
+    ) {
+      index++;
+      continue;
+    }
     if (item === null) {
       draft[index++] = null as SourceNull;
       continue;
     }
-    const currentValue = firstEnter ? undefined : draft[index];
     const { result, complete } = executeSelection(
       context,
       possibleSelections,

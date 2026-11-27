@@ -19,7 +19,7 @@ import type {
 import {
   createDraft,
   hydrateDraft,
-  getDataPathForDebugging,
+  getDataPath,
   isObjectValue,
   isRootRef,
   TraverseEnv,
@@ -75,24 +75,35 @@ export function read<TData>(
     options,
   );
 
+  return diffResult<TData>(outputTree, store.partialReadResults);
+}
+
+export function diffResult<TData>(
+  outputTree: IndexedTree,
+  partialReadResults?: Set<OperationDescriptor>,
+): Cache.DiffResult<TData> & { dangling?: Set<string> } {
   // FIXME: this may break with optimistic layers - partialReadResults should be per layer?
   if (outputTree.incompleteChunks.size) {
-    store.partialReadResults.add(outputTree.operation);
-    let missing: MissingFieldError[] | undefined;
-    return {
-      result: outputTree.result.data as TData,
-      complete: false as const,
-      get missing() {
-        return (missing ??= [reportFirstMissingField(outputTree)]);
-      },
-      dangling: outputTree.danglingReferences,
-    };
+    partialReadResults?.add(outputTree.operation);
+    return incompleteDiffResult<TData>(outputTree);
   }
-  store.partialReadResults.delete(outputTree.operation);
-
+  partialReadResults?.delete(outputTree.operation);
   return {
     result: outputTree.result.data as TData,
     complete: true,
+  };
+}
+
+// Only incomplete reads need a closure for the lazy missing-field error.
+function incompleteDiffResult<TData>(tree: IndexedTree) {
+  let missing: MissingFieldError[] | undefined;
+  return {
+    result: tree.result.data as TData,
+    complete: false as const,
+    get missing() {
+      return (missing ??= [reportFirstMissingField(tree)]);
+    },
+    dangling: tree.danglingReferences,
   };
 }
 
@@ -233,7 +244,7 @@ function hasMatchingFragment(
   return true;
 }
 
-function normalizeRootLevelTypeName(tree: IndexedTree) {
+export function normalizeRootLevelTypeName(tree: IndexedTree) {
   // Root-level __typename field may become out of sync due to difference in manual writes/optimistic results and network results
   //   so forcing consistent state matching operation selection set:
   const rootNode = tree.nodes.get(tree.rootNodeKey)?.[0];
@@ -263,7 +274,7 @@ function growOutputTree(
     }
   }
   if (!dataTree) {
-    dataTree = growDataTree(env, forest, operation);
+    dataTree = growDataTree(env, [forest], operation);
     addTree(env, forest, dataTree);
   }
   const tree = applyTransformations(
@@ -293,10 +304,11 @@ function growOutputTree(
   return { outputTree: tree, dirtyNodes: new Map() };
 }
 
-function growDataTree(
+export function growDataTree(
   env: CacheEnv,
-  forest: DataForest | OptimisticLayer,
+  layers: (DataForest | OptimisticLayer)[],
   operationDescriptor: OperationDescriptor,
+  preserveLinks = false,
 ): DataTree {
   const { possibleSelections, rootNodeKey, rootType } = operationDescriptor;
 
@@ -307,10 +319,11 @@ function growDataTree(
     rootType,
   );
   hydrateDraft(
-    env,
+    preserveLinks ? { keyMap: env.keyMap, preserveLinks } : env,
     rootDraft,
-    createChunkProvider([forest]),
-    createChunkMatcher([forest]),
+    createChunkProvider(layers),
+    // A wholesale match from a lower layer might bypass a changed field or link.
+    preserveLinks ? undefined : createChunkMatcher(layers),
   );
 
   // ApolloCompat: mostly added for tests
@@ -431,7 +444,7 @@ function reportFirstMissingField(tree: IndexedTree): MissingFieldError {
     findParent: createParentLocator(tree.dataMap),
   };
   const [chunk] = tree.incompleteChunks;
-  const path = getDataPathForDebugging(pathEnv, chunk);
+  const path = getDataPath(pathEnv, chunk);
 
   let message;
   if (isObjectValue(chunk)) {

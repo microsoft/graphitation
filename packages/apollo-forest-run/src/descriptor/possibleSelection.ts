@@ -23,6 +23,7 @@ import type {
   FragmentMap,
   SpreadInfo,
   WatchBoundary,
+  DeferCondition,
 } from "./types";
 import { accumulate, getOrCreate } from "../jsutils/map";
 import { assert, assertNever } from "../jsutils/assert";
@@ -40,7 +41,7 @@ export type Context = Readonly<{
   fieldsWithArgs: FieldInfo[];
   mergeMemo: Map<PossibleSelection, Set<PossibleSelection>>;
   copyOnWrite: Set<PossibleSelection | FieldInfo | SpreadInfo>;
-}>;
+}> & { hasDeferSites?: boolean };
 
 const EMPTY_ARRAY = Object.freeze([]);
 
@@ -62,12 +63,14 @@ export function describeResultTree(
     copyOnWrite: new Set(),
   };
 
+  const possibleSelections = collectPossibleSelections(
+    context,
+    doc.definition.selectionSet,
+  );
   return {
-    possibleSelections: collectPossibleSelections(
-      context,
-      doc.definition.selectionSet,
-    ),
+    possibleSelections,
     fieldsWithArgs: context.fieldsWithArgs,
+    hasDeferSites: Boolean(context.hasDeferSites),
   };
 }
 
@@ -75,9 +78,8 @@ function collectPossibleSelections(
   context: Context,
   selectionSet: SelectionSetNode,
 ): PossibleSelections {
-  const commonSelection = createEmptySelection();
   const possibleSelections: PossibleSelections = new Map([
-    [null, commonSelection],
+    [null, createEmptySelection()],
   ]);
   collectFields(context, possibleSelections, selectionSet);
   mergeSubSelections(context, possibleSelections);
@@ -160,6 +162,13 @@ function collectFields(
       addFieldEntry(context, selection.fields, node, ancestors);
     } else if (node.kind === "InlineFragment") {
       inferPossibleType(context, typeCondition, getTypeName(node));
+      collectDeferSite(
+        context,
+        selectionsByType,
+        node,
+        getTypeName(node) ?? typeCondition,
+        ancestors,
+      );
       ancestorStack.push(node);
       collectFields(
         context,
@@ -187,6 +196,13 @@ function collectFields(
         throw new Error(`No fragment named ${node.name.value}.`);
       }
       addSpreadEntry(context, selectionsByType, fragment, node, ancestors);
+      collectDeferSite(
+        context,
+        selectionsByType,
+        node,
+        getTypeName(fragment),
+        ancestors,
+      );
       inferPossibleType(context, typeCondition, getTypeName(fragment));
       ancestorStack.push(node);
       collectFields(
@@ -202,6 +218,42 @@ function collectFields(
       assertNever(node);
     }
   }
+}
+
+function collectDeferSite(
+  context: Context,
+  selections: PossibleSelections,
+  node: InlineFragmentNode | FragmentSpreadNode,
+  type: TypeName | null | undefined,
+  ancestors: SelectionNode[],
+) {
+  if (!findDirective(node, "defer")) return;
+  const conditions: DeferCondition[] = [];
+  for (const ancestor of [...ancestors, node]) {
+    for (const directive of ancestor.directives ?? EMPTY_ARRAY) {
+      const name = directive.name.value;
+      // An enclosing @defer changes delivery timing, not inclusion of this site.
+      if (
+        name !== "include" &&
+        name !== "skip" &&
+        (name !== "defer" || ancestor !== node)
+      ) {
+        continue;
+      }
+      const condition = findArgument(directive, "if")?.value;
+      if (condition?.kind === "Variable") {
+        conditions.push({ variable: condition.name.value, directive: name });
+      } else if (
+        (condition ? valueFromASTUntyped(condition) : true) !==
+        (name !== "skip")
+      ) {
+        return;
+      }
+    }
+  }
+  context.hasDeferSites = true;
+  const target = getOrCreate(selections, type ?? null, createEmptySelection);
+  (target.deferConditions ??= []).push(conditions);
 }
 
 /**
@@ -248,7 +300,7 @@ function appendUntypedSelection(
   possibleSelections: PossibleSelections,
   untypedSelection: PossibleSelection,
 ) {
-  if (!untypedSelection.fields.size) {
+  if (!untypedSelection.fields.size && !untypedSelection.deferConditions) {
     return;
   }
   for (const [typeName, selection] of possibleSelections.entries()) {
@@ -470,6 +522,9 @@ function mergeSelectionsImpl(
 
   if (mutableTarget !== target) {
     context.mergeMemo.set(mutableTarget, new Set([source]));
+  }
+  if (source.deferConditions) {
+    (mutableTarget.deferConditions ??= []).push(...source.deferConditions);
   }
 
   for (const [fieldName, sourceAliases] of source.fields.entries()) {
@@ -745,6 +800,8 @@ function copySelection(
     depth: selection.depth,
     structuralHash: UNINITIALIZED_HASH,
   };
+  if (selection.deferConditions)
+    copy.deferConditions = [...selection.deferConditions];
   for (const [field, aliases] of selection.fields.entries()) {
     copy.fields.set(field, [...aliases]);
     for (const alias of aliases) {

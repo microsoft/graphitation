@@ -255,7 +255,18 @@ export function applyMergePolicies(
 
           existingChunk = existingParent
             ? resolveFieldChunk(existingParent, field)
-            : materializeFromForest(env, pathEnv, layers, parent, field);
+            : undefined;
+
+          // Falls back to the forest when the field is missing in the existing parent (or there is no parent)
+          if (existingChunk === undefined || isMissingValue(existingChunk)) {
+            existingChunk = materializeFromForest(
+              env,
+              pathEnv,
+              layers,
+              parent,
+              field,
+            );
+          }
 
           if (existingChunk !== undefined) {
             assert(isCompatibleValue(fieldValue, existingChunk));

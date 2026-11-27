@@ -140,7 +140,7 @@ export const isComplexLeafValue = (
 
 export const isSimpleLeafValue = (
   value: GraphValue,
-): value is ScalarValue | null => typeof value !== "object";
+): value is ScalarValue | null => value === null || typeof value !== "object";
 
 export const isLeafValue = (
   value: GraphValue,

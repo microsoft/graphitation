@@ -41,7 +41,7 @@ import {
   createTypedObjectChunk,
   createParentLocator,
   findClosestNode,
-  getDataPathForDebugging,
+  getDataPath,
   isCompositeListValue,
   isParentListRef,
   isParentObjectRef,
@@ -63,6 +63,7 @@ type Context = {
   indexedSources: number;
   rootNodeKey: string;
   knownMissingFields: MissingFieldsMap | undefined;
+  checkMissingFields?: boolean;
   incompleteChunks: Set<ObjectChunk>;
   recycleTree: IndexedTree | null;
   findParent: ParentLocator;
@@ -81,6 +82,7 @@ export function indexTree(
   result: OperationResult,
   knownMissingFields?: MissingFieldsMap,
   previousTreeState: IndexedTree | null = null,
+  checkMissingFields = false,
 ): IndexedTree {
   let rootNodeKey;
   try {
@@ -103,13 +105,14 @@ export function indexTree(
     operation,
     result,
     knownMissingFields,
+    checkMissingFields,
     nodes: new Map(),
     typeMap: new Map(),
     dataMap,
     indexedSources: 0,
     incompleteChunks: new Set(),
     rootNodeKey,
-    recycleTree: previousTreeState,
+    recycleTree: checkMissingFields ? null : previousTreeState,
     findParent: createParentLocator(dataMap),
   };
   const rootRef: RootChunkReference = {
@@ -294,7 +297,15 @@ function indexSourceObject(
     : env.objectKey(source, selection, context.operation);
 
   const key = typeof objectKeyResult === "string" ? objectKeyResult : false;
-  const missingFields = knownMissingFields?.get(source);
+  let missingFields = knownMissingFields?.get(source);
+  if (context.checkMissingFields) {
+    // A deferred result (including a forced finish) may lack scalar fields too.
+    for (const field of selection.fieldQueue) {
+      if (source[field.dataKey] === undefined) {
+        (missingFields ??= new Set()).add(field);
+      }
+    }
+  }
 
   const chunk = createTypedObjectChunk(
     op,
@@ -741,6 +752,6 @@ function describePath(
   list: CompositeListChunk,
   from?: ObjectChunk | CompositeListChunk | null,
 ): string {
-  const path = getDataPathForDebugging({ findParent }, list, from ?? undefined);
+  const path = getDataPath({ findParent }, list, from ?? undefined);
   return from ? path.join(".") : `data${path.map((s) => `.${s}`).join("")}`;
 }

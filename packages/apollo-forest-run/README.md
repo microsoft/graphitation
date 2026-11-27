@@ -35,6 +35,47 @@ of GraphQL client.
 
 # Architecture
 
+## Deferred results
+
+`writeExecutionResult` accepts complete results and path-addressed `@defer` payloads
+(2022-09-17 draft). A complete result is an ordinary write. While an execution
+has more payloads, `diff`, `read`, `readQuery`, and watches of that operation
+(same document, variables and root) see its preview. A preloader with
+`@cache(covers: ["Summary", "Details"])` also supplies data to those named
+operations, even before any watch is registered. The list can come from a
+variable. A covered query reads its own selection, arguments and field policies.
+A `cache-first` query can therefore hit the cache before the preloader finishes.
+
+Each pending execution owns a private forest. A covered query reads only from
+streams that name its operation; its own field arguments and entity links
+determine which data it can use. Optimistic layers, when requested, take priority,
+then the query's own execution, then covering executions newest first, then
+committed data. Finishing one execution removes only its layer. Unrelated
+queries and watches, fragment reads, and `extract` still see only normal cache data.
+
+If the cache already has `User:1.bio`, both the executing and covered queries
+can keep showing it while a new response for `User:1` omits `bio`. If nothing
+visible changes, a complete cached result stays complete and retains its
+identity; `hasNext: true` alone does not notify a watch.
+A delivered `null` wins. If the response points to `User:2`, it cannot borrow
+`User:1.bio`. Fallback is for display only; it never becomes part of what the
+server is treated as having sent.
+
+Forest Run applies each patch at its response path, using the server's list
+indices even if a field policy reorders the preview. The target object must
+have an enabled `@defer` in its selection; a label is not used to locate it.
+Each preview applies policies against the current committed base, never
+against a previous preview. Merge
+functions can therefore run more than once and should be free of side effects.
+
+`hasNext: false` applies any last patches, then writes the assembled **server
+data** once, just like a delayed query arriving after other writes. To finish
+early, send `{ hasNext: false }` with the same operation, variables, root and
+execution `key` (if used). Fields that never arrived remain missing unless the
+normal cache read can satisfy them. There is no automatic timeout. A new
+execution supersedes the old one; use distinct keys to discard late payloads.
+Streamed list items and the newer ID-based incremental format are not supported.
+
 ## Overview
 
 Unlike normalized caches where data is stored in a single flat object and then propagated to "local live queries"

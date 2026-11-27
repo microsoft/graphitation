@@ -13,7 +13,7 @@ import type {
   NodeDifferenceMap,
   ValueDifference,
 } from "../diff/types";
-import { createParentLocator, getDataPathForDebugging } from "./traverse";
+import { createParentLocator, getDataPath } from "./traverse";
 import {
   CompositeListChunk,
   MissingFieldsSerialized,
@@ -69,7 +69,7 @@ function getChunkPath(
     return ["Enable enableRichHistory for full path"];
   }
   const findParent = createParentLocator(currentTree.dataMap);
-  return getDataPathForDebugging({ findParent }, chunk);
+  return getDataPath({ findParent }, chunk);
 }
 
 function extractArrayChanges(

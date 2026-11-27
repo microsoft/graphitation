@@ -43,6 +43,7 @@ export function write(
   store: Store,
   activeTransaction: Transaction,
   options: Cache.WriteOptions,
+  checkMissingFields = false,
 ): WriteResult {
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
   const targetForest = getActiveForest(store, activeTransaction);
@@ -126,16 +127,10 @@ export function write(
     operationResult,
     undefined,
     existingResult,
+    checkMissingFields,
   );
 
-  // ApolloCompat: necessary for fragment writes with custom ids
-  if (options.dataId && incomingResult.rootNodeKey !== options.dataId) {
-    const rootNode = incomingResult.nodes.get(incomingResult.rootNodeKey);
-    assert(rootNode);
-    incomingResult.nodes.set(options.dataId, rootNode);
-    incomingResult.nodes.delete(incomingResult.rootNodeKey);
-    incomingResult.rootNodeKey = options.dataId;
-  }
+  setExplicitRootId(incomingResult, options.dataId);
 
   const modifiedIncomingResult = applyMergePolicies(
     env,
@@ -286,7 +281,7 @@ function processDiffErrors(
   }
 }
 
-function getExistingResult(
+export function getExistingResult(
   env: CacheEnv,
   store: Store,
   targetForest: IndexedForest,
@@ -323,7 +318,18 @@ function aggregateAllAffectedNodes(
   return accumulator;
 }
 
-function resolveExtraRootNodeType(
+// ApolloCompat: necessary for fragment writes with custom ids
+export function setExplicitRootId(tree: IndexedTree, dataId?: string) {
+  if (dataId && tree.rootNodeKey !== dataId) {
+    const rootNode = tree.nodes.get(tree.rootNodeKey);
+    assert(rootNode);
+    tree.nodes.set(dataId, rootNode);
+    tree.nodes.delete(tree.rootNodeKey);
+    tree.rootNodeKey = dataId;
+  }
+}
+
+export function resolveExtraRootNodeType(
   env: CacheEnv,
   store: Store,
   operationDescriptor: OperationDescriptor,
