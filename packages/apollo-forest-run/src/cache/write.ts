@@ -22,10 +22,10 @@ import {
 import { applyMergePolicies } from "./policies";
 import {
   getActiveForest,
-  getCoveringInFlightForests,
   getEffectiveReadLayers,
   isInFlightForest,
   touchOperation,
+  updateCoveredInFlightTrees,
 } from "./store";
 import { diffTree, GraphDifference } from "../diff/diffTree";
 import { createObjectDifference } from "../diff/difference";
@@ -240,12 +240,8 @@ export function write(
       targetForest,
       operationDescriptor,
     );
-    const forests = tree
-      ? getCoveringInFlightForests(store, operationDescriptor)
-      : EMPTY_ARRAY;
-    for (const forest of forests) {
-      assert(tree);
-      writeTree(env, store, forest, tree, affectedOperations);
+    if (tree) {
+      updateCoveredInFlightTrees(env, store, tree);
     }
   }
 
@@ -257,39 +253,6 @@ export function write(
     affectedNodes: aggregateAllAffectedNodes(difference, allUpdates),
     updateStats: allUpdates.map((update) => update.stats ?? null),
   };
-}
-
-/**
- * Writes a stored tree (with merge policies applied) to another forest, e.g. a covered operation's own result
- * to in-flight layers: it replaces the tree of the operation, other trees with its nodes are updated
- * (trees of a forest must agree, otherwise reads blend their values, e.g. items of different lists)
- */
-function writeTree(
-  env: CacheEnv,
-  store: Store,
-  forest: DataForest,
-  tree: DataTree,
-  affectedOperationsMutable: Map<OperationDescriptor, NodeDifferenceMap>,
-) {
-  const difference = diffTree(forest, tree, env);
-  const affected = resolveAffectedOperations(forest, difference);
-  affected.delete(tree.operation);
-  updateAffectedTrees(
-    env,
-    forest,
-    affected,
-    (key) => getNodeChunks(getEffectiveReadLayers(store, forest, false), key),
-    tree,
-  );
-  replaceTree(env, forest, tree);
-  forest.readResults.delete(tree.operation);
-  store.optimisticReadResults.delete(tree.operation);
-  invalidateReadResults(env, store, forest, difference, affected, tree);
-  for (const [operation, nodeDifference] of affected) {
-    if (!affectedOperationsMutable.has(operation)) {
-      affectedOperationsMutable.set(operation, nodeDifference);
-    }
-  }
 }
 
 function appendAffectedOperationsFromOtherLayers(

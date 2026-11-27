@@ -543,7 +543,7 @@ describe("covered operations (@cache(covers))", () => {
     });
   });
 
-  it("keep their own results written while streaming (until a later result of the execution)", () => {
+  it("keep their own results written while streaming", () => {
     const cache = new TestCache();
     cache.write({
       query: chatQuery,
@@ -560,58 +560,11 @@ describe("covered operations (@cache(covers))", () => {
     expect(read(cache, chatQuery).result).toEqual({
       messages: [message("1", "own"), message("2", "own")],
     });
-    // Written to the layer like to a forest: other trees with its nodes agree (the preloader sees it too)
-    expect(read(cache, preloaderQuery).result).toEqual({
-      messages: [message("1", "own"), message("2", "own")],
-    });
 
-    // A later result of the execution is a later write to the layer (last write wins)
+    // Later results of the execution still update it (in the in-flight layer)
     execution.subsequent([{ path: ["messages", 0], data: { name: "new" } }]);
     expect(read(cache, chatQuery).result).toEqual({
-      messages: [message("1", "new")],
-    });
-  });
-
-  it("never blend values of trees of the layer (e.g. items of different lists)", () => {
-    const cache = new TestCache({
-      typePolicies: {
-        Query: {
-          fields: {
-            messages: {
-              merge: (existing: unknown[] = [], incoming: unknown[]) => [
-                ...existing,
-                ...incoming,
-              ],
-            },
-          },
-        },
-      },
-    });
-    const execution = execute(cache, preloaderQuery);
-    execution.initial({ messages: [message("1"), message("2")] });
-    // Own result of the covered operation: merged with the data forest (no page 1 there yet)
-    cache.write({
-      query: chatQuery,
-      result: { messages: [message("3", "three"), message("4", "four")] },
-    });
-    // Optimistic layers make reads re-hydrate results from all trees with their nodes
-    cache.recordOptimisticTransaction((c) => {
-      c.writeFragment({
-        id: "Message:4",
-        fragment: gql`
-          fragment Text on Message {
-            text
-          }
-        `,
-        data: { __typename: "Message", text: "optimistic" },
-      });
-    }, "layer");
-
-    expect(read(cache, chatQuery, true).result).toEqual({
-      messages: [
-        message("3", "three"),
-        { ...message("4", "four"), text: "optimistic" },
-      ],
+      messages: [message("1", "new"), message("2", "own")],
     });
   });
 
@@ -1084,8 +1037,7 @@ describe("@defer: fetchMore on a covered query while the preloader streams", () 
             preloader: page1Pending,
           },
           {
-            // Its own write wins for itself (pending texts of page 1 as the write left them). It is written to the
-            //   layer like to a forest, so the preloader's tree in the layer agrees with it (until its next result)
+            // Its own write wins for itself (pending texts of page 1 as the write left them)
             list: {
               messages: ["m1:-", "m2:-", "m3:t3", "m4:t4"],
               complete: true,
@@ -1093,10 +1045,7 @@ describe("@defer: fetchMore on a covered query while the preloader streams", () 
             watch: [
               { messages: ["m1:-", "m2:-", "m3:t3", "m4:t4"], complete: true },
             ],
-            preloader: {
-              messages: ["m1:-", "m2:-", "m3:t3", "m4:t4"],
-              complete: true,
-            },
+            preloader: page1Pending,
           },
           {
             // By design, page 2 is lost: the commit writes the preloader's list over it (no merge policy, last write wins,
@@ -1118,11 +1067,10 @@ describe("@defer: fetchMore on a covered query while the preloader streams", () 
             preloader: page1Pending,
           },
           {
-            // Its own write wins for itself: the data forest has no page 1 yet, so page 2 is merged with nothing.
-            //   Trees of the layer agree (no texts of one list on items of another)
+            // Its own write wins for itself: the data forest has no page 1 yet, so page 2 is merged with nothing
             list: { messages: ["m3:t3", "m4:t4"], complete: true },
             watch: [{ messages: ["m3:t3", "m4:t4"], complete: true }],
-            preloader: { messages: ["m3:t3", "m4:t4"], complete: true },
+            preloader: page1Pending,
           },
           {
             // By design, page 1 goes after page 2: the commit is a regular write after fetchMore, so the merge policy

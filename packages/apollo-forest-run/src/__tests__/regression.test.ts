@@ -2845,3 +2845,66 @@ test("updates a list item that is null in one chunk and an object in another", (
   });
   expect(single.complete).toBe(true);
 });
+
+test("does not complete list items with values of items of another list (optimistic layers)", () => {
+  const list = gql`
+    query MessageList($id: ID!) {
+      conversation(id: $id) {
+        id
+        messages {
+          id
+          text
+        }
+      }
+    }
+  `;
+  const ids = gql`
+    query Ids($id: ID!) {
+      conversation(id: $id) {
+        id
+        messages {
+          id
+        }
+      }
+    }
+  `;
+  const variables = { id: "c1" };
+  const conversation = (messages: object[]) => ({
+    conversation: { __typename: "Conversation", id: "c1", messages },
+  });
+  const cache = new ForestRun();
+  cache.writeQuery({
+    query: list,
+    variables,
+    data: conversation([
+      { __typename: "Message", id: "m1", text: "t1" },
+      { __typename: "Message", id: "m2", text: "t2" },
+    ]),
+  });
+  cache.recordOptimisticTransaction(() => {
+    cache.writeQuery({
+      query: ids,
+      variables,
+      data: conversation([
+        { __typename: "Message", id: "m3" },
+        { __typename: "Message", id: "m4" },
+      ]),
+    });
+  }, "layer");
+
+  const diff = cache.diff({
+    query: list,
+    variables,
+    optimistic: true,
+    returnPartialData: true,
+  });
+
+  // Texts of m1 and m2 are not used for m3 and m4 (items at the same positions of the other list)
+  expect(diff).toMatchObject({
+    complete: false,
+    result: conversation([
+      { __typename: "Message", id: "m3" },
+      { __typename: "Message", id: "m4" },
+    ]),
+  });
+});
