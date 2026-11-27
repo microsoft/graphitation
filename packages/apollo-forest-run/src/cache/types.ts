@@ -167,7 +167,7 @@ export type Transaction = {
 };
 
 export type WriteResult = {
-  options: Cache.WriteOptions;
+  options: WriteOptionsInternal;
   incoming: DataTree;
   affected: Iterable<OperationDescriptor>;
   affectedNodes: Set<NodeKey>; // contains directly updated nodes + parent nodes indirectly affected by nested node update
@@ -372,3 +372,16 @@ export type SerializedCache = Record<
 export type ExecutionWriteOptions = Omit<Cache.WriteOptions, "result"> & {
   execution: ExecutionResult;
 };
+
+// A prepared write of an execution result (see prepareExecutionWrite): the data and its target
+export type ExecutionWrite = {
+  kind: "ExecutionWrite"; // Not a raw execution result (e.g. untyped options of `write`)
+  data: ResultData;
+  // The optimistic layer of the execution, or null for the active forest
+  layer: OptimisticLayer | null;
+};
+
+// Options of the internal `write`: a result, or a prepared execution write
+export type WriteOptionsInternal =
+  | Cache.WriteOptions
+  | (Omit<Cache.WriteOptions, "result"> & { execution: ExecutionWrite });

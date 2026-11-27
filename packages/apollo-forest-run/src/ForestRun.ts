@@ -42,7 +42,7 @@ import {
   transformDocument,
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
-import { isSubsequentResult, writeExecutionResult } from "./cache/execution";
+import { isSubsequentResult, prepareExecutionWrite } from "./cache/execution";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -241,30 +241,33 @@ export class ForestRun<
   ): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
-    const result = writeExecutionResult(
+    const execution = prepareExecutionWrite(
       this.env,
       this.store,
       transaction,
       options,
       this,
-      // ApolloCompat: layers are replayed in optimistic transactions (see removeOptimisticLayers)
-      (optimistic, update) =>
-        this.runTransaction({
-          optimistic,
-          update: () => {
-            const replayTransaction = peek(this.transactionStack);
-            assert(replayTransaction);
-            update(replayTransaction);
-          },
-        }),
+      // ApolloCompat: replays of execution layers are regular optimistic writes (see removeOptimisticLayers)
+      (layerTag, replayOptions) =>
+        this.recordOptimisticTransaction(
+          (cache) => cache.write(replayOptions),
+          layerTag,
+        ),
     );
-    return result &&
-      !isSubsequentResult(options.execution) &&
-      result.incoming.nodes.size
-      ? getRef(result.incoming.rootNodeKey)
+    if (!execution) {
+      return undefined;
+    }
+    const result = write(this.env, this.store, transaction, {
+      ...options,
+      execution,
+    });
+    transaction.changelog.push(result);
+
+    const incoming = result.incoming;
+    return !isSubsequentResult(options.execution) && incoming.nodes.size
+      ? getRef(incoming.rootNodeKey)
       : undefined;
   }
-
   private collectAffectedOperationsAndNodes(transaction: Transaction) {
     transaction.affectedOperations ??= new Set();
     transaction.affectedNodes ??= new Set();

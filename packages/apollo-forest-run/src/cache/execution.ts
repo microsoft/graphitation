@@ -8,11 +8,10 @@ import type { OperationDescriptor } from "../descriptor/types";
 import type {
   CacheEnv,
   Execution,
+  ExecutionWrite,
   ExecutionWriteOptions,
-  OptimisticLayer,
   Store,
   Transaction,
-  WriteResult,
 } from "./types";
 import type {
   ExecutionKey,
@@ -29,17 +28,17 @@ import {
   resolveResultDescriptor,
 } from "./descriptor";
 import { createOptimisticLayer, removeOptimisticLayers } from "./store";
-import { write } from "./write";
 import { mergeAt } from "../incremental/data";
 
-// Runs `update` in a new optimistic transaction with the layer tag (ApolloCompat: replays of layers, see ForestRun)
-export type OptimisticTransactionRunner = (
+// ApolloCompat: replays a layer of an execution as a regular optimistic write with the layer tag (see ForestRun)
+export type OptimisticWriteReplay = (
   layerTag: string,
-  update: (transaction: Transaction) => void,
+  options: Cache.WriteOptions,
 ) => void;
 
 /**
- * Writes an execution result with the regular write. Returns undefined for ignored results.
+ * Prepares the write of an execution result (the caller writes it with the regular write).
+ * Returns null for results which are not written (unknown or superseded executions).
  *
  * Results of an incremental execution (`@defer`) are written to a regular optimistic layer of the execution until
  * it completes (`hasNext: false`, also sent by the client on timeout):
@@ -49,16 +48,15 @@ export type OptimisticTransactionRunner = (
  * - on completion, the layer is removed and the received result is written as a single result
  *
  * A new execution of the operation cancels the current one (its layer is removed without writing).
- * Results of unknown or superseded executions are ignored.
  */
-export function writeExecutionResult(
+export function prepareExecutionWrite(
   env: CacheEnv,
   store: Store,
   transaction: Transaction,
   options: ExecutionWriteOptions,
   cache: unknown,
-  runOptimisticTransaction: OptimisticTransactionRunner,
-): WriteResult | undefined {
+  replay: OptimisticWriteReplay,
+): ExecutionWrite | null {
   const { execution, ...writeOptions } = options;
   const operation = resolveExecutionOperation(env, store, options);
   const current = store.executions.get(operation);
@@ -66,65 +64,37 @@ export function writeExecutionResult(
   if (isSubsequentResult(execution)) {
     if (!current || current.key !== execution.key) {
       // E.g. late results of a superseded execution
-      return undefined;
+      return null;
     }
     const data = spliceIncrementalResults(current.data, execution);
     if (!execution.hasNext) {
       removeExecution(env, store, transaction, current, cache);
-      return writeResult(env, store, transaction, {
-        ...writeOptions,
-        result: data,
-      });
+      return { kind: "ExecutionWrite", data, layer: null };
     }
     if (data === current.data) {
-      return undefined;
+      return null;
     }
     current.data = data;
     const layer = store.optimisticLayers.find(
       (layer) => layer.layerTag === current.layerTag,
     );
     assert(layer);
-    return writeResult(
-      env,
-      store,
-      transaction,
-      { ...writeOptions, result: data },
-      layer,
-    );
+    return { kind: "ExecutionWrite", data, layer };
   }
   if (current) {
     removeExecution(env, store, transaction, current, cache);
   }
-  const result = { ...writeOptions, result: execution.data };
   if (!isIncrementalResult(operation, execution)) {
-    return writeResult(env, store, transaction, result);
+    return { kind: "ExecutionWrite", data: execution.data, layer: null };
   }
   // Executions are never optimistic
   assert(!transaction.optimisticLayer);
   const added = addExecution(store, operation, execution.key, execution.data);
-  // ApolloCompat: replays write the data received so far to a new layer
-  const replay = () =>
-    runOptimisticTransaction(added.layerTag, (transaction) =>
-      writeResult(env, store, transaction, {
-        ...writeOptions,
-        result: added.data,
-      }),
-    );
-  const layer = createOptimisticLayer(added.layerTag, replay);
+  const layer = createOptimisticLayer(added.layerTag, () =>
+    replay(added.layerTag, { ...writeOptions, result: added.data }),
+  );
   store.optimisticLayers.push(layer);
-  return writeResult(env, store, transaction, result, layer);
-}
-
-function writeResult(
-  env: CacheEnv,
-  store: Store,
-  transaction: Transaction,
-  options: Cache.WriteOptions,
-  layer?: OptimisticLayer,
-): WriteResult {
-  const result = write(env, store, transaction, options, layer);
-  transaction.changelog.push(result);
-  return result;
+  return { kind: "ExecutionWrite", data: execution.data, layer };
 }
 
 function removeExecution(
@@ -147,7 +117,6 @@ function removeExecution(
   // Deleted after the layer: keeps the descriptor of a non-cacheable operation (see canReleaseOperationDescriptor)
   store.executions.delete(execution.operation);
 }
-
 function resolveExecutionOperation(
   env: CacheEnv,
   store: Store,
