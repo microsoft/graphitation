@@ -40,8 +40,6 @@ import { mergeAt } from "../incremental/data";
 export type ExecutionWrite = {
   forest: DataForest | OptimisticLayer;
   data: ResultData;
-  // The current execution written to (the target forest is its layer)
-  current: Execution | null;
 };
 
 export function resolveExecutionWrite(
@@ -59,13 +57,12 @@ export function resolveExecutionWrite(
       (layer) => layer.layerTag === current.layerTag,
     );
     assert(layer);
-    return { forest: layer, data: current.data, current };
+    return { forest: layer, data: current.data };
   }
   // E.g. a complete result, or untyped options of `write` (a subsequent result is the same as `write` without `result`)
   return {
     forest: getActiveForest(store, transaction),
     data: isSubsequentResult(execution) ? {} : execution.data,
-    current: null,
   };
 }
 
@@ -106,8 +103,6 @@ export function addExecution(
     key,
     layerTag: `@defer:${operation.debugName}:${++executionCount}`,
     data,
-    incoming: null,
-    tree: null,
   };
   store.executions.set(operation, execution);
   return execution;
