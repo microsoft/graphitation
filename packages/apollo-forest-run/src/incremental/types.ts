@@ -1,5 +1,6 @@
 import type {
   DataKey,
+  FieldInfo,
   FieldName,
   TypeName,
   DeferLabel,
@@ -120,20 +121,15 @@ export type IncrementalExecution = {
 export type ObjectAddress = {
   nodeKey: NodeKey;
   nodeSelections: PossibleSelections;
-  // Response keys and list indexes from the node to the object
-  pathFromNode: ResponsePath;
-  // Fields of object steps of the path (response keys may be aliases of other fields of other types)
-  fieldsFromNode: ReadonlyArray<AddressFieldStep>;
-  // Type of the object (an object of another type at the address is another object)
-  type: TypeName | false;
-  // Selections of the object
-  selections: PossibleSelections;
+  // Fields and list indexes from the node to the object
+  pathFromNode: ReadonlyArray<AddressStep>;
+  // Types of the node, of objects fields of the path are resolved on, and of the object (the last one):
+  //   an object of another type at the address is another object
+  types: ReadonlyArray<TypeName | false>;
 };
 
-export type AddressFieldStep = {
-  parentType: TypeName | false;
-  fieldName: FieldName;
-};
+// A field is a part of the selection of a specific type (unlike a response key, e.g. an alias of other fields)
+export type AddressStep = FieldInfo | number;
 
 // Result of a deferred fragment with data
 export type DeferredResult = {

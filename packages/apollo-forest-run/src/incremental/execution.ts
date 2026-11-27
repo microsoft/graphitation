@@ -23,7 +23,7 @@ import type {
   IncrementalStreamResult,
   ObjectAddress,
   ObjectKeyFn,
-  AddressFieldStep,
+  AddressStep,
   ResponsePathKey,
   SplicedIncrementalResult,
   SpliceState,
@@ -36,6 +36,7 @@ import type {
   PossibleSelections,
   OperationDescriptor,
   ResponsePath,
+  TypeName,
 } from "../descriptor/types";
 import type { NodeDifferenceMap } from "../diff/types";
 import type { GraphDifference } from "../diff/diffTree";
@@ -272,7 +273,7 @@ function spliceIncrementalResults(
     }
     // Another object at the response path (e.g. a link replaced by another write) didn't receive data.
     //   Note: positional (e.g. lists may have changed), only marks missing fields (a refetch at worst, never a write)
-    const local = resolveResponsePath(root, path);
+    const local = resolvePath(root, path);
     if (local && local !== chunk && !(local.key && local.key === chunk?.key)) {
       state.skipped.push({ chunk: local, data });
     }
@@ -296,7 +297,7 @@ function spliceIncrementalResults(
         { operation: tree.operation, objectKey, incremental },
         server,
         data,
-        address.selections,
+        getAddressSelections(address),
         path,
         address,
         true,
@@ -363,24 +364,18 @@ function mergeNestedResults(
 // Resolves the object in the current stored result
 function resolveAddress(
   tree: IndexedTree,
-  {
-    nodeKey,
-    nodeSelections,
-    pathFromNode,
-    fieldsFromNode,
-    type,
-  }: ObjectAddress,
+  { nodeKey, nodeSelections, pathFromNode, types }: ObjectAddress,
 ): ObjectChunk | undefined {
   // Any chunk of the node with the same selection (the same node at multiple locations has the same data)
   for (const node of tree.nodes.get(nodeKey) ?? EMPTY_ARRAY) {
     const chunk =
       node.possibleSelections === nodeSelections
-        ? resolveResponsePath(node, pathFromNode, fieldsFromNode)
+        ? resolvePath(node, pathFromNode, types)
         : undefined;
     // Values deleted in place by cache.modify stay in `tree.nodes` (and `tree.dataMap`)
     if (chunk && isReachable(tree.dataMap, chunk)) {
       // An object of another type (e.g. an unkeyed object replaced by another write) is another object
-      return isOfType(chunk, type) ? chunk : undefined;
+      return isOfType(chunk, types[types.length - 1]) ? chunk : undefined;
     }
   }
   return undefined;
@@ -852,9 +847,7 @@ function updateIncrementalExecution(
       nodeKey: indexed.rootNodeKey,
       nodeSelections: selections,
       pathFromNode: EMPTY_ARRAY,
-      fieldsFromNode: EMPTY_ARRAY,
-      type: data.__typename || indexed.operation.rootType || false,
-      selections,
+      types: [data.__typename || indexed.operation.rootType || false],
     },
     false,
     true,
@@ -922,16 +915,15 @@ function capturePlaceholders(
             nodeKey: key,
             nodeSelections: selections,
             pathFromNode: EMPTY_ARRAY,
-            fieldsFromNode: EMPTY_ARRAY,
-            type,
-            selections,
+            types: [type],
           }
-        : { ...address, type, selections };
+        : { ...address, types: [...address.types, type] };
   }
+  const { types } = address;
   const selection = resolveSelection(
     operation,
     selections,
-    address.type || null,
+    types[types.length - 1] || null,
   );
   if (selection.deferredFragments) {
     incremental.placeholders.set(getPathKey(path), address);
@@ -952,18 +944,26 @@ function capturePlaceholders(
         delivered[field.dataKey],
         field.selection,
         [...path, field.dataKey],
-        {
-          ...address,
-          pathFromNode: [...address.pathFromNode, field.dataKey],
-          fieldsFromNode: [
-            ...address.fieldsFromNode,
-            { parentType: address.type, fieldName: field.name },
-          ],
-        },
+        { ...address, pathFromNode: [...address.pathFromNode, field] },
         inServerData,
       );
     }
   }
+}
+
+// Selections of the addressed object
+function getAddressSelections({
+  nodeSelections,
+  pathFromNode,
+}: ObjectAddress): PossibleSelections {
+  for (let index = pathFromNode.length - 1; index >= 0; index--) {
+    const step = pathFromNode[index];
+    if (typeof step !== "number") {
+      assert(step.selection);
+      return step.selection;
+    }
+  }
+  return nodeSelections;
 }
 
 // Whether objects with the selections (or below) may have deferred fragments enabled for the operation variables
@@ -1005,31 +1005,31 @@ const deferredSelections = new WeakMap<
 >();
 
 /**
- * Resolves an object by response keys and list indexes (e.g. paths of incremental results).
- * With `fields`, object steps must be the same fields of the same types (e.g. not an alias of another field).
+ * Resolves an object by list indexes and fields: response keys (e.g. paths of incremental results) or fields
+ * of selections (addresses: a field of the selection of the object, e.g. not an alias of another field).
+ * With `types`, objects fields are resolved on must be of the same types (when known).
  */
-function resolveResponsePath(
+function resolvePath(
   chunk: ObjectChunk,
-  path: ResponsePath,
-  fields?: ReadonlyArray<AddressFieldStep>,
+  path: ReadonlyArray<string | AddressStep>,
+  types?: ReadonlyArray<TypeName | false>,
 ): ObjectChunk | undefined {
   let value: GraphChunk | undefined = chunk;
-  let fieldIndex = 0;
+  let objectIndex = 0;
   for (const step of path) {
     if (typeof step === "number") {
       value = resolveListItem(value, step);
-    } else if (isObjectValue(value)) {
-      const field = value.selection.fieldQueue.find(
-        (field) => field.dataKey === step,
-      );
-      const expected = fields?.[fieldIndex++];
-      value =
-        field &&
-        (!expected ||
-          (field.name === expected.fieldName &&
-            isOfType(value, expected.parentType)))
-          ? resolveObjectField(value, field)
+    } else if (
+      isObjectValue(value) &&
+      (!types || isOfType(value, types[objectIndex++]))
+    ) {
+      const field =
+        typeof step === "string"
+          ? value.selection.fieldQueue.find((field) => field.dataKey === step)
+          : value.selection.fieldQueue.includes(step)
+          ? step
           : undefined;
+      value = field && resolveObjectField(value, field);
     } else {
       value = undefined;
     }
