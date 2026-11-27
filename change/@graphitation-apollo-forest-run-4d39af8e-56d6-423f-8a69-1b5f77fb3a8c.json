@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Fix read policies returning references to nodes with newer data in optimistic layers",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}

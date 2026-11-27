@@ -2845,3 +2845,59 @@ test("updates a list item that is null in one chunk and an object in another", (
   });
   expect(single.complete).toBe(true);
 });
+
+test("read policy returning a reference respects newer node data in optimistic layers", () => {
+  const cache = new ForestRun({
+    typePolicies: {
+      Query: {
+        fields: {
+          featured: {
+            read: (_, { toReference }) =>
+              toReference({ __typename: "Card", id: "c1" }),
+          },
+        },
+      },
+    },
+  });
+  const query = gql`
+    query Featured {
+      featured {
+        id
+        title
+      }
+    }
+  `;
+  const optimisticUpdate = gql`
+    query FeaturedUpdate {
+      featured {
+        id
+        title
+      }
+      card {
+        id
+        title
+      }
+    }
+  `;
+  cache.write({
+    query,
+    result: { featured: { __typename: "Card", id: "c1", title: "old" } },
+  });
+  cache.diff({ query, optimistic: true });
+
+  cache.recordOptimisticTransaction(() => {
+    cache.write({
+      query: optimisticUpdate,
+      result: {
+        featured: null,
+        card: { __typename: "Card", id: "c1", title: "new" },
+      },
+    });
+  }, "test");
+  const diff = cache.diff({ query, optimistic: true });
+
+  expect(diff.result).toEqual({
+    featured: { __typename: "Card", id: "c1", title: "new" },
+  });
+  expect(diff.complete).toBe(true);
+});
