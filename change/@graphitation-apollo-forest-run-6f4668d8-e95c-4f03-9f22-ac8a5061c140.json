@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Fix: do not complete list items with values of items at the same positions of other lists (e.g. in optimistic layers)",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
