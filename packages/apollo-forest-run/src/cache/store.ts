@@ -599,7 +599,13 @@ export function addInFlightExecution(
   assert(!store.inFlightExecutions.has(operation));
   const { dataForest } = store;
   const forest = createDataForest();
-  const execution: InFlightExecution = { operation, key, forest, data };
+  const execution: InFlightExecution = {
+    operation,
+    key,
+    forest,
+    data,
+    incoming: null,
+  };
 
   const seed = (id: OperationId) => {
     const tree = dataForest.trees.get(id);
@@ -671,6 +677,7 @@ export function updateCoveredInFlightTrees(
     }
     replaceTree(env, execution.forest, tree);
     execution.forest.readResults.delete(operation);
+    execution.incoming = null; // The layer changed by another write
     store.optimisticReadResults.delete(operation);
   }
 }

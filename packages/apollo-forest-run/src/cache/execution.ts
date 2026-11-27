@@ -1,3 +1,4 @@
+import type { Cache } from "@apollo/client";
 import type {
   CacheEnv,
   ExecutionWriteOptions,
@@ -73,13 +74,7 @@ export function writeExecutionResult(
       return undefined;
     }
     current.data = data;
-    return write(
-      env,
-      store,
-      transaction,
-      { ...writeOptions, result: data },
-      current.forest,
-    );
+    return writeToLayer(env, store, transaction, writeOptions, current);
   }
   if (current) {
     removeExecution(store, transaction, current);
@@ -97,13 +92,26 @@ export function writeExecutionResult(
     execution.key,
     execution.data,
   );
-  return write(
+  return writeToLayer(env, store, transaction, writeOptions, inFlight);
+}
+
+function writeToLayer(
+  env: CacheEnv,
+  store: Store,
+  transaction: Transaction,
+  writeOptions: Omit<Cache.WriteOptions, "result">,
+  execution: InFlightExecution,
+): WriteResult {
+  const result = write(
     env,
     store,
     transaction,
-    { ...writeOptions, result: inFlight.data },
-    inFlight.forest,
+    { ...writeOptions, result: execution.data },
+    execution.forest,
+    execution.incoming ?? undefined,
   );
+  execution.incoming = result.incoming;
+  return result;
 }
 
 export function isSubsequentResult(

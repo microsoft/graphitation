@@ -28,6 +28,7 @@ import {
   updateCoveredInFlightTrees,
 } from "./store";
 import { diffTree, GraphDifference } from "../diff/diffTree";
+import { createObjectDifference } from "../diff/difference";
 import {
   resolveAffectedOperations,
   updateAffectedTrees,
@@ -40,6 +41,11 @@ import { replaceTree } from "../forest/addTree";
 import { invalidateReadResults } from "./invalidate";
 import { IndexedForest } from "../forest/types";
 
+/**
+ * `previousIncoming` (optional): the previous incoming result of the operation written to the target forest,
+ * when the target forest only changed by writing it since then. Objects shared with it (by reference) are unchanged:
+ * their chunks are recycled and their nodes are not diffed.
+ */
 export function write(
   env: CacheEnv,
   store: Store,
@@ -49,6 +55,7 @@ export function write(
     store,
     activeTransaction,
   ),
+  previousIncoming?: IndexedTree,
 ): WriteResult {
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
 
@@ -130,7 +137,7 @@ export function write(
     operationDescriptor,
     operationResult,
     undefined,
-    existingResult,
+    previousIncoming ?? existingResult,
   );
 
   // ApolloCompat: necessary for fragment writes with custom ids
@@ -150,7 +157,13 @@ export function write(
     options.overwrite ?? false,
   );
 
-  const difference = diffTree(targetForest, modifiedIncomingResult, env);
+  const difference = diffTree(
+    targetForest,
+    modifiedIncomingResult,
+    env,
+    previousIncoming &&
+      seedUnchangedNodes(modifiedIncomingResult, previousIncoming),
+  );
 
   if (difference.errors.length) {
     processDiffErrors(targetForest, modifiedIncomingResult, difference);
@@ -371,6 +384,22 @@ function resolveExtraRootNodeType(
   }
   return undefined;
 }
+
+function seedUnchangedNodes(
+  model: IndexedTree,
+  previous: IndexedTree,
+): NodeDifferenceMap {
+  const seed: NodeDifferenceMap = new Map();
+  for (const [nodeKey, chunks] of model.nodes) {
+    if (chunks.every((chunk) => previous.dataMap.has(chunk.data))) {
+      seed.set(nodeKey, UNCHANGED);
+    }
+  }
+  return seed;
+}
+
+// Complete: diffing returns it as is (never mutated)
+const UNCHANGED = createObjectDifference();
 
 const inspect = JSON.stringify.bind(JSON);
 const EMPTY_ARRAY = Object.freeze([]);

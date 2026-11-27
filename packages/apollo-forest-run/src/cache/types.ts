@@ -128,6 +128,8 @@ export type InFlightExecution = {
   forest: DataForest;
   // Data received so far (in the server view)
   data: ResultData;
+  // The last result written to the layer (shares unchanged objects with the next one, see write)
+  incoming: IndexedTree | null;
 };
 
 export type CacheKey = string;
