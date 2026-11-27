@@ -115,6 +115,7 @@ export function write(
   if (writeData === existingData && existingResult) {
     // E.g. a new execution (or a complete result) with data of the stored result
     captureIncrementalExecution(
+      env,
       store,
       targetForest,
       operationDescriptor,
@@ -180,6 +181,7 @@ export function write(
   );
 
   captureIncrementalExecution(
+    env,
     store,
     targetForest,
     operationDescriptor,

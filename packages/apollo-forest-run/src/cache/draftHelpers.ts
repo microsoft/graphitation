@@ -24,7 +24,7 @@ import {
   isObjectValue,
   isCompositeNullValue,
   findClosestNode,
-  getDataPath,
+  getDataPathForDebugging,
   resolveGraphValueReference,
   retrieveEmbeddedValue,
   TraverseEnv,
@@ -112,7 +112,7 @@ function embeddedPathClause(env: TraverseEnv, value: GraphValue): string {
     return "";
   }
   try {
-    const path = getDataPath(env, value);
+    const path = getDataPathForDebugging(env, value);
     return path.length ? ` at path ${path.join(".")}` : "";
   } catch {
     return "";

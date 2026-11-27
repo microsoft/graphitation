@@ -19,7 +19,7 @@ import type {
 import {
   createDraft,
   hydrateDraft,
-  getDataPath,
+  getDataPathForDebugging,
   isObjectValue,
   isRootRef,
   TraverseEnv,
@@ -431,7 +431,7 @@ function reportFirstMissingField(tree: IndexedTree): MissingFieldError {
     findParent: createParentLocator(tree.dataMap),
   };
   const [chunk] = tree.incompleteChunks;
-  const path = getDataPath(pathEnv, chunk);
+  const path = getDataPathForDebugging(pathEnv, chunk);
 
   let message;
   if (isObjectValue(chunk)) {

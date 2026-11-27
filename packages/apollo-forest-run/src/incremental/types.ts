@@ -15,7 +15,6 @@ import type {
   ObjectChunk,
   SourceObject,
 } from "../values/types";
-import type { TraverseEnv } from "../values/traverse";
 import type {
   CompositeListDifference,
   MissingBaseFieldsError,
@@ -113,7 +112,8 @@ export type IncrementalExecution = {
 /**
  * Address of an object: its closest node and the path from that node (not the response path),
  * so it stays valid when other writes change the stored result (e.g. items are prepended to a list,
- * see apollographql/apollo-client#13530). Resolved in the current stored result via `tree.nodes`.
+ * see apollographql/apollo-client#13530). Captured in the server view (see capturePlaceholders),
+ * resolved in the current stored result via `tree.nodes`.
  *
  * Note: list indexes of embedded (unkeyed) lists between the node and the object are not stable.
  */
@@ -123,9 +123,11 @@ export type ObjectAddress = {
   // Response keys and list indexes from the node to the object
   pathFromNode: ResponsePath;
   // Fields of object steps of the path (response keys may be aliases of other fields of other types)
-  fieldsFromNode: AddressFieldStep[];
+  fieldsFromNode: ReadonlyArray<AddressFieldStep>;
   // Type of the object (an object of another type at the address is another object)
   type: TypeName | false;
+  // Selections of the object
+  selections: PossibleSelections;
 };
 
 export type AddressFieldStep = {
@@ -153,18 +155,6 @@ export type SplicedIncrementalResult = {
   missingBaseFields: MissingBaseFieldsError[];
   // Initial differences of nodes, restricted to delivered fields and paths to them (see seedDifferences)
   seed: NodeDifferenceMap;
-  // Objects data was spliced into (locate objects with deferred fragments in delivered data)
-  results: SplicedIncrementalResultEntry[];
-};
-
-// An object data was spliced into (each spliced object has its own entry, e.g. objects of containers)
-export type SplicedIncrementalResultEntry = {
-  // Response path of the object (in the server view)
-  path: ResponsePath;
-  // Path to the object in the stored result (may differ from the response path)
-  localPath: ResponsePath;
-  // Fields with values written as a whole (objects and lists)
-  wholeFields: Set<DataKey> | undefined;
 };
 
 /**
@@ -177,19 +167,18 @@ export type SplicedIncrementalResultEntry = {
  */
 export type DeliveredFields = Map<SourceObject, Set<DataKey>>;
 
+// Key of an object with the selection (identifies server objects)
+export type ObjectKeyFn = (
+  data: SourceObject,
+  selections: PossibleSelections,
+) => string | false | undefined;
+
 export type SpliceState = {
   tree: IndexedTree;
   incremental: IncrementalExecution;
   // Whether a field of the type has a merge policy (delivered values of such fields are incoming values as is)
   hasMergePolicy: (typeName: TypeName, fieldName: FieldName) => boolean;
-  // Key of an object with the selection (identifies server objects)
-  objectKey: (
-    data: SourceObject,
-    selections: PossibleSelections,
-  ) => string | false | undefined;
-  pathEnv: TraverseEnv;
-  // Objects data was spliced into
-  results: SplicedIncrementalResultEntry[];
+  objectKey: ObjectKeyFn;
   // Local objects data was not delivered to (another object received it, see markSkippedFieldsMissing)
   skipped: { chunk: ObjectChunk; data: SourceObject }[];
   missingBaseFields: MissingBaseFieldsError[];
