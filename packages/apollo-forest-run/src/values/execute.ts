@@ -21,14 +21,22 @@ import { addTypenameToDocument } from "../descriptor/addTypenameToDocument";
 import { resolveSelection } from "../descriptor/resolvedSelection";
 import { isSourceCompositeValue } from "./predicates";
 
-export type ExecutionState = {
+type VisitedModels<TModel, TListModel> = Map<
+  SourceObject | SourceCompositeList,
+  Set<TModel | TListModel>
+>;
+
+export type ExecutionState<TModel, TListModel> = {
   data: SourceObject;
   incompleteValues: IncompleteValues;
+  visited: VisitedModels<TModel, TListModel>;
 };
 
-export type InitialState = {
+export type InitialState<TModel, TListModel> = {
   data?: SourceObject | undefined;
   incompleteValues?: IncompleteValues;
+  // Models visited by previous executions of the same state (e.g. with other sources of data)
+  visited?: VisitedModels<TModel, TListModel>;
 };
 
 export type FieldQueue = FieldInfo[];
@@ -58,13 +66,16 @@ export type Resolver<TModel, TListModel = NestedIterable<TModel>> = {
     selection: ResolvedSelection,
     currentValue: SourceObject,
   ): SourceLeafValue | TModel | TListModel | typeof SKIP | undefined;
+
+  // Whether models are (possibly) of the same object, e.g. items at the same index of lists of different chunks
+  isSameObject(model: TModel | TListModel, other: TModel | TListModel): boolean;
 };
 
 type Context<TModel, TListModel> = {
   operation: OperationDescriptor;
   resolver: Resolver<TModel, TListModel>;
   incompleteValues: IncompleteValues;
-  visited: Map<SourceObject | SourceCompositeList, Set<TModel | TListModel>>;
+  visited: VisitedModels<TModel, TListModel>;
   amend: boolean;
 };
 
@@ -88,9 +99,9 @@ export function execute<TModel, TListModel = NestedIterable<TModel | null>>(
   operation: OperationDescriptor,
   possibleSelections: PossibleSelections,
   rootModel: TModel,
-  state: InitialState,
+  state: InitialState<TModel, TListModel>,
   resolver: Resolver<TModel, TListModel>,
-): ExecutionState {
+): ExecutionState<TModel, TListModel> {
   const context: Context<TModel, TListModel> = {
     operation,
     resolver,
@@ -99,7 +110,7 @@ export function execute<TModel, TListModel = NestedIterable<TModel | null>>(
     //   except for "leaf" object fields defined on the source object.
     //   This will re-traverse every field, but won't overwrite existing leaf values.
     amend: Boolean(state.data && !state.incompleteValues),
-    visited: new Map(),
+    visited: state.visited ?? new Map(),
   };
   const { result } = executeObjectSelection(
     context,
@@ -109,7 +120,8 @@ export function execute<TModel, TListModel = NestedIterable<TModel | null>>(
   );
   state.data = result;
   state.incompleteValues = context.incompleteValues;
-  return state as ExecutionState;
+  state.visited = context.visited;
+  return state as ExecutionState<TModel, TListModel>;
 }
 
 function executeSelection<TModel, TListModel>(
@@ -326,11 +338,20 @@ function executeCompositeListSelection<TModel, TListModel>(
       index++;
       continue;
     }
+    const currentValue = firstEnter ? undefined : draft[index];
     if (item === null) {
-      draft[index++] = null as SourceNull;
+      if (!currentValue) {
+        draft[index] = null as SourceNull;
+      }
+      // Otherwise, an object of an earlier model has precedence: stays incomplete
+      index++;
       continue;
     }
-    const currentValue = firstEnter ? undefined : draft[index];
+    if (currentValue && !isSameItem(context, currentValue, item)) {
+      // An item of another list (e.g. chunks of the same node with different lists): stays incomplete
+      index++;
+      continue;
+    }
     const { result, complete } = executeSelection(
       context,
       possibleSelections,
@@ -381,6 +402,20 @@ function isVisited<TModel, TListModel>(
   model: TModel | TListModel,
 ) {
   return context.visited.get(draft)?.has(model);
+}
+
+// Values of an item are only completed from the same object (by the model it was entered with first)
+function isSameItem<TModel, TListModel>(
+  context: Context<TModel, TListModel>,
+  draft: SourceObject | SourceCompositeList,
+  model: TModel | TListModel,
+): boolean {
+  const visited = context.visited.get(draft);
+  if (!visited) {
+    return true;
+  }
+  const [first] = visited;
+  return context.resolver.isSameObject(first, model);
 }
 
 /**

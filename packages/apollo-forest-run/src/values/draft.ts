@@ -140,6 +140,16 @@ export function hydrateDraft(
       resolveType(model: ObjectChunk) {
         return model.type;
       },
+      isSameObject(model, other) {
+        if (!("key" in model) || !("key" in other)) {
+          return true;
+        }
+        if (model.key !== false && other.key !== false) {
+          return model.key === other.key;
+        }
+        // Embedded objects of lists are identified by positions (unless of different types)
+        return !model.type || !other.type || model.type === other.type;
+      },
       enterList(
         model: IterableListValue,
         _possibleSelections: PossibleSelections,

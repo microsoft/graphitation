@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Fix reads hydrating objects from multiple chunks: do not complete list items with values of other objects (by position), do not overwrite them with nulls of lower layers, and do not recycle stale chunks of lower layers",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
