@@ -2985,25 +2985,49 @@ describe("optimistic reads within transactions", () => {
     result,
   });
 
-  test("are the same as optimistic reads after an optimistic transaction", () => {
-    const run = (watched: boolean) => {
-      const cache = new ForestRun();
-      const callback = jest.fn();
-      if (watched) {
-        cache.watch({ query, optimistic: true, callback });
-      }
-      cache.recordOptimisticTransaction(() => {
-        // Without "name"
-        cache.writeQuery({ query, data: { messages: [message("1")] } });
-      }, "layer");
-      return { cache, callback };
-    };
-    const expected = read(run(false).cache);
-    const { cache, callback } = run(true);
+  const runOptimisticTransaction = (
+    watched: boolean,
+    setup: (cache: ForestRun) => void = () => {},
+  ) => {
+    const cache = new ForestRun();
+    setup(cache);
+    const callback = jest.fn();
+    if (watched) {
+      cache.watch({ query, optimistic: true, callback });
+    }
+    cache.recordOptimisticTransaction(() => {
+      // Without "name"
+      cache.writeQuery({ query, data: { messages: [message("1")] } });
+    }, "layer");
+    return { cache, callback };
+  };
 
+  test("are the same as optimistic reads after an optimistic transaction", () => {
+    const expected = read(runOptimisticTransaction(false).cache);
+    const { cache, callback } = runOptimisticTransaction(true);
+
+    // Current contract, as for top-level reads: missing scalar fields of written results are not tracked,
+    //   so this result is complete without "name" (asserts consistency with top-level reads, not correctness)
     expect(expected).toMatchObject({
       complete: true,
       result: { messages: [message("1")] },
+    });
+    expect(view(callback.mock.calls[0][0])).toEqual(expected);
+    expect(read(cache)).toEqual(expected);
+  });
+
+  test("read fields missing in the layer from lower layers after an optimistic transaction", () => {
+    const setup = (cache: ForestRun) =>
+      cache.writeQuery({
+        query: names,
+        data: { messages: [{ __typename: "Message", id: "1", name: "a" }] },
+      });
+    const expected = read(runOptimisticTransaction(false, setup).cache);
+    const { cache, callback } = runOptimisticTransaction(true, setup);
+
+    expect(expected).toEqual({
+      complete: true,
+      result: { messages: [message("1", { name: "a" })] },
     });
     expect(view(callback.mock.calls[0][0])).toEqual(expected);
     expect(read(cache)).toEqual(expected);
