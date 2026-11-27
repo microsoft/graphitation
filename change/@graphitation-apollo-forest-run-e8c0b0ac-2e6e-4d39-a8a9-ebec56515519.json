@@ -1,6 +1,6 @@
 {
   "type": "minor",
-  "comment": "@defer support: ForestRun.writeExecutionResult previews incremental delivery (2022 draft format) to watches of the executing operation and its @cache(covers) consumers, and commits the assembled result on completion",
+  "comment": "@defer support: ForestRun.writeExecutionResult previews incremental delivery (2022 draft format) to reads and watches of the executing operation and its @cache(covers) consumers, and commits the assembled result on completion",
   "packageName": "@graphitation/apollo-forest-run",
   "email": "vrazuvaev@microsoft.com_msteamsmdb",
   "dependentChangeType": "patch"

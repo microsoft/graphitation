@@ -48,6 +48,10 @@ describe("writeExecutionResult", () => {
     expect(ref).toEqual({ __ref: "ROOT_QUERY" });
     expect(cache.extract()).toEqual({});
     expect(cache.readQuery({ query })).toBeNull();
+    expect(cache.readQuery({ query, returnPartialData: true })).toEqual(
+      initialData,
+    );
+    expect(cache.extract()).toEqual({});
   });
 
   it("writes subsequent results only via writeExecutionResult", () => {

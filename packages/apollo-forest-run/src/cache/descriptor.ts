@@ -198,11 +198,11 @@ export function getDiffDescriptor(
   return resolveResultDescriptor(
     env,
     store,
-    getWatchDescriptor(env, store, options),
+    getReadDescriptor(env, store, options),
   );
 }
 
-export function getWatchDescriptor(
+export function getReadDescriptor(
   env: CacheEnv,
   store: Store,
   options: Cache.WatchOptions | Cache.DiffOptions,

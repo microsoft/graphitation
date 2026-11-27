@@ -1,4 +1,4 @@
-import { gql } from "@apollo/client";
+import { ApolloClient, ApolloLink, gql } from "@apollo/client";
 import type { DocumentNode } from "graphql";
 import { ForestRun } from "../ForestRun";
 import { resolveOperationDescriptor } from "../cache/descriptor";
@@ -163,6 +163,8 @@ describe("@defer: subsequent results", () => {
     `;
     const alice = { __typename: "User", id: "1", bio: "cached" };
     cache.writeQuery({ query: owner, data: { viewer: alice } });
+    const ownerResult = cache.readQuery({ query: owner });
+    const panelResult = cache.readQuery({ query: panel });
     const exactWatch = jest.fn(),
       coveredWatch = jest.fn();
     cache.watch({
@@ -191,9 +193,20 @@ describe("@defer: subsequent results", () => {
         expect(calls[calls.length - 1][0].result[field]).toEqual(value);
       }
     };
+    const quiet = jest.fn();
+    cache.watch({ query: owner, optimistic: false, callback: quiet });
+    cache.watch({ query: panel, optimistic: false, callback: quiet });
     execution.initial({ viewer: { __typename: "User", id: "1" } });
+    for (const [query, result] of [
+      [owner, ownerResult],
+      [panel, panelResult],
+    ] as const) {
+      expect(cache.diff({ query, optimistic: false }).complete).toBe(true);
+      expect(cache.readQuery({ query })).toBe(result);
+    }
     expect(exactWatch).toHaveBeenCalledTimes(1);
     expect(coveredWatch).toHaveBeenCalledTimes(1);
+    expect(quiet).not.toHaveBeenCalled();
     check(alice, true);
     bioMerge.mockClear();
     execution.subsequent([]);
@@ -203,10 +216,108 @@ describe("@defer: subsequent results", () => {
       hasNext: true,
     });
     check({ ...alice, bio: null }, true);
+    expect(cache.readQuery({ query: owner })).toEqual({
+      viewer: { ...alice, bio: null },
+    });
+    expect(cache.readQuery({ query: panel })).toEqual({
+      me: { ...alice, bio: null },
+    });
     const bob = { __typename: "User", id: "2" };
     execution.initial({ viewer: bob });
     check(bob, false);
-    expect(cache.readQuery({ query: owner })).toEqual({ viewer: alice });
+    expect(cache.readQuery({ query: owner })).toBeNull();
+    expect(cache.readQuery({ query: panel, returnPartialData: true })).toEqual({
+      me: bob,
+    });
+  });
+
+  it("serves a complete cache-first read from a preloader without a pre-existing watch", async () => {
+    const cache = new ForestRun();
+    const pending = cover(cache, "1", "loading");
+    pending.initial({ record: { __typename: "User", id: "1", text: "early" } });
+    const variables = { id: "1", withName: true };
+    const options = { query: summary, variables, optimistic: false };
+    const partial = cache.diff(options);
+    expect(partial.complete).toBe(false);
+    expect(partial.missing?.[0].path).toEqual(["card", "name"]);
+    expect(cache.readQuery(options)).toBeNull();
+    expect(() =>
+      cache.diff({ ...options, returnPartialData: false }),
+    ).toThrow();
+    pending.subsequent([{ path: ["record"], data: { name: "ready" } }], {
+      hasNext: true,
+    });
+    const expected = {
+      card: { __typename: "User", title: "ready", text: "early" },
+    };
+    const request = jest.fn(() => {
+      throw new Error("unexpected cache miss");
+    });
+    const client = new ApolloClient({ cache, link: new ApolloLink(request) });
+    try {
+      expect(
+        (
+          await client.query({
+            query: summary,
+            variables,
+            fetchPolicy: "cache-first",
+          })
+        ).data,
+      ).toEqual(expected);
+      expect(request).not.toHaveBeenCalled();
+      expect(cache.read({ ...options, rootId: "ROOT_QUERY" })).toEqual(
+        expected,
+      );
+      expect(
+        cache.readQuery({
+          query: summary,
+          variables: { ...variables, id: "2" },
+        }),
+      ).toBeNull();
+      expect(cache.extract()).toEqual({});
+    } finally {
+      client.stop();
+    }
+  });
+
+  it("uses requested optimistic data ahead of in-flight data for exact and covered reads", () => {
+    const cache = new ForestRun();
+    const user = {
+      __typename: "User",
+      id: "1",
+      text: "pending",
+      name: "name",
+      bio: "bio",
+    };
+    const owner = {
+      query: preloader,
+      variables: {
+        user: "1",
+        consumers: ["Summary", "Details"],
+        request: "optimistic",
+      },
+    };
+    const consumer = { query: summary, variables: { id: "1", withName: true } };
+    cover(cache, "1", "optimistic").initial({ record: user });
+    cache.recordOptimisticTransaction(() => {
+      cache.writeQuery({
+        ...owner,
+        data: { record: { ...user, text: "optimistic" } },
+      });
+    }, "edit");
+    for (const optimistic of [true, false]) {
+      const text = optimistic ? "optimistic" : "pending";
+      expect(cache.readQuery({ ...owner, optimistic })).toMatchObject({
+        record: { text },
+      });
+      expect(cache.readQuery({ ...consumer, optimistic })).toMatchObject({
+        card: { text },
+      });
+    }
+    cache.removeOptimistic("edit");
+    expect(cache.readQuery({ ...consumer, optimistic: true })).toMatchObject({
+      card: { text: "pending" },
+    });
   });
 
   it("renders covered consumers from an unwatched preloader, without publishing its data", () => {
@@ -302,8 +413,9 @@ describe("@defer: subsequent results", () => {
     expect(cache.extract()).toEqual(before);
     expect(
       cache.diff({ query: summary, variables, optimistic: true }).result,
-    ).toEqual({
-      card: { __typename: "User", text: "committed" },
+    ).toEqual(expected);
+    expect(cache.readQuery({ query: other })).toMatchObject({
+      same: { text: "committed" },
     });
     pending.subsequent([{ path: ["record"], data: { bio: "last" } }], {
       hasNext: true,
@@ -356,11 +468,11 @@ describe("@defer: subsequent results", () => {
     expect(a.mock.calls[3][0].result.user.bio).toBe("older patch");
     expect(
       cache.readQuery({ query: details, variables: { id: "1" } }),
-    ).toMatchObject({ user: { bio: "three" } });
+    ).toMatchObject({ user: { bio: "older patch" } });
     expect(b).toHaveBeenCalledTimes(1);
     expect(
       cache.readQuery({ query: details, variables: { id: "2" } }),
-    ).toBeNull();
+    ).toMatchObject({ user: { bio: "private" } });
     independent.subsequent([{ path: ["record"], data: { bio: "committed" } }]);
     oldest.subsequent([]);
     expect(
@@ -425,6 +537,10 @@ describe("@defer: subsequent results", () => {
     });
     expect(otherRoot).not.toHaveBeenCalled();
     expect(cache.extract()).toEqual({});
+    expect(
+      cache.readQuery({ query, id: "Message:1", returnPartialData: true }),
+    ).toEqual({ ...data, text: "ONE" });
+    expect(cache.readQuery({ query, id: "Message:2" })).toBeNull();
     cache.writeExecutionResult({
       query,
       dataId: "Message:1",
@@ -510,7 +626,10 @@ describe("@defer: subsequent results", () => {
     expect(differentVars).not.toHaveBeenCalled();
     expect(differentDoc).not.toHaveBeenCalled();
     expect(cache.extract()).toEqual(before);
-    expect(cache.diff({ query, variables, optimistic: true }).result).toEqual(
+    expect(cache.diff({ query, variables, optimistic: true }).result).toEqual({
+      messages: [{ ...incoming, name: "preview" }],
+    });
+    expect(cache.readQuery({ query, variables: { limit: 2 } })).toEqual(
       committed,
     );
     expect(cache.readFragment({ fragment, id: "Message:1" })).toMatchObject({

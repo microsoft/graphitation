@@ -22,7 +22,7 @@ import type {
 import { ApolloCache } from "@apollo/client";
 import { assert } from "./jsutils/assert";
 import { accumulate, deleteAccumulated } from "./jsutils/map";
-import { diffResult, read } from "./cache/read";
+import { read } from "./cache/read";
 import { getNodeChunks } from "./cache/draftHelpers";
 import { modify } from "./cache/modify";
 import {
@@ -38,14 +38,14 @@ import {
 } from "./cache/store";
 import {
   getDiffDescriptor,
-  getWatchDescriptor,
+  getReadDescriptor,
   resolveResultDescriptor,
   isFragmentDocument,
   transformDocument,
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
 import { writeExecution } from "./incremental/execution";
-import { projectWatch } from "./incremental/preview";
+import { readInFlight } from "./incremental/preview";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -215,7 +215,7 @@ export class ForestRun<
 
   /**
    * Writes an execution result: a complete result, or results of incremental delivery (`@defer`).
-   * Pending data is private to watches of this operation and its @cache(covers) consumers until completion.
+   * Pending data is visible to reads and watches of this operation and its @cache(covers) consumers.
    */
   public writeExecutionResult(
     options: ExecutionWriteOptions,
@@ -345,25 +345,22 @@ export class ForestRun<
       if (preview) return preview;
     }
     this.previewWatches?.delete(watch);
-    return this.diff(watch);
+    return this.runRead(watch, false);
   }
 
   private previewWatch(
     watch: Cache.WatchOptions,
     onlyIfChangedFromBase = false,
   ): Cache.DiffResult<unknown> | undefined {
-    const operation = getWatchDescriptor(this.env, this.store, watch);
-    const projected = projectWatch(
+    const diff = readInFlight(
       this.env,
       this.store,
-      operation,
+      watch,
       peek(this.transactionStack),
-      watch.optimistic,
       onlyIfChangedFromBase,
     );
-    if (!projected) return;
+    if (!diff) return;
     (this.previewWatches ??= new WeakSet()).add(watch);
-    const diff = diffResult(projected);
     // Different chunks/streams can change without changing this consumer's projection.
     if (
       watch.lastDiff &&
@@ -388,14 +385,15 @@ export class ForestRun<
 
   private runRead<TData, TVariables = any>(
     options: Cache.DiffOptions<TData, TVariables>,
+    includeInFlight = true,
   ): Cache.DiffResult<TData> {
     const activeTransaction = peek(this.transactionStack);
-    const result = read<TData>(
-      this.env,
-      this.store,
-      activeTransaction,
-      options,
-    );
+    const preview =
+      includeInFlight && this.store.incrementalExecutions.size
+        ? readInFlight<TData>(this.env, this.store, options, activeTransaction)
+        : undefined;
+    const result =
+      preview ?? read<TData>(this.env, this.store, activeTransaction, options);
     if (options.returnPartialData === false && result.dangling?.size) {
       const [ref] = result.dangling;
       throw new Error(`Dangling reference to missing ${ref} object`);
@@ -725,10 +723,11 @@ export class ForestRun<
     accumulator: Set<Cache.WatchOptions>,
     onWatchUpdated?: Cache.BatchOptions<this>["onWatchUpdated"],
   ) {
-    const consider = (
-      watch: Cache.WatchOptions,
-      diff: Cache.DiffResult<unknown>,
-    ) => {
+    const consider = (watch: Cache.WatchOptions) => {
+      const preview = this.previewWatch(watch, !watch.lastDiff);
+      if (!preview && !this.previewWatches?.delete(watch)) return;
+      this.newWatches.delete(watch);
+      const diff = preview ?? this.runRead(watch, false);
       if (this.shouldNotifyWatch(watch, diff, onWatchUpdated)) {
         accumulator.add(watch);
       } else {
@@ -742,10 +741,9 @@ export class ForestRun<
       const group = resolveResultDescriptor(this.env, this.store, operation);
       if (transaction.affectedOperations?.has(group)) continue;
       for (const watch of this.store.watches.get(group) ?? EMPTY_ARRAY) {
-        if (getWatchDescriptor(this.env, this.store, watch) !== operation)
+        if (getReadDescriptor(this.env, this.store, watch) !== operation)
           continue;
-        this.newWatches.delete(watch);
-        consider(watch, this.diffWatch(watch));
+        consider(watch);
       }
     }
     if (coveredNames) {
@@ -759,14 +757,11 @@ export class ForestRun<
         for (const watch of watches) {
           if (
             transaction.previewOperations?.has(
-              getWatchDescriptor(this.env, this.store, watch),
+              getReadDescriptor(this.env, this.store, watch),
             )
           )
             continue;
-          const preview = this.previewWatch(watch, !watch.lastDiff);
-          if (!preview && !this.previewWatches?.delete(watch)) continue;
-          this.newWatches.delete(watch);
-          consider(watch, preview ?? this.diff(watch));
+          consider(watch);
         }
       }
     }
