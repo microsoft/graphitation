@@ -17,6 +17,7 @@ import type {
   SerializedOperationInfo,
   Store,
   Transaction,
+  ExecutionWriteOptions,
 } from "./cache/types";
 import { ApolloCache } from "@apollo/client";
 import { assert } from "./jsutils/assert";
@@ -41,6 +42,11 @@ import {
   transformDocument,
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
+import {
+  isInitialExecutionWrite,
+  isSubsequentResult,
+  spliceSubsequentResult,
+} from "./incremental/execution";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -207,9 +213,58 @@ export class ForestRun<
         });
   }
 
+  /**
+   * Writes an execution result: a complete result, or results of incremental delivery (`@defer`).
+   * Complete and initial results are written as with `write`, subsequent results are spliced into the stored result.
+   */
+  public writeExecutionResult(
+    options: ExecutionWriteOptions,
+  ): Reference | undefined {
+    return this.transactionStack.length
+      ? this.runWriteExecutionResult(options)
+      : this.runTransaction({
+          update: () => this.runWriteExecutionResult(options),
+        });
+  }
+
   private runWrite(options: Cache.WriteOptions): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
+    const result = write(this.env, this.store, transaction, options);
+    transaction.changelog.push(result);
+
+    const incoming = result.incoming;
+    return incoming.nodes.size ? getRef(incoming.rootNodeKey) : undefined;
+  }
+
+  private runWriteExecutionResult(
+    options: ExecutionWriteOptions,
+  ): Reference | undefined {
+    const transaction = peek(this.transactionStack);
+    assert(transaction);
+    // Execution results are written to the base forest only (never optimistic)
+    assert(!transaction.optimisticLayer && !transaction.forceOptimistic);
+    if (!isInitialExecutionWrite(options)) {
+      const { execution } = options;
+      assert(isSubsequentResult(execution));
+      // Written as a regular result of the operation, with incremental results spliced in
+      const spliced = spliceSubsequentResult(
+        this.env,
+        this.store,
+        transaction,
+        options,
+        execution,
+      );
+      if (spliced) {
+        transaction.changelog.push(
+          write(this.env, this.store, transaction, {
+            ...options,
+            execution: spliced,
+          }),
+        );
+      }
+      return undefined;
+    }
     const result = write(this.env, this.store, transaction, options);
     transaction.changelog.push(result);
 

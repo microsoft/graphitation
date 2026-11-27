@@ -61,6 +61,11 @@ export type OperationTree = {
   // Error states
   incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
 
+  // Object chunks with deferred fragments (enabled for the operation variables), only for operations with `@defer`.
+  //   Invariant: exactly the chunks of this tree with deferred fragments (new and recycled). Collected when indexing
+  //   the tree, must be kept in sync by anything mutating the tree in place (see cache.modify).
+  deferredChunks: ObjectChunk[] | undefined;
+
   // Tree changes
   history: CircularBuffer<HistoryChange>;
 
@@ -87,6 +92,11 @@ export type DetachedFragmentTree = {
 
   // Error states
   incompleteChunks: Set<ObjectChunk | CompositeListChunk>;
+
+  // Object chunks with deferred fragments (enabled for the operation variables), only for operations with `@defer`.
+  //   Invariant: exactly the chunks of this tree with deferred fragments (new and recycled). Collected when indexing
+  //   the tree, must be kept in sync by anything mutating the tree in place (see cache.modify).
+  deferredChunks: ObjectChunk[] | undefined;
 
   // Tree changes
   history: CircularBuffer<HistoryChange>;

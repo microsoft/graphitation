@@ -673,7 +673,9 @@ describe("optimizeDescriptorShape", () => {
     }
     fragment Foo on Foo {
       id
-      items(first: $first)
+      ... @defer {
+        items(first: $first)
+      }
     }
   `);
   const docDescriptor = describeDocument(document);
@@ -714,6 +716,8 @@ describe("optimizeDescriptorShape", () => {
         fieldsWithArgs: resultTree.fieldsWithArgs,
       });
       expect(Object.keys(optimized[i])).not.toContain("fieldsWithArgs");
+      expect(optimized[i].hasDeferSites).toBe(true);
+      expect(legacy[i].hasDeferSites).toBe(true);
     }
     expect(optimized.map((op) => op.kind)).toEqual([
       "Operation",

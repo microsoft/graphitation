@@ -155,6 +155,7 @@ function createDescriptor(
     definition,
     hasDefaultValues: documentDescriptor.hasDefaultValues,
     possibleSelections: resultTreeDescriptor.possibleSelections,
+    hasDeferSites: resultTreeDescriptor.hasDeferSites,
     variables,
     variablesWithDefaults,
     variablesKey,
