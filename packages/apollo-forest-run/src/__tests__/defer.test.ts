@@ -2528,3 +2528,222 @@ describe("@defer: merge policies of subsequent results", () => {
     );
   });
 });
+
+describe("@defer: fetchMore on a covered query while the preloader streams", () => {
+  const MessageList = gql`
+    query MessageList($id: ID!) {
+      conversation(id: $id) {
+        id
+        messages {
+          id
+          text
+        }
+      }
+    }
+  `;
+  const Preloader = gql`
+    query Preloader($id: ID!) @cache(covers: ["MessageList"]) {
+      conversation(id: $id) {
+        id
+        messages {
+          id
+          ... @defer {
+            text
+          }
+        }
+      }
+    }
+  `;
+  // The same selection as MessageList under another name (not covered by the preloader)
+  const OtherList = gql`
+    query OtherList($id: ID!) {
+      conversation(id: $id) {
+        id
+        messages {
+          id
+          text
+        }
+      }
+    }
+  `;
+  const variables = { id: "c1" };
+  const conversation = (messages: unknown[]) => ({
+    __typename: "Conversation",
+    id: "c1",
+    messages,
+  });
+  const msg = (id: string, text?: string) => ({
+    __typename: "Message",
+    id,
+    ...(text !== undefined && { text }),
+  });
+  const page2 = [msg("m3", "t3"), msg("m4", "t4")];
+
+  type Messages = {
+    conversation: { messages: { id: string; text?: string }[] };
+  };
+  type Snapshot = {
+    ids: string[] | undefined;
+    texts: (string | undefined)[] | undefined;
+    complete: boolean;
+  };
+  function snapshot(
+    result: Messages | null | undefined,
+    complete: boolean,
+  ): Snapshot {
+    const messages = result?.conversation?.messages;
+    return {
+      ids: messages?.map((m) => m.id),
+      texts: messages?.map((m) => m.text),
+      complete,
+    };
+  }
+
+  it.each(["updateQuery", "merge policy"] as const)(
+    "pages and deferred texts (fetchMore with %s)",
+    (variant) => {
+      const cache = new TestCache(
+        variant === "merge policy"
+          ? {
+              typePolicies: {
+                Conversation: {
+                  fields: {
+                    messages: {
+                      keyArgs: false,
+                      merge: (
+                        existing: unknown[] = [],
+                        incoming: unknown[],
+                      ) => [...existing, ...incoming],
+                    },
+                  },
+                },
+              },
+            }
+          : undefined,
+      );
+      const watchCalls: Snapshot[] = [];
+      cache.watch<Messages>({
+        query: MessageList,
+        variables,
+        optimistic: true,
+        callback: (diff) =>
+          watchCalls.push(snapshot(diff.result, diff.complete ?? false)),
+      });
+      const read = (query: DocumentNode) => {
+        const diff = cache.diff<Messages>({
+          query,
+          variables,
+          optimistic: false,
+          returnPartialData: true,
+        });
+        return snapshot(diff.result, Boolean(diff.complete));
+      };
+      const steps: Record<string, unknown> = {};
+      const record = (step: string) => {
+        steps[step] = {
+          messageList: read(MessageList),
+          watchCalls: watchCalls.length,
+          lastWatch: watchCalls[watchCalls.length - 1],
+          preloader: read(Preloader),
+        };
+      };
+
+      // 1. The preloader's initial payload (page 1, `text` deferred)
+      cache.writeExecutionResult({
+        query: Preloader,
+        variables,
+        execution: {
+          data: { conversation: conversation([msg("m1"), msg("m2")]) },
+          hasNext: true,
+        },
+      });
+      record("1. preloader initial");
+
+      // 2. fetchMore of page 2 (as Apollo 3 fetchMore writes it)
+      if (variant === "updateQuery") {
+        cache.updateQuery<Messages>(
+          {
+            query: MessageList,
+            variables,
+            returnPartialData: true,
+            optimistic: false,
+          },
+          (prev) => {
+            assert(prev);
+            return {
+              ...prev,
+              conversation: {
+                ...prev.conversation,
+                messages: [...prev.conversation.messages, ...page2],
+              },
+            };
+          },
+        );
+      } else {
+        // The same query and variables (no `after` variable): the merge policy concatenates
+        cache.writeQuery({
+          query: MessageList,
+          variables,
+          data: { conversation: conversation(page2) },
+        });
+      }
+      record("2. fetchMore page 2");
+
+      // 3. The preloader's subsequent payload: texts of page 1 (server paths)
+      cache.writeExecutionResult({
+        query: Preloader,
+        variables,
+        execution: {
+          incremental: [
+            { path: ["conversation", "messages", 0], data: { text: "t1" } },
+            { path: ["conversation", "messages", 1], data: { text: "t2" } },
+          ],
+          hasNext: false,
+        },
+      });
+      record("3. preloader subsequent");
+      steps["data forest (OtherList)"] = read(OtherList);
+
+      // Both variants: the same observations
+      const page1 = {
+        ids: ["m1", "m2"],
+        texts: [undefined, undefined],
+        // NOTE: `text` of page 1 is still pending (deferred) but reads are complete: missing scalar fields
+        //   are not tracked (a pre-existing limitation, also for regular writes)
+        complete: true,
+      };
+      const withPage2 = {
+        ids: ["m1", "m2", "m3", "m4"],
+        texts: [undefined, undefined, "t3", "t4"],
+        complete: true, // NOTE: same as above (page 1 texts are still pending)
+      };
+      const final = {
+        ids: ["m1", "m2", "m3", "m4"],
+        texts: ["t1", "t2", "t3", "t4"],
+        complete: true,
+      };
+      expect(steps).toEqual({
+        "1. preloader initial": {
+          messageList: page1,
+          watchCalls: 1,
+          lastWatch: page1,
+          preloader: page1,
+        },
+        "2. fetchMore page 2": {
+          messageList: withPage2,
+          watchCalls: 2,
+          lastWatch: withPage2,
+          preloader: withPage2,
+        },
+        // Texts go to m1 and m2 (by keys at the server paths): page 2 is kept, no duplicates, the order is kept
+        "3. preloader subsequent": {
+          messageList: final,
+          watchCalls: 3,
+          lastWatch: final,
+          preloader: final,
+        },
+        "data forest (OtherList)": final,
+      });
+    },
+  );
+});
