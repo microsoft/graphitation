@@ -1322,6 +1322,43 @@ describe("@defer: subsequent results", () => {
     });
   });
 
+  it("keeps concurrent executions of an operation with different variables", () => {
+    const query = gql`
+      query ($id: ID!) {
+        user(id: $id) {
+          id
+          name
+          ... @defer {
+            bio
+          }
+        }
+      }
+    `;
+    const cache = new TestCache();
+    const executions = ["A", "B"].map((id) => {
+      const execution = execute(cache, query, { variables: { id } });
+      execution.initial({ user: { __typename: "User", id, name: id } });
+      return execution;
+    });
+
+    // B finishes first: A's execution stays pending
+    executions[1].subsequent([{ path: ["user"], data: { bio: "for B" } }]);
+    expect(cache.execution(query, { id: "A" })).toBeDefined();
+    executions[0].subsequent([{ path: ["user"], data: { bio: "for A" } }]);
+
+    for (const id of ["A", "B"]) {
+      expect(
+        cache.diff({ query, variables: { id }, optimistic: false }),
+      ).toMatchObject({
+        complete: true,
+        result: {
+          user: { __typename: "User", id, name: id, bio: `for ${id}` },
+        },
+      });
+      expect(cache.execution(query, { id })).toBeUndefined();
+    }
+  });
+
   describe("reports results incomplete when deferred data is not delivered to the local object", () => {
     // The local object at the location didn't receive deferred data: no write, the result is incomplete (refetched)
     function deliver(
@@ -1526,9 +1563,15 @@ describe("@defer: subsequent results", () => {
       });
     });
 
-    it.each([true, false])(
-      "does not report fields delivered to reordered objects missing (in one payload: %s)",
-      (batched) => {
+    // Server order [A, B]; `layout` is the local list (reordered, or with another occurrence of an entity)
+    it.each([
+      ["B,A", true],
+      ["B,A", false],
+      ["A,A,B", true],
+      ["A,A,B", false],
+    ])(
+      "delivers fields to entities of a locally changed list (local list: %s, in one payload: %s)",
+      (layout, batched) => {
         const query = gql`
           query {
             users {
@@ -1549,7 +1592,10 @@ describe("@defer: subsequent results", () => {
         const cache = new TestCache();
         const execution = execute(cache, query);
         execution.initial({ users: [userA, userB] });
-        cache.writeQuery({ query, data: { users: [userB, userA] } });
+        const local = layout
+          .split(",")
+          .map((id) => (id === "A" ? userA : userB));
+        cache.writeQuery({ query, data: { users: local } });
         const watch = jest.fn();
         cache.watch({ query, optimistic: false, callback: watch });
 
@@ -1560,10 +1606,10 @@ describe("@defer: subsequent results", () => {
           execution.subsequent([results[1]]);
         }
 
-        const users = [
-          { ...userB, bio: "for B" },
-          { ...userA, bio: "for A" },
-        ];
+        const users = local.map((user) => ({
+          ...user,
+          bio: `for ${user.id}`,
+        }));
         expect(cache.diff({ query, optimistic: false })).toMatchObject({
           complete: true,
           result: { users },
