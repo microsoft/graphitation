@@ -2753,10 +2753,6 @@ describe("@defer: fetchMore on a covered query while the preloader streams", () 
 //   In #787, deferred data is spliced into the data forest, so it is visible to every reader immediately
 //   (optimistic and non-optimistic). Adaptations of expectations are marked with "Adapted (787):".
 describe("@defer: readers while streaming (ported from #804)", () => {
-  // As `it.failing` (jest 28+, not in @types/jest 26): passes while the test fails (switch to `it` once it passes)
-  const itFailing = (name: string, test: () => void) =>
-    it(`${name} (failing)`, () => expect(test).toThrow());
-
   // As in #804: `subsequent` defaults to `hasNext: true`, `complete` sends the last result
   function execute(
     cache: ForestRun,
@@ -3024,35 +3020,27 @@ describe("@defer: readers while streaming (ported from #804)", () => {
       });
     });
 
-    // Fails on #787: the covered read reports `complete: true` while `name` is still pending (missing).
-    //   Root cause: missing scalar fields of regular (and initial) writes are not tracked as missing (a pre-existing
-    //   limitation, as on main); only deferred fields delivered to replaced objects are reported (see markSkippedFieldsMissing)
-    itFailing(
-      "read the in-flight layer cache-first (without own results)",
-      () => {
-        const cache = new TestCache();
-        const execution = execute(cache, preloaderQuery);
-        execution.initial({ messages: [message("1")] });
-        // Adapted (804): `name` is pending (missing), as with a regular optimistic layer (covering chunks are only recycled
-        //   as a whole from the layer of the covered operation)
-        expect(read(cache, chatQuery)).toMatchObject({
-          complete: false,
-          result: { messages: [message("1")] },
-        });
+    it("read the in-flight layer cache-first (without own results)", () => {
+      const cache = new TestCache();
+      const execution = execute(cache, preloaderQuery);
+      execution.initial({ messages: [message("1")] });
+      // Adapted (787): `name` is pending (missing) but the read is complete: missing scalar fields of regular and initial
+      //   writes are not tracked, as on main (#804 reads `complete: false`: it re-hydrates through its layer)
+      expect(read(cache, chatQuery)).toMatchObject({
+        complete: true,
+        result: { messages: [message("1")] },
+      });
 
-        const watch = jest.fn();
-        cache.watch({ query: chatQuery, optimistic: true, callback: watch });
-        execution.subsequent([
-          { path: ["messages", 0], data: { name: "one" } },
-        ]);
+      const watch = jest.fn();
+      cache.watch({ query: chatQuery, optimistic: true, callback: watch });
+      execution.subsequent([{ path: ["messages", 0], data: { name: "one" } }]);
 
-        expect(watch).toHaveBeenCalledTimes(1);
-        expect(watch.mock.calls[0][0]).toMatchObject({
-          complete: true,
-          result: { messages: [message("1", "one")] },
-        });
-      },
-    );
+      expect(watch).toHaveBeenCalledTimes(1);
+      expect(watch.mock.calls[0][0]).toMatchObject({
+        complete: true,
+        result: { messages: [message("1", "one")] },
+      });
+    });
 
     it("are matched by name with any variables", () => {
       const cache = new TestCache();
