@@ -3136,3 +3136,66 @@ test("does not complete list items with values of items of other types at the sa
   );
   expect(diff.complete).toBe(false);
 });
+
+test("does not recycle chunks of lower layers when the operation's tree in a layer does not have the node", () => {
+  const chat = gql`
+    query Chat {
+      conversations {
+        id
+        title
+      }
+      featured {
+        id
+        title
+      }
+    }
+  `;
+  const other = gql`
+    query Other {
+      conversation {
+        id
+        title
+        extra
+      }
+    }
+  `;
+  const conversation = (id: string, title: string) => ({
+    __typename: "Conversation",
+    id,
+    title,
+  });
+  const cache = new ForestRun({
+    typePolicies: {
+      Query: {
+        fields: {
+          featured: {
+            read: (_, { toReference }) =>
+              toReference({ __typename: "Conversation", id: "c1" }),
+          },
+        },
+      },
+    },
+  });
+  cache.writeQuery({
+    query: chat,
+    data: { conversations: [conversation("c1", "old")], featured: null },
+  });
+  cache.recordOptimisticTransaction((c) => {
+    c.writeQuery({
+      query: chat,
+      data: { conversations: [conversation("c2", "c2")], featured: null },
+    });
+    c.writeQuery({
+      query: other,
+      data: { conversation: { ...conversation("c1", "new"), extra: "x" } },
+    });
+  }, "layer");
+
+  const diff = cache.diff<{ featured: object }>({
+    query: chat,
+    optimistic: true,
+  });
+
+  // The tree of Chat in the layer has no c1: the chunk of Other has precedence over the chunk of Chat in the data forest
+  expect(diff.result?.featured).toEqual(conversation("c1", "new"));
+});
