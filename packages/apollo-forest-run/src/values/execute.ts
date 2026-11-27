@@ -58,6 +58,9 @@ export type Resolver<TModel, TListModel = NestedIterable<TModel>> = {
     selection: ResolvedSelection,
     currentValue: SourceObject,
   ): SourceLeafValue | TModel | TListModel | typeof SKIP | undefined;
+
+  // Whether models are (possibly) of the same object, e.g. items at the same index of lists of different chunks
+  isSameObject(model: TModel | TListModel, other: TModel | TListModel): boolean;
 };
 
 type Context<TModel, TListModel> = {
@@ -331,6 +334,11 @@ function executeCompositeListSelection<TModel, TListModel>(
       continue;
     }
     const currentValue = firstEnter ? undefined : draft[index];
+    if (currentValue && !isSameItem(context, currentValue, item)) {
+      // An item of another list (e.g. chunks of the same node with different lists): stays incomplete
+      index++;
+      continue;
+    }
     const { result, complete } = executeSelection(
       context,
       possibleSelections,
@@ -381,6 +389,20 @@ function isVisited<TModel, TListModel>(
   model: TModel | TListModel,
 ) {
   return context.visited.get(draft)?.has(model);
+}
+
+// Values of an item are only completed from the same object (by the model it was entered with first)
+function isSameItem<TModel, TListModel>(
+  context: Context<TModel, TListModel>,
+  draft: SourceObject | SourceCompositeList,
+  model: TModel | TListModel,
+): boolean {
+  const visited = context.visited.get(draft);
+  if (!visited) {
+    return true;
+  }
+  const [first] = visited;
+  return context.resolver.isSameObject(first, model);
 }
 
 /**
