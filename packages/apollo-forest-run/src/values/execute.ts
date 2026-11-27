@@ -21,14 +21,22 @@ import { addTypenameToDocument } from "../descriptor/addTypenameToDocument";
 import { resolveSelection } from "../descriptor/resolvedSelection";
 import { isSourceCompositeValue } from "./predicates";
 
-export type ExecutionState = {
+type VisitedModels<TModel, TListModel> = Map<
+  SourceObject | SourceCompositeList,
+  Set<TModel | TListModel>
+>;
+
+export type ExecutionState<TModel, TListModel> = {
   data: SourceObject;
   incompleteValues: IncompleteValues;
+  visited: VisitedModels<TModel, TListModel>;
 };
 
-export type InitialState = {
+export type InitialState<TModel, TListModel> = {
   data?: SourceObject | undefined;
   incompleteValues?: IncompleteValues;
+  // Models visited by previous executions of the same state (e.g. with other sources of data)
+  visited?: VisitedModels<TModel, TListModel>;
 };
 
 export type FieldQueue = FieldInfo[];
@@ -67,7 +75,7 @@ type Context<TModel, TListModel> = {
   operation: OperationDescriptor;
   resolver: Resolver<TModel, TListModel>;
   incompleteValues: IncompleteValues;
-  visited: Map<SourceObject | SourceCompositeList, Set<TModel | TListModel>>;
+  visited: VisitedModels<TModel, TListModel>;
   amend: boolean;
 };
 
@@ -91,9 +99,9 @@ export function execute<TModel, TListModel = NestedIterable<TModel | null>>(
   operation: OperationDescriptor,
   possibleSelections: PossibleSelections,
   rootModel: TModel,
-  state: InitialState,
+  state: InitialState<TModel, TListModel>,
   resolver: Resolver<TModel, TListModel>,
-): ExecutionState {
+): ExecutionState<TModel, TListModel> {
   const context: Context<TModel, TListModel> = {
     operation,
     resolver,
@@ -102,7 +110,7 @@ export function execute<TModel, TListModel = NestedIterable<TModel | null>>(
     //   except for "leaf" object fields defined on the source object.
     //   This will re-traverse every field, but won't overwrite existing leaf values.
     amend: Boolean(state.data && !state.incompleteValues),
-    visited: new Map(),
+    visited: state.visited ?? new Map(),
   };
   const { result } = executeObjectSelection(
     context,
@@ -112,7 +120,8 @@ export function execute<TModel, TListModel = NestedIterable<TModel | null>>(
   );
   state.data = result;
   state.incompleteValues = context.incompleteValues;
-  return state as ExecutionState;
+  state.visited = context.visited;
+  return state as ExecutionState<TModel, TListModel>;
 }
 
 function executeSelection<TModel, TListModel>(

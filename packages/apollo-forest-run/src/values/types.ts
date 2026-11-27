@@ -10,6 +10,7 @@ import {
   ArgumentValues,
 } from "../descriptor/types";
 import type { HistoryChangeSerialized } from "../forest/types";
+import type { IterableListValue } from "./iterator";
 import * as ValueKind from "./valueKind";
 
 declare const OpaqueSymbol: unique symbol;
@@ -317,6 +318,11 @@ export type ObjectDraft = {
   incompleteValues: IncompleteValues | undefined;
   missingFields: MissingFieldsMap | undefined;
   dangling: boolean;
+  // Models the draft was hydrated with (by objects and lists of the draft)
+  visited?: Map<
+    SourceObject | SourceCompositeList,
+    Set<ObjectValue | IterableListValue>
+  >;
 };
 
 // -------------------------------------------------------------------------------------------------------------

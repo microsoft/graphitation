@@ -2952,3 +2952,76 @@ test("does not recycle chunks of lower layers over partially matching chunks of 
   }, "layer2");
   expect(read()).toEqual(conversation("b"));
 });
+
+test("does not complete list items with values of items of another list (written by another operation)", () => {
+  const target = gql`
+    query Target {
+      target {
+        id
+        messages {
+          id
+          text
+        }
+      }
+    }
+  `;
+  const lookup = gql`
+    query Lookup {
+      lookup {
+        id
+        messages {
+          id
+          text
+        }
+      }
+    }
+  `;
+  const targetIds = gql`
+    query TargetIds {
+      target {
+        id
+        messages {
+          id
+        }
+      }
+    }
+  `;
+  const conversation = (id: string, messages: object[]) => ({
+    __typename: "Conversation",
+    id,
+    messages,
+  });
+  const cache = new ForestRun();
+  cache.writeQuery({
+    query: target,
+    data: {
+      target: conversation("A", [
+        { __typename: "Message", id: "m1", text: "t1" },
+      ]),
+    },
+  });
+  cache.writeQuery({
+    query: lookup,
+    data: {
+      lookup: conversation("B", [
+        { __typename: "Message", id: "m2", text: "t2" },
+      ]),
+    },
+  });
+  cache.writeQuery({
+    query: targetIds,
+    data: { target: conversation("B", [{ __typename: "Message", id: "m3" }]) },
+  });
+
+  const diff = cache.diff({
+    query: target,
+    optimistic: false,
+    returnPartialData: true,
+  });
+
+  // The text of m2 is not used for m3 (item at the same position of the list in another chunk of B)
+  expect(diff.result).toEqual({
+    target: conversation("B", [{ __typename: "Message", id: "m3" }]),
+  });
+  expect(diff.complete).toBe(false);
+});
