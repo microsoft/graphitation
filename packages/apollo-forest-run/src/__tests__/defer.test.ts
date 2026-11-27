@@ -1526,6 +1526,163 @@ describe("@defer: subsequent results", () => {
       });
     });
 
+    it.each([true, false])(
+      "does not report fields delivered to reordered objects missing (in one payload: %s)",
+      (batched) => {
+        const query = gql`
+          query {
+            users {
+              id
+              name
+              ... @defer {
+                bio
+              }
+            }
+          }
+        `;
+        const userA = { __typename: "User", id: "A", name: "A" };
+        const userB = { __typename: "User", id: "B", name: "B" };
+        const results = [
+          { path: ["users", 0], data: { bio: "for A" } },
+          { path: ["users", 1], data: { bio: "for B" } },
+        ];
+        const cache = new TestCache();
+        const execution = execute(cache, query);
+        execution.initial({ users: [userA, userB] });
+        cache.writeQuery({ query, data: { users: [userB, userA] } });
+        const watch = jest.fn();
+        cache.watch({ query, optimistic: false, callback: watch });
+
+        if (batched) {
+          execution.subsequent(results);
+        } else {
+          execution.subsequent([results[0]], { hasNext: true });
+          execution.subsequent([results[1]]);
+        }
+
+        const users = [
+          { ...userB, bio: "for B" },
+          { ...userA, bio: "for A" },
+        ];
+        expect(cache.diff({ query, optimistic: false })).toMatchObject({
+          complete: true,
+          result: { users },
+        });
+        expect(watch).toHaveBeenCalledTimes(batched ? 1 : 2);
+        expect(watch.mock.calls[watch.mock.calls.length - 1][0]).toMatchObject({
+          complete: true,
+          result: { users },
+        });
+      },
+    );
+
+    // `slot` is an alias of different fields of Cat and Dog (both of type Accessory)
+    const accessoryQueries = {
+      direct: gql`
+        query {
+          viewer {
+            id
+            pet {
+              ... on Cat {
+                slot: collar {
+                  kind
+                  ... @defer {
+                    note
+                  }
+                }
+              }
+              ... on Dog {
+                slot: harness {
+                  kind
+                  note
+                }
+              }
+            }
+          }
+        }
+      `,
+      parent: gql`
+        query {
+          viewer {
+            id
+            pet {
+              ... on Cat {
+                slot: collar {
+                  kind
+                }
+              }
+              ... on Dog {
+                slot: harness {
+                  kind
+                  note
+                }
+              }
+            }
+            ... @defer {
+              pet {
+                ... on Cat {
+                  slot: collar {
+                    note
+                  }
+                }
+              }
+            }
+          }
+        }
+      `,
+    };
+
+    it.each(["direct", "parent"] as const)(
+      "does not deliver data through an alias of another field of another type (%s)",
+      (shape) => {
+        const query = accessoryQueries[shape];
+        const accessory = (kind: string, fields = {}) => ({
+          __typename: "Accessory",
+          kind,
+          ...fields,
+        });
+        const dog = {
+          __typename: "Dog",
+          slot: accessory("harness", { note: "for harness" }),
+        };
+        const { watch, diff } = deliver(
+          query,
+          {
+            viewer: {
+              ...user,
+              pet: { __typename: "Cat", slot: accessory("collar") },
+            },
+          },
+          // A write of the same operation: the cat is replaced with a dog
+          { query, data: { viewer: { ...user, pet: dog } } },
+          shape === "direct"
+            ? [
+                {
+                  path: ["viewer", "pet", "slot"],
+                  data: { note: "for collar" },
+                },
+              ]
+            : [
+                {
+                  path: ["viewer"],
+                  data: {
+                    pet: {
+                      __typename: "Cat",
+                      slot: { __typename: "Accessory", note: "for collar" },
+                    },
+                  },
+                },
+              ],
+        );
+
+        expect(diff).toMatchObject({
+          complete: true,
+          result: { viewer: { ...user, pet: dog } },
+        });
+        expect(watch).not.toHaveBeenCalled();
+      },
+    );
+
     it.each(["direct", "parent"] as const)(
       "reports missing fields of a replaced object (%s)",
       (shape) => {
