@@ -369,7 +369,9 @@ function applyTransformations(
   previous?: TransformedResult,
 ): IndexedTree {
   // This effectively disables recycling when optimistic layers are present, which is suboptimal.
-  const hasOptimisticLayers = dataLayers.length > 1;
+  //   Note: optimistic layers go first (in-flight layers are data forests of their readers, like the data forest)
+  const hasOptimisticLayers =
+    dataLayers.length > 1 && dataLayers[0].layerTag !== null;
   const operation = inputTree.operation;
 
   // TODO: inputTree.incompleteChunks must be updated on write, then we can remove size check
@@ -495,8 +497,12 @@ function resolveAffectedOptimisticNodes(
   }
   const result: DirtyNodeMap = new Map();
 
-  for (let i = 0; i < dataLayers.length - 1; i++) {
-    // Note: last layer is the data layer
+  for (
+    let i = 0;
+    i < dataLayers.length - 1 && dataLayers[i].layerTag !== null;
+    i++
+  ) {
+    // Note: optimistic layers only (lower layers are the data forest and in-flight layers)
     const optimisticLayer = dataLayers[i];
     const nodeKeys =
       inputTree.nodes.size < optimisticLayer.operationsByNodes.size

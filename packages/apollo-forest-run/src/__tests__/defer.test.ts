@@ -230,6 +230,19 @@ describe("writeExecutionResult", () => {
 });
 
 describe("in-flight layer", () => {
+  it("reads results like regular results (no re-hydration)", () => {
+    const cache = new TestCache();
+    const regular = new TestCache();
+    const data = { messages: [message("1"), message("2")] };
+    execute(cache, preloaderQuery).initial(data);
+    regular.write({ query: preloaderQuery, result: data });
+
+    const diff = read(cache, preloaderQuery);
+    expect(diff).toEqual(read(regular, preloaderQuery));
+    const inFlight = cache.inFlight(preloaderQuery);
+    const tree = inFlight?.forest.trees.get(cache.operation(preloaderQuery).id);
+    expect(diff.result).toBe(tree?.result.data);
+  });
   it("is only visible to the operation itself while streaming", () => {
     const cache = new TestCache();
     cache.write({ query: nameQuery, result: { messages: [] } });
@@ -260,7 +273,11 @@ describe("in-flight layer", () => {
     execution.subsequent([{ path: ["messages", 1], data: { name: "two" } }]);
 
     expect(watch).toHaveBeenCalledTimes(3);
-    expect(watch.mock.calls[0][0]).toMatchObject({ complete: false });
+    // Pending fields read like fields missing in a regular write (complete)
+    expect(watch.mock.calls[0][0]).toMatchObject({
+      complete: true,
+      result: { messages: [message("1"), message("2")] },
+    });
     expect(watch.mock.calls[1][0].result).toEqual({
       messages: [message("1", "one"), message("2")],
     });
@@ -474,7 +491,11 @@ describe("covered operations (@cache(covers))", () => {
     const cache = new TestCache();
     const execution = execute(cache, preloaderQuery);
     execution.initial({ messages: [message("1")] });
-    expect(read(cache, chatQuery).complete).toBe(false);
+    // As with a regular write of the preloader result (its chunks are recycled)
+    expect(read(cache, chatQuery)).toMatchObject({
+      complete: true,
+      result: { messages: [message("1")] },
+    });
 
     const watch = jest.fn();
     cache.watch({ query: chatQuery, optimistic: true, callback: watch });
@@ -674,7 +695,9 @@ describe("timeout and cancellation", () => {
     // Late results of the cancelled execution are ignored
     first.complete([{ path: ["messages", 0], data: { name: "late" } }]);
     expect(cache.inFlight(preloaderQuery)?.key).toBe(2);
-    expect(read(cache, chatQuery).complete).toBe(false);
+    expect(read(cache, chatQuery).result).toEqual({
+      messages: [message("2")],
+    });
 
     second.complete([{ path: ["messages", 0], data: { name: "second" } }]);
     // Nothing of the cancelled execution was written
@@ -921,7 +944,8 @@ describe("@defer: fetchMore on a covered query while the preloader streams", () 
 
       const dataForest = summarize(diff(OtherList));
 
-      const page1Pending = { messages: ["m1:-", "m2:-"], complete: false };
+      // Pending texts read like fields missing in a regular write (complete)
+      const page1Pending = { messages: ["m1:-", "m2:-"], complete: true };
       if (variant === "updateQuery") {
         expect(steps).toEqual([
           {
@@ -930,16 +954,18 @@ describe("@defer: fetchMore on a covered query while the preloader streams", () 
             preloader: page1Pending,
           },
           {
-            // NOTE: page 2 is lost for MessageList while streaming, although its own write (with all 4 messages)
-            //   replaced its tree in the in-flight layer: reads re-hydrate Conversation:c1.messages from the
-            //   preloader's chunk in the same layer first. Its own write should win for itself.
-            //   The watch is notified again with the same (partial) data.
-            list: page1Pending,
-            watch: [page1Pending],
+            // Its own write wins for itself (pending texts of page 1 as the write left them)
+            list: {
+              messages: ["m1:-", "m2:-", "m3:t3", "m4:t4"],
+              complete: true,
+            },
+            watch: [
+              { messages: ["m1:-", "m2:-", "m3:t3", "m4:t4"], complete: true },
+            ],
             preloader: page1Pending,
           },
           {
-            // NOTE: page 2 is lost: the commit writes the preloader's list over it (no merge policy, last write wins,
+            // By design, page 2 is lost: the commit writes the preloader's list over it (no merge policy, last write wins,
             //   same as a slow non-deferred preloader response arriving after fetchMore)
             list: { messages: ["m1:t1", "m2:t2"], complete: true },
             watch: [{ messages: ["m1:t1", "m2:t2"], complete: true }],
@@ -958,16 +984,14 @@ describe("@defer: fetchMore on a covered query while the preloader streams", () 
             preloader: page1Pending,
           },
           {
-            // NOTE: wrong texts and lost page 2: MessageList's own tree (page 2 only, the data forest has no page 1 yet)
-            //   and the preloader's tree (page 1) are both in the in-flight layer. Reads take the list from the
-            //   preloader's chunk and resolve items by position in MessageList's chunk: m1 gets m3's text.
-            list: { messages: ["m1:t3", "m2:t4"], complete: true },
-            watch: [{ messages: ["m1:t3", "m2:t4"], complete: true }],
+            // Its own write wins for itself: the data forest has no page 1 yet, so page 2 is merged with nothing
+            list: { messages: ["m3:t3", "m4:t4"], complete: true },
+            watch: [{ messages: ["m3:t3", "m4:t4"], complete: true }],
             preloader: page1Pending,
           },
           {
-            // NOTE: wrong order: the commit is a regular write after fetchMore, so the merge policy appends page 1
-            //   after page 2 (same as a slow non-deferred preloader response arriving after fetchMore)
+            // By design, page 1 goes after page 2: the commit is a regular write after fetchMore, so the merge policy
+            //   appends page 1 (same as a slow non-deferred preloader response arriving after fetchMore)
             list: {
               messages: ["m3:t3", "m4:t4", "m1:t1", "m2:t2"],
               complete: true,
