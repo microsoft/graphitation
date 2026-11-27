@@ -8,6 +8,7 @@ import {
   resolveSelection,
   resolvedSelectionsAreEqual,
   fieldEntriesAreEqual,
+  getFieldByDataKey,
 } from "../resolvedSelection";
 import {
   Key,
@@ -609,6 +610,29 @@ describe(resolveSelection, () => {
       const resolved = resolveSelection(operation, fooSelection, null);
       expect(resolved.deferredFragments).toBe(undefined);
     });
+  });
+});
+
+describe(getFieldByDataKey, () => {
+  it("returns the first active field for a response key in each resolved selection", () => {
+    const query = `
+      query ($skipFirst: Boolean! = false) {
+        name @skip(if: $skipFirst)
+        name: name
+        byline: author @include(if: $skipFirst)
+      }
+    `;
+    const original = createTestOperation(query);
+    const filtered = createTestOperation(query, { skipFirst: true });
+    const a = resolveSelection(original, original.possibleSelections, null);
+    const b = resolveSelection(filtered, filtered.possibleSelections, null);
+    const [first, second] = a.fieldQueue;
+
+    expect(getFieldByDataKey(a, "name")).toBe(first);
+    expect(getFieldByDataKey(a, "byline")).toBeUndefined();
+    expect(getFieldByDataKey(b, "name")).toBe(second);
+    expect(getFieldByDataKey(b, "byline")?.name).toBe("author");
+    expect(getFieldByDataKey(b, "author")).toBeUndefined();
   });
 });
 

@@ -59,6 +59,7 @@ import {
 } from "../values";
 import * as Difference from "../diff/difference";
 import {
+  getFieldByDataKey,
   resolveNormalizedField,
   resolveSelection,
 } from "../descriptor/resolvedSelection";
@@ -407,11 +408,10 @@ function spliceData(
   for (const key of Object.keys(data)) {
     const incoming = data[key];
     const received = server?.[key];
-    const ref = chunk.fieldChunks.get(key);
-    const field = ref && isParentObjectRef(ref) ? ref.field : undefined;
+    const field = getFieldByDataKey(chunk.selection, key);
+    const existing = chunk.fieldChunks.get(key)?.value;
     if (received !== undefined && received !== null && field?.selection) {
       // A container
-      const existing = ref?.value;
       if (isSourceData(incoming) && isSourceData(received)) {
         const object = resolveReceivedObject(
           state,
@@ -457,13 +457,13 @@ function spliceData(
       received == null &&
       field?.selection &&
       isSourceData(incoming) &&
-      ref?.value !== undefined &&
-      isObjectValue(ref.value) &&
+      existing !== undefined &&
+      isObjectValue(existing) &&
       !(chunk.type && state.hasMergePolicy(chunk.type, field.name)) &&
-      isSameObject(state, ref.value, incoming, field.selection)
+      isSameObject(state, existing, incoming, field.selection)
     ) {
       // First delivery of an object the stored result has already (e.g. written by another operation)
-      spliceData(state, ref.value, [...path, key], incoming, undefined);
+      spliceData(state, existing, [...path, key], incoming, undefined);
     } else {
       target[key] = incoming;
       if (isSourceData(incoming) || Array.isArray(incoming)) {
@@ -978,9 +978,7 @@ function resolveObjectField(
   step: string | AddressFieldStep,
 ): GraphChunk | undefined {
   const key = typeof step === "string" ? step : step.dataKey;
-  const field = chunk.selection.fieldQueue.find(
-    (field) => field.dataKey === key,
-  );
+  const field = getFieldByDataKey(chunk.selection, key);
   // A response key in an address may now alias a different field on a different type.
   return field?.selection &&
     (typeof step === "string" ||

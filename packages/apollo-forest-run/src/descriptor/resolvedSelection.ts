@@ -1,6 +1,7 @@
 import type {
   ArgumentValues,
   ASTReference,
+  DataKey,
   Directives,
   FieldInfo,
   FieldMap,
@@ -39,6 +40,10 @@ const EMPTY_MAP = new Map();
 const selectionOperations = new WeakMap<
   ResolvedSelection,
   OperationDescriptor
+>();
+const fieldsByDataKey = new WeakMap<
+  ResolvedSelection,
+  Map<DataKey, FieldInfo>
 >();
 
 /**
@@ -329,6 +334,24 @@ export function resolveNormalizedField(
   const normalizedField = selection.normalizedFields?.get(field);
   assert(normalizedField);
   return normalizedField;
+}
+
+export function getFieldByDataKey(
+  selection: ResolvedSelection,
+  dataKey: DataKey,
+): FieldInfo | undefined {
+  let fields = fieldsByDataKey.get(selection);
+  if (!fields) {
+    fields = new Map();
+    for (const field of selection.fieldQueue) {
+      // e.g. `name` and `name: name` have the same response key. Match the first active entry.
+      if (!fields.has(field.dataKey)) {
+        fields.set(field.dataKey, field);
+      }
+    }
+    fieldsByDataKey.set(selection, fields);
+  }
+  return fields.get(dataKey);
 }
 
 export function getFieldName(fieldEntry: NormalizedFieldEntry): string {
