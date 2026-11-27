@@ -2901,13 +2901,13 @@ test("does not complete list items with values of items of another list (optimis
   });
 
   // Texts of m1 and m2 are not used for m3 and m4 (items at the same positions of the other list)
-  expect(diff).toMatchObject({
-    complete: false,
-    result: conversation([
+  expect(diff.result).toEqual(
+    conversation([
       { __typename: "Message", id: "m3" },
       { __typename: "Message", id: "m4" },
     ]),
-  });
+  );
+  expect(diff.complete).toBe(false);
 });
 
 test("does not recycle chunks of lower layers over partially matching chunks of covering operations", () => {
@@ -2952,6 +2952,267 @@ test("does not recycle chunks of lower layers over partially matching chunks of 
     c.writeQuery({ query: preloader, data: preloaderData("b") });
   }, "layer2");
   expect(read()).toEqual(conversation("b"));
+});
+
+test("does not complete list items with values of items of another list (written by another operation)", () => {
+  const target = gql`
+    query Target {
+      target {
+        id
+        messages {
+          id
+          text
+        }
+      }
+    }
+  `;
+  const lookup = gql`
+    query Lookup {
+      lookup {
+        id
+        messages {
+          id
+          text
+        }
+      }
+    }
+  `;
+  const targetIds = gql`
+    query TargetIds {
+      target {
+        id
+        messages {
+          id
+        }
+      }
+    }
+  `;
+  const conversation = (id: string, messages: object[]) => ({
+    __typename: "Conversation",
+    id,
+    messages,
+  });
+  const cache = new ForestRun();
+  cache.writeQuery({
+    query: target,
+    data: {
+      target: conversation("A", [
+        { __typename: "Message", id: "m1", text: "t1" },
+      ]),
+    },
+  });
+  cache.writeQuery({
+    query: lookup,
+    data: {
+      lookup: conversation("B", [
+        { __typename: "Message", id: "m2", text: "t2" },
+      ]),
+    },
+  });
+  cache.writeQuery({
+    query: targetIds,
+    data: { target: conversation("B", [{ __typename: "Message", id: "m3" }]) },
+  });
+
+  const diff = cache.diff({
+    query: target,
+    optimistic: false,
+    returnPartialData: true,
+  });
+
+  // The text of m2 is not used for m3 (item at the same position of the list in another chunk of B)
+  expect(diff.result).toEqual({
+    target: conversation("B", [{ __typename: "Message", id: "m3" }]),
+  });
+  expect(diff.complete).toBe(false);
+});
+
+test("does not overwrite list items with nulls of lists of lower layers", () => {
+  const list = gql`
+    query MessageList {
+      conversation {
+        id
+        messages {
+          id
+          text
+        }
+      }
+    }
+  `;
+  const ids = gql`
+    query Ids {
+      conversation {
+        id
+        messages {
+          id
+        }
+      }
+    }
+  `;
+  const conversation = (messages: (object | null)[]) => ({
+    conversation: { __typename: "Conversation", id: "c1", messages },
+  });
+  const cache = new ForestRun();
+  cache.writeQuery({ query: list, data: conversation([null]) });
+  cache.recordOptimisticTransaction((c) => {
+    c.writeQuery({
+      query: ids,
+      data: conversation([{ __typename: "Message", id: "m3" }]),
+    });
+  }, "layer");
+
+  const diff = cache.diff({
+    query: list,
+    optimistic: true,
+    returnPartialData: true,
+  });
+
+  expect(diff.result).toEqual(
+    conversation([{ __typename: "Message", id: "m3" }]),
+  );
+  expect(diff.complete).toBe(false);
+});
+
+test("does not complete list items with values of items of other types at the same positions", () => {
+  const list = gql`
+    query ItemList {
+      conversation {
+        id
+        items {
+          ... on Message {
+            id
+            text
+          }
+          ... on Notice {
+            text
+          }
+          ... on Alert {
+            text
+          }
+        }
+      }
+    }
+  `;
+  const ids = gql`
+    query Ids {
+      conversation {
+        id
+        items {
+          ... on Message {
+            id
+          }
+        }
+      }
+    }
+  `;
+  const conversation = (items: object[]) => ({
+    conversation: { __typename: "Conversation", id: "c1", items },
+  });
+  const noticeTexts: unknown[] = [];
+  const cache = new ForestRun({
+    possibleTypes: { Item: ["Message", "Notice", "Alert"] },
+    typePolicies: {
+      Notice: {
+        fields: {
+          text: {
+            read(existing) {
+              noticeTexts.push(existing);
+              return existing;
+            },
+          },
+        },
+      },
+    },
+  });
+  cache.writeQuery({
+    query: list,
+    data: conversation([
+      { __typename: "Message", id: "m1", text: "t1" },
+      { __typename: "Notice", text: "t2" },
+    ]),
+  });
+  cache.recordOptimisticTransaction((c) => {
+    c.writeQuery({
+      query: ids,
+      data: conversation([{ __typename: "Notice" }, { __typename: "Alert" }]),
+    });
+  }, "layer");
+
+  const diff = cache.diff({
+    query: list,
+    optimistic: true,
+    returnPartialData: true,
+  });
+
+  // Items are not matched with items of other types at the same positions (keyed or embedded)
+  expect(diff.result).toEqual(
+    conversation([{ __typename: "Notice" }, { __typename: "Alert" }]),
+  );
+  expect(diff.complete).toBe(false);
+  expect(noticeTexts).toEqual([undefined]);
+});
+
+test("does not recycle chunks of lower layers when the operation's tree in a layer does not have the node", () => {
+  const chat = gql`
+    query Chat {
+      conversations {
+        id
+        title
+      }
+      featured {
+        id
+        title
+      }
+    }
+  `;
+  const other = gql`
+    query Other {
+      conversation {
+        id
+        title
+        extra
+      }
+    }
+  `;
+  const conversation = (id: string, title: string) => ({
+    __typename: "Conversation",
+    id,
+    title,
+  });
+  const cache = new ForestRun({
+    typePolicies: {
+      Query: {
+        fields: {
+          featured: {
+            read: (_, { toReference }) =>
+              toReference({ __typename: "Conversation", id: "c1" }),
+          },
+        },
+      },
+    },
+  });
+  cache.writeQuery({
+    query: chat,
+    data: { conversations: [conversation("c1", "old")], featured: null },
+  });
+  cache.recordOptimisticTransaction((c) => {
+    c.writeQuery({
+      query: chat,
+      data: { conversations: [conversation("c2", "c2")], featured: null },
+    });
+    c.writeQuery({
+      query: other,
+      data: { conversation: { ...conversation("c1", "new"), extra: "x" } },
+    });
+  }, "layer");
+
+  const diff = cache.diff<{ featured: object }>({
+    query: chat,
+    optimistic: true,
+  });
+
+  // The tree of Chat in the layer has no c1: the chunk of Other has precedence over the chunk of Chat in the data forest
+  expect(diff.result?.featured).toEqual(conversation("c1", "new"));
 });
 
 describe("optimistic reads within transactions", () => {
