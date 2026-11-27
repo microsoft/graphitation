@@ -16,6 +16,7 @@ import { assert } from "../jsutils/assert";
 import { resolveNormalizedField } from "../descriptor/resolvedSelection";
 import { hasFieldEntry } from "../values/resolve";
 import { createOptimisticHistoryEntry } from "../values/history";
+import { getInFlightForests, isInFlightForest } from "./store";
 
 export function invalidateReadResults(
   env: CacheEnv,
@@ -32,7 +33,10 @@ export function invalidateReadResults(
     partialReadResults,
   } = store;
 
-  const layers = [dataForest, ...optimisticLayers];
+  // In-flight layers are isolated: their changes only affect read results of their readers (and vice versa)
+  const layers = isInFlightForest(store, targetForest)
+    ? getInFlightForests(store)
+    : [dataForest, ...optimisticLayers];
   for (const layer of layers) {
     for (const [operation, nodeDiffs] of affectedOperations.entries()) {
       const results = layer.readResults.get(operation);

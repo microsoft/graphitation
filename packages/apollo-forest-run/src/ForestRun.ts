@@ -17,6 +17,7 @@ import type {
   SerializedOperationInfo,
   Store,
   Transaction,
+  ExecutionWriteOptions,
 } from "./cache/types";
 import { ApolloCache } from "@apollo/client";
 import { assert } from "./jsutils/assert";
@@ -41,6 +42,10 @@ import {
   transformDocument,
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
+import {
+  isSubsequentResult,
+  shouldWriteExecutionResult,
+} from "./cache/execution";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -215,6 +220,40 @@ export class ForestRun<
 
     const incoming = result.incoming;
     return incoming.nodes.size ? getRef(incoming.rootNodeKey) : undefined;
+  }
+
+  /**
+   * Writes an execution result: a complete result, or results of incremental delivery (`@defer`).
+   *
+   * Results of an incremental execution are only visible to the operation itself and operations it covers
+   * (`@cache(covers: [...])`) until the execution completes. Then they are written as a single regular result.
+   */
+  public writeExecutionResult(
+    options: ExecutionWriteOptions,
+  ): Reference | undefined {
+    return this.transactionStack.length
+      ? this.runWriteExecutionResult(options)
+      : this.runTransaction({
+          update: () => this.runWriteExecutionResult(options),
+        });
+  }
+
+  private runWriteExecutionResult(
+    options: ExecutionWriteOptions,
+  ): Reference | undefined {
+    const transaction = peek(this.transactionStack);
+    assert(transaction);
+    if (!shouldWriteExecutionResult(this.env, this.store, options)) {
+      // E.g. late results of a superseded execution
+      return undefined;
+    }
+    const result = write(this.env, this.store, transaction, options);
+    transaction.changelog.push(result);
+
+    const incoming = result.incoming;
+    return !isSubsequentResult(options.execution) && incoming.nodes.size
+      ? getRef(incoming.rootNodeKey)
+      : undefined;
   }
 
   private collectAffectedOperationsAndNodes(transaction: Transaction) {
@@ -548,6 +587,7 @@ export class ForestRun<
       nonCacheableOperations:
         parentTransaction?.nonCacheableOperations ??
         (this.env.cleanupNonCacheableOperations ? new Set() : null),
+      rereadOperations: null,
     };
     this.transactionStack.push(activeTransaction);
     let error;
@@ -626,10 +666,15 @@ export class ForestRun<
     //   so this may not only add watches, but also remove them from accumulator (depending on onWatchUpdated callback)
     const accumulator = transaction.watchesToNotify ?? new Set();
     for (const operation of transaction.affectedOperations) {
+      const reread = transaction.rereadOperations?.has(operation);
       for (const watch of this.store.watches.get(operation) ?? EMPTY_ARRAY) {
         const diff = this.diff(watch);
 
-        if (!this.shouldNotifyWatch(watch, diff, onWatchUpdated)) {
+        if (reread && isEqualDiff(watch.lastDiff, diff)) {
+          // The same data as notified already (new objects): keeps identity for later comparisons
+          watch.lastDiff = diff;
+          accumulator.delete(watch);
+        } else if (!this.shouldNotifyWatch(watch, diff, onWatchUpdated)) {
           accumulator.delete(watch);
         } else {
           accumulator.add(watch);
@@ -742,4 +787,15 @@ export class ForestRun<
 
 function peek<T>(stack: T[]): T | undefined {
   return stack[stack.length - 1];
+}
+
+function isEqualDiff(
+  lastDiff: Cache.DiffResult<unknown> | undefined,
+  diff: Cache.DiffResult<unknown>,
+): boolean {
+  return (
+    lastDiff !== undefined &&
+    lastDiff.complete === diff.complete &&
+    equal(lastDiff.result, diff.result)
+  );
 }

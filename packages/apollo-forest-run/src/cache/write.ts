@@ -9,10 +9,13 @@ import type {
   OptimisticLayer,
   Store,
   Transaction,
+  WriteOptionsInternal,
   WriteResult,
 } from "./types";
 import type { NodeKey, OperationDescriptor } from "../descriptor/types";
 import { assert } from "../jsutils/assert";
+import type { ExecutionWrite } from "./execution";
+import { isExecutionWrite, resolveExecutionWrite } from "./execution";
 import {
   resolveResultDescriptor,
   resolveOperationDescriptor,
@@ -23,9 +26,11 @@ import { applyMergePolicies } from "./policies";
 import {
   getActiveForest,
   getEffectiveReadLayers,
+  isInFlightForest,
   touchOperation,
 } from "./store";
 import { diffTree, GraphDifference } from "../diff/diffTree";
+import { createObjectDifference } from "../diff/difference";
 import {
   resolveAffectedOperations,
   updateAffectedTrees,
@@ -38,19 +43,32 @@ import { replaceTree } from "../forest/addTree";
 import { invalidateReadResults } from "./invalidate";
 import { IndexedForest } from "../forest/types";
 
+/**
+ * Writes a result, or an execution result (routed to in-flight layers, see resolveExecutionWrite).
+ */
 export function write(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
-  options: Cache.WriteOptions,
+  options: WriteOptionsInternal,
 ): WriteResult {
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
-  const targetForest = getActiveForest(store, activeTransaction);
 
-  const writeData =
-    typeof options.result === "object" && options.result !== null
-      ? options.result
-      : {};
+  let execution: ExecutionWrite | null = null;
+  let result: Cache.WriteOptions["result"];
+  if (isExecutionWrite(options)) {
+    execution = resolveExecutionWrite(env, store, activeTransaction, options);
+    result = execution.data;
+  } else {
+    result = options.result;
+  }
+  const targetForest =
+    execution?.forest ?? getActiveForest(store, activeTransaction);
+  // The previous result written to the in-flight layer (only the execution wrote to the layer since then):
+  //   objects shared with it (by reference) are unchanged, their chunks are recycled and their nodes are not diffed
+  const previousIncoming = execution?.inFlight?.incoming ?? undefined;
+
+  const writeData = typeof result === "object" && result !== null ? result : {};
   const rootNodeKey = options.dataId ?? objectKey(writeData);
   assert(rootNodeKey !== false);
 
@@ -125,7 +143,7 @@ export function write(
     operationDescriptor,
     operationResult,
     undefined,
-    existingResult,
+    previousIncoming ?? existingResult,
   );
 
   // ApolloCompat: necessary for fragment writes with custom ids
@@ -137,15 +155,29 @@ export function write(
     incomingResult.rootNodeKey = options.dataId;
   }
 
+  // In-flight writes merge with the data forest (as on completion): each result is merged as a whole
+  const mergeForest = isInFlightForest(store, targetForest)
+    ? store.dataForest
+    : targetForest;
+  if (mergeForest !== targetForest) {
+    incomingResult.prev =
+      getExistingResult(env, store, mergeForest, operationDescriptor) ?? null;
+  }
   const modifiedIncomingResult = applyMergePolicies(
     env,
-    getEffectiveReadLayers(store, targetForest, false),
+    getEffectiveReadLayers(store, mergeForest, false),
     mergePolicies,
     incomingResult,
     options.overwrite ?? false,
   );
 
-  const difference = diffTree(targetForest, modifiedIncomingResult, env);
+  const difference = diffTree(
+    targetForest,
+    modifiedIncomingResult,
+    env,
+    previousIncoming &&
+      seedUnchangedNodes(modifiedIncomingResult, previousIncoming),
+  );
 
   if (difference.errors.length) {
     processDiffErrors(targetForest, modifiedIncomingResult, difference);
@@ -207,6 +239,10 @@ export function write(
   incomingResult.prev = null;
   modifiedIncomingResult.prev = null;
 
+  if (execution?.inFlight) {
+    execution.inFlight.incoming = modifiedIncomingResult;
+  }
+
   return {
     options,
     incoming: modifiedIncomingResult,
@@ -224,6 +260,10 @@ function appendAffectedOperationsFromOtherLayers(
   targetForest: DataForest | OptimisticLayer,
   incomingResult: IndexedTree,
 ) {
+  if (isInFlightForest(store, targetForest)) {
+    // In-flight layers are isolated: other layers never read through them
+    return;
+  }
   // Optimistic reads go through all existing layers
   //  And those layers may be affected by incoming results too, so we actually need to diff all other layers too
   //  TODO: just write to all effective layers?
@@ -350,6 +390,22 @@ function resolveExtraRootNodeType(
   }
   return undefined;
 }
+
+function seedUnchangedNodes(
+  model: IndexedTree,
+  previous: IndexedTree,
+): NodeDifferenceMap {
+  const seed: NodeDifferenceMap = new Map();
+  for (const [nodeKey, chunks] of model.nodes) {
+    if (chunks.every((chunk) => previous.dataMap.has(chunk.data))) {
+      seed.set(nodeKey, UNCHANGED);
+    }
+  }
+  return seed;
+}
+
+// Complete: diffing returns it as is (never mutated)
+const UNCHANGED = createObjectDifference();
 
 const inspect = JSON.stringify.bind(JSON);
 const EMPTY_ARRAY = Object.freeze([]);

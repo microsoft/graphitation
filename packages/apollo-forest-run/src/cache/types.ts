@@ -33,6 +33,11 @@ import type { TelemetryEvent } from "../telemetry/types";
 import { ExtendedLogger, Logger } from "../jsutils/logger";
 import { GraphDifference, GraphDiffError } from "../diff/diffTree";
 import { ObjectDifference } from "../diff/types";
+import type {
+  ExecutionKey,
+  ExecutionResult,
+  ResultData,
+} from "../incremental/types";
 
 export type PartitionOptions = {
   maxOperationCount: number;
@@ -109,6 +114,25 @@ export type OptimisticLayer = ExtendedForest & {
   replay: <T>(cache: T) => any; // ApolloCompat
 };
 
+/**
+ * An incremental execution (`@defer`) with pending results.
+ *
+ * Its results are written to an isolated in-flight layer (a data forest of its own) until the execution completes:
+ * only the operation itself and operations it covers (`@cache(covers: [...])`) read through the layer.
+ * Nothing else writes to the layer: other writes go to the data forest and are shadowed for readers of the layer.
+ * On completion, the received data is written to the data forest as a single result.
+ */
+export type InFlightExecution = {
+  operation: OperationDescriptor;
+  key: ExecutionKey | undefined;
+  // Starts with trees of the operation and of covered operations in the data forest (shared, immutable)
+  forest: DataForest;
+  // Data received so far (in the server view)
+  data: ResultData;
+  // The last result written to the layer (shares unchanged objects with the next one, see write)
+  incoming: IndexedTree | null;
+};
+
 export type CacheKey = string;
 
 export type Store = {
@@ -127,6 +151,8 @@ export type Store = {
   partitions: WeakMap<IndexedTree, ResolvedPartition>;
   // Pending scheduled auto-eviction
   pendingEviction: ScheduledEvictionHandle | null;
+  // Keyed by result descriptors (at most one execution of an operation at a time)
+  inFlightExecutions: Map<OperationDescriptor, InFlightExecution>;
 };
 
 export type Transaction = {
@@ -141,10 +167,13 @@ export type Transaction = {
   // Owned by the outermost transaction: nested transactions share the same set by reference
   // and the outermost one releases everything at once when it completes.
   nonCacheableOperations: Set<OperationDescriptor> | null;
+  // Operations reading from another forest now (readers of dropped in-flight layers): results are new objects,
+  //   so their watches are only notified when results are not deeply equal
+  rereadOperations: Set<OperationDescriptor> | null;
 };
 
 export type WriteResult = {
-  options: Cache.WriteOptions;
+  options: WriteOptionsInternal;
   incoming: DataTree;
   affected: Iterable<OperationDescriptor>;
   affectedNodes: Set<NodeKey>; // contains directly updated nodes + parent nodes indirectly affected by nested node update
@@ -344,3 +373,11 @@ export type SerializedCache = Record<
   SerializedOperationKey,
   SerializedOperationInfo
 >;
+
+// Options of ForestRun.writeExecutionResult: the same as of `write`, but with an execution result (instead of `result`)
+export type ExecutionWriteOptions = Omit<Cache.WriteOptions, "result"> & {
+  execution: ExecutionResult;
+};
+
+// Options of the internal `write`: a result, or an execution result (routed to in-flight layers)
+export type WriteOptionsInternal = Cache.WriteOptions | ExecutionWriteOptions;

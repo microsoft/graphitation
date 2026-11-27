@@ -43,6 +43,7 @@ import { Cache, MissingFieldError } from "@apollo/client";
 import {
   getActiveForest,
   getEffectiveReadLayers,
+  getInFlightLayers,
   touchOperation,
 } from "./store";
 import { assert } from "../jsutils/assert";
@@ -67,12 +68,14 @@ export function read<TData>(
     }
   }
 
+  const operationDescriptor = getDiffDescriptor(env, store, options);
   const { outputTree } = readOperation(
     env,
     store,
     activeTransaction,
-    getDiffDescriptor(env, store, options),
+    operationDescriptor,
     options,
+    getInFlightLayers(store, operationDescriptor),
   );
 
   // FIXME: this may break with optimistic layers - partialReadResults should be per layer?
@@ -102,13 +105,19 @@ function readOperation(
   activeTransaction: Transaction | undefined,
   operationDescriptor: OperationDescriptor,
   options: Cache.DiffOptions,
+  inFlightLayers: readonly DataForest[],
 ): TransformedResult {
   const { optimisticLayers, optimisticReadResults } = store;
 
   const optimistic = activeTransaction?.forceOptimistic ?? options.optimistic;
 
   // Normally, this is a data forest, but when executed within transaction - could be one of the optimistic layers
-  const forest = getActiveForest(store, activeTransaction);
+  //   (or an in-flight layer, which keeps read results of its readers instead of the data forest)
+  const activeForest = getActiveForest(store, activeTransaction);
+  const forest =
+    activeForest === store.dataForest && inFlightLayers.length
+      ? inFlightLayers[0]
+      : activeForest;
   touchOperation(env, store, operationDescriptor);
 
   const resultsMap =
@@ -125,6 +134,7 @@ function readOperation(
       forest,
       operationDescriptor,
       optimistic,
+      inFlightLayers,
       readState,
     );
     normalizeRootLevelTypeName(readState.outputTree);
@@ -198,6 +208,7 @@ function readFragment(
       activeTransaction,
       tree.operation,
       options,
+      EMPTY_ARRAY, // Fragment reads never go through in-flight layers
     );
     const nodeChunks = outputTree.nodes.get(id);
     if (!nodeChunks?.length) {
@@ -253,23 +264,39 @@ function growOutputTree(
   forest: DataForest | OptimisticLayer,
   operation: OperationDescriptor,
   optimistic: boolean,
+  inFlightLayers: readonly DataForest[],
   previous?: TransformedResult,
 ): TransformedResult {
+  const dataLayers = getEffectiveReadLayers(
+    store,
+    forest,
+    false,
+    inFlightLayers,
+  );
   let dataTree: IndexedTree | undefined = forest.trees.get(operation.id);
-  for (const layer of getEffectiveReadLayers(store, forest, false)) {
+  for (const layer of dataLayers) {
+    if (inFlightLayers.length && layer === store.dataForest) {
+      // Readers of in-flight layers have trees there (a tree in the data forest only is shadowed by the layers)
+      break;
+    }
     dataTree = layer.trees.get(operation.id);
     if (dataTree) {
       break;
     }
   }
   if (!dataTree) {
-    dataTree = growDataTree(env, forest, operation);
+    // Trees of in-flight readers borrow data of all lower layers (e.g. cache-first reads of covered operations)
+    dataTree = growDataTree(
+      env,
+      inFlightLayers.length ? dataLayers : [forest],
+      operation,
+    );
     addTree(env, forest, dataTree);
   }
   const tree = applyTransformations(
     env,
     dataTree,
-    getEffectiveReadLayers(store, forest, optimistic),
+    getEffectiveReadLayers(store, forest, optimistic, inFlightLayers),
     previous,
   );
   indexReadPolicies(env, tree);
@@ -295,7 +322,7 @@ function growOutputTree(
 
 function growDataTree(
   env: CacheEnv,
-  forest: DataForest | OptimisticLayer,
+  layers: (DataForest | OptimisticLayer)[],
   operationDescriptor: OperationDescriptor,
 ): DataTree {
   const { possibleSelections, rootNodeKey, rootType } = operationDescriptor;
@@ -309,8 +336,8 @@ function growDataTree(
   hydrateDraft(
     env,
     rootDraft,
-    createChunkProvider([forest]),
-    createChunkMatcher([forest]),
+    createChunkProvider(layers),
+    createChunkMatcher(layers),
   );
 
   // ApolloCompat: mostly added for tests
@@ -346,7 +373,9 @@ function applyTransformations(
   previous?: TransformedResult,
 ): IndexedTree {
   // This effectively disables recycling when optimistic layers are present, which is suboptimal.
-  const hasOptimisticLayers = dataLayers.length > 1;
+  //   Note: optimistic layers go first (in-flight layers are data forests of their readers, like the data forest)
+  const hasOptimisticLayers =
+    dataLayers.length > 1 && dataLayers[0].layerTag !== null;
   const operation = inputTree.operation;
 
   // TODO: inputTree.incompleteChunks must be updated on write, then we can remove size check
@@ -472,8 +501,12 @@ function resolveAffectedOptimisticNodes(
   }
   const result: DirtyNodeMap = new Map();
 
-  for (let i = 0; i < dataLayers.length - 1; i++) {
-    // Note: last layer is the data layer
+  for (
+    let i = 0;
+    i < dataLayers.length - 1 && dataLayers[i].layerTag !== null;
+    i++
+  ) {
+    // Note: optimistic layers only (lower layers are the data forest and in-flight layers)
     const optimisticLayer = dataLayers[i];
     const nodeKeys =
       inputTree.nodes.size < optimisticLayer.operationsByNodes.size
