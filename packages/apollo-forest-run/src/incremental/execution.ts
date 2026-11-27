@@ -47,7 +47,6 @@ import { getExistingResult, shouldCache } from "../cache/store";
 import {
   copySourcesUpToRoot,
   createParentLocator,
-  findClosestNode,
   getDataPath,
   isCompositeListValue,
   isNodeValue,
@@ -275,7 +274,7 @@ function spliceIncrementalResults(
     }
     // Another object at the response path (e.g. a link replaced by another write) didn't receive data.
     //   Note: positional (e.g. lists may have changed), only marks missing fields (a refetch at worst, never a write)
-    const local = resolveResponsePath(root, path);
+    const local = resolveObjectPath(root, path);
     if (local && local !== chunk && !(local.key && local.key === chunk?.key)) {
       state.skipped.push({ chunk: local, data });
     }
@@ -349,19 +348,13 @@ function mergeNestedResults(
 // Resolves the object in the current stored result
 function resolveAddress(
   tree: IndexedTree,
-  {
-    nodeKey,
-    nodeSelections,
-    pathFromNode,
-    fieldsFromNode,
-    type,
-  }: ObjectAddress,
+  { nodeKey, nodeSelections, pathFromNode, type }: ObjectAddress,
 ): ObjectChunk | undefined {
   // Any chunk of the node with the same selection (the same node at multiple locations has the same data)
   for (const node of tree.nodes.get(nodeKey) ?? EMPTY_ARRAY) {
     const chunk =
       node.possibleSelections === nodeSelections
-        ? resolveResponsePath(node, pathFromNode, fieldsFromNode)
+        ? resolveObjectPath(node, pathFromNode)
         : undefined;
     // Values deleted in place by cache.modify stay in `tree.nodes` (and `tree.dataMap`)
     if (chunk && isReachable(tree.dataMap, chunk)) {
@@ -875,7 +868,7 @@ function captureDeliveredPlaceholders(
   // Objects results were delivered to (by chunks: unlike sources, chunks are unique per location)
   const targets = new Map<ObjectChunk, SplicedIncrementalResultEntry[]>();
   for (const result of results) {
-    const chunk = resolveResponsePath(root, result.localPath);
+    const chunk = resolveObjectPath(root, result.localPath);
     if (chunk) {
       accumulate(targets, chunk, result);
     }
@@ -936,62 +929,40 @@ function createAddress(
   findParent: ParentLocator,
   chunk: ObjectChunk,
 ): ObjectAddress {
-  const node = findClosestNode(chunk, findParent);
+  const pathFromNode: (AddressFieldStep | number)[] = [];
+  let node: ObjectChunk | CompositeListChunk = chunk;
+  while (!isNodeValue(node)) {
+    const ref = findParent(node);
+    assert(!isRootRef(ref));
+    pathFromNode.push(
+      isParentObjectRef(ref)
+        ? {
+            parentType: ref.parent.type,
+            dataKey: ref.field.dataKey,
+            fieldName: ref.field.name,
+          }
+        : ref.index,
+    );
+    node = ref.parent;
+  }
   return {
     nodeKey: node.key,
     nodeSelections: node.possibleSelections,
-    pathFromNode: getDataPath({ findParent }, chunk, node),
-    fieldsFromNode: getFieldsFromNode(findParent, chunk, node),
+    pathFromNode: pathFromNode.reverse(),
     type: chunk.type,
   };
 }
 
-function getFieldsFromNode(
-  findParent: ParentLocator,
+function resolveObjectPath(
   chunk: ObjectChunk,
-  node: ObjectChunk,
-): AddressFieldStep[] {
-  const fields: AddressFieldStep[] = [];
-  let value: ObjectChunk | CompositeListChunk = chunk;
-  while (value !== node) {
-    const ref = findParent(value);
-    if (isRootRef(ref)) {
-      break;
-    }
-    if (isParentObjectRef(ref)) {
-      fields.push({ parentType: ref.parent.type, fieldName: ref.field.name });
-    }
-    value = ref.parent;
-  }
-  return fields.reverse();
-}
-
-/**
- * Resolves an object by response keys and list indexes (e.g. paths of incremental results).
- * With `fields`, object steps must be the same fields of the same types (e.g. not an alias of another field).
- */
-function resolveResponsePath(
-  chunk: ObjectChunk,
-  path: ResponsePath,
-  fields?: AddressFieldStep[],
+  path: ResponsePath | ObjectAddress["pathFromNode"],
 ): ObjectChunk | undefined {
   let value: GraphChunk | undefined = chunk;
-  let fieldIndex = 0;
   for (const step of path) {
     if (typeof step === "number") {
       value = resolveListItem(value, step);
     } else if (isObjectValue(value)) {
-      const field = value.selection.fieldQueue.find(
-        (field) => field.dataKey === step,
-      );
-      const expected = fields?.[fieldIndex++];
-      value =
-        field &&
-        (!expected ||
-          (field.name === expected.fieldName &&
-            isOfType(value, expected.parentType)))
-          ? resolveObjectField(value, field)
-          : undefined;
+      value = resolveObjectField(value, step);
     } else {
       value = undefined;
     }
@@ -1004,10 +975,17 @@ function resolveResponsePath(
 
 function resolveObjectField(
   chunk: ObjectChunk,
-  field: FieldInfo,
+  step: string | AddressFieldStep,
 ): GraphChunk | undefined {
-  return field.selection &&
-    chunk.data[field.dataKey] !== undefined &&
+  const key = typeof step === "string" ? step : step.dataKey;
+  const field = chunk.selection.fieldQueue.find(
+    (field) => field.dataKey === key,
+  );
+  // A response key in an address may now alias a different field on a different type.
+  return field?.selection &&
+    (typeof step === "string" ||
+      (field.name === step.fieldName && isOfType(chunk, step.parentType))) &&
+    chunk.data[key] !== undefined &&
     !chunk.missingFields?.has(field)
     ? resolveFieldChunk(chunk, field)
     : undefined;

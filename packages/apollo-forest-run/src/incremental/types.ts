@@ -120,16 +120,14 @@ export type IncrementalExecution = {
 export type ObjectAddress = {
   nodeKey: NodeKey;
   nodeSelections: PossibleSelections;
-  // Response keys and list indexes from the node to the object
-  pathFromNode: ResponsePath;
-  // Fields of object steps of the path (response keys may be aliases of other fields of other types)
-  fieldsFromNode: AddressFieldStep[];
+  pathFromNode: ReadonlyArray<AddressFieldStep | number>;
   // Type of the object (an object of another type at the address is another object)
   type: TypeName | false;
 };
 
 export type AddressFieldStep = {
   parentType: TypeName | false;
+  dataKey: DataKey;
   fieldName: FieldName;
 };
 
