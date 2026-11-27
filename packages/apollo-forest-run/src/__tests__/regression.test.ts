@@ -1,6 +1,7 @@
 import { gql } from "../__tests__/helpers/descriptor";
 // The test helper does not support interpolation, so fragments-by-template need the real tag.
 import { gql as gqlWithInterpolation } from "@apollo/client";
+import type { Cache } from "@apollo/client";
 import { ForestRun } from "../ForestRun";
 
 test.each([undefined, false, true])(
@@ -2906,5 +2907,96 @@ test("does not complete list items with values of items of another list (optimis
       { __typename: "Message", id: "m3" },
       { __typename: "Message", id: "m4" },
     ]),
+  });
+});
+
+describe("optimistic reads within transactions", () => {
+  const query = gql`
+    query Messages {
+      messages {
+        id
+        text
+        name
+      }
+    }
+  `;
+  const names = gql`
+    query Names {
+      messages {
+        id
+        name
+      }
+    }
+  `;
+  const message = (id: string, fields: object = {}) => ({
+    __typename: "Message",
+    id,
+    text: `text ${id}`,
+    ...fields,
+  });
+  const read = (cache: ForestRun) =>
+    view(cache.diff({ query, optimistic: true, returnPartialData: true }));
+  const view = ({ complete, result }: Cache.DiffResult<unknown>) => ({
+    complete,
+    result,
+  });
+
+  test("are the same as optimistic reads after an optimistic transaction", () => {
+    const run = (watched: boolean) => {
+      const cache = new ForestRun();
+      const callback = jest.fn();
+      if (watched) {
+        cache.watch({ query, optimistic: true, callback });
+      }
+      cache.recordOptimisticTransaction(() => {
+        // Without "name"
+        cache.writeQuery({ query, data: { messages: [message("1")] } });
+      }, "layer");
+      return { cache, callback };
+    };
+    const expected = read(run(false).cache);
+    const { cache, callback } = run(true);
+
+    expect(expected).toMatchObject({
+      complete: true,
+      result: { messages: [message("1")] },
+    });
+    expect(view(callback.mock.calls[0][0])).toEqual(expected);
+    expect(read(cache)).toEqual(expected);
+  });
+
+  test("are the same as optimistic reads after a non-optimistic transaction", () => {
+    const run = (watched: boolean) => {
+      const cache = new ForestRun();
+      cache.writeQuery({ query, data: { messages: [message("1")] } });
+      cache.recordOptimisticTransaction(() => {
+        cache.writeQuery({
+          query: names,
+          data: { messages: [{ __typename: "Message", id: "1", name: "a" }] },
+        });
+      }, "layer");
+      const callback = jest.fn();
+      if (watched) {
+        cache.watch({ query, optimistic: true, callback });
+      }
+      cache.batch({
+        optimistic: false,
+        update: () =>
+          cache.writeQuery({
+            query,
+            data: { messages: [message("1", { text: "new", name: "b" })] },
+          }),
+      });
+      return { cache, callback };
+    };
+    const expected = read(run(false).cache);
+    const { cache, callback } = run(true);
+
+    expect(expected).toMatchObject({
+      complete: true,
+      result: { messages: [message("1", { text: "new", name: "a" })] },
+    });
+    expect(view(callback.mock.calls[0][0])).toEqual(expected);
+    expect(read(cache)).toEqual(expected);
   });
 });

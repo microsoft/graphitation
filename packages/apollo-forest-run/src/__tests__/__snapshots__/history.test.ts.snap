@@ -274,6 +274,61 @@ exports[`enableRichHistory: false should capture optimistic array changes in his
           "Todo:4",
         ],
       },
+    ],
+    "totalEntries": 1,
+  },
+  {
+    "history": [
+      {
+        "changes": [
+          {
+            "currentLength": 3,
+            "itemChanges": [
+              {
+                "data": undefined,
+                "index": 0,
+                "kind": 0,
+              },
+              {
+                "data": undefined,
+                "index": 1,
+                "kind": 2,
+                "oldIndex": 0,
+              },
+              {
+                "data": undefined,
+                "index": 2,
+                "kind": 0,
+              },
+              {
+                "data": undefined,
+                "kind": 1,
+                "oldIndex": 1,
+              },
+            ],
+            "kind": 3,
+            "path": [
+              "User:1",
+              "todos",
+            ],
+            "previousLength": 2,
+          },
+        ],
+        "data": undefined,
+        "kind": "Optimistic",
+        "modifyingOperation": {
+          "name": "query GetTodoHistory",
+          "variables": {},
+        },
+        "timestamp": 1577836800000,
+        "updatedNodes": [
+          "ROOT_QUERY",
+          "User:1",
+          "Todo:3",
+          "Todo:1",
+          "Todo:4",
+        ],
+      },
       {
         "changes": [
           {
@@ -325,6 +380,52 @@ exports[`enableRichHistory: false should capture optimistic array changes in his
 
 exports[`enableRichHistory: false should capture optimistic array changes in history entries 2`] = `
 [
+  [
+    {
+      "changes": [
+        {
+          "currentLength": 3,
+          "itemChanges": [
+            {
+              "index": 0,
+              "kind": 0,
+            },
+            {
+              "index": 1,
+              "kind": 2,
+              "oldIndex": 0,
+            },
+            {
+              "index": 2,
+              "kind": 0,
+            },
+            {
+              "kind": 1,
+              "oldIndex": 1,
+            },
+          ],
+          "kind": 3,
+          "path": [
+            "User:(redacted-id-0)",
+            "todos",
+          ],
+          "previousLength": 2,
+        },
+      ],
+      "kind": "Optimistic",
+      "modifyingOperation": {
+        "name": "query GetTodoHistory",
+      },
+      "timestamp": 1577836800000,
+      "updatedNodes": [
+        "ROOT_QUERY",
+        "User:(redacted-id-0)",
+        "Todo:(redacted-id-1)",
+        "Todo:(redacted-id-2)",
+        "Todo:(redacted-id-3)",
+      ],
+    },
+  ],
   [
     {
       "changes": [
@@ -439,6 +540,35 @@ exports[`enableRichHistory: false should capture optimistic updates in history e
           "User:1",
         ],
       },
+    ],
+    "totalEntries": 1,
+  },
+  {
+    "history": [
+      {
+        "changes": [
+          {
+            "kind": 0,
+            "newValue": "Alice (optimistic)",
+            "oldValue": "Alice",
+            "path": [
+              "User:1",
+              "name",
+            ],
+          },
+        ],
+        "data": undefined,
+        "kind": "Optimistic",
+        "modifyingOperation": {
+          "name": "query GetUserHistory",
+          "variables": {},
+        },
+        "timestamp": 1577836800000,
+        "updatedNodes": [
+          "ROOT_QUERY",
+          "User:1",
+        ],
+      },
       {
         "changes": [
           {
@@ -468,6 +598,28 @@ exports[`enableRichHistory: false should capture optimistic updates in history e
 
 exports[`enableRichHistory: false should capture optimistic updates in history entries 2`] = `
 [
+  [
+    {
+      "changes": [
+        {
+          "kind": 0,
+          "path": [
+            "User:(redacted-id-0)",
+            "name",
+          ],
+        },
+      ],
+      "kind": "Optimistic",
+      "modifyingOperation": {
+        "name": "query GetUserHistory",
+      },
+      "timestamp": 1577836800000,
+      "updatedNodes": [
+        "ROOT_QUERY",
+        "User:(redacted-id-0)",
+      ],
+    },
+  ],
   [
     {
       "changes": [
@@ -1035,6 +1187,108 @@ exports[`enableRichHistory: true should capture optimistic array changes in hist
           "Todo:4",
         ],
       },
+    ],
+    "totalEntries": 1,
+  },
+  {
+    "history": [
+      {
+        "changes": [
+          {
+            "currentLength": 3,
+            "itemChanges": [
+              {
+                "data": undefined,
+                "index": 0,
+                "kind": 0,
+              },
+              {
+                "data": undefined,
+                "index": 1,
+                "kind": 2,
+                "oldIndex": 0,
+              },
+              {
+                "data": undefined,
+                "index": 2,
+                "kind": 0,
+              },
+              {
+                "data": undefined,
+                "kind": 1,
+                "oldIndex": 1,
+              },
+            ],
+            "kind": 3,
+            "path": [
+              "User:1",
+              "todos",
+            ],
+            "previousLength": 2,
+          },
+        ],
+        "data": {
+          "current": {
+            "data": {
+              "user": {
+                "__typename": "User",
+                "id": "1",
+                "todos": [
+                  {
+                    "__typename": "Todo",
+                    "id": "1",
+                    "text": "Write tests",
+                  },
+                  {
+                    "__typename": "Todo",
+                    "id": "2",
+                    "text": "Fix bug",
+                  },
+                ],
+              },
+            },
+          },
+          "incoming": {
+            "data": {
+              "user": {
+                "__typename": "User",
+                "id": "1",
+                "todos": [
+                  {
+                    "__typename": "Todo",
+                    "id": "3",
+                    "text": "New task",
+                  },
+                  {
+                    "__typename": "Todo",
+                    "id": "1",
+                    "text": "Write tests",
+                  },
+                  {
+                    "__typename": "Todo",
+                    "id": "4",
+                    "text": "Another new task",
+                  },
+                ],
+              },
+            },
+          },
+          "updated": undefined,
+        },
+        "kind": "Optimistic",
+        "modifyingOperation": {
+          "name": "query GetTodoHistory",
+          "variables": {},
+        },
+        "timestamp": 1577836800000,
+        "updatedNodes": [
+          "ROOT_QUERY",
+          "User:1",
+          "Todo:3",
+          "Todo:1",
+          "Todo:4",
+        ],
+      },
       {
         "changes": [
           {
@@ -1219,6 +1473,52 @@ exports[`enableRichHistory: true should capture optimistic array changes in hist
         "Todo:(redacted-id-3)",
       ],
     },
+  ],
+  [
+    {
+      "changes": [
+        {
+          "currentLength": 3,
+          "itemChanges": [
+            {
+              "index": 0,
+              "kind": 0,
+            },
+            {
+              "index": 1,
+              "kind": 2,
+              "oldIndex": 0,
+            },
+            {
+              "index": 2,
+              "kind": 0,
+            },
+            {
+              "kind": 1,
+              "oldIndex": 1,
+            },
+          ],
+          "kind": 3,
+          "path": [
+            "User:(redacted-id-0)",
+            "todos",
+          ],
+          "previousLength": 2,
+        },
+      ],
+      "kind": "Optimistic",
+      "modifyingOperation": {
+        "name": "query GetTodoHistory",
+      },
+      "timestamp": 1577836800000,
+      "updatedNodes": [
+        "ROOT_QUERY",
+        "User:(redacted-id-0)",
+        "Todo:(redacted-id-1)",
+        "Todo:(redacted-id-2)",
+        "Todo:(redacted-id-3)",
+      ],
+    },
     {
       "changes": [
         {
@@ -1263,6 +1563,55 @@ exports[`enableRichHistory: true should capture optimistic array changes in hist
 
 exports[`enableRichHistory: true should capture optimistic updates in history entries 1`] = `
 [
+  {
+    "history": [
+      {
+        "changes": [
+          {
+            "kind": 0,
+            "newValue": "Alice (optimistic)",
+            "oldValue": "Alice",
+            "path": [
+              "User:1",
+              "name",
+            ],
+          },
+        ],
+        "data": {
+          "current": {
+            "data": {
+              "user": {
+                "__typename": "User",
+                "id": "1",
+                "name": "Alice",
+              },
+            },
+          },
+          "incoming": {
+            "data": {
+              "user": {
+                "__typename": "User",
+                "id": "1",
+                "name": "Alice (optimistic)",
+              },
+            },
+          },
+          "updated": undefined,
+        },
+        "kind": "Optimistic",
+        "modifyingOperation": {
+          "name": "query GetUserHistory",
+          "variables": {},
+        },
+        "timestamp": 1577836800000,
+        "updatedNodes": [
+          "ROOT_QUERY",
+          "User:1",
+        ],
+      },
+    ],
+    "totalEntries": 1,
+  },
   {
     "history": [
       {
@@ -1366,6 +1715,28 @@ exports[`enableRichHistory: true should capture optimistic updates in history en
 
 exports[`enableRichHistory: true should capture optimistic updates in history entries 2`] = `
 [
+  [
+    {
+      "changes": [
+        {
+          "kind": 0,
+          "path": [
+            "User:(redacted-id-0)",
+            "name",
+          ],
+        },
+      ],
+      "kind": "Optimistic",
+      "modifyingOperation": {
+        "name": "query GetUserHistory",
+      },
+      "timestamp": 1577836800000,
+      "updatedNodes": [
+        "ROOT_QUERY",
+        "User:(redacted-id-0)",
+      ],
+    },
+  ],
   [
     {
       "changes": [

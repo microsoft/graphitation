@@ -106,15 +106,18 @@ function readOperation(
   const { optimisticLayers, optimisticReadResults } = store;
 
   const optimistic = activeTransaction?.forceOptimistic ?? options.optimistic;
+  const readsAllLayers = optimistic && optimisticLayers.length > 0;
 
-  // Normally, this is a data forest, but when executed within transaction - could be one of the optimistic layers
-  const forest = getActiveForest(store, activeTransaction);
+  // Normally, this is a data forest, but when executed within transaction - could be one of the optimistic layers.
+  // Reads of all layers share results, also within transactions: they must be computed the same way (not in the layer)
+  const forest = readsAllLayers
+    ? store.dataForest
+    : getActiveForest(store, activeTransaction);
   touchOperation(env, store, operationDescriptor);
 
-  const resultsMap =
-    options.optimistic && optimisticLayers.length
-      ? optimisticReadResults
-      : forest.readResults;
+  const resultsMap = readsAllLayers
+    ? optimisticReadResults
+    : forest.readResults;
 
   let readState = resultsMap.get(operationDescriptor);
 
