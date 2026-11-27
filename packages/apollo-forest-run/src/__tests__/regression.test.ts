@@ -2908,3 +2908,47 @@ test("does not complete list items with values of items of another list (optimis
     ]),
   });
 });
+
+test("does not recycle chunks of lower layers over partially matching chunks of covering operations", () => {
+  const chat = gql`
+    query Chat {
+      conversation {
+        id
+        title
+      }
+    }
+  `;
+  const preloader = gql`
+    query Preloader @cache(covers: ["Chat"]) {
+      viewer {
+        id
+      }
+      conversation {
+        id
+        title
+      }
+    }
+  `;
+  const conversation = (title: string) => ({
+    conversation: { __typename: "Conversation", id: "c1", title },
+  });
+  const preloaderData = (title: string) => ({
+    viewer: { __typename: "User", id: "u1" },
+    ...conversation(title),
+  });
+  const cache = new ForestRun();
+  cache.writeQuery({ query: chat, data: conversation("old") });
+  const read = () => cache.diff({ query: chat, optimistic: true }).result;
+
+  cache.recordOptimisticTransaction((c) => {
+    c.writeQuery({ query: preloader, data: preloaderData("a") });
+  }, "layer1");
+  expect(read()).toEqual(conversation("a"));
+
+  // Only the conversation is invalidated: the root chunk of Preloader in the new layer has another selection
+  //   (viewer), but still has precedence over the root chunk of Chat in the data forest
+  cache.recordOptimisticTransaction((c) => {
+    c.writeQuery({ query: preloader, data: preloaderData("b") });
+  }, "layer2");
+  expect(read()).toEqual(conversation("b"));
+});
