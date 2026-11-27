@@ -208,7 +208,6 @@ export function canReleaseOperationDescriptor(
   }
   if (
     store.watches.has(operation) ||
-    store.executions.has(operation) ||
     store.optimisticReadResults.has(operation) ||
     store.partialReadResults.has(operation)
   ) {
