@@ -35,6 +35,27 @@ of GraphQL client.
 
 # Architecture
 
+## Deferred results
+
+`writeExecutionResult` accepts complete results and path-addressed `@defer` payloads
+(2022-09-17 draft). A complete result is an ordinary write. While an execution
+has more payloads, only watches of that operation (same document, variables and
+root) see its preview. Ordinary reads, fragment reads, `extract` and other
+watches still see committed data.
+
+Forest Run assembles patches in the server's original response order, even if
+a field policy reorders a list in the preview. Each preview applies policies
+against the current committed base, never against a previous preview. Merge
+functions can therefore run more than once and should be free of side effects.
+
+`hasNext: false` applies any last patches, then writes the assembled **server
+data** once, just like a delayed query arriving after other writes. To finish
+early, send `{ hasNext: false }` with the same operation, variables, root and
+execution `key` (if used). Fields that never arrived remain missing unless the
+normal cache read can satisfy them. There is no automatic timeout. A new
+execution supersedes the old one; use distinct keys to discard late payloads.
+Streamed list items and the newer ID-based incremental format are not supported.
+
 ## Overview
 
 Unlike normalized caches where data is stored in a single flat object and then propagated to "local live queries"

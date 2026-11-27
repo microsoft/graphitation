@@ -183,8 +183,6 @@ export function applyMergePolicies(
   mergePoliciesMap: Map<TypeName, Map<FieldName, FieldMergeFunction>>,
   incomingTree: IndexedTree,
   overwrite: boolean,
-  // Restricts merge policies to some fields
-  applyToField?: (parent: ObjectChunk, field: FieldInfo) => boolean,
 ): IndexedTree {
   const findChunkInfo = (value: ApolloStoreValue | SourceObject) => {
     if (typeof value !== "object" || value === null) {
@@ -247,9 +245,6 @@ export function applyMergePolicies(
       ): ValueDifference | undefined {
         if (isMissingValue(fieldValue)) {
           return undefined;
-        }
-        if (applyToField && !applyToField(parent, field)) {
-          return fieldDiff;
         }
         let existingChunk: GraphChunk | undefined;
         if (!overwrite) {

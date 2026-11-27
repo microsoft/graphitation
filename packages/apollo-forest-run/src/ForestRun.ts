@@ -22,7 +22,7 @@ import type {
 import { ApolloCache } from "@apollo/client";
 import { assert } from "./jsutils/assert";
 import { accumulate, deleteAccumulated } from "./jsutils/map";
-import { read } from "./cache/read";
+import { diffResult, read } from "./cache/read";
 import { getNodeChunks } from "./cache/draftHelpers";
 import { modify } from "./cache/modify";
 import {
@@ -38,15 +38,13 @@ import {
 } from "./cache/store";
 import {
   getDiffDescriptor,
+  getWatchDescriptor,
+  resolveResultDescriptor,
   isFragmentDocument,
   transformDocument,
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
-import {
-  isInitialExecutionWrite,
-  isSubsequentResult,
-  spliceSubsequentResult,
-} from "./incremental/execution";
+import { writeExecution } from "./incremental/execution";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -215,7 +213,7 @@ export class ForestRun<
 
   /**
    * Writes an execution result: a complete result, or results of incremental delivery (`@defer`).
-   * Complete and initial results are written as with `write`, subsequent results are spliced into the stored result.
+   * Pending data is private to watches of this operation until a terminal result commits it.
    */
   public writeExecutionResult(
     options: ExecutionWriteOptions,
@@ -242,34 +240,8 @@ export class ForestRun<
   ): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
-    // Execution results are written to the base forest only (never optimistic)
-    assert(!transaction.optimisticLayer && !transaction.forceOptimistic);
-    if (!isInitialExecutionWrite(options)) {
-      const { execution } = options;
-      assert(isSubsequentResult(execution));
-      // Written as a regular result of the operation, with incremental results spliced in
-      const spliced = spliceSubsequentResult(
-        this.env,
-        this.store,
-        transaction,
-        options,
-        execution,
-      );
-      if (spliced) {
-        transaction.changelog.push(
-          write(this.env, this.store, transaction, {
-            ...options,
-            execution: spliced,
-          }),
-        );
-      }
-      return undefined;
-    }
-    const result = write(this.env, this.store, transaction, options);
-    transaction.changelog.push(result);
-
-    const incoming = result.incoming;
-    return incoming.nodes.size ? getRef(incoming.rootNodeKey) : undefined;
+    const key = writeExecution(this.env, this.store, transaction, options);
+    return key === undefined ? undefined : getRef(key);
   }
 
   private collectAffectedOperationsAndNodes(transaction: Transaction) {
@@ -332,7 +304,7 @@ export class ForestRun<
     const errors = new Map<Cache.WatchOptions, Error>();
     for (const watch of watchesToNotify) {
       try {
-        const newDiff = this.diff(watch);
+        const newDiff = this.diffWatch(watch);
         // ApolloCompat: expected by QueryManager (and looks like only for watches???) :/
         if (fromOptimisticTransaction && watch.optimistic) {
           newDiff.fromOptimisticTransaction = true;
@@ -363,6 +335,12 @@ export class ForestRun<
     const lastDiff = watch.lastDiff;
     watch.lastDiff = diff;
     watch.callback(diff, lastDiff);
+  }
+
+  private diffWatch(watch: Cache.WatchOptions): Cache.DiffResult<any> {
+    const operation = getWatchDescriptor(this.env, this.store, watch);
+    const preview = this.store.incrementalExecutions.get(operation)?.preview;
+    return preview ? diffResult(preview) : this.diff(watch);
   }
 
   public read<T>(options: Cache.ReadOptions): T | null {
@@ -410,7 +388,7 @@ export class ForestRun<
     const operationDescriptor = getDiffDescriptor(this.env, this.store, watch);
 
     if (watch.immediate /* && !this.transactionStack.length */) {
-      const diff = this.diff(watch);
+      const diff = this.diffWatch(watch);
       if (this.shouldNotifyWatch(watch, diff)) {
         this.notifyWatch(watch, diff);
       }
@@ -674,32 +652,44 @@ export class ForestRun<
     transaction: Transaction,
     onWatchUpdated?: Cache.BatchOptions<any>["onWatchUpdated"],
   ): Set<Cache.WatchOptions> | null {
-    if (!transaction.affectedOperations?.size) {
+    if (
+      !transaction.affectedOperations?.size &&
+      !transaction.previewOperations?.size
+    ) {
       return transaction.watchesToNotify ?? null;
     }
     // Note: activeTransaction.watchesToNotify may already contain watches delegated by completed nested transactions
     //   so this may not only add watches, but also remove them from accumulator (depending on onWatchUpdated callback)
     const accumulator = transaction.watchesToNotify ?? new Set();
-    for (const operation of transaction.affectedOperations) {
+    const consider = (
+      watch: Cache.WatchOptions,
+      diff: Cache.DiffResult<unknown>,
+    ) => {
+      if (this.shouldNotifyWatch(watch, diff, onWatchUpdated)) {
+        accumulator.add(watch);
+      } else {
+        accumulator.delete(watch);
+      }
+    };
+    for (const operation of transaction.previewOperations ?? EMPTY_ARRAY) {
+      const group = resolveResultDescriptor(this.env, this.store, operation);
+      if (transaction.affectedOperations?.has(group)) continue;
+      for (const watch of this.store.watches.get(group) ?? EMPTY_ARRAY) {
+        if (getWatchDescriptor(this.env, this.store, watch) !== operation)
+          continue;
+        this.newWatches.delete(watch);
+        consider(watch, this.diffWatch(watch));
+      }
+    }
+    for (const operation of transaction.affectedOperations ?? EMPTY_ARRAY) {
       for (const watch of this.store.watches.get(operation) ?? EMPTY_ARRAY) {
-        const diff = this.diff(watch);
-
-        if (!this.shouldNotifyWatch(watch, diff, onWatchUpdated)) {
-          accumulator.delete(watch);
-        } else {
-          accumulator.add(watch);
-        }
+        consider(watch, this.diffWatch(watch));
       }
     }
     for (const nodeKey of transaction.affectedNodes ?? EMPTY_ARRAY) {
       const fragmentWatches = this.store.fragmentWatches.get(nodeKey);
       for (const watch of fragmentWatches ?? EMPTY_ARRAY) {
-        const diff = this.diff(watch);
-        if (!this.shouldNotifyWatch(watch, diff, onWatchUpdated)) {
-          accumulator.delete(watch);
-        } else {
-          accumulator.add(watch);
-        }
+        consider(watch, this.diff(watch));
       }
     }
     return accumulator;

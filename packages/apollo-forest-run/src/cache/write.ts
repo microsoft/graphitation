@@ -8,14 +8,9 @@ import type {
   OptimisticLayer,
   Store,
   Transaction,
-  WriteOptionsInternal,
   WriteResult,
 } from "./types";
 import type { NodeKey, OperationDescriptor } from "../descriptor/types";
-import type {
-  InitialExecutionResult,
-  SplicedIncrementalResult,
-} from "../incremental/types";
 import { assert } from "../jsutils/assert";
 import {
   resolveOperationDescriptor,
@@ -38,13 +33,6 @@ import {
 import { indexTree } from "../forest/indexTree";
 import { createParentLocator, markAsPartial, TraverseEnv } from "../values";
 import { NodeDifferenceMap } from "../forest/updateTree";
-import {
-  captureIncrementalExecution,
-  addMissingBaseFields,
-  createDeliveredFieldFilter,
-  isSplicedIncrementalResult,
-  seedDifferences,
-} from "../incremental/execution";
 import { getNodeChunks } from "./draftHelpers";
 import { replaceTree } from "../forest/addTree";
 import { invalidateReadResults } from "./invalidate";
@@ -53,23 +41,13 @@ export function write(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
-  options: WriteOptionsInternal,
+  options: Cache.WriteOptions,
+  checkMissingFields = false,
 ): WriteResult {
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
   const targetForest = getActiveForest(store, activeTransaction);
 
-  // An initial result of incremental delivery is written as a regular (partial) result,
-  //   subsequent results are spliced into the stored result first (see spliceSubsequentResult)
-  let execution: InitialExecutionResult | SplicedIncrementalResult | undefined;
-  let result: Cache.WriteOptions["result"];
-  if (isExecutionWrite(options)) {
-    execution = options.execution;
-    result = execution.data;
-  } else {
-    result = options.result;
-  }
-  const splicedResult =
-    execution && isSplicedIncrementalResult(execution) ? execution : undefined;
+  const { result } = options;
   const writeData = typeof result === "object" && result !== null ? result : {};
   const rootNodeKey = options.dataId ?? objectKey(writeData);
   assert(rootNodeKey !== false);
@@ -113,15 +91,6 @@ export function write(
   assert(!existingResult?.prev);
 
   if (writeData === existingData && existingResult) {
-    // E.g. a new execution (or a complete result) with data of the stored result
-    captureIncrementalExecution(
-      store,
-      targetForest,
-      operationDescriptor,
-      execution,
-      existingResult,
-      existingResult,
-    );
     return {
       options,
       incoming: existingResult,
@@ -153,22 +122,12 @@ export function write(
     env,
     operationDescriptor,
     operationResult,
-    splicedResult?.missingFields,
-    existingResult ?? splicedResult?.incremental.transientTree,
+    undefined,
+    existingResult,
+    checkMissingFields,
   );
-  if (splicedResult && !existingResult) {
-    // A transient tree is only a source of recycled chunks (existing values are resolved from the forest)
-    incomingResult.prev = null;
-  }
 
-  // ApolloCompat: necessary for fragment writes with custom ids
-  if (options.dataId && incomingResult.rootNodeKey !== options.dataId) {
-    const rootNode = incomingResult.nodes.get(incomingResult.rootNodeKey);
-    assert(rootNode);
-    incomingResult.nodes.set(options.dataId, rootNode);
-    incomingResult.nodes.delete(incomingResult.rootNodeKey);
-    incomingResult.rootNodeKey = options.dataId;
-  }
+  setExplicitRootId(incomingResult, options.dataId);
 
   const modifiedIncomingResult = applyMergePolicies(
     env,
@@ -176,28 +135,9 @@ export function write(
     mergePolicies,
     incomingResult,
     options.overwrite ?? false,
-    splicedResult && createDeliveredFieldFilter(splicedResult),
   );
 
-  captureIncrementalExecution(
-    store,
-    targetForest,
-    operationDescriptor,
-    execution,
-    incomingResult,
-    modifiedIncomingResult,
-  );
-
-  const difference = diffTree(
-    targetForest,
-    modifiedIncomingResult,
-    env,
-    splicedResult && seedDifferences(incomingResult, splicedResult),
-  );
-
-  if (splicedResult && splicedResult.tree === existingResult) {
-    addMissingBaseFields(difference, splicedResult);
-  }
+  const difference = diffTree(targetForest, modifiedIncomingResult, env);
   if (difference.errors.length) {
     processDiffErrors(targetForest, modifiedIncomingResult, difference);
   }
@@ -353,7 +293,18 @@ function aggregateAllAffectedNodes(
   return accumulator;
 }
 
-function resolveExtraRootNodeType(
+// ApolloCompat: necessary for fragment writes with custom ids
+export function setExplicitRootId(tree: IndexedTree, dataId?: string) {
+  if (dataId && tree.rootNodeKey !== dataId) {
+    const rootNode = tree.nodes.get(tree.rootNodeKey);
+    assert(rootNode);
+    tree.nodes.set(dataId, rootNode);
+    tree.nodes.delete(tree.rootNodeKey);
+    tree.rootNodeKey = dataId;
+  }
+}
+
+export function resolveExtraRootNodeType(
   env: CacheEnv,
   store: Store,
   operationDescriptor: OperationDescriptor,
@@ -379,13 +330,6 @@ function resolveExtraRootNodeType(
     return chunk.type;
   }
   return undefined;
-}
-
-function isExecutionWrite(
-  options: WriteOptionsInternal,
-): options is Exclude<WriteOptionsInternal, Cache.WriteOptions> {
-  // An explicit nullish `execution` (e.g. untyped options of `write`) is a regular write of `result`
-  return "execution" in options && options.execution != null;
 }
 
 const inspect = JSON.stringify.bind(JSON);

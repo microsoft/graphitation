@@ -22,8 +22,8 @@ import { operationCacheKey, resolveResultDescriptor } from "./descriptor";
 const EMPTY_ARRAY = Object.freeze([]);
 const DEFAULT_PARTITION: DefaultPartition = "__default__";
 
-export function createStore(_: CacheEnv): Store {
-  const dataForest: DataForest = {
+export function createDataForest(): DataForest {
+  return {
     trees: new Map(),
     operationsByNodes: new Map<NodeKey, Set<OperationId>>(),
     operationsByName: new Map(),
@@ -37,7 +37,9 @@ export function createStore(_: CacheEnv): Store {
     operationsWithDanglingRefs: new Map(),
     deletedNodes: new Set(),
   };
+}
 
+export function createStore(_: CacheEnv): Store {
   const optimisticReadResults = new Map<
     OperationDescriptor,
     TransformedResult
@@ -47,7 +49,7 @@ export function createStore(_: CacheEnv): Store {
   const optimisticLayers: OptimisticLayer[] = [];
   const store: Store = {
     operations: new Map(),
-    dataForest,
+    dataForest: createDataForest(),
     optimisticLayers,
     optimisticReadResults,
     partialReadResults,

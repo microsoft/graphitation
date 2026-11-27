@@ -5,7 +5,7 @@ import {
   MissingBaseFieldsError,
   MissingModelFieldsError,
   NodeDifferenceMap,
-  ObjectDifference,
+  ObjectDiffState,
 } from "./types";
 import { isComplete, isDirty } from "./difference";
 import { createObjectAggregate } from "../values/create";
@@ -52,37 +52,20 @@ EMPTY_SET.add = () => {
   throw new Error("Immutable Empty Set");
 };
 
-type NodeDiffState = {
-  difference: ObjectDifference | undefined;
-  errors: DiffError[];
-};
-
 // Re-using state object for multiple nodes
-const nodeDiffState: NodeDiffState = {
+const nodeDiffState = {
   difference: undefined,
   errors: [],
 };
 
-/**
- * `seed` (optional): initial differences of nodes, restricting diffing to queued fields (see ObjectDifference.fieldQueue),
- *   e.g. when only some fields of the model may differ from the current state. Consumed by diffing.
- */
 export function diffTree(
   forest: IndexedForest,
   model: IndexedTree,
   env: DiffEnv,
-  seed?: NodeDifferenceMap,
 ): GraphDifference {
   const context: Context = { env, forest: forest };
   const currentTreeState = forest.trees.get(model.operation.id);
-  return diffNodesImpl(
-    context,
-    forest,
-    model.nodes,
-    env,
-    currentTreeState,
-    seed,
-  );
+  return diffNodesImpl(context, forest, model.nodes, env, currentTreeState);
 }
 
 export function diffNodes(
@@ -100,7 +83,6 @@ function diffNodesImpl(
   nodes: NodeMap,
   env: DiffEnv,
   currentTreeState?: IndexedTree,
-  seed?: NodeDifferenceMap,
 ): GraphDifference {
   const newNodes: NodeKey[] = [];
   const nodeDifference: NodeDifferenceMap = new Map();
@@ -116,9 +98,6 @@ function diffNodesImpl(
         : createObjectAggregate(nodeChunks);
 
     assert(modelNode.key);
-    if (seed) {
-      nodeDiffState.difference = seed.get(modelNode.key);
-    }
 
     if (currentTreeState?.nodes.has(modelNode.key)) {
       const difference = diffTreeNode(
@@ -192,7 +171,7 @@ function diffTreeNode(
   baseTree: IndexedTree,
   modelNode: ObjectValue,
   nodeDifferenceMap: NodeDifferenceMap,
-  nodeDiffState: NodeDiffState,
+  nodeDiffState: ObjectDiffState,
 ) {
   if (nodeDiffState.difference && isComplete(nodeDiffState.difference)) {
     return nodeDiffState.difference;

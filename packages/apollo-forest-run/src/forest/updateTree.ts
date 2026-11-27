@@ -3,15 +3,19 @@ import type {
   PossibleSelections,
 } from "../descriptor/types";
 import type {
+  NestedList,
   ObjectChunk,
   ObjectValue,
   NodeKey,
   NodeChunk,
+  CompositeValueChunk,
   CompositeListChunk,
   ObjectDraft,
+  SourceObject,
 } from "../values/types";
 import type { NodeDifferenceMap } from "../diff/types";
 import type {
+  Draft,
   ForestEnv,
   IndexedTree,
   UpdateTreeContext,
@@ -21,13 +25,13 @@ import { assert } from "../jsutils/assert";
 import { indexTree } from "./indexTree";
 import { isDirty } from "../diff/difference";
 import {
-  copySourcesUpToRoot,
   createDraft,
   createParentLocator,
   getDataPath,
   hydrateDraft,
   isNodeValue,
   isObjectValue,
+  isParentObjectRef,
   isRootRef,
   isSourceObject,
   resolveObjectKey,
@@ -35,6 +39,8 @@ import {
 } from "../values";
 import { updateObject } from "./updateObject";
 import { createUpdateLogger } from "../telemetry/updateStats/updateLogger";
+
+type ComplexValue = SourceObject | NestedList<SourceObject>;
 
 export { NodeDifferenceMap }; // FIXME
 
@@ -280,30 +286,60 @@ function completeObject(
 function createSourceCopiesUpToRoot(
   context: UpdateTreeContext,
   tree: IndexedTree,
-  from: ObjectChunk,
-) {
+  from: CompositeValueChunk,
+  isRootCall = true,
+  isIndirectlyAffected = false,
+): ComplexValue {
   const { drafts, affectedNodes, statsLogger } = context;
-  copySourcesUpToRoot(
-    tree.dataMap,
-    drafts,
-    from,
-    (chunk, parentRef, _, existingDraft, isFrom) => {
-      // Only report copies made while traversing up the tree.
-      // The initial (non-root) call includes fields copied by updateValue,
-      // which are unrelated to the upward copy process.
-      if (!isFrom || !parentRef || isRootRef(parentRef)) {
-        statsLogger?.copyParentChunkStats(chunk, existingDraft);
-      }
-    },
-    (chunk, isFrom) => {
-      if (!isFrom && isNodeValue(chunk)) {
-        // Affected nodes include:
-        // 1. Nodes with difference that were modified (some nodes with normalized difference won't be actually affected by the update due to not having)
-        // 2. Parent nodes affected by the change in nested nodes
-        affectedNodes.add(chunk.key);
-      }
-    },
+  const parent = from.data ? tree.dataMap.get(from.data) : null;
+
+  if (isIndirectlyAffected && isNodeValue(from)) {
+    // Affected nodes include:
+    // 1. Nodes with difference that were modified (some nodes with normalized difference won't be actually affected by the update due to not having)
+    // 2. Parent nodes affected by the change in nested nodes
+    affectedNodes.add(from.key);
+  }
+
+  if (!parent || isRootRef(parent)) {
+    assert(isObjectValue(from));
+    const data = from.data;
+    let draft = drafts.get(data);
+    statsLogger?.copyParentChunkStats(from, draft);
+    if (!draft) {
+      draft = { ...data };
+      drafts.set(data, draft);
+    }
+    return data;
+  }
+  const parentSource = createSourceCopiesUpToRoot(
+    context,
+    tree,
+    parent.parent,
+    false,
+    true,
   );
+  const parentDraft = drafts.get(parentSource);
+  assert(parentDraft);
+
+  const dataKey = isParentObjectRef(parent)
+    ? parent.field.dataKey
+    : parent.index;
+  const value = (parentSource as any)[dataKey];
+
+  let draft = drafts.get(value);
+
+  // Only report copies made while traversing up the tree.
+  // The initial (root) call includes fields copied by updateValue,
+  // which are unrelated to the upward copy process.
+  if (!isRootCall) {
+    statsLogger?.copyParentChunkStats(from, draft);
+  }
+  if (!draft) {
+    draft = (Array.isArray(value) ? [...value] : { ...value }) as Draft;
+    drafts.set(value, draft);
+  }
+  (parentDraft as any)[dataKey] = draft;
+  return value;
 }
 
 function apolloBackwardsCompatibility_saveOrphanNodes(

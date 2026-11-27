@@ -1,140 +1,97 @@
-import type { ResponsePath } from "../descriptor/types";
+import type {
+  OperationDescriptor,
+  PossibleSelections,
+  ResponsePath,
+} from "../descriptor/types";
 import type { SourceObject } from "../values/types";
-import { assert } from "../jsutils/assert";
+import type { SubsequentIncrementalExecutionResult } from "./types";
+import { resolveSelection } from "../descriptor/resolvedSelection";
 
-// JSON helpers for results of incremental delivery (copy-on-write)
-
-// Copy-on-write merge of data at the path (undefined when the path is not in the value)
-export function mergeAt(
-  value: unknown,
-  path: ResponsePath,
-  index: number,
+// Parents may introduce a defer site targeted by another entry in the same payload.
+export function assemble(
+  operation: OperationDescriptor,
   data: SourceObject,
-): unknown {
-  if (index === path.length) {
-    return isSourceData(value) ? mergeSourceData(value, data) : undefined;
-  }
-  const step = path[index];
-  if (Array.isArray(value) && typeof step === "number") {
-    const item = mergeAt(value[step], path, index + 1, data);
-    if (item === undefined) {
-      return undefined;
-    }
-    const copy: unknown[] = [...value];
-    copy[step] = item;
-    return copy;
-  }
-  if (isSourceData(value) && typeof step === "string") {
-    const item = mergeAt(value[step], path, index + 1, data);
-    return item === undefined ? undefined : { ...value, [step]: item };
-  }
-  return undefined;
-}
-
-/**
- * Deep merge of objects (copy-on-write). Lists are merged item by item: results of the same execution
- * (the server view) have the same lists at the same paths.
- */
-export function mergeSourceData(
-  target: SourceObject,
-  source: SourceObject,
+  payload: SubsequentIncrementalExecutionResult,
 ): SourceObject {
-  const result: SourceObject = { ...target };
-  for (const key of Object.keys(source)) {
-    result[key] = mergeValues(result[key], source[key]) as SourceObject;
+  const patches = (payload.incremental ?? []).flatMap((entry) =>
+    "data" in entry && isObject(entry.data) && entry.path
+      ? [{ path: entry.path, data: entry.data }]
+      : [],
+  );
+  for (const patch of patches.sort((a, b) => a.path.length - b.path.length)) {
+    const merged = mergeAt(
+      data,
+      operation.possibleSelections,
+      patch.path,
+      0,
+      patch.data,
+    );
+    if (isObject(merged)) data = merged;
   }
-  return result;
+  return data;
+
+  function mergeAt(
+    value: unknown,
+    selections: PossibleSelections,
+    path: ResponsePath,
+    index: number,
+    incoming: SourceObject,
+  ): unknown {
+    const step = path[index];
+    if (Array.isArray(value) && typeof step === "number") {
+      const child = mergeAt(value[step], selections, path, index + 1, incoming);
+      if (child === undefined) return undefined;
+      const copy = [...value];
+      copy[step] = child;
+      return copy;
+    }
+    if (!isObject(value)) return undefined;
+    const selection = resolveSelection(
+      operation,
+      selections,
+      value.__typename ?? (index === 0 ? operation.rootType : null),
+    );
+    if (index === path.length) {
+      return selection.deferredFragments
+        ? mergeValues(value, incoming)
+        : undefined;
+    }
+    const field = selection.fieldQueue.find((field) => field.dataKey === step);
+    if (!field?.selection) return undefined;
+    const child = mergeAt(
+      value[step],
+      field.selection,
+      path,
+      index + 1,
+      incoming,
+    );
+    return child === undefined ? undefined : { ...value, [step]: child };
+  }
 }
 
+// Overlapping fragments describe the same server lists, regardless of local order.
 function mergeValues(existing: unknown, incoming: unknown): unknown {
-  if (isSourceData(existing) && isSourceData(incoming)) {
-    return mergeSourceData(existing, incoming);
+  if (isObject(existing) && isObject(incoming)) {
+    return {
+      ...existing,
+      ...Object.fromEntries(
+        Object.entries(incoming).map(([key, value]) => [
+          key,
+          mergeValues(existing[key], value),
+        ]),
+      ),
+    };
   }
   if (Array.isArray(existing) && Array.isArray(incoming)) {
-    const length = Math.max(existing.length, incoming.length);
-    const result: unknown[] = new Array(length);
-    for (let index = 0; index < length; index++) {
-      result[index] =
-        incoming[index] === undefined
-          ? existing[index]
-          : mergeValues(existing[index], incoming[index]);
-    }
+    const result = [...existing];
+    incoming.forEach((value, i) => {
+      result[i] = mergeValues(existing[i], value);
+    });
     return result;
   }
   return incoming;
 }
 
-export function isPathPrefix(
-  prefix: ResponsePath,
-  path: ResponsePath,
-): boolean {
-  return (
-    prefix.length <= path.length &&
-    prefix.every((step, index) => path[index] === step)
-  );
-}
-
-// Unlike isSourceObject, excludes lists
-export function isSourceData(value: unknown): value is SourceObject {
+function isObject(value: unknown): value is SourceObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-export function getDataAt(
-  data: SourceObject,
-  path: ResponsePath,
-  index = 0,
-): SourceObject | undefined {
-  let value: unknown = data;
-  for (let i = index; i < path.length && value !== undefined; i++) {
-    const step = path[i];
-    value =
-      Array.isArray(value) && typeof step === "number"
-        ? value[step]
-        : isSourceData(value) && typeof step === "string"
-        ? value[step]
-        : undefined;
-  }
-  return isSourceData(value) ? value : undefined;
-}
-
-/**
- * Merges data received from the server at the path (copy-on-write, see mergeSourceData),
- * creating missing objects and lists on the path (sparse).
- */
-export function mergeServerData(
-  value: unknown,
-  path: ResponsePath,
-  data: SourceObject,
-  index = 0,
-): SourceObject {
-  const result = mergeServerDataAt(value, path, data, index);
-  assert(isSourceData(result));
-  return result;
-}
-
-function mergeServerDataAt(
-  value: unknown,
-  path: ResponsePath,
-  data: SourceObject,
-  index: number,
-): unknown {
-  if (index === path.length) {
-    return isSourceData(value) ? mergeSourceData(value, data) : data;
-  }
-  const step = path[index];
-  if (typeof step === "number") {
-    const copy: unknown[] = Array.isArray(value) ? [...value] : [];
-    copy[step] = mergeServerDataAt(copy[step], path, data, index + 1);
-    return copy;
-  }
-  const object: SourceObject = isSourceData(value)
-    ? { ...value }
-    : ({} as SourceObject);
-  object[step] = mergeServerDataAt(
-    object[step],
-    path,
-    data,
-    index + 1,
-  ) as SourceObject;
-  return object;
 }

@@ -34,23 +34,18 @@ describe("writeExecutionResult", () => {
     expect(diff).toMatchObject({ complete: true, result: completeData });
   });
 
-  it("writes an initial result like a regular result with missing deferred fields", () => {
+  it("returns the root reference for an initial result without writing to the forest", () => {
     const cache = new ForestRun();
-    const legacyCache = new ForestRun();
-    cache.writeExecutionResult({
+    const ref = cache.writeExecutionResult({
       query,
       execution: {
         data: initialData,
         hasNext: true,
       },
     });
-    legacyCache.write({ query, result: initialData });
-
-    const diff = cache.diff({ query, optimistic: false });
-    const legacyDiff = legacyCache.diff({ query, optimistic: false });
-
-    expect(diff.result).toEqual(initialData);
-    expect(diff).toEqual(legacyDiff);
+    expect(ref).toEqual({ __ref: "ROOT_QUERY" });
+    expect(cache.extract()).toEqual({});
+    expect(cache.readQuery({ query })).toBeNull();
   });
 
   it("returns the root reference like write", () => {

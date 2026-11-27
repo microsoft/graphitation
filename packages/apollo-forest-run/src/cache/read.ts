@@ -78,6 +78,16 @@ export function read<TData>(
   // FIXME: this may break with optimistic layers - partialReadResults should be per layer?
   if (outputTree.incompleteChunks.size) {
     store.partialReadResults.add(outputTree.operation);
+  } else {
+    store.partialReadResults.delete(outputTree.operation);
+  }
+  return diffResult<TData>(outputTree);
+}
+
+export function diffResult<TData>(
+  outputTree: IndexedTree,
+): Cache.DiffResult<TData> & { dangling?: Set<string> } {
+  if (outputTree.incompleteChunks.size) {
     let missing: MissingFieldError[] | undefined;
     return {
       result: outputTree.result.data as TData,
@@ -88,7 +98,6 @@ export function read<TData>(
       dangling: outputTree.danglingReferences,
     };
   }
-  store.partialReadResults.delete(outputTree.operation);
 
   return {
     result: outputTree.result.data as TData,
@@ -233,7 +242,7 @@ function hasMatchingFragment(
   return true;
 }
 
-function normalizeRootLevelTypeName(tree: IndexedTree) {
+export function normalizeRootLevelTypeName(tree: IndexedTree) {
   // Root-level __typename field may become out of sync due to difference in manual writes/optimistic results and network results
   //   so forcing consistent state matching operation selection set:
   const rootNode = tree.nodes.get(tree.rootNodeKey)?.[0];
