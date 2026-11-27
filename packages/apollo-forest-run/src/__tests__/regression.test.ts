@@ -2900,13 +2900,13 @@ test("does not complete list items with values of items of another list (optimis
   });
 
   // Texts of m1 and m2 are not used for m3 and m4 (items at the same positions of the other list)
-  expect(diff).toMatchObject({
-    complete: false,
-    result: conversation([
+  expect(diff.result).toEqual(
+    conversation([
       { __typename: "Message", id: "m3" },
       { __typename: "Message", id: "m4" },
     ]),
-  });
+  );
+  expect(diff.complete).toBe(false);
 });
 
 test("does not recycle chunks of lower layers over partially matching chunks of covering operations", () => {
