@@ -569,6 +569,68 @@ describe("covered operations (@cache(covers))", () => {
   });
 });
 
+describe("merge policies of in-flight writes", () => {
+  const query = gql`
+    query {
+      viewer {
+        id
+        tags
+        ... @defer(label: "a") {
+          name
+        }
+        ... @defer(label: "b") {
+          bio
+        }
+      }
+    }
+  `;
+  const user = { __typename: "User", id: "u" };
+
+  it.each([
+    [[], ["x"]],
+    [["a"], ["a", "x"]],
+  ])(
+    "merge with the data forest (existing: %j) on each result and on completion",
+    (existing, expected) => {
+      const merge = jest.fn((prev: string[] = [], incoming: string[]) => [
+        ...prev,
+        ...incoming,
+      ]);
+      const cache = new ForestRun({
+        typePolicies: { User: { fields: { tags: { merge } } } },
+      });
+      if (existing.length) {
+        cache.writeQuery({
+          query,
+          data: { viewer: { ...user, tags: existing } },
+        });
+        merge.mockClear();
+      }
+      const tags = () =>
+        (read(cache, query).result as { viewer: { tags: string[] } }).viewer
+          .tags;
+      const execution = execute(cache, query);
+      execution.initial({ viewer: { ...user, tags: ["x"] } });
+      expect(tags()).toEqual(expected);
+
+      execution.subsequent([
+        { path: ["viewer"], label: "a", data: { name: "n" } },
+      ]);
+      expect(tags()).toEqual(expected);
+      execution.subsequent([
+        { path: ["viewer"], label: "b", data: { bio: "b" } },
+      ]);
+      expect(tags()).toEqual(expected);
+
+      execution.complete();
+      expect(tags()).toEqual(expected);
+      for (const [prev] of merge.mock.calls) {
+        expect(prev ?? []).toEqual(existing);
+      }
+    },
+  );
+});
+
 describe("timeout and cancellation", () => {
   it("writes received results on timeout (synthetic hasNext: false)", () => {
     const cache = new TestCache();

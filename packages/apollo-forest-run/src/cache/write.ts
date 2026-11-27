@@ -149,9 +149,17 @@ export function write(
     incomingResult.rootNodeKey = options.dataId;
   }
 
+  // In-flight writes merge with the data forest (as on completion): each result is merged as a whole
+  const mergeForest = isInFlightForest(store, targetForest)
+    ? store.dataForest
+    : targetForest;
+  if (mergeForest !== targetForest) {
+    incomingResult.prev =
+      getExistingResult(env, store, mergeForest, operationDescriptor) ?? null;
+  }
   const modifiedIncomingResult = applyMergePolicies(
     env,
-    getEffectiveReadLayers(store, targetForest, false),
+    getEffectiveReadLayers(store, mergeForest, false),
     mergePolicies,
     incomingResult,
     options.overwrite ?? false,
