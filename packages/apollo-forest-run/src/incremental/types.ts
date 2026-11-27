@@ -1,4 +1,4 @@
-import type { IndexedTree } from "../forest/types";
+import type { DataForest } from "../cache/types";
 import type {
   DeferLabel,
   FormattedError,
@@ -56,5 +56,6 @@ export type IncrementalExecution = {
   key: ExecutionKey | undefined;
   serverData: SourceObject;
   overwrite: boolean | undefined;
-  preview: IndexedTree;
+  // Merged server data, before each watch applies its own selection and read policies.
+  forest: DataForest;
 };

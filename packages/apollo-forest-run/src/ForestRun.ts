@@ -45,6 +45,7 @@ import {
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
 import { writeExecution } from "./incremental/execution";
+import { projectWatch } from "./incremental/preview";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -116,6 +117,7 @@ export class ForestRun<
   };
 
   protected invalidatedDiffs = new WeakSet<Cache.DiffResult<any>>();
+  private previewWatches = new WeakSet<Cache.WatchOptions>();
   protected extractedObjects = new WeakMap<any, SerializedOperationInfo>();
 
   public constructor(public config?: CacheConfig<TPartitions>) {
@@ -213,7 +215,7 @@ export class ForestRun<
 
   /**
    * Writes an execution result: a complete result, or results of incremental delivery (`@defer`).
-   * Pending data is private to watches of this operation until a terminal result commits it.
+   * Pending data is private to watches of this operation and its @cache(covers) consumers until completion.
    */
   public writeExecutionResult(
     options: ExecutionWriteOptions,
@@ -338,9 +340,37 @@ export class ForestRun<
   }
 
   private diffWatch(watch: Cache.WatchOptions): Cache.DiffResult<any> {
+    const preview = this.previewWatch(watch);
+    if (preview) return preview;
+    this.previewWatches.delete(watch);
+    return this.diff(watch);
+  }
+
+  private previewWatch(
+    watch: Cache.WatchOptions,
+    onlyIfChangedFromBase = false,
+  ): Cache.DiffResult<unknown> | undefined {
     const operation = getWatchDescriptor(this.env, this.store, watch);
-    const preview = this.store.incrementalExecutions.get(operation)?.preview;
-    return preview ? diffResult(preview) : this.diff(watch);
+    const projected = projectWatch(
+      this.env,
+      this.store,
+      operation,
+      peek(this.transactionStack),
+      watch.optimistic,
+      onlyIfChangedFromBase,
+    );
+    if (!projected) return;
+    this.previewWatches.add(watch);
+    const diff = diffResult(projected);
+    // Different chunks/streams can change without changing this consumer's projection.
+    if (
+      watch.lastDiff &&
+      watch.lastDiff.complete === diff.complete &&
+      equal(watch.lastDiff.result, diff.result)
+    ) {
+      diff.result = watch.lastDiff.result;
+    }
+    return diff;
   }
 
   public read<T>(options: Cache.ReadOptions): T | null {
@@ -671,7 +701,10 @@ export class ForestRun<
         accumulator.delete(watch);
       }
     };
+    let coveredNames: Set<string> | undefined;
     for (const operation of transaction.previewOperations ?? EMPTY_ARRAY) {
+      for (const name of operation.covers)
+        (coveredNames ??= new Set()).add(name);
       const group = resolveResultDescriptor(this.env, this.store, operation);
       if (transaction.affectedOperations?.has(group)) continue;
       for (const watch of this.store.watches.get(group) ?? EMPTY_ARRAY) {
@@ -679,6 +712,28 @@ export class ForestRun<
           continue;
         this.newWatches.delete(watch);
         consider(watch, this.diffWatch(watch));
+      }
+    }
+    if (coveredNames) {
+      for (const [group, watches] of this.store.watches) {
+        if (
+          !group.name ||
+          !coveredNames.has(group.name) ||
+          transaction.affectedOperations?.has(group)
+        )
+          continue;
+        for (const watch of watches) {
+          if (
+            transaction.previewOperations?.has(
+              getWatchDescriptor(this.env, this.store, watch),
+            )
+          )
+            continue;
+          const preview = this.previewWatch(watch, !watch.lastDiff);
+          if (!preview && !this.previewWatches.delete(watch)) continue;
+          this.newWatches.delete(watch);
+          consider(watch, preview ?? this.diff(watch));
+        }
       }
     }
     for (const operation of transaction.affectedOperations ?? EMPTY_ARRAY) {

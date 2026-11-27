@@ -272,7 +272,7 @@ function growOutputTree(
     }
   }
   if (!dataTree) {
-    dataTree = growDataTree(env, forest, operation);
+    dataTree = growDataTree(env, [forest], operation);
     addTree(env, forest, dataTree);
   }
   const tree = applyTransformations(
@@ -302,10 +302,11 @@ function growOutputTree(
   return { outputTree: tree, dirtyNodes: new Map() };
 }
 
-function growDataTree(
+export function growDataTree(
   env: CacheEnv,
-  forest: DataForest | OptimisticLayer,
+  layers: (DataForest | OptimisticLayer)[],
   operationDescriptor: OperationDescriptor,
+  preserveLinks = false,
 ): DataTree {
   const { possibleSelections, rootNodeKey, rootType } = operationDescriptor;
 
@@ -316,10 +317,11 @@ function growDataTree(
     rootType,
   );
   hydrateDraft(
-    env,
+    preserveLinks ? { keyMap: env.keyMap, preserveLinks } : env,
     rootDraft,
-    createChunkProvider([forest]),
-    createChunkMatcher([forest]),
+    createChunkProvider(layers),
+    // A wholesale match from a lower layer might bypass a changed field or link.
+    preserveLinks ? undefined : createChunkMatcher(layers),
   );
 
   // ApolloCompat: mostly added for tests

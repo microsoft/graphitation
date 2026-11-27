@@ -58,7 +58,7 @@ export function createStore(_: CacheEnv): Store {
     atime: new Map(),
     partitions: new WeakMap(),
     pendingEviction: null,
-    incrementalExecutions: new WeakMap(),
+    incrementalExecutions: new Map(),
   };
   return store;
 }
@@ -465,6 +465,7 @@ function removeDataTree(
     optimisticReadResults,
     partialReadResults,
     operations,
+    incrementalExecutions,
     watches,
     atime,
   }: Store,
@@ -482,7 +483,10 @@ function removeDataTree(
   dataForest.operationsByPartitions.get(partition)?.delete(operation.id);
   optimisticReadResults.delete(operation);
   partialReadResults.delete(operation);
-  operations.get(operation.document)?.delete(operationCacheKey(operation));
+  // The execution still needs the same descriptor for subsequent payloads, even without a base tree.
+  if (!incrementalExecutions.has(operation)) {
+    operations.get(operation.document)?.delete(operationCacheKey(operation));
+  }
   atime.delete(operation.id);
   // Notes:
   // - Not deleting from optimistic layers because they are meant to be short-lived anyway
@@ -504,7 +508,7 @@ export function resetStore(store: Store): void {
   operations.clear();
   optimisticReadResults.clear();
   optimisticLayers.length = 0;
-  store.incrementalExecutions = new WeakMap();
+  store.incrementalExecutions.clear();
 }
 
 const getRootNode = (result: IndexedTree): NodeChunk | undefined =>

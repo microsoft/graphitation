@@ -5,8 +5,7 @@ import type {
   Transaction,
 } from "../cache/types";
 import { resolveOperationDescriptor, ROOT_NODES } from "../cache/descriptor";
-import { applyMergePolicies, applyReadPolicies } from "../cache/policies";
-import { normalizeRootLevelTypeName } from "../cache/read";
+import { applyMergePolicies } from "../cache/policies";
 import { createDataForest, getExistingResult } from "../cache/store";
 import {
   resolveExtraRootNodeType,
@@ -89,25 +88,15 @@ export function writeExecution(
         overwrite ?? false,
       );
       merged.prev = tree.prev = null;
-      let output = merged;
-      if (env.readPolicies.size) {
-        const layer = createDataForest();
-        layer.trees.set(operation.id, merged);
-        trackTreeNodes(layer, merged);
-        output = applyReadPolicies(
-          env,
-          [layer, store.dataForest],
-          env.readPolicies,
-          merged,
-        );
-      }
-      output.prev = null;
-      normalizeRootLevelTypeName(output);
+      const forest = createDataForest();
+      forest.trees.set(operation.id, merged);
+      trackTreeNodes(forest, merged);
+      if (initial) executions.delete(operation); // Most recently started execution takes precedence.
       executions.set(operation, {
         key: execution.key,
         serverData: data,
         overwrite,
-        preview: output,
+        forest,
       });
       if (options.broadcast !== false) {
         (transaction.previewOperations ??= new Set()).add(operation);

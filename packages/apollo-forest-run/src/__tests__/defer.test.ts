@@ -97,6 +97,277 @@ const friend = (id: string, bio?: string) => ({
 });
 
 describe("@defer: subsequent results", () => {
+  const preloader = gql`
+    query Preload($user: ID!, $consumers: [String!]!, $request: String)
+    @cache(covers: $consumers) {
+      record: user(id: $user) {
+        id
+        text
+        ... @defer {
+          name
+        }
+        ... @defer {
+          bio
+        }
+      }
+    }
+  `;
+  const summary = gql`
+    query Summary($id: ID!, $withName: Boolean!) {
+      card: user(id: $id) {
+        title: name @include(if: $withName)
+        text
+      }
+    }
+  `;
+  const details = gql`
+    query Details($id: ID!) {
+      user(id: $id) {
+        bio
+      }
+    }
+  `;
+  const cover = (
+    cache: ForestRun,
+    id: string,
+    request: string,
+    key = request,
+  ) =>
+    execute(cache, preloader, {
+      key,
+      variables: { user: id, consumers: ["Summary", "Details"], request },
+    });
+
+  it("uses warm fields on the same entity for exact and covered watches, never as server input", () => {
+    const bioMerge = jest.fn((_existing, incoming) => incoming);
+    const cache = new ForestRun({
+      typePolicies: { User: { fields: { bio: { merge: bioMerge } } } },
+    });
+    const owner = gql`
+      query Owner @cache(covers: ["Panel"]) {
+        viewer {
+          id
+          ... @defer {
+            bio
+          }
+        }
+      }
+    `;
+    const panel = gql`
+      query Panel {
+        me: viewer {
+          id
+          bio
+        }
+      }
+    `;
+    const alice = { __typename: "User", id: "1", bio: "cached" };
+    cache.writeQuery({ query: owner, data: { viewer: alice } });
+    const exactWatch = jest.fn(),
+      coveredWatch = jest.fn();
+    cache.watch({
+      query: owner,
+      optimistic: false,
+      immediate: true,
+      callback: exactWatch,
+    });
+    cache.watch({
+      query: panel,
+      optimistic: false,
+      immediate: true,
+      callback: coveredWatch,
+    });
+    const execution = execute(cache, owner);
+    const check = (value: object, complete: boolean) => {
+      for (const [observer, field] of [
+        [exactWatch, "viewer"],
+        [coveredWatch, "me"],
+      ] as const) {
+        const calls = observer.mock.calls;
+        expect(calls[calls.length - 1][0]).toMatchObject({
+          complete,
+          result: { [field]: value },
+        });
+        expect(calls[calls.length - 1][0].result[field]).toEqual(value);
+      }
+    };
+    execution.initial({ viewer: { __typename: "User", id: "1" } });
+    expect(exactWatch).toHaveBeenCalledTimes(1);
+    expect(coveredWatch).toHaveBeenCalledTimes(1);
+    check(alice, true);
+    bioMerge.mockClear();
+    execution.subsequent([]);
+    expect(bioMerge).not.toHaveBeenCalled();
+    execution.initial({ viewer: { __typename: "User", id: "1" } });
+    execution.subsequent([{ path: ["viewer"], data: { bio: null } }], {
+      hasNext: true,
+    });
+    check({ ...alice, bio: null }, true);
+    const bob = { __typename: "User", id: "2" };
+    execution.initial({ viewer: bob });
+    check(bob, false);
+    expect(cache.readQuery({ query: owner })).toEqual({ viewer: alice });
+  });
+
+  it("renders covered consumers from an unwatched preloader, without publishing its data", () => {
+    const cache = new ForestRun({
+      typePolicies: {
+        User: {
+          fields: {
+            name: {
+              read(value) {
+                return value && `${value}!`;
+              },
+              merge(_existing, incoming) {
+                return incoming.toUpperCase();
+              },
+            },
+          },
+        },
+      },
+    });
+    // Details reaches the same entity through a different, already-committed root link.
+    const linkedDetails = gql`
+      query Details {
+        featured {
+          bio
+        }
+      }
+    `;
+    const other = gql`
+      query Other {
+        featured {
+          id
+          text
+        }
+        same: user(id: "1") {
+          id
+          text
+        }
+      }
+    `;
+    const cached = { __typename: "User", id: "1", text: "committed" };
+    cache.writeQuery({
+      query: other,
+      data: { featured: cached, same: { ...cached } },
+    });
+    const variables = { id: "1", withName: true };
+    const watch = jest.fn(),
+      detail = jest.fn(),
+      wrong = jest.fn(),
+      unrelated = jest.fn();
+    cache.watch({
+      query: summary,
+      variables,
+      optimistic: false,
+      callback: watch,
+    });
+    cache.watch({ query: linkedDetails, optimistic: false, callback: detail });
+    cache.watch({
+      query: summary,
+      variables: { ...variables, id: "2" },
+      optimistic: true,
+      callback: wrong,
+    });
+    cache.watch({ query: other, optimistic: true, callback: unrelated });
+    const before = cache.extract();
+    const pending = cover(cache, "1", "unwatched");
+    pending.initial({
+      record: { __typename: "User", id: "1", text: "pending" },
+    });
+    expect(watch.mock.calls[0][0]).toMatchObject({
+      complete: false,
+      result: { card: { text: "pending" } },
+    });
+    pending.subsequent([{ path: ["record"], data: { name: "alice" } }], {
+      hasNext: true,
+    });
+    const expected = {
+      card: { __typename: "User", title: "ALICE!", text: "pending" },
+    };
+    expect(watch.mock.calls[1][0].complete).toBe(true);
+    expect(watch.mock.calls[1][0].result).toEqual(expected);
+    expect(detail).not.toHaveBeenCalled(); // no change to its projection yet
+    const late = jest.fn();
+    cache.watch({
+      query: summary,
+      variables,
+      optimistic: true,
+      immediate: true,
+      callback: late,
+    });
+    expect(late.mock.calls[0][0].result).toEqual(expected);
+    expect(wrong).not.toHaveBeenCalled();
+    expect(unrelated).not.toHaveBeenCalled();
+    expect(cache.extract()).toEqual(before);
+    expect(
+      cache.diff({ query: summary, variables, optimistic: true }).result,
+    ).toEqual({
+      card: { __typename: "User", text: "committed" },
+    });
+    pending.subsequent([{ path: ["record"], data: { bio: "last" } }], {
+      hasNext: true,
+    });
+    expect(detail.mock.calls[0][0]).toMatchObject({
+      complete: true,
+      result: { featured: { bio: "last" } },
+    });
+    expect(unrelated).not.toHaveBeenCalled();
+    pending.subsequent([]);
+    expect(cache.readQuery({ query: summary, variables })).toEqual(expected);
+  });
+
+  it("retires only the keyed stream that finished and keeps other covered projections live", () => {
+    const cache = new ForestRun();
+    const a = jest.fn(),
+      b = jest.fn();
+    for (const [id, callback] of [
+      ["1", a],
+      ["2", b],
+    ] as const) {
+      cache.watch({
+        query: details,
+        variables: { id },
+        optimistic: false,
+        callback,
+      });
+    }
+    const start = (id: string, request: string, bio: string, key = request) => {
+      const pending = cover(cache, id, request, key);
+      pending.initial({ record: { __typename: "User", id, bio } });
+      return pending;
+    };
+    const oldest = start("1", "first", "one");
+    const stale = start("1", "second", "two");
+    const newest = start("1", "second", "three", "replacement");
+    const independent = start("2", "other", "private");
+    expect(a.mock.calls.map(([d]) => d.result.user.bio)).toEqual([
+      "one",
+      "two",
+      "three",
+    ]);
+    expect(b.mock.calls.map(([d]) => d.result.user.bio)).toEqual(["private"]);
+    stale.subsequent([{ path: ["record"], data: { bio: "stale" } }]);
+    oldest.subsequent([{ path: ["record"], data: { bio: "older patch" } }], {
+      hasNext: true,
+    });
+    expect(a).toHaveBeenCalledTimes(3);
+    newest.subsequent([]);
+    expect(a.mock.calls[3][0].result.user.bio).toBe("older patch");
+    expect(
+      cache.readQuery({ query: details, variables: { id: "1" } }),
+    ).toMatchObject({ user: { bio: "three" } });
+    expect(b).toHaveBeenCalledTimes(1);
+    expect(
+      cache.readQuery({ query: details, variables: { id: "2" } }),
+    ).toBeNull();
+    independent.subsequent([{ path: ["record"], data: { bio: "committed" } }]);
+    oldest.subsequent([]);
+    expect(
+      cache.readQuery({ query: details, variables: { id: "2" } }),
+    ).toMatchObject({ user: { bio: "committed" } });
+  });
+
   it("scopes previews to the execution root and batches watches at transaction completion", () => {
     const cache = new ForestRun({
       typePolicies: {
@@ -227,8 +498,8 @@ describe("@defer: subsequent results", () => {
     });
     for (const callback of [matching, late]) {
       expect(callback.mock.calls[0][0]).toMatchObject({
-        complete: false,
-        result: { messages: [incoming] },
+        complete: true,
+        result: { messages: [{ ...incoming, name: "stored" }] },
       });
     }
     pending.subsequent([{ path: ["messages", 0], data: { name: "preview" } }], {

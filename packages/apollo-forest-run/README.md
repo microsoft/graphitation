@@ -39,9 +39,25 @@ of GraphQL client.
 
 `writeExecutionResult` accepts complete results and path-addressed `@defer` payloads
 (2022-09-17 draft). A complete result is an ordinary write. While an execution
-has more payloads, only watches of that operation (same document, variables and
-root) see its preview. Ordinary reads, fragment reads, `extract` and other
-watches still see committed data.
+has more payloads, watches of that operation (same document, variables and
+root) see its preview. A preloader with `@cache(covers: ["Summary", "Details"])`
+also supplies data to those named operations' watches, even if nobody watches
+the preloader itself. The list can come from a variable. A covered watch reads
+its own selection, arguments, and field policies; it can become complete before
+the preloader finishes. New watches see the current projection.
+
+Each pending execution owns a private forest. A covered watch reads only from
+streams that name its operation; its own field arguments and entity links
+determine which data it can use. Optimistic layers, when requested, take priority,
+then the watch's own execution, then covering executions newest first, then committed data. Finishing one
+execution removes only its layer. Ordinary reads, fragment reads, `extract`
+and unrelated watches still see only their normal cache data.
+
+If the cache already has `User:1.bio`, both the executing watch and a covered
+watch can keep showing it while a new response for `User:1` is missing `bio`.
+A delivered `null` wins. If the response points to `User:2`, it cannot borrow
+`User:1.bio`. Fallback is for display only; it never becomes part of what the
+server is treated as having sent.
 
 Forest Run assembles patches in the server's original response order, even if
 a field policy reorders a list in the preview. Each preview applies policies

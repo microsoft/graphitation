@@ -82,6 +82,8 @@ export function createDraft(
 
 type DraftEnv = {
   keyMap?: WeakMap<SourceObject, string | false>;
+  // Private layered reads can have different links/lists at the same position in each source.
+  preserveLinks?: boolean;
 };
 
 /**
@@ -130,6 +132,9 @@ export function hydrateDraft(
     return draft;
   }
   const missingFields: MissingFieldsMap = new Map();
+  const links = env.preserveLinks
+    ? new WeakMap<SourceObject, ObjectValue>()
+    : undefined;
 
   const { data, incompleteValues } = execute<ObjectValue, IterableListValue>(
     draft.operation,
@@ -140,6 +145,16 @@ export function hydrateDraft(
       resolveType(model: ObjectChunk) {
         return model.type;
       },
+      canAmend: links
+        ? (current, next) => {
+            if (!current || !next) return false;
+            if ("list" in next)
+              return Array.isArray(current) && current.length === next.length;
+            if (Array.isArray(current)) return false;
+            const original = links.get(current);
+            return original?.key === next.key && original.type === next.type;
+          }
+        : undefined,
       enterList(
         model: IterableListValue,
         _possibleSelections: PossibleSelections,
@@ -166,6 +181,7 @@ export function hydrateDraft(
           enterObject(selection, model, output);
         }
         if (firstVisit) {
+          links?.set(output, model);
           const match =
             typeof chunkMatcher === "function" && model.key !== false
               ? chunkMatcher(model.key, draft.operation, selection)

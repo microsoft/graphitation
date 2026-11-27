@@ -132,7 +132,7 @@ export type Store = {
   // Pending scheduled auto-eviction
   pendingEviction: ScheduledEvictionHandle | null;
   // The latest incremental execution (`@defer`) of an operation, while it has pending results
-  incrementalExecutions: WeakMap<OperationDescriptor, IncrementalExecution>;
+  incrementalExecutions: Map<OperationDescriptor, IncrementalExecution>;
 };
 
 export type Transaction = {
