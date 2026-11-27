@@ -3025,3 +3025,49 @@ test("does not complete list items with values of items of another list (written
   });
   expect(diff.complete).toBe(false);
 });
+
+test("does not overwrite list items with nulls of lists of lower layers", () => {
+  const list = gql`
+    query MessageList {
+      conversation {
+        id
+        messages {
+          id
+          text
+        }
+      }
+    }
+  `;
+  const ids = gql`
+    query Ids {
+      conversation {
+        id
+        messages {
+          id
+        }
+      }
+    }
+  `;
+  const conversation = (messages: (object | null)[]) => ({
+    conversation: { __typename: "Conversation", id: "c1", messages },
+  });
+  const cache = new ForestRun();
+  cache.writeQuery({ query: list, data: conversation([null]) });
+  cache.recordOptimisticTransaction((c) => {
+    c.writeQuery({
+      query: ids,
+      data: conversation([{ __typename: "Message", id: "m3" }]),
+    });
+  }, "layer");
+
+  const diff = cache.diff({
+    query: list,
+    optimistic: true,
+    returnPartialData: true,
+  });
+
+  expect(diff.result).toEqual(
+    conversation([{ __typename: "Message", id: "m3" }]),
+  );
+  expect(diff.complete).toBe(false);
+});

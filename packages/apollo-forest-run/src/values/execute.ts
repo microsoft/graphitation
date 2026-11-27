@@ -338,11 +338,15 @@ function executeCompositeListSelection<TModel, TListModel>(
       index++;
       continue;
     }
+    const currentValue = firstEnter ? undefined : draft[index];
     if (item === null) {
-      draft[index++] = null as SourceNull;
+      if (!currentValue) {
+        draft[index] = null as SourceNull;
+      }
+      // Otherwise, an object of an earlier model has precedence: stays incomplete
+      index++;
       continue;
     }
-    const currentValue = firstEnter ? undefined : draft[index];
     if (currentValue && !isSameItem(context, currentValue, item)) {
       // An item of another list (e.g. chunks of the same node with different lists): stays incomplete
       index++;
