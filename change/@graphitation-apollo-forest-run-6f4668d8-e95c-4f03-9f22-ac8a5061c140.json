@@ -1,6 +1,6 @@
 {
   "type": "patch",
-  "comment": "Fix: do not complete list items with values of items at the same positions of other lists (e.g. in optimistic layers)",
+  "comment": "Fix: do not complete list items with values of items of other lists, and do not recycle chunks of lower layers over partially matching chunks of covering operations (optimistic reads)",
   "packageName": "@graphitation/apollo-forest-run",
   "email": "vrazuvaev@microsoft.com_msteamsmdb",
   "dependentChangeType": "patch"
