@@ -3,16 +3,16 @@ import type {
   InlineFragmentNode,
   SelectionSetNode,
 } from "graphql";
+import type { Cache } from "@apollo/client";
 import type { OperationDescriptor } from "../descriptor/types";
 import type {
   CacheEnv,
-  DataForest,
   Execution,
   ExecutionWriteOptions,
   OptimisticLayer,
   Store,
   Transaction,
-  WriteOptionsInternal,
+  WriteResult,
 } from "./types";
 import type {
   ExecutionKey,
@@ -28,52 +28,127 @@ import {
   resolveOperationDescriptor,
   resolveResultDescriptor,
 } from "./descriptor";
-import { getActiveForest } from "./store";
+import { createOptimisticLayer, removeOptimisticLayers } from "./store";
+import { write } from "./write";
 import { mergeAt } from "../incremental/data";
 
-/**
- * Target of an execution write, resolved by `write` (results are written by the regular write).
- *
- * Results of the current execution of an operation are written to its optimistic layer (see Execution) as a whole
- * (received data so far). Other results are written like `write` writes `result`.
- */
-export type ExecutionWrite = {
-  forest: DataForest | OptimisticLayer;
-  data: ResultData;
-};
+// Runs `update` in a new optimistic transaction with the layer tag (ApolloCompat: replays of layers, see ForestRun)
+export type OptimisticTransactionRunner = (
+  layerTag: string,
+  update: (transaction: Transaction) => void,
+) => void;
 
-export function resolveExecutionWrite(
+/**
+ * Writes an execution result with the regular write. Returns undefined for ignored results.
+ *
+ * Results of an incremental execution (`@defer`) are written to a regular optimistic layer of the execution until
+ * it completes (`hasNext: false`, also sent by the client on timeout):
+ * - the initial result creates the layer
+ * - subsequent results are spliced into the received result (copy-on-write, by response paths), which is written
+ *   to the layer as a whole
+ * - on completion, the layer is removed and the received result is written as a single result
+ *
+ * A new execution of the operation cancels the current one (its layer is removed without writing).
+ * Results of unknown or superseded executions are ignored.
+ */
+export function writeExecutionResult(
   env: CacheEnv,
   store: Store,
   transaction: Transaction,
   options: ExecutionWriteOptions,
-): ExecutionWrite {
-  const { execution } = options;
-  const current = store.executions.get(
-    resolveExecutionOperation(env, store, options),
-  );
-  if (current && current.key === execution.key) {
+  cache: unknown,
+  runOptimisticTransaction: OptimisticTransactionRunner,
+): WriteResult | undefined {
+  const { execution, ...writeOptions } = options;
+  const operation = resolveExecutionOperation(env, store, options);
+  const current = store.executions.get(operation);
+
+  if (isSubsequentResult(execution)) {
+    if (!current || current.key !== execution.key) {
+      // E.g. late results of a superseded execution
+      return undefined;
+    }
+    const data = spliceIncrementalResults(current.data, execution);
+    if (!execution.hasNext) {
+      removeExecution(env, store, transaction, current, cache);
+      return writeResult(env, store, transaction, {
+        ...writeOptions,
+        result: data,
+      });
+    }
+    if (data === current.data) {
+      return undefined;
+    }
+    current.data = data;
     const layer = store.optimisticLayers.find(
       (layer) => layer.layerTag === current.layerTag,
     );
     assert(layer);
-    return { forest: layer, data: current.data };
+    return writeResult(
+      env,
+      store,
+      transaction,
+      { ...writeOptions, result: data },
+      layer,
+    );
   }
-  // E.g. a complete result, or untyped options of `write` (a subsequent result is the same as `write` without `result`)
-  return {
-    forest: getActiveForest(store, transaction),
-    data: isSubsequentResult(execution) ? {} : execution.data,
-  };
+  if (current) {
+    removeExecution(env, store, transaction, current, cache);
+  }
+  const result = { ...writeOptions, result: execution.data };
+  if (!isIncrementalResult(operation, execution)) {
+    return writeResult(env, store, transaction, result);
+  }
+  // Executions are never optimistic
+  assert(!transaction.optimisticLayer);
+  const added = addExecution(store, operation, execution.key, execution.data);
+  // ApolloCompat: replays write the data received so far to a new layer
+  const replay = () =>
+    runOptimisticTransaction(added.layerTag, (transaction) =>
+      writeResult(env, store, transaction, {
+        ...writeOptions,
+        result: added.data,
+      }),
+    );
+  const layer = createOptimisticLayer(added.layerTag, replay);
+  store.optimisticLayers.push(layer);
+  return writeResult(env, store, transaction, result, layer);
 }
 
-export function isExecutionWrite(
-  options: WriteOptionsInternal,
-): options is ExecutionWriteOptions {
-  // An explicit nullish `execution` (e.g. untyped options of `write`) is a regular write of `result`
-  return "execution" in options && options.execution != null;
+function writeResult(
+  env: CacheEnv,
+  store: Store,
+  transaction: Transaction,
+  options: Cache.WriteOptions,
+  layer?: OptimisticLayer,
+): WriteResult {
+  const result = write(env, store, transaction, options, layer);
+  transaction.changelog.push(result);
+  return result;
 }
 
-export function resolveExecutionOperation(
+function removeExecution(
+  env: CacheEnv,
+  store: Store,
+  transaction: Transaction,
+  execution: Execution,
+  cache: unknown,
+) {
+  const affected = removeOptimisticLayers(
+    cache,
+    env,
+    store,
+    execution.layerTag,
+  );
+  transaction.affectedOperations ??= new Set();
+  for (const operation of affected ?? EMPTY_ARRAY) {
+    transaction.affectedOperations.add(operation);
+  }
+  // Deleted after the layer: keeps the descriptor of a non-cacheable operation (see canReleaseOperationDescriptor)
+  store.executions.delete(execution.operation);
+}
+
+function resolveExecutionOperation(
   env: CacheEnv,
   store: Store,
   options: ExecutionWriteOptions,
@@ -91,7 +166,7 @@ export function resolveExecutionOperation(
   );
 }
 
-export function addExecution(
+function addExecution(
   store: Store,
   operation: OperationDescriptor,
   key: ExecutionKey | undefined,
@@ -117,7 +192,7 @@ export function isSubsequentResult(
 }
 
 // An initial result with pending results of @defer enabled by its variables (e.g. not resolved inline by the server)
-export function isIncrementalResult(
+function isIncrementalResult(
   operation: OperationDescriptor,
   execution: InitialExecutionResult,
 ): boolean {
@@ -188,7 +263,7 @@ const enabledDefer = new WeakMap<OperationDescriptor, boolean>();
  *
  * TODO: streamed list items (`items`)
  */
-export function spliceIncrementalResults(
+function spliceIncrementalResults(
   data: ResultData,
   execution: SubsequentExecutionResult,
 ): ResultData {

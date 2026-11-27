@@ -1,3 +1,4 @@
+import type { Cache } from "@apollo/client";
 import type { IndexedTree, UpdateTreeResult } from "../forest/types";
 import type { OperationResult } from "../values/types";
 import type {
@@ -8,12 +9,10 @@ import type {
   OptimisticLayer,
   Store,
   Transaction,
-  WriteOptionsInternal,
   WriteResult,
 } from "./types";
 import type { NodeKey, OperationDescriptor } from "../descriptor/types";
 import { assert } from "../jsutils/assert";
-import { isExecutionWrite, resolveExecutionWrite } from "./execution";
 import {
   resolveResultDescriptor,
   resolveOperationDescriptor,
@@ -40,24 +39,22 @@ import { invalidateReadResults } from "./invalidate";
 import { IndexedForest } from "../forest/types";
 
 /**
- * Writes a result, or an execution result (routed to the execution's layer, see resolveExecutionWrite).
+ * `targetLayer` (optional): an optimistic layer to write to, instead of the active forest of the transaction
  */
 export function write(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
-  options: WriteOptionsInternal,
+  options: Cache.WriteOptions,
+  targetLayer?: OptimisticLayer,
 ): WriteResult {
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
+  const targetForest = targetLayer ?? getActiveForest(store, activeTransaction);
 
-  const execution = isExecutionWrite(options)
-    ? resolveExecutionWrite(env, store, activeTransaction, options)
-    : null;
-  const result = execution?.data ?? ("result" in options && options.result);
-  const targetForest =
-    execution?.forest ?? getActiveForest(store, activeTransaction);
-
-  const writeData = typeof result === "object" && result !== null ? result : {};
+  const writeData =
+    typeof options.result === "object" && options.result !== null
+      ? options.result
+      : {};
   const rootNodeKey = options.dataId ?? objectKey(writeData);
   assert(rootNodeKey !== false);
 

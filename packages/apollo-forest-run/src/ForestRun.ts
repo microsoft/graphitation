@@ -17,7 +17,6 @@ import type {
   SerializedOperationInfo,
   Store,
   Transaction,
-  Execution,
   ExecutionWriteOptions,
 } from "./cache/types";
 import { ApolloCache } from "@apollo/client";
@@ -43,13 +42,7 @@ import {
   transformDocument,
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
-import {
-  addExecution,
-  isIncrementalResult,
-  isSubsequentResult,
-  resolveExecutionOperation,
-  spliceIncrementalResults,
-} from "./cache/execution";
+import { isSubsequentResult, writeExecutionResult } from "./cache/execution";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -246,67 +239,31 @@ export class ForestRun<
   private runWriteExecutionResult(
     options: ExecutionWriteOptions,
   ): Reference | undefined {
-    const { execution } = options;
-    const operation = resolveExecutionOperation(this.env, this.store, options);
-    const current = this.store.executions.get(operation);
-
-    if (isSubsequentResult(execution)) {
-      if (!current || current.key !== execution.key) {
-        // E.g. late results of a superseded execution
-        return undefined;
-      }
-      const data = spliceIncrementalResults(current.data, execution);
-      if (!execution.hasNext) {
-        this.removeExecution(current);
-        this.writeExecution({ ...options, execution: { data } });
-      } else if (data !== current.data) {
-        current.data = data;
-        this.writeExecution(options);
-      }
-      return undefined;
-    }
-    if (current) {
-      this.removeExecution(current);
-    }
-    if (!isIncrementalResult(operation, execution)) {
-      return this.writeExecution(options);
-    }
-    // Executions are never optimistic
-    assert(!peek(this.transactionStack)?.optimisticLayer);
-    const { layerTag } = addExecution(
-      this.store,
-      operation,
-      execution.key,
-      execution.data,
-    );
-    // ApolloCompat: replays (see removeOptimisticLayers) write the data received so far to a new layer
-    const replay = () =>
-      this.runTransaction({
-        update: () => this.writeExecution(options),
-        optimistic: layerTag,
-      });
-    this.store.optimisticLayers.push(createOptimisticLayer(layerTag, replay));
-    return this.writeExecution(options);
-  }
-
-  private writeExecution(
-    options: ExecutionWriteOptions,
-  ): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
-    const result = write(this.env, this.store, transaction, options);
-    transaction.changelog.push(result);
-
-    const incoming = result.incoming;
-    return incoming.nodes.size ? getRef(incoming.rootNodeKey) : undefined;
+    const result = writeExecutionResult(
+      this.env,
+      this.store,
+      transaction,
+      options,
+      this,
+      // ApolloCompat: layers are replayed in optimistic transactions (see removeOptimisticLayers)
+      (optimistic, update) =>
+        this.runTransaction({
+          optimistic,
+          update: () => {
+            const replayTransaction = peek(this.transactionStack);
+            assert(replayTransaction);
+            update(replayTransaction);
+          },
+        }),
+    );
+    return result &&
+      !isSubsequentResult(options.execution) &&
+      result.incoming.nodes.size
+      ? getRef(result.incoming.rootNodeKey)
+      : undefined;
   }
-
-  private removeExecution(execution: Execution) {
-    // Deleted after the layer: keeps the descriptor of a non-cacheable operation (see canReleaseOperationDescriptor)
-    this.removeOptimisticLayers(execution.layerTag);
-    this.store.executions.delete(execution.operation);
-  }
-
   private collectAffectedOperationsAndNodes(transaction: Transaction) {
     transaction.affectedOperations ??= new Set();
     transaction.affectedNodes ??= new Set();
