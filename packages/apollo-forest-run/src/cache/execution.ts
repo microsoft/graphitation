@@ -1,5 +1,11 @@
 import type { Cache } from "@apollo/client";
 import type {
+  FragmentSpreadNode,
+  InlineFragmentNode,
+  SelectionSetNode,
+} from "graphql";
+import type { OperationDescriptor } from "../descriptor/types";
+import type {
   CacheEnv,
   ExecutionWriteOptions,
   InFlightExecution,
@@ -79,7 +85,12 @@ export function writeExecutionResult(
   if (current) {
     removeExecution(store, transaction, current);
   }
-  if (!("hasNext" in execution) || !execution.hasNext) {
+  if (
+    !("hasNext" in execution) ||
+    !execution.hasNext ||
+    !hasEnabledDefer(operation)
+  ) {
+    // E.g. deferred data resolved inline by the server (a complete result)
     return write(env, store, transaction, {
       ...writeOptions,
       result: execution.data,
@@ -119,6 +130,62 @@ export function isSubsequentResult(
 ): execution is SubsequentExecutionResult {
   return !("data" in execution);
 }
+
+// Whether the operation has @defer directives enabled by its variables (`if` argument)
+function hasEnabledDefer(operation: OperationDescriptor): boolean {
+  let enabled = enabledDefer.get(operation);
+  if (enabled === undefined) {
+    enabled = selectsEnabledDefer(
+      operation,
+      operation.definition.selectionSet,
+      new Set(),
+    );
+    enabledDefer.set(operation, enabled);
+  }
+  return enabled;
+}
+
+function selectsEnabledDefer(
+  operation: OperationDescriptor,
+  selectionSet: SelectionSetNode,
+  visitedFragments: Set<string>,
+): boolean {
+  for (const selection of selectionSet.selections) {
+    if (selection.kind !== "Field" && isEnabledDefer(operation, selection)) {
+      return true;
+    }
+    const nested =
+      selection.kind !== "FragmentSpread"
+        ? selection.selectionSet
+        : visitedFragments.has(selection.name.value)
+        ? undefined
+        : operation.fragmentMap.get(selection.name.value)?.selectionSet;
+    if (selection.kind === "FragmentSpread") {
+      visitedFragments.add(selection.name.value);
+    }
+    if (nested && selectsEnabledDefer(operation, nested, visitedFragments)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isEnabledDefer(
+  operation: OperationDescriptor,
+  selection: InlineFragmentNode | FragmentSpreadNode,
+): boolean {
+  const defer = selection.directives?.find((d) => d.name.value === "defer");
+  const condition = defer?.arguments?.find((a) => a.name.value === "if");
+  if (!defer || !condition) {
+    return Boolean(defer);
+  }
+  const { value } = condition;
+  return value.kind === "Variable"
+    ? Boolean(operation.variablesWithDefaults[value.name.value])
+    : value.kind !== "BooleanValue" || value.value;
+}
+
+const enabledDefer = new WeakMap<OperationDescriptor, boolean>();
 
 function removeExecution(
   store: Store,

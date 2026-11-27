@@ -700,6 +700,35 @@ describe("merge policies of in-flight writes", () => {
 });
 
 describe("timeout and cancellation", () => {
+  it.each([
+    [false, false],
+    [true, true],
+  ])(
+    "writes initial results with @defer(if: %s) to the data forest unless deferred (in flight: %s)",
+    (defer, inFlight) => {
+      const cache = new TestCache();
+      const query = gql`
+        query ($defer: Boolean) {
+          messages {
+            id
+            text
+            ... @defer(if: $defer) {
+              name
+            }
+          }
+        }
+      `;
+      const variables = { defer };
+      cache.writeExecutionResult({
+        query,
+        variables,
+        execution: { data: { messages: [message("1")] }, hasNext: true },
+      });
+
+      expect(Boolean(cache.inFlight(query, variables))).toBe(inFlight);
+      expect(Boolean(cache.mainTree(query, variables))).toBe(!inFlight);
+    },
+  );
   it("writes received results on timeout (synthetic hasNext: false)", () => {
     const cache = new TestCache();
     cache.write({
