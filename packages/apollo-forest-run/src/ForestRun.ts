@@ -264,6 +264,7 @@ export class ForestRun<
       ? getRef(result.incoming.rootNodeKey)
       : undefined;
   }
+
   private collectAffectedOperationsAndNodes(transaction: Transaction) {
     transaction.affectedOperations ??= new Set();
     transaction.affectedNodes ??= new Set();
