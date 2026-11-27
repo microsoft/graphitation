@@ -9,7 +9,7 @@ import type {
   ValueDifference,
 } from "./types";
 import * as Descriptor from "../descriptor/resolvedSelection";
-import { assertNever } from "../jsutils/assert";
+import { assert, assertNever } from "../jsutils/assert";
 import { isCompositeValue } from "../values/predicates";
 import { ValueKind } from "../values/types";
 import { DifferenceKind } from "./types";
@@ -101,9 +101,7 @@ export function addDirtyListItem(diff: CompositeListDifference, index: number) {
 
 export function createCompositeValueDifference(
   value: CompositeValue,
-): ValueDifference {
-  // By default, assuming everything is dirty
-  //   only after full diff of a sub-branch we can be sure if it is clean
+): ObjectDifference | CompositeListDifference {
   switch (value.kind) {
     case ValueKind.Object:
       return createObjectDifference();
@@ -114,6 +112,29 @@ export function createCompositeValueDifference(
         `InvariantViolation: ${value["kind"]} is not supported value kind`,
       );
   }
+}
+
+// Attach child state without queuing a comparison or marking a change.
+export function getOrCreateEmbeddedDifference(
+  parent: ObjectDifference | CompositeListDifference,
+  step: NormalizedFieldEntry | number,
+  create: () => ObjectDifference | CompositeListDifference,
+): ObjectDifference | CompositeListDifference {
+  let child;
+  if (typeof step === "number") {
+    assert(isCompositeListDifference(parent));
+    child =
+      getListItemDifference(parent, step) ??
+      addListItemDifference(parent, step, create());
+  } else {
+    assert(isObjectDifference(parent));
+    child = (
+      getFieldDifference(parent, step) ??
+      addFieldDifference(parent, step, create())
+    ).state;
+  }
+  assert(isObjectDifference(child) || isCompositeListDifference(child));
+  return child;
 }
 
 export function getFieldQueue(

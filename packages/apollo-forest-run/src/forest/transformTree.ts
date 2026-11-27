@@ -5,7 +5,6 @@ import type {
   TypeName,
 } from "../descriptor/types";
 import type {
-  CompositeListChunk,
   GraphChunk,
   NodeChunk,
   ObjectChunk,
@@ -30,7 +29,7 @@ import {
   resolveFieldAliases,
   resolveFieldChunk,
 } from "../values";
-import { assert, assertNever } from "../jsutils/assert";
+import { assert } from "../jsutils/assert";
 
 export type ChunkFilter = {
   types?: Iterable<TypeName>;
@@ -414,46 +413,27 @@ function addEmbeddedChunkDifference(
   parentNodeDifference: ObjectDifference,
   chunk: ObjectChunk,
   chunkDifference: ObjectDifference,
-): ObjectDifference {
-  let parentDiff: ValueDifference = parentNodeDifference;
-  let valueDifference: ValueDifference = parentDiff;
+): void {
+  let difference: ObjectDifference | CompositeListDifference =
+    parentNodeDifference;
 
   descendToChunk(treeState, parentNode, chunk, (value, parent, step) => {
     assert(isCompositeListValue(value) || isObjectValue(value));
-    if (isObjectValue(parent)) {
-      assert(
-        typeof step !== "number" && Difference.isObjectDifference(parentDiff),
-      );
-      const field = resolveNormalizedField(parent.selection, step);
-      const fieldDifference =
-        Difference.getFieldDifference(parentDiff, field) ??
-        Difference.addFieldDifference(
-          parentDiff,
-          field,
-          value === chunk ? chunkDifference : createValueDifference(value),
-        );
-      valueDifference = fieldDifference.state;
+    let key;
+    if (typeof step === "number") {
+      assert(isCompositeListValue(parent));
+      key = step;
     } else {
-      assert(
-        typeof step === "number" &&
-          Difference.isCompositeListDifference(parentDiff),
-      );
-      valueDifference =
-        Difference.getListItemDifference(parentDiff, step) ??
-        Difference.addListItemDifference(
-          parentDiff,
-          step,
-          value === chunk ? chunkDifference : createValueDifference(value),
-        );
+      assert(isObjectValue(parent));
+      key = resolveNormalizedField(parent.selection, step);
     }
-    assert(
-      Difference.isObjectDifference(valueDifference) ||
-        Difference.isCompositeListDifference(valueDifference),
+    difference = Difference.getOrCreateEmbeddedDifference(difference, key, () =>
+      value === chunk
+        ? chunkDifference
+        : Difference.createCompositeValueDifference(value),
     );
-    parentDiff = valueDifference;
   });
-  assert(valueDifference === chunkDifference);
-  return valueDifference;
+  assert(difference === chunkDifference);
 }
 
 function markParentNodeDirty(
@@ -489,16 +469,4 @@ function markParentNodeDirty(
       );
     }
   });
-}
-
-function createValueDifference(
-  chunk: ObjectChunk | CompositeListChunk,
-): ObjectDifference | CompositeListDifference {
-  if (isObjectValue(chunk)) {
-    return Difference.createObjectDifference();
-  }
-  if (isCompositeListValue(chunk)) {
-    return Difference.createCompositeListDifference();
-  }
-  assertNever(chunk);
 }

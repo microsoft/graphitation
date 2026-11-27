@@ -772,37 +772,22 @@ function visitCopy(
   }
   assert(parentRef && !isRootRef(parentRef));
   const parent = differences.get(parentRef.parent);
-  let difference;
+  let step;
   if (isParentObjectRef(parentRef)) {
     assert(Difference.isObjectDifference(parent));
-    const entry = resolveNormalizedField(
-      parentRef.parent.selection,
-      parentRef.field,
-    );
-    Difference.enqueueField(parent, entry);
-    difference =
-      Difference.getFieldDifference(parent, entry)?.state ??
-      Difference.addFieldDifference(
-        parent,
-        entry,
-        Difference.createCompositeValueDifference(chunk),
-      ).state;
+    step = resolveNormalizedField(parentRef.parent.selection, parentRef.field);
+    Difference.enqueueField(parent, step);
   } else {
     assert(Difference.isCompositeListDifference(parent));
-    Difference.enqueueListItem(parent, parentRef.index);
-    difference =
-      Difference.getListItemDifference(parent, parentRef.index) ??
-      Difference.addListItemDifference(
-        parent,
-        parentRef.index,
-        Difference.createCompositeValueDifference(chunk),
-      );
+    step = parentRef.index;
+    Difference.enqueueListItem(parent, step);
   }
-  assert(
-    Difference.isObjectDifference(difference) ||
-      Difference.isCompositeListDifference(difference),
+  differences.set(
+    chunk,
+    Difference.getOrCreateEmbeddedDifference(parent, step, () =>
+      Difference.createCompositeValueDifference(chunk),
+    ),
   );
-  differences.set(chunk, difference);
 }
 
 /**
