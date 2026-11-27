@@ -20,6 +20,20 @@ const pendingHookResult = (m: number, h: number) => ({
   message: { __typename: "Message", id: String(m), [`field${h}`]: h },
 });
 
+// Large list query for optimistic updates
+const LIST_SIZE = 2000;
+const messagesQuery = parse(
+  `query Messages { messages { id text author { id name } } }`,
+);
+const messagesResult = (text: string) => ({
+  messages: Array.from({ length: LIST_SIZE }, (_, i) => ({
+    __typename: "Message",
+    id: String(i),
+    text: `${text} ${i}`,
+    author: { __typename: "User", id: String(i % 10), name: `User ${i % 10}` },
+  })),
+});
+
 const addWatchers = (
   watcherCount: number,
   cache: ForestRun,
@@ -342,6 +356,34 @@ export const scenarios = [
               data: data["complex-nested-changes-in-all-objects"],
             });
           }, "test");
+        },
+      };
+    },
+  },
+  {
+    // Optimistic writeQuery of a large list followed by an optimistic read of the same list
+    name: "read-optimistic-list",
+    prepare: (ctx: ScenarioContext) => {
+      const { CacheFactory, configuration, watcherCount } = ctx;
+      // Optimistic layer removal logs debug messages, which would break worker output (stdout)
+      const cache = new CacheFactory({
+        ...configuration,
+        logger: { ...console, debug: () => {} },
+      });
+      const query = messagesQuery;
+      const optimisticData = messagesResult("optimistic");
+
+      cache.writeQuery({ query, data: messagesResult("server") });
+      addWatchers(watcherCount, cache, query);
+
+      return {
+        run() {
+          cache.recordOptimisticTransaction((c) => {
+            c.writeQuery({ query, data: optimisticData });
+          }, "optimistic-list");
+          const result = cache.diff({ query, optimistic: true });
+          cache.removeOptimistic("optimistic-list");
+          return result;
         },
       };
     },

@@ -1,5 +1,6 @@
 import type {
   FieldName,
+  NodeKey,
   OperationDescriptor,
   VariableValues,
 } from "../descriptor/types";
@@ -266,12 +267,13 @@ function growOutputTree(
     dataTree = growDataTree(env, forest, operation);
     addTree(env, forest, dataTree);
   }
-  const tree = applyTransformations(
-    env,
-    dataTree,
-    getEffectiveReadLayers(store, forest, optimistic),
-    previous,
-  );
+  const readLayers = getEffectiveReadLayers(store, forest, optimistic);
+  const optimisticTree = optimistic
+    ? findCompleteOptimisticTree(readLayers, operation)
+    : undefined;
+  const tree = optimisticTree
+    ? applyReadPolicies(env, readLayers, env.readPolicies, optimisticTree)
+    : applyTransformations(env, dataTree, readLayers, previous);
   indexReadPolicies(env, tree);
 
   if (tree === dataTree) {
@@ -333,6 +335,84 @@ function growDataTree(
   );
   tree.grown = true;
   return tree;
+}
+
+/**
+ * Returns operation tree from the topmost optimistic layer containing it, when this tree can be used as a read result
+ * without re-hydration: it is complete and no higher layer touches or deletes any of its nodes
+ * (data of a layer has priority over all layers below it).
+ */
+function findCompleteOptimisticTree(
+  dataLayers: (OptimisticLayer | DataForest)[],
+  operation: OperationDescriptor,
+): DataTree | undefined {
+  if (operation.historySize) {
+    // Operation history is tracked in data forest trees
+    return undefined;
+  }
+  // Note: last layer is the data layer
+  for (let i = 0; i < dataLayers.length - 1; i++) {
+    const tree = dataLayers[i].trees.get(operation.id);
+    if (!tree) {
+      continue;
+    }
+    if (hasMissingFields(tree)) {
+      return undefined;
+    }
+    for (let j = 0; j <= i; j++) {
+      const layer = dataLayers[j];
+      if (
+        hasCommonNodes(tree, layer.deletedNodes) ||
+        (j < i && hasCommonNodes(tree, layer.operationsByNodes))
+      ) {
+        return undefined;
+      }
+    }
+    return tree;
+  }
+  return undefined;
+}
+
+function hasMissingFields(tree: IndexedTree): boolean {
+  if (tree.incompleteChunks.size) {
+    return true;
+  }
+  // Written results may miss leaf fields without having them in incompleteChunks
+  for (const { value } of tree.dataMap.values()) {
+    if (!isObjectValue(value)) {
+      continue;
+    }
+    const { data, selection } = value;
+    for (const field of selection.fieldQueue) {
+      if (
+        data[field.dataKey] === undefined &&
+        !selection.skippedFields?.has(field)
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function hasCommonNodes(
+  tree: IndexedTree,
+  nodeKeys: Set<NodeKey> | Map<NodeKey, unknown>,
+): boolean {
+  if (nodeKeys.size > tree.nodes.size) {
+    for (const nodeKey of tree.nodes.keys()) {
+      if (nodeKeys.has(nodeKey)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  for (const nodeKey of nodeKeys.keys()) {
+    if (tree.nodes.has(nodeKey)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**

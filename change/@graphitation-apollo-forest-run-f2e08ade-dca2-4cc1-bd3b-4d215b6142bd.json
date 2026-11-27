@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Perf: optimistic reads use complete operation tree from the topmost optimistic layer as is (when no higher layer touches its nodes)",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
