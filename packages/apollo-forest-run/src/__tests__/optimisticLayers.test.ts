@@ -93,3 +93,51 @@ describe("optimistic transactions with reuseOptimisticLayer", () => {
     expect(read(cache)).toEqual({ a: "a0", b: "b0" });
   });
 });
+
+describe("optimistic reads of covered operations", () => {
+  it("do not recycle chunks of lower layers over partially matching chunks of a covering operation", () => {
+    const Chat = gql`
+      query Chat {
+        conversation {
+          id
+          title
+        }
+      }
+    `;
+    const Preloader = gql`
+      query Preloader @cache(covers: ["Chat"]) {
+        viewer {
+          id
+        }
+        conversation {
+          id
+          title
+        }
+      }
+    `;
+    const conversation = (title: string) => ({
+      conversation: { __typename: "Conversation", id: "c1", title },
+    });
+    const preloader = (title: string) => ({
+      viewer: { __typename: "User", id: "u" },
+      ...conversation(title),
+    });
+    const cache = new ForestRun();
+    cache.writeQuery({ query: Chat, data: conversation("old") });
+    cache.batch({
+      optimistic: "layer",
+      update: (c) => c.writeQuery({ query: Preloader, data: preloader("a") }),
+    });
+    const read = () => cache.diff({ query: Chat, optimistic: true }).result;
+    expect(read()).toEqual(conversation("a"));
+
+    // Only the conversation is invalidated: the root chunk of the preloader in the layer has another selection
+    //   (viewer), but still has precedence over the root chunk of Chat in the data forest
+    cache.batch({
+      optimistic: "layer",
+      reuseOptimisticLayer: true,
+      update: (c) => c.writeQuery({ query: Preloader, data: preloader("b") }),
+    });
+    expect(read()).toEqual(conversation("b"));
+  });
+});
