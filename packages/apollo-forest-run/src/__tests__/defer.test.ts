@@ -8,6 +8,7 @@ import type {
   IncrementalDeferResult,
 } from "../incremental/types";
 import type { IndexedTree } from "../forest/types";
+import type { ExecutionWriteOptions } from "../cache/types";
 import type { GraphChunk, ObjectChunk } from "../values/types";
 import { assert } from "../jsutils/assert";
 import {
@@ -2744,6 +2745,780 @@ describe("@defer: fetchMore on a covered query while the preloader streams", () 
         },
         "data forest (OtherList)": final,
       });
+    },
+  );
+});
+
+// Ported from #804 (vladar/forest-run-defer-optimistic): behaviour of readers while an execution streams.
+//   In #787, deferred data is spliced into the data forest, so it is visible to every reader immediately
+//   (optimistic and non-optimistic). Adaptations of expectations are marked with "Adapted (787):".
+describe("@defer: readers while streaming (ported from #804)", () => {
+  // As `it.failing` (jest 28+, not in @types/jest 26): passes while the test fails (switch to `it` once it passes)
+  const itFailing = (name: string, test: () => void) =>
+    it(`${name} (failing)`, () => expect(test).toThrow());
+
+  // As in #804: `subsequent` defaults to `hasNext: true`, `complete` sends the last result
+  function execute(
+    cache: ForestRun,
+    query: DocumentNode,
+    { variables = {}, key }: { variables?: object; key?: ExecutionKey } = {},
+  ) {
+    return {
+      initial(data: Record<string, unknown>) {
+        return cache.writeExecutionResult({
+          query,
+          variables,
+          execution: { data, hasNext: true, key },
+        });
+      },
+      subsequent(
+        incremental: IncrementalDeferResult[],
+        { hasNext = true }: { hasNext?: boolean } = {},
+      ) {
+        return cache.writeExecutionResult({
+          query,
+          variables,
+          execution: { incremental, hasNext, key },
+        });
+      },
+      complete(incremental: IncrementalDeferResult[] = []) {
+        return this.subsequent(incremental, { hasNext: false });
+      },
+    };
+  }
+
+  // Preloader with deferred names, covering the chat query
+  const preloaderQuery = gql`
+    query Preloader @cache(covers: ["Chat"]) {
+      messages {
+        id
+        text
+        ... @defer(label: "name") {
+          name
+        }
+      }
+    }
+  `;
+
+  const chatQuery = gql`
+    query Chat {
+      messages {
+        id
+        text
+        name
+      }
+    }
+  `;
+
+  // Not covered
+  const textQuery = gql`
+    query Text {
+      messages {
+        id
+        text
+      }
+    }
+  `;
+
+  const messageFragment = gql`
+    fragment MessageName on Message {
+      id
+      name
+    }
+  `;
+
+  // Streamed data is optimistic data: optimistic reads see it
+  const read = (cache: ForestRun, query: DocumentNode, optimistic = true) =>
+    cache.diff({ query, optimistic, returnPartialData: true });
+
+  describe("streaming operation", () => {
+    it("notifies watches of the operation on each result", () => {
+      const cache = new TestCache();
+      const execution = execute(cache, preloaderQuery);
+      const watch = jest.fn();
+      cache.watch({ query: preloaderQuery, optimistic: true, callback: watch });
+
+      execution.initial({ messages: [message("1"), message("2")] });
+      execution.subsequent([{ path: ["messages", 0], data: { name: "one" } }]);
+      execution.subsequent([{ path: ["messages", 1], data: { name: "two" } }]);
+
+      expect(watch).toHaveBeenCalledTimes(3);
+      // Pending fields read like fields missing in a regular write (complete)
+      expect(watch.mock.calls[0][0]).toMatchObject({
+        complete: true,
+        result: { messages: [message("1"), message("2")] },
+      });
+      expect(watch.mock.calls[1][0].result).toEqual({
+        messages: [message("1", "one"), message("2")],
+      });
+      expect(watch.mock.calls[2][0]).toMatchObject({
+        complete: true,
+        result: { messages: [message("1", "one"), message("2", "two")] },
+      });
+    });
+  });
+
+  describe("pending fields keep cached values (no loaders)", () => {
+    it("starts from the existing result of the operation (no loaders for pending fields)", () => {
+      const cache = new TestCache();
+      cache.write({
+        query: preloaderQuery,
+        result: { messages: [message("1", "one")] },
+      });
+      const watch = jest.fn();
+      cache.watch({
+        query: preloaderQuery,
+        optimistic: true,
+        immediate: true,
+        callback: watch,
+      });
+      const before = watch.mock.calls[0][0];
+
+      // The same data as stored, with the deferred field pending
+      execute(cache, preloaderQuery).initial({ messages: [message("1")] });
+
+      // Adapted (787): the initial result is a regular write of the same data (the deferred field is pending,
+      //   not deleted): nothing changes, the watch is not notified (#804 re-hydrates through its layer)
+      expect(watch).toHaveBeenCalledTimes(1);
+      for (const [diff] of watch.mock.calls) {
+        expect(diff).toEqual(before);
+      }
+      expect(read(cache, preloaderQuery, true).result).toEqual(before.result);
+      expect(read(cache, preloaderQuery)).toMatchObject({
+        complete: true,
+        result: { messages: [message("1", "one")] },
+      });
+    });
+
+    it("keeps existing values of pending fields when the initial result changes other fields", () => {
+      const cache = new TestCache();
+      cache.write({
+        query: preloaderQuery,
+        result: { messages: [message("1", "one")] },
+      });
+      execute(cache, preloaderQuery).initial({
+        messages: [{ ...message("1"), text: "edited" }],
+      });
+
+      expect(read(cache, preloaderQuery)).toMatchObject({
+        complete: true,
+        result: { messages: [{ ...message("1", "one"), text: "edited" }] },
+      });
+      // Adapted (804): optimistic reads of other operations see the result, non-optimistic reads don't
+      expect(read(cache, textQuery).result).toEqual({
+        messages: [{ __typename: "Message", id: "1", text: "edited" }],
+      });
+      // Adapted (787): the initial result is written to the data forest, non-optimistic reads see it too
+      expect(read(cache, textQuery, false).result).toEqual({
+        messages: [{ __typename: "Message", id: "1", text: "edited" }],
+      });
+    });
+  });
+
+  describe("pending fields fall through to cached values", () => {
+    it.each([
+      [
+        "a keyed object",
+        gql`
+          query Viewer {
+            viewer {
+              id
+              name
+              ... @defer {
+                bio
+              }
+            }
+          }
+        `,
+        { viewer: { __typename: "User", id: "u", name: "n", bio: "cached" } },
+        { viewer: { __typename: "User", id: "u", name: "n" } },
+      ],
+      [
+        "an unkeyed embedded object",
+        gql`
+          query Viewer {
+            viewer {
+              id
+              settings {
+                theme
+                ... @defer {
+                  locale
+                }
+              }
+            }
+          }
+        `,
+        {
+          viewer: {
+            __typename: "User",
+            id: "u",
+            settings: { __typename: "Settings", theme: "dark", locale: "en" },
+          },
+        },
+        {
+          viewer: {
+            __typename: "User",
+            id: "u",
+            settings: { __typename: "Settings", theme: "dark" },
+          },
+        },
+      ],
+      [
+        "keyed list items",
+        preloaderQuery,
+        { messages: [message("1", "one"), message("2", "two")] },
+        { messages: [message("1"), message("2")] },
+      ],
+    ])(
+      "in %s: complete reads of cached values, equal watch results",
+      (_, query, cached, initial) => {
+        const cache = new TestCache();
+        cache.write({ query, result: cached });
+        const watch = jest.fn();
+        cache.watch({
+          query,
+          optimistic: true,
+          immediate: true,
+          callback: watch,
+        });
+        watch.mockClear();
+
+        // Unchanged, deferred fields pending
+        execute(cache, query).initial(initial);
+
+        const diff = read(cache, query);
+        expect(diff).toEqual({ complete: true, result: cached });
+        expect(diff.missing).toBeUndefined();
+        for (const [notified] of watch.mock.calls) {
+          expect(notified).toEqual({ complete: true, result: cached });
+        }
+      },
+    );
+  });
+
+  describe("covered operations (@cache(covers))", () => {
+    it("read through the in-flight layer and are notified on each result", () => {
+      const cache = new TestCache();
+      cache.write({
+        query: chatQuery,
+        result: { messages: [message("1", "old")] },
+      });
+      const watch = jest.fn();
+      cache.watch({
+        query: chatQuery,
+        optimistic: true,
+        immediate: true,
+        callback: watch,
+      });
+      watch.mockClear();
+      const execution = execute(cache, preloaderQuery);
+
+      execution.initial({ messages: [message("1")] });
+      expect(watch).not.toHaveBeenCalled(); // nothing changed
+
+      execution.subsequent([{ path: ["messages", 0], data: { name: "new" } }]);
+      expect(watch).toHaveBeenCalledTimes(1);
+      expect(watch.mock.calls[0][0]).toMatchObject({
+        complete: true,
+        result: { messages: [message("1", "new")] },
+      });
+    });
+
+    // Fails on #787: the covered read reports `complete: true` while `name` is still pending (missing).
+    //   Root cause: missing scalar fields of regular (and initial) writes are not tracked as missing (a pre-existing
+    //   limitation, as on main); only deferred fields delivered to replaced objects are reported (see markSkippedFieldsMissing)
+    itFailing(
+      "read the in-flight layer cache-first (without own results)",
+      () => {
+        const cache = new TestCache();
+        const execution = execute(cache, preloaderQuery);
+        execution.initial({ messages: [message("1")] });
+        // Adapted (804): `name` is pending (missing), as with a regular optimistic layer (covering chunks are only recycled
+        //   as a whole from the layer of the covered operation)
+        expect(read(cache, chatQuery)).toMatchObject({
+          complete: false,
+          result: { messages: [message("1")] },
+        });
+
+        const watch = jest.fn();
+        cache.watch({ query: chatQuery, optimistic: true, callback: watch });
+        execution.subsequent([
+          { path: ["messages", 0], data: { name: "one" } },
+        ]);
+
+        expect(watch).toHaveBeenCalledTimes(1);
+        expect(watch.mock.calls[0][0]).toMatchObject({
+          complete: true,
+          result: { messages: [message("1", "one")] },
+        });
+      },
+    );
+
+    it("are matched by name with any variables", () => {
+      const cache = new TestCache();
+      const chatWithVariables = gql`
+        query Chat($first: Int) {
+          messages(first: $first) {
+            id
+            text
+            name
+          }
+        }
+      `;
+      const preloader = gql`
+        query Preloader($first: Int) @cache(covers: ["Chat"]) {
+          messages(first: $first) {
+            id
+            text
+            ... @defer {
+              name
+            }
+          }
+        }
+      `;
+      const variables = { first: 1 };
+      const execution = execute(cache, preloader, { variables });
+      execution.initial({ messages: [message("1")] });
+      execution.subsequent([{ path: ["messages", 0], data: { name: "one" } }]);
+
+      // Adapted (804): optimistic reads (any operation)
+      expect(
+        cache.diff({ query: chatWithVariables, variables, optimistic: true }),
+      ).toMatchObject({
+        complete: true,
+        result: { messages: [message("1", "one")] },
+      });
+    });
+  });
+
+  describe("fragment reads and watches", () => {
+    it.each([false, true])(
+      "fragment watches and reads (useFragment) see each result (optimizeFragmentReads: %s)",
+      (optimizeFragmentReads) => {
+        const cache = new TestCache({ optimizeFragmentReads });
+        const watch = jest.fn();
+        // As useFragment / watchFragment
+        cache.watch({
+          query: cache["getFragmentDoc"](messageFragment),
+          id: "Message:1",
+          optimistic: true,
+          returnPartialData: true,
+          immediate: true,
+          callback: watch,
+        });
+        const execution = execute(cache, preloaderQuery);
+        const readName = (optimistic: boolean) =>
+          cache.readFragment({
+            id: "Message:1",
+            fragment: messageFragment,
+            optimistic,
+            returnPartialData: true,
+          });
+
+        execution.initial({ messages: [message("1")] });
+        expect(readName(true)).toEqual({ __typename: "Message", id: "1" });
+        execution.subsequent([
+          { path: ["messages", 0], data: { name: "one" } },
+        ]);
+        expect(readName(true)).toEqual({
+          __typename: "Message",
+          id: "1",
+          name: "one",
+        });
+        // Adapted (787): delivered data is written to the data forest, non-optimistic reads see it too
+        expect(readName(false)).toEqual({
+          __typename: "Message",
+          id: "1",
+          name: "one",
+        });
+
+        expect(watch.mock.calls.map(([diff]) => diff.result)).toEqual([
+          { __typename: "Message" }, // immediate (nothing cached)
+          { __typename: "Message", id: "1" },
+          { __typename: "Message", id: "1", name: "one" },
+        ]);
+        execution.complete();
+        expect(readName(false)).toEqual({
+          __typename: "Message",
+          id: "1",
+          name: "one",
+        });
+      },
+    );
+  });
+
+  describe("timeout", () => {
+    it("writes received results on timeout (synthetic hasNext: false)", () => {
+      const cache = new TestCache();
+      cache.write({
+        query: preloaderQuery,
+        result: { messages: [message("1", "old 1"), message("2", "old 2")] },
+      });
+      const execution = execute(cache, preloaderQuery);
+      execution.initial({ messages: [message("1"), message("2")] });
+      execution.subsequent([
+        { path: ["messages", 0], data: { name: "new 1" } },
+      ]);
+
+      // Timeout
+      cache.writeExecutionResult({
+        query: preloaderQuery,
+        execution: { hasNext: false },
+      });
+
+      expect(cache.execution(preloaderQuery)).toBeUndefined();
+      // Pending fields keep existing values
+      expect(read(cache, chatQuery)).toMatchObject({
+        complete: true,
+        result: { messages: [message("1", "new 1"), message("2", "old 2")] },
+      });
+    });
+  });
+
+  describe("@defer: covered queries of a preloader (production setup)", () => {
+    // Covered queries are separate documents, converted to fragments on Query and spread into the preloader
+    //   (the covered selection equals the fragment exactly). Their watches are registered before the preloader
+    //   starts streaming (cache-first miss), as `useQuery` does (QueryInfo: diff, then watch with `optimistic: true`).
+    const ChatQuery = gql`
+      query ChatQuery($id: ID!) {
+        conversation(id: $id) {
+          id
+          messages {
+            id
+            text
+          }
+        }
+      }
+    `;
+    const HeaderQuery = gql`
+      query HeaderQuery($id: ID!) {
+        conversation(id: $id) {
+          id
+          title
+        }
+      }
+    `;
+    const Preloader = gql`
+      query Preloader($id: ID!) @cache(covers: ["ChatQuery", "HeaderQuery"]) {
+        viewer {
+          id
+        }
+        ...HeaderQuery_query @defer(label: "header")
+        ...ChatQuery_query @defer(label: "chat")
+      }
+      fragment HeaderQuery_query on Query {
+        conversation(id: $id) {
+          id
+          title
+        }
+      }
+      fragment ChatQuery_query on Query {
+        conversation(id: $id) {
+          id
+          messages {
+            id
+            text
+          }
+        }
+      }
+    `;
+    const variables = { id: "c1" };
+    const conversation = (fields: object) => ({
+      conversation: { __typename: "Conversation", id: "c1", ...fields },
+    });
+    const chat = conversation({
+      messages: [{ __typename: "Message", id: "m1", text: "t1" }],
+    });
+    const header = conversation({ title: "T" });
+
+    type Covered = { query: DocumentNode; variables: object };
+    // What the covered component renders after each step: the latest diff its watch was notified with
+    type Rendered = { data: unknown; complete: boolean | undefined };
+
+    function stream(
+      cache: ForestRun,
+      covered: Covered,
+      {
+        diffFirst = false,
+        returnPartialData = undefined as boolean | undefined,
+      } = {},
+    ) {
+      const options = { ...covered, optimistic: true, returnPartialData };
+      if (diffFirst) {
+        cache.diff({ ...options, returnPartialData: true });
+      }
+      let rendered: Rendered = { data: undefined, complete: undefined };
+      cache.watch({
+        ...options,
+        callback: (diff) => {
+          rendered = { data: diff.result, complete: diff.complete };
+        },
+      });
+      const steps: Rendered[] = [];
+      const write = (execution: ExecutionWriteOptions["execution"]) => {
+        cache.writeExecutionResult({ query: Preloader, variables, execution });
+        steps.push(rendered);
+      };
+      write({
+        data: { viewer: { __typename: "User", id: "u" } },
+        hasNext: true,
+      });
+      write({
+        incremental: [{ path: [], label: "header", data: header }],
+        hasNext: true,
+      });
+      write({
+        incremental: [{ path: [], label: "chat", data: chat }],
+        hasNext: true,
+      });
+      write({ hasNext: false });
+      return steps;
+    }
+
+    const delivered: Rendered[] = [
+      // initial: nothing of the covered query yet
+      { data: {}, complete: false },
+      // header payload: another covered query's fragment (shares the conversation node)
+      {
+        data: { conversation: { __typename: "Conversation", id: "c1" } },
+        complete: false,
+      },
+      // chat payload: rendered while the preloader is still streaming
+      { data: chat, complete: true },
+      // completion
+      { data: chat, complete: true },
+    ];
+
+    it.each([
+      ["watch only", false],
+      ["diff, then watch (as QueryInfo)", true],
+    ])("(a) notify covered watches without cached data: %s", (_, diffFirst) => {
+      const cache = new ForestRun();
+      expect(
+        stream(cache, { query: ChatQuery, variables }, { diffFirst }),
+      ).toEqual(delivered);
+    });
+
+    it("(a) notify each covered query when its own fragment is delivered", () => {
+      const cache = new ForestRun();
+      expect(stream(cache, { query: HeaderQuery, variables })).toEqual([
+        { data: {}, complete: false },
+        { data: header, complete: true },
+        { data: header, complete: true },
+        { data: header, complete: true },
+      ]);
+    });
+
+    it.each([undefined, true, false])(
+      "(b, d) notify covered watches with cached data (returnPartialData: %s)",
+      (returnPartialData) => {
+        const cache = new ForestRun();
+        const cached = conversation({
+          messages: [{ __typename: "Message", id: "m0", text: "old" }],
+        });
+        cache.writeQuery({ query: ChatQuery, variables, data: cached });
+
+        expect(
+          stream(
+            cache,
+            { query: ChatQuery, variables },
+            { diffFirst: true, returnPartialData },
+          ),
+        ).toEqual([
+          { data: cached, complete: true },
+          { data: cached, complete: true },
+          { data: chat, complete: true },
+          { data: chat, complete: true },
+        ]);
+      },
+    );
+    it("(d) watches with returnPartialData: false throw on missing data (as on main)", () => {
+      const cache = new ForestRun();
+      // A watch with `returnPartialData: false` throws on missing data (ApolloCompat), so it is only safe
+      //   with complete data (see the cached variant above)
+      expect(() =>
+        stream(
+          cache,
+          { query: ChatQuery, variables },
+          { returnPartialData: false },
+        ),
+      ).toThrow("Can't find field 'conversation'");
+    });
+
+    it("(e) fields deferred within the covered fragment", () => {
+      const cache = new ForestRun();
+      const preloader = gql`
+        query Preloader($id: ID!) @cache(covers: ["ChatQuery"]) {
+          ...ChatQuery_query
+        }
+        fragment ChatQuery_query on Query {
+          conversation(id: $id) {
+            id
+            messages {
+              id
+              ... @defer {
+                text
+              }
+            }
+          }
+        }
+      `;
+      const watch = jest.fn();
+      cache.watch({
+        query: ChatQuery,
+        variables,
+        optimistic: true,
+        callback: watch,
+      });
+      const execution = execute(cache, preloader, { variables });
+
+      execution.initial(
+        conversation({ messages: [{ __typename: "Message", id: "m1" }] }),
+      );
+      expect(watch).toHaveBeenCalledTimes(1);
+      expect(watch.mock.calls[0][0].result).toEqual(
+        conversation({ messages: [{ __typename: "Message", id: "m1" }] }),
+      );
+      execution.subsequent([
+        { path: ["conversation", "messages", 0], data: { text: "t1" } },
+      ]);
+      expect(watch).toHaveBeenCalledTimes(2);
+      expect(watch.mock.calls[1][0]).toMatchObject({
+        complete: true,
+        result: chat,
+      });
+    });
+
+    // Adapted (804): `it` instead of `it.failing` (#802): there is no notion of covered operations, all optimistic reads see
+    //   the execution's layer, whatever the variables of the reader
+    it.each([
+      [
+        "an extra undeclared variable (e.g. a shared variables object)",
+        { query: ChatQuery, variables: { id: "c1", locale: "en" } },
+      ],
+      [
+        "other variable names",
+        {
+          query: gql`
+            query ChatQuery($conversationId: ID!) {
+              conversation(id: $conversationId) {
+                id
+                messages {
+                  id
+                  text
+                }
+              }
+            }
+          `,
+          variables: { conversationId: "c1" },
+        },
+      ],
+    ])("(c) notify covered watches with %s", (_, covered) => {
+      const cache = new ForestRun();
+      expect(stream(cache, covered, { diffFirst: true })).toEqual(delivered);
+    });
+  });
+});
+
+describe("@defer: merge policies of subsequent results (ported from #801)", () => {
+  // Defer on items (the list is a container) or elsewhere (the list is outside of delivered data).
+  //   An offset-based merge is idempotent for repeated server pages (a refetch), but not for its own output:
+  //   merge policies only run for delivered values (stored values outside of them are merge outputs)
+  it.each(["items", "elsewhere"] as const)(
+    "produces the same result with an offset-based merge policy as without @defer (defer %s)",
+    (site) => {
+      const typePolicies = {
+        Query: {
+          fields: {
+            messages: {
+              keyArgs: false as const,
+              merge(
+                existing: unknown[] = [],
+                incoming: unknown[],
+                { args }: { args: Record<string, unknown> | null },
+              ) {
+                const merged = existing.slice();
+                const offset = Number(args?.offset ?? 0);
+                incoming.forEach((item, index) => {
+                  merged[offset + index] = item;
+                });
+                return merged;
+              },
+            },
+          },
+        },
+      };
+      const deferred =
+        site === "items"
+          ? gql`
+              query ($offset: Int) {
+                messages(offset: $offset) {
+                  id
+                  text
+                  ... @defer {
+                    name
+                  }
+                }
+              }
+            `
+          : gql`
+              query ($offset: Int) {
+                messages(offset: $offset) {
+                  id
+                  text
+                  name
+                }
+                viewer {
+                  id
+                  ... @defer {
+                    name
+                  }
+                }
+              }
+            `;
+      const plain = gql`
+        query ($offset: Int) {
+          messages(offset: $offset) {
+            id
+            text
+            name
+          }
+        }
+      `;
+      const viewer = { __typename: "User", id: "v" };
+      const pages = [["1", "2"], ["3"]];
+      const withDefer = new TestCache({ typePolicies });
+      const withoutDefer = new TestCache({ typePolicies });
+      // The first page is fetched again (e.g. a refetch)
+      for (const index of [0, 1, 0]) {
+        const variables = { offset: index * 2 };
+        const ids = pages[index];
+        const execution = execute(withDefer, deferred, { variables });
+        if (site === "items") {
+          execution.initial({ messages: ids.map((id) => message(id)) });
+          execution.subsequent(
+            ids.map((id, i) => ({ path: ["messages", i], data: { name: id } })),
+          );
+        } else {
+          execution.initial({
+            messages: ids.map((id) => message(id, id)),
+            viewer,
+          });
+          execution.subsequent([{ path: ["viewer"], data: { name: "v" } }]);
+        }
+        withoutDefer.writeQuery({
+          query: plain,
+          variables,
+          data: { messages: ids.map((id) => message(id, id)) },
+        });
+      }
+
+      const read = (cache: TestCache) =>
+        cache.readQuery({ query: plain, variables: { offset: 0 } });
+      expect(read(withDefer)).toEqual({
+        messages: ["1", "2", "3"].map((id) => message(id, id)),
+      });
+      expect(read(withDefer)).toEqual(read(withoutDefer));
     },
   );
 });
