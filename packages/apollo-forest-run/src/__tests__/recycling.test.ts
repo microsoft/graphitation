@@ -1,4 +1,5 @@
-import { gql } from "@apollo/client";
+import { ApolloCache, gql } from "@apollo/client";
+import { getFragmentQueryDocument } from "@apollo/client/utilities";
 import { ForestRun } from "../ForestRun";
 
 describe("within the same operation", () => {
@@ -317,6 +318,360 @@ describe("cross-operation recycling via @cache(covers)", () => {
   });
 });
 
+describe("with optimistic layers", () => {
+  const ChatQuery = gql`
+    query ChatQuery {
+      chat {
+        id
+        messages {
+          id
+          text
+        }
+      }
+    }
+  `;
+  const MessageNamesQuery = gql`
+    query MessageNamesQuery {
+      chat {
+        id
+        messages {
+          id
+          name
+        }
+      }
+    }
+  `;
+  const MessagesQuery = gql`
+    query MessagesQuery {
+      chat {
+        id
+        messages {
+          id
+          text
+          name
+        }
+      }
+    }
+  `;
+  const message = (id: string, text: string) => ({
+    __typename: "Message",
+    id,
+    text,
+  });
+  const chat = (messages: unknown[]) => ({
+    chat: { __typename: "Chat", id: "1", messages },
+  });
+
+  it("recycles chunks when upper layer has only unrelated fields", () => {
+    const cache = new ForestRun();
+    const input = chat([message("1", "foo"), message("2", "bar")]);
+    cache.write({ query: ChatQuery, result: input });
+
+    cache.recordOptimisticTransaction((c) => {
+      c.writeQuery({
+        query: MessageNamesQuery,
+        data: chat([
+          { __typename: "Message", id: "1", name: "a" },
+          { __typename: "Message", id: "2", name: "b" },
+        ]),
+      });
+    }, "optimistic");
+    const output = cache.diff<typeof input>({
+      query: ChatQuery,
+      optimistic: true,
+    });
+
+    expect(output.complete).toBe(true);
+    expect(output.result).toEqual(input);
+    expect(output.result?.chat.messages[0]).toBe(input.chat.messages[0]);
+    expect(output.result?.chat.messages[1]).toBe(input.chat.messages[1]);
+  });
+
+  it("returns the whole result when upper layer has only unrelated fields of its nodes", () => {
+    const cache = new ForestRun();
+    const input = chat([message("1", "foo"), message("2", "bar")]);
+    cache.write({ query: ChatQuery, result: input });
+
+    cache.recordOptimisticTransaction((c) => {
+      c.writeFragment({
+        id: "Message:1",
+        fragment: gql`
+          fragment MessageName on Message {
+            name
+          }
+        `,
+        data: { __typename: "Message", name: "a" },
+      });
+    }, "optimistic");
+    const output = cache.diff({ query: ChatQuery, optimistic: true });
+
+    expect(output.result).toBe(input);
+  });
+
+  it("does not recycle chunks when upper layer changes selected fields", () => {
+    const cache = new ForestRun();
+    const input = chat([message("1", "foo"), message("2", "bar")]);
+    cache.write({ query: ChatQuery, result: input });
+
+    cache.recordOptimisticTransaction((c) => {
+      c.writeQuery({
+        query: MessagesQuery,
+        data: chat([
+          { ...message("1", "foo (optimistic)"), name: "a" },
+          { ...message("2", "bar"), name: "b" },
+        ]),
+      });
+    }, "optimistic");
+    const output = cache.diff<typeof input>({
+      query: ChatQuery,
+      optimistic: true,
+    });
+
+    expect(output.result).toEqual(
+      chat([message("1", "foo (optimistic)"), message("2", "bar")]),
+    );
+    // Same value in the upper layer: still recycled
+    expect(output.result?.chat.messages[1]).toBe(input.chat.messages[1]);
+
+    cache.removeOptimistic("optimistic");
+    const final = cache.diff({ query: ChatQuery, optimistic: true });
+
+    expect(final.result).toEqual(input);
+  });
+
+  describe("with nested nodes", () => {
+    const ItemQuery = gql`
+      query ItemQuery {
+        top
+        item {
+          id
+          child {
+            id
+            text
+          }
+        }
+      }
+    `;
+    const ItemNameQuery = gql`
+      {
+        item {
+          id
+          name
+        }
+      }
+    `;
+    const ChildText = gql`
+      fragment ChildText on Child {
+        text
+      }
+    `;
+    const item = (id: string, text = "base") => ({
+      __typename: "Item",
+      id,
+      child: { __typename: "Child", id, text },
+    });
+    const redirectToItem2 = (c: ApolloCache<unknown>) => {
+      c.writeQuery({
+        query: gql`
+          {
+            item {
+              id
+            }
+          }
+        `,
+        data: { item: { __typename: "Item", id: "2" } },
+      });
+      c.writeFragment({
+        id: "Child:2",
+        fragment: ChildText,
+        data: { __typename: "Child", text: "optimistic" },
+      });
+    };
+    const writeTop = (cache: ForestRun) =>
+      cache.write({
+        query: gql`
+          {
+            top
+          }
+        `,
+        result: { top: "b" },
+      });
+
+    it("keeps optimistic data of nested nodes when re-reading after unrelated changes", () => {
+      const cache = new ForestRun();
+      cache.write({ query: ItemQuery, result: { top: "a", item: item("1") } });
+
+      cache.recordOptimisticTransaction((c) => {
+        c.writeQuery({
+          query: ItemNameQuery,
+          data: { item: { __typename: "Item", id: "1", name: "a" } },
+        });
+        c.writeFragment({
+          id: "Child:1",
+          fragment: ChildText,
+          data: { __typename: "Child", text: "optimistic" },
+        });
+      }, "optimistic");
+      cache.diff({ query: ItemQuery, optimistic: true });
+      writeTop(cache);
+      const output = cache.diff({ query: ItemQuery, optimistic: true });
+
+      expect(output.result).toEqual({
+        top: "b",
+        item: item("1", "optimistic"),
+      });
+    });
+
+    it("respects nested nodes evicted in upper layer when re-reading after unrelated changes", () => {
+      const cache = new ForestRun();
+      cache.write({ query: ItemQuery, result: { top: "a", item: item("1") } });
+
+      cache.recordOptimisticTransaction((c) => {
+        c.writeQuery({
+          query: ItemNameQuery,
+          data: { item: { __typename: "Item", id: "1", name: "a" } },
+        });
+        c.writeFragment({
+          id: "Child:1",
+          fragment: ChildText,
+          data: item("1").child,
+        });
+        c.evict({ id: "Child:1" });
+      }, "optimistic");
+      const diff = {
+        query: ItemQuery,
+        optimistic: true,
+        returnPartialData: true,
+      };
+      cache.diff(diff);
+      writeTop(cache);
+
+      expect(cache.diff(diff).complete).toBe(false);
+    });
+
+    it("does not recycle nodes outside of the read result with optimistic descendants", () => {
+      const cache = new ForestRun();
+      const query = gql`
+        query Main {
+          item {
+            id
+            child {
+              id
+              text
+            }
+          }
+          other {
+            id
+          }
+        }
+      `;
+      const other = { __typename: "Item", id: "2" };
+      cache.write({ query, result: { item: item("1"), other } });
+      cache.write({
+        query: gql`
+          query Preloader @cache(covers: ["Main"]) {
+            other {
+              id
+              child {
+                id
+                text
+              }
+            }
+          }
+        `,
+        result: { other: item("2") },
+      });
+
+      cache.recordOptimisticTransaction(redirectToItem2, "optimistic");
+      const output = cache.diff({ query, optimistic: true });
+
+      expect(output.result).toEqual({ item: item("2", "optimistic"), other });
+    });
+
+    it("does not recycle orphan nodes with optimistic descendants", () => {
+      const cache = new ForestRun({ apolloCompat_keepOrphanNodes: true });
+      cache.write({ query: ItemQuery, result: { top: "a", item: item("2") } });
+      cache.write({ query: ItemQuery, result: { top: "a", item: item("1") } });
+
+      cache.recordOptimisticTransaction(redirectToItem2, "optimistic");
+      const output = cache.diff({ query: ItemQuery, optimistic: true });
+
+      expect(output.result).toEqual({
+        top: "a",
+        item: item("2", "optimistic"),
+      });
+    });
+  });
+
+  it("does not recycle chunks when upper layer changes node type", () => {
+    const cache = new ForestRun({
+      addTypename: false,
+      dataIdFromObject: (object) => String(object.id),
+      possibleTypes: { Node: ["A", "B"] },
+    });
+    const fragment = gql`
+      fragment Main on Node {
+        id
+        ... on A {
+          a
+        }
+        ... on B {
+          b
+        }
+      }
+    `;
+    cache.writeFragment({
+      id: "1",
+      fragment,
+      data: { __typename: "A", id: "1", a: "base" },
+    });
+
+    cache.recordOptimisticTransaction((c) => {
+      c.writeFragment({
+        id: "1",
+        fragment: gql`
+          fragment WriteB on B {
+            id
+            b
+          }
+        `,
+        data: { __typename: "B", id: "1", b: "optimistic" },
+      });
+    }, "optimistic");
+    const output = cache.diff({
+      query: getFragmentQueryDocument(fragment),
+      id: "1",
+      optimistic: true,
+    });
+
+    expect(output.result).toEqual({ id: "1", b: "optimistic" });
+  });
+
+  it("respects fields evicted in upper layer", () => {
+    const cache = new ForestRun();
+    cache.write({ query: ChatQuery, result: chat([message("1", "foo")]) });
+
+    cache.recordOptimisticTransaction((c) => {
+      c.writeFragment({
+        id: "Message:1",
+        fragment: gql`
+          fragment MessageText on Message {
+            text
+          }
+        `,
+        data: { __typename: "Message", text: "foo" },
+      });
+      c.evict({ id: "Message:1", fieldName: "text" });
+    }, "optimistic");
+    const output = cache.diff({
+      query: ChatQuery,
+      optimistic: true,
+      returnPartialData: true,
+    });
+
+    expect(output.complete).toBe(false);
+  });
+});
 // TODO: recycling when there are:
 //  - variables at different levels (i.e. different operations with the same document)
 //  - merge policies

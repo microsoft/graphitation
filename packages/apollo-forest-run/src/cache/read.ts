@@ -1,5 +1,6 @@
 import type {
   FieldName,
+  NodeKey,
   OperationDescriptor,
   VariableValues,
 } from "../descriptor/types";
@@ -30,7 +31,11 @@ import {
 } from "../values";
 import { applyReadPolicies } from "./policies";
 import { indexTree } from "../forest/indexTree";
-import { createChunkMatcher, createChunkProvider } from "./draftHelpers";
+import {
+  createChunkMatcher,
+  createChunkProvider,
+  hasConflictingFields,
+} from "./draftHelpers";
 import {
   getDiffDescriptor,
   getFragmentNode,
@@ -356,9 +361,13 @@ function applyTransformations(
   }
 
   // For dirty nodes we should not recycle existing chunks
-  const dirtyNodes =
-    previous?.dirtyNodes ??
-    resolveAffectedOptimisticNodes(inputTree, dataLayers);
+  const uncheckedNodes = new Set<NodeKey>();
+  const dirtyNodes = resolveAffectedOptimisticNodes(
+    inputTree,
+    dataLayers,
+    previous?.dirtyNodes,
+    uncheckedNodes,
+  );
 
   if (!inputTree.incompleteChunks.size && !dirtyNodes.size) {
     // Fast-path: skip optimistic transforms
@@ -375,7 +384,13 @@ function applyTransformations(
       operation.rootType,
     ),
     createChunkProvider(dataLayers),
-    createChunkMatcher(dataLayers, false, dirtyNodes),
+    createChunkMatcher(
+      dataLayers,
+      false,
+      dirtyNodes,
+      (chunk) =>
+        !uncheckedNodes.has(chunk.key) && isAttachedChunk(inputTree, chunk),
+    ),
   );
   const optimisticTree = indexTree(
     env,
@@ -466,11 +481,14 @@ function reportFirstMissingField(tree: IndexedTree): MissingFieldError {
 function resolveAffectedOptimisticNodes(
   inputTree: ResultTree,
   dataLayers: (OptimisticLayer | DataForest)[],
+  previousDirtyNodes: DirtyNodeMap | undefined,
+  uncheckedNodeKeys: Set<NodeKey>,
 ): DirtyNodeMap {
   if (dataLayers.length <= 1) {
-    return EMPTY_MAP;
+    return previousDirtyNodes ?? EMPTY_MAP;
   }
   const result: DirtyNodeMap = new Map();
+  const uncheckedNodes: DirtyNodeMap = new Map();
 
   for (let i = 0; i < dataLayers.length - 1; i++) {
     // Note: last layer is the data layer
@@ -481,18 +499,72 @@ function resolveAffectedOptimisticNodes(
         : optimisticLayer.operationsByNodes.keys();
 
     for (const nodeKey of nodeKeys) {
-      if (
-        optimisticLayer.operationsByNodes.has(nodeKey) &&
-        inputTree.nodes.has(nodeKey)
-      ) {
-        result.set(nodeKey, EMPTY_SET as Set<FieldName>);
+      const operationIds = optimisticLayer.operationsByNodes.get(nodeKey);
+      const chunks = inputTree.nodes.get(nodeKey);
+      let dirtyFields = result.get(nodeKey);
+      if (!operationIds || !chunks || dirtyFields === EMPTY_SET) {
+        continue;
+      }
+      const isDeleted = optimisticLayer.deletedNodes.has(nodeKey);
+      // Only fields that optimistic chunks may actually change are dirty
+      for (const operationId of operationIds) {
+        const upperChunks =
+          isDeleted || operationId === inputTree.operation.id
+            ? undefined
+            : optimisticLayer.trees.get(operationId)?.nodes.get(nodeKey);
+        if (!upperChunks?.length) {
+          if (previousDirtyNodes && !isDeleted) {
+            // Re-reads: such nodes (and their ancestors) are recycled with stricter rules (same as before)
+            uncheckedNodes.set(nodeKey, new Set());
+            continue;
+          }
+          // Deleted node, optimistic data of this very operation (e.g. to capture optimistic history),
+          //   or node tracked without data: the whole node is dirty
+          dirtyFields = EMPTY_SET as Set<FieldName>;
+          break;
+        }
+        for (const upperChunk of upperChunks) {
+          for (const chunk of chunks) {
+            if (chunk.type !== upperChunk.type) {
+              // Type change may affect resolved selections of the node
+              dirtyFields = EMPTY_SET as Set<FieldName>;
+            } else if (hasConflictingFields(chunk, upperChunk)) {
+              dirtyFields ??= new Set();
+              hasConflictingFields(chunk, upperChunk, dirtyFields);
+            }
+          }
+        }
+      }
+      if (dirtyFields) {
+        result.set(nodeKey, dirtyFields);
       }
     }
   }
   // Add parent nodes to make sure they are not recycled
   //   (when parents are recycled, nested affected nodes won't be updated properly)
   appendParentNodes(inputTree, result);
+  appendParentNodes(inputTree, uncheckedNodes);
+  uncheckedNodes.forEach((_, nodeKey) => uncheckedNodeKeys.add(nodeKey));
+
+  // Nodes invalidated since the previous read
+  for (const [nodeKey, fields] of previousDirtyNodes ?? EMPTY_ARRAY) {
+    const dirtyFields = result.get(nodeKey);
+    if (!dirtyFields || fields.size === 0) {
+      result.set(nodeKey, fields);
+    } else if (dirtyFields !== EMPTY_SET) {
+      fields.forEach((field) => dirtyFields.add(field));
+    }
+  }
   return result;
+}
+
+// Chunk of this tree reachable from its root (unlike orphan nodes) - so all its descendants are tracked in this tree
+function isAttachedChunk(tree: ResultTree, chunk: ObjectChunk): boolean {
+  const parentInfo = tree.dataMap.get(chunk.data);
+  return (
+    parentInfo?.value === chunk &&
+    !(isRootRef(parentInfo) && parentInfo.detached)
+  );
 }
 
 function appendParentNodes(inputTree: ResultTree, dirtyNodes: DirtyNodeMap) {

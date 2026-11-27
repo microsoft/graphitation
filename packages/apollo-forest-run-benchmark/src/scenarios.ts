@@ -20,6 +20,26 @@ const pendingHookResult = (m: number, h: number) => ({
   message: { __typename: "Message", id: String(m), [`field${h}`]: h },
 });
 
+// One query reads N messages, while an optimistic layer holds the same messages with other fields
+const OPTIMISTIC_LIST_SIZE = 2000;
+const chatTextsQuery = parse(
+  `query ChatTexts { chat { id messages { id text } } }`,
+);
+const chatNamesQuery = parse(
+  `query ChatNames { chat { id messages { id name } } }`,
+);
+const chatResult = (field: "text" | "name") => ({
+  chat: {
+    __typename: "Chat",
+    id: "1",
+    messages: Array.from({ length: OPTIMISTIC_LIST_SIZE }, (_, i) => ({
+      __typename: "Message",
+      id: String(i),
+      [field]: `${field} ${i}`,
+    })),
+  },
+});
+
 const addWatchers = (
   watcherCount: number,
   cache: ForestRun,
@@ -492,6 +512,25 @@ export const scenarios = [
             variables: { id: "0" },
             data: pendingHookResult(0, half),
           });
+        },
+      };
+    },
+  },
+  {
+    // Reads a list while an optimistic layer holds all list items (but with fields not selected by the reader)
+    name: "read-list-under-unrelated-optimistic-layer",
+    prepare: (ctx: ScenarioContext) => {
+      const { CacheFactory, configuration } = ctx;
+      const cache = new CacheFactory(configuration);
+
+      cache.writeQuery({ query: chatTextsQuery, data: chatResult("text") });
+      cache.recordOptimisticTransaction((c) => {
+        c.writeQuery({ query: chatNamesQuery, data: chatResult("name") });
+      }, "optimistic");
+
+      return {
+        run() {
+          return cache.diff({ query: chatTextsQuery, optimistic: true });
         },
       };
     },
