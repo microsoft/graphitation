@@ -9,6 +9,7 @@ import type {
   DataForest,
   ExecutionWriteOptions,
   InFlightExecution,
+  OptimisticLayer,
   Store,
   Transaction,
   WriteOptionsInternal,
@@ -25,7 +26,11 @@ import {
   resolveOperationDescriptor,
   resolveResultDescriptor,
 } from "./descriptor";
-import { addInFlightExecution, removeInFlightExecution } from "./store";
+import {
+  addInFlightExecution,
+  getActiveForest,
+  removeInFlightExecution,
+} from "./store";
 import { mergeAt } from "../incremental/data";
 
 /**
@@ -42,7 +47,7 @@ import { mergeAt } from "../incremental/data";
  * A new execution of the operation cancels the current one (its in-flight layer is discarded).
  */
 export type ExecutionWrite = {
-  forest: DataForest;
+  forest: DataForest | OptimisticLayer;
   data: ResultData;
   // The in-flight execution written to (the target forest is its layer)
   inFlight: InFlightExecution | null;
@@ -54,14 +59,27 @@ export function resolveExecutionWrite(
   transaction: Transaction,
   options: ExecutionWriteOptions,
 ): ExecutionWrite {
-  // Executions are written to the data forest only (never optimistic)
-  assert(!transaction.optimisticLayer);
   const { execution } = options;
   const operation = resolveExecutionOperation(env, store, options);
   const current = store.inFlightExecutions.get(operation);
 
+  if (
+    isSubsequentResult(execution) &&
+    (!current || current.key !== execution.key)
+  ) {
+    // Not a result of the current execution (e.g. untyped options of `write`, see shouldWriteExecutionResult):
+    //   the same as `write` without `result`
+    return {
+      forest: getActiveForest(store, transaction),
+      data: {},
+      inFlight: null,
+    };
+  }
+  // Executions are written to the data forest only (never optimistic)
+  assert(!transaction.optimisticLayer);
+
   if (isSubsequentResult(execution)) {
-    assert(current && current.key === execution.key);
+    assert(current);
     const data = spliceIncrementalResults(current.data, execution);
     if (!execution.hasNext) {
       removeExecution(store, transaction, current);

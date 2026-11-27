@@ -135,6 +135,25 @@ describe("writeExecutionResult", () => {
     expect(cache.extract()).toEqual(legacyCache.extract());
   });
 
+  it("writes untyped execution options of write like write without result", () => {
+    const cache = new ForestRun();
+    const legacyCache = new ForestRun();
+    const data = { messages: [message("1", "one")] };
+    cache.write({ query: preloaderQuery, result: data });
+    legacyCache.write({ query: preloaderQuery, result: data });
+
+    // Untyped options (not Cache.WriteOptions)
+    const options = {
+      query: preloaderQuery,
+      execution: { incremental: [], hasNext: false },
+    };
+    // @ts-expect-error write accepts results only (Apollo Cache.WriteOptions)
+    cache.write(options);
+    legacyCache.write({ query: preloaderQuery, result: undefined });
+
+    expect(cache.extract()).toEqual(legacyCache.extract());
+  });
+
   it("returns the root reference for initial results only", () => {
     const cache = new ForestRun();
     const execution = execute(cache, preloaderQuery);
