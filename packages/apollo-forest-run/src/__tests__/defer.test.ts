@@ -7,10 +7,21 @@ import {
   getInFlightLayers,
 } from "../cache/store";
 import { assert } from "../jsutils/assert";
+import type { ExecutionWriteOptions } from "../cache/types";
 import type {
   ExecutionKey,
   IncrementalDeferResult,
 } from "../incremental/types";
+
+// `it.failing` exists in the jest runtime (29), not in its types (@types/jest 26)
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace jest {
+    interface It {
+      failing: It;
+    }
+  }
+}
 
 class TestCache extends ForestRun {
   operation(query: DocumentNode, variables = {}) {
@@ -1349,4 +1360,247 @@ describe("@defer: fetchMore on a covered query while the preloader streams", () 
       }
     },
   );
+});
+
+describe("@defer: covered queries of a preloader (production setup)", () => {
+  // Covered queries are separate documents, converted to fragments on Query and spread into the preloader
+  //   (the covered selection equals the fragment exactly). Their watches are registered before the preloader
+  //   starts streaming (cache-first miss), as `useQuery` does (QueryInfo: diff, then watch with `optimistic: true`).
+  const ChatQuery = gql`
+    query ChatQuery($id: ID!) {
+      conversation(id: $id) {
+        id
+        messages {
+          id
+          text
+        }
+      }
+    }
+  `;
+  const HeaderQuery = gql`
+    query HeaderQuery($id: ID!) {
+      conversation(id: $id) {
+        id
+        title
+      }
+    }
+  `;
+  const Preloader = gql`
+    query Preloader($id: ID!) @cache(covers: ["ChatQuery", "HeaderQuery"]) {
+      viewer {
+        id
+      }
+      ...HeaderQuery_query @defer(label: "header")
+      ...ChatQuery_query @defer(label: "chat")
+    }
+    fragment HeaderQuery_query on Query {
+      conversation(id: $id) {
+        id
+        title
+      }
+    }
+    fragment ChatQuery_query on Query {
+      conversation(id: $id) {
+        id
+        messages {
+          id
+          text
+        }
+      }
+    }
+  `;
+  const variables = { id: "c1" };
+  const conversation = (fields: object) => ({
+    conversation: { __typename: "Conversation", id: "c1", ...fields },
+  });
+  const chat = conversation({
+    messages: [{ __typename: "Message", id: "m1", text: "t1" }],
+  });
+  const header = conversation({ title: "T" });
+
+  type Covered = { query: DocumentNode; variables: object };
+  // What the covered component renders after each step: the latest diff its watch was notified with
+  type Rendered = { data: unknown; complete: boolean | undefined };
+
+  function stream(
+    cache: ForestRun,
+    covered: Covered,
+    {
+      diffFirst = false,
+      returnPartialData = undefined as boolean | undefined,
+    } = {},
+  ) {
+    const options = { ...covered, optimistic: true, returnPartialData };
+    if (diffFirst) {
+      cache.diff({ ...options, returnPartialData: true });
+    }
+    let rendered: Rendered = { data: undefined, complete: undefined };
+    cache.watch({
+      ...options,
+      callback: (diff) => {
+        rendered = { data: diff.result, complete: diff.complete };
+      },
+    });
+    const steps: Rendered[] = [];
+    const write = (execution: ExecutionWriteOptions["execution"]) => {
+      cache.writeExecutionResult({ query: Preloader, variables, execution });
+      steps.push(rendered);
+    };
+    write({ data: { viewer: { __typename: "User", id: "u" } }, hasNext: true });
+    write({
+      incremental: [{ path: [], label: "header", data: header }],
+      hasNext: true,
+    });
+    write({
+      incremental: [{ path: [], label: "chat", data: chat }],
+      hasNext: true,
+    });
+    write({ hasNext: false });
+    return steps;
+  }
+
+  const delivered: Rendered[] = [
+    // initial: nothing of the covered query yet
+    { data: {}, complete: false },
+    // header payload: another covered query's fragment (shares the conversation node)
+    {
+      data: { conversation: { __typename: "Conversation", id: "c1" } },
+      complete: false,
+    },
+    // chat payload: rendered while the preloader is still streaming
+    { data: chat, complete: true },
+    // completion
+    { data: chat, complete: true },
+  ];
+
+  it.each([
+    ["watch only", false],
+    ["diff, then watch (as QueryInfo)", true],
+  ])("(a) notify covered watches without cached data: %s", (_, diffFirst) => {
+    const cache = new ForestRun();
+    expect(
+      stream(cache, { query: ChatQuery, variables }, { diffFirst }),
+    ).toEqual(delivered);
+  });
+
+  it("(a) notify each covered query when its own fragment is delivered", () => {
+    const cache = new ForestRun();
+    expect(stream(cache, { query: HeaderQuery, variables })).toEqual([
+      { data: {}, complete: false },
+      { data: header, complete: true },
+      { data: header, complete: true },
+      { data: header, complete: true },
+    ]);
+  });
+
+  it.each([undefined, true, false])(
+    "(b, d) notify covered watches with cached data (returnPartialData: %s)",
+    (returnPartialData) => {
+      const cache = new ForestRun();
+      const cached = conversation({
+        messages: [{ __typename: "Message", id: "m0", text: "old" }],
+      });
+      cache.writeQuery({ query: ChatQuery, variables, data: cached });
+
+      expect(
+        stream(
+          cache,
+          { query: ChatQuery, variables },
+          { diffFirst: true, returnPartialData },
+        ),
+      ).toEqual([
+        { data: cached, complete: true },
+        { data: cached, complete: true },
+        { data: chat, complete: true },
+        { data: chat, complete: true },
+      ]);
+    },
+  );
+  it("(d) watches with returnPartialData: false throw on missing data (as on main)", () => {
+    const cache = new ForestRun();
+    // A watch with `returnPartialData: false` throws on missing data (ApolloCompat), so it is only safe
+    //   with complete data (see the cached variant above)
+    expect(() =>
+      stream(
+        cache,
+        { query: ChatQuery, variables },
+        { returnPartialData: false },
+      ),
+    ).toThrow("Can't find field 'conversation'");
+  });
+
+  it("(e) fields deferred within the covered fragment", () => {
+    const cache = new ForestRun();
+    const preloader = gql`
+      query Preloader($id: ID!) @cache(covers: ["ChatQuery"]) {
+        ...ChatQuery_query
+      }
+      fragment ChatQuery_query on Query {
+        conversation(id: $id) {
+          id
+          messages {
+            id
+            ... @defer {
+              text
+            }
+          }
+        }
+      }
+    `;
+    const watch = jest.fn();
+    cache.watch({
+      query: ChatQuery,
+      variables,
+      optimistic: true,
+      callback: watch,
+    });
+    const execution = execute(cache, preloader, { variables });
+
+    execution.initial(
+      conversation({ messages: [{ __typename: "Message", id: "m1" }] }),
+    );
+    expect(watch).toHaveBeenCalledTimes(1);
+    expect(watch.mock.calls[0][0].result).toEqual(
+      conversation({ messages: [{ __typename: "Message", id: "m1" }] }),
+    );
+    execution.subsequent([
+      { path: ["conversation", "messages", 0], data: { text: "t1" } },
+    ]);
+    expect(watch).toHaveBeenCalledTimes(2);
+    expect(watch.mock.calls[1][0]).toMatchObject({
+      complete: true,
+      result: chat,
+    });
+  });
+
+  // FAILING (#802): the covered query is not covered by `isCoveredBy` (variables with defaults of the covered
+  //   operation must be a subset of the preloader's variables with equal values): it reads the data forest only,
+  //   so its watch gets nothing while the preloader streams (data only arrives with the commit).
+  //   With name-only matching (before 0800a579) both cases work.
+  it.failing.each([
+    [
+      "an extra undeclared variable (e.g. a shared variables object)",
+      { query: ChatQuery, variables: { id: "c1", locale: "en" } },
+    ],
+    [
+      "other variable names",
+      {
+        query: gql`
+          query ChatQuery($conversationId: ID!) {
+            conversation(id: $conversationId) {
+              id
+              messages {
+                id
+                text
+              }
+            }
+          }
+        `,
+        variables: { conversationId: "c1" },
+      },
+    ],
+  ])("(c) notify covered watches with %s", (_, covered) => {
+    const cache = new ForestRun();
+    expect(stream(cache, covered, { diffFirst: true })).toEqual(delivered);
+  });
 });
