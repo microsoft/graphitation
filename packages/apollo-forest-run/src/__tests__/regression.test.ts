@@ -3044,3 +3044,68 @@ describe("optimistic reads within transactions", () => {
     expect(read(cache)).toEqual(expected);
   });
 });
+
+describe("optimistic reads of nodes written in higher layers", () => {
+  const chat = gql`
+    query Chat {
+      chat {
+        id
+        message {
+          id
+          text
+        }
+      }
+    }
+  `;
+  const text = gql`
+    fragment MessageText on Message {
+      id
+      text
+    }
+  `;
+  const writeChat = (cache: ForestRun) =>
+    cache.writeQuery({
+      query: chat,
+      data: {
+        chat: {
+          __typename: "Chat",
+          id: "c1",
+          message: { __typename: "Message", id: "m1", text: "first" },
+        },
+      },
+    });
+  const writeText = (cache: ForestRun) =>
+    cache.writeFragment({
+      id: "Message:m1",
+      fragment: text,
+      data: { __typename: "Message", id: "m1", text: "second" },
+    });
+  const readText = (cache: ForestRun) =>
+    cache.readQuery<{ chat: { message: { text: string } } }>(
+      { query: chat },
+      true,
+    )?.chat.message.text;
+
+  // Chat:c1 only exists in the lower layer
+  test("are up-to-date within the transaction", () => {
+    const cache = new ForestRun();
+    cache.recordOptimisticTransaction(() => writeChat(cache), "layer1");
+    let text;
+    cache.recordOptimisticTransaction(() => {
+      writeText(cache);
+      text = readText(cache);
+    }, "layer2");
+
+    expect(text).toBe("second");
+    expect(readText(cache)).toBe("second");
+  });
+
+  test("are up-to-date after the transaction", () => {
+    const cache = new ForestRun();
+    cache.recordOptimisticTransaction(() => writeChat(cache), "layer1");
+    expect(readText(cache)).toBe("first");
+
+    cache.recordOptimisticTransaction(() => writeText(cache), "layer2");
+    expect(readText(cache)).toBe("second");
+  });
+});
