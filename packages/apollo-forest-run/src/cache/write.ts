@@ -9,7 +9,6 @@ import type {
   OptimisticLayer,
   Store,
   Transaction,
-  WriteOptionsInternal,
   WriteResult,
 } from "./types";
 import type { NodeKey, OperationDescriptor } from "../descriptor/types";
@@ -39,25 +38,19 @@ import { replaceTree } from "../forest/addTree";
 import { invalidateReadResults } from "./invalidate";
 import { IndexedForest } from "../forest/types";
 
-/**
- * Writes a result, or a prepared execution write (its data, to its target, see prepareExecutionWrite)
- */
 export function write(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
-  options: WriteOptionsInternal,
+  options: Cache.WriteOptions,
 ): WriteResult {
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
-  let result: Cache.WriteOptions["result"];
-  let targetForest = getActiveForest(store, activeTransaction);
-  if (isExecutionWrite(options)) {
-    result = options.execution.data;
-    targetForest = options.execution.layer ?? targetForest;
-  } else {
-    result = options.result;
-  }
-  const writeData = typeof result === "object" && result !== null ? result : {};
+  const targetForest = getActiveForest(store, activeTransaction);
+
+  const writeData =
+    typeof options.result === "object" && options.result !== null
+      ? options.result
+      : {};
   const rootNodeKey = options.dataId ?? objectKey(writeData);
   assert(rootNodeKey !== false);
 
@@ -360,18 +353,6 @@ function resolveExtraRootNodeType(
 
 const inspect = JSON.stringify.bind(JSON);
 const EMPTY_ARRAY = Object.freeze([]);
-
-function isExecutionWrite(
-  options: WriteOptionsInternal,
-): options is Exclude<WriteOptionsInternal, Cache.WriteOptions> {
-  // Raw execution results (e.g. in untyped options of `write`) are not prepared execution writes
-  return (
-    "execution" in options &&
-    typeof options.execution === "object" &&
-    options.execution !== null &&
-    options.execution.kind === "ExecutionWrite"
-  );
-}
 
 export function isWrite(op: WriteResult | ModifyResult): op is WriteResult {
   return "incoming" in op; // write has "incoming" tree

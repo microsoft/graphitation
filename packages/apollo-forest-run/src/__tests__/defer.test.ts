@@ -1031,11 +1031,12 @@ describe("merge policies of execution writes", () => {
   });
 });
 describe("timeout and cancellation", () => {
+  // Adapted: `hasNext` decides (no @defer(if) check). A server sends `hasNext: true` only with pending results
   it.each([
-    [false, false],
+    [false, true],
     [true, true],
   ])(
-    "writes initial results with @defer(if: %s) to the data forest unless deferred (in flight: %s)",
+    "writes initial results with hasNext to the execution's layer (@defer(if: %s), in flight: %s)",
     (defer, inFlight) => {
       const cache = new TestCache();
       const query = gql`
