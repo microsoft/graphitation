@@ -3,6 +3,7 @@ import type { DocumentNode } from "graphql";
 import { ForestRun } from "../ForestRun";
 import { resolveOperationDescriptor } from "../cache/descriptor";
 import { canReleaseOperationDescriptor } from "../cache/store";
+import { assert } from "../jsutils/assert";
 import type {
   ExecutionKey,
   IncrementalDeferResult,
@@ -683,4 +684,249 @@ describe("timeout and cancellation", () => {
     await cache.reset();
     expect(cache.inFlight(preloaderQuery)).toBeUndefined();
   });
+});
+
+describe("@defer: fetchMore on a covered query while the preloader streams", () => {
+  const MessageList = gql`
+    query MessageList($id: ID!) {
+      conversation(id: $id) {
+        id
+        messages {
+          id
+          text
+        }
+      }
+    }
+  `;
+  const Preloader = gql`
+    query Preloader($id: ID!) @cache(covers: ["MessageList"]) {
+      conversation(id: $id) {
+        id
+        messages {
+          id
+          ... @defer {
+            text
+          }
+        }
+      }
+    }
+  `;
+  // The same selection as MessageList under another name: not covered, reads the data forest only
+  const OtherList = gql`
+    query OtherList($id: ID!) {
+      conversation(id: $id) {
+        id
+        messages {
+          id
+          text
+        }
+      }
+    }
+  `;
+  const variables = { id: "c1" };
+  const msg = (id: string, text?: string) => ({
+    __typename: "Message",
+    id,
+    ...(text !== undefined && { text }),
+  });
+  const conversation = (messages: object[]) => ({
+    conversation: { __typename: "Conversation", id: "c1", messages },
+  });
+  type Messages = {
+    conversation?: { messages?: { id: string; text?: string }[] };
+  };
+  // e.g. { messages: ["m1:t1", "m2:-"], complete: true }
+  const summarize = ({
+    result,
+    complete,
+  }: {
+    result?: unknown;
+    complete?: boolean;
+  }) => ({
+    messages: ((result as Messages | null)?.conversation?.messages ?? []).map(
+      (m) => `${m.id}:${m.text ?? "-"}`,
+    ),
+    complete,
+  });
+
+  // (A) Apollo 3 fetchMore with `updateQuery` (ObservableQuery.updateQuery: a partial non-optimistic diff + writeQuery).
+  //   Note: `cache.updateQuery` can't be used here: it reads complete data only, so `prev` is null while texts are pending
+  // (B) Apollo 3 fetchMore without `updateQuery`: writeQuery of the fetchMore result, merged by the field policy.
+  //   Note: the same query and variables are written (without an `$after` argument): in ForestRun, a field with arguments
+  //   doesn't match the same field without arguments even with `keyArgs: false`, unrelated to @defer
+  it.each(["updateQuery", "merge policy"] as const)(
+    "fetchMore via %s",
+    (variant) => {
+      const cache = new ForestRun({
+        typePolicies: {
+          Conversation: {
+            fields: {
+              messages:
+                variant === "merge policy"
+                  ? {
+                      keyArgs: false,
+                      merge: (
+                        existing: unknown[] = [],
+                        incoming: unknown[],
+                      ) => [...existing, ...incoming],
+                    }
+                  : { keyArgs: false },
+            },
+          },
+        },
+      });
+      const watch = jest.fn();
+      cache.watch({
+        query: MessageList,
+        variables,
+        optimistic: true,
+        returnPartialData: true,
+        callback: watch,
+      });
+      const diff = (query: DocumentNode) =>
+        cache.diff({
+          query,
+          variables,
+          optimistic: true,
+          returnPartialData: true,
+        });
+      const record = () => {
+        const step = {
+          list: summarize(diff(MessageList)),
+          watch: watch.mock.calls.map(([d]) => summarize(d)),
+          preloader: summarize(diff(Preloader)),
+        };
+        watch.mockClear();
+        return step;
+      };
+      const steps = [];
+
+      // 1. Initial payload of the preloader (page 1, texts deferred)
+      cache.writeExecutionResult({
+        query: Preloader,
+        variables,
+        execution: {
+          data: conversation([msg("m1"), msg("m2")]),
+          hasNext: true,
+        },
+      });
+      steps.push(record());
+
+      // 2. fetchMore result (page 2)
+      const page2 = [msg("m3", "t3"), msg("m4", "t4")];
+      if (variant === "updateQuery") {
+        const prev = cache.diff<ReturnType<typeof conversation>>({
+          query: MessageList,
+          variables,
+          returnPartialData: true,
+          optimistic: false,
+        }).result;
+        assert(prev);
+        cache.writeQuery({
+          query: MessageList,
+          variables,
+          data: {
+            ...prev,
+            conversation: {
+              ...prev.conversation,
+              messages: [...prev.conversation.messages, ...page2],
+            },
+          },
+        });
+      } else {
+        cache.writeQuery({
+          query: MessageList,
+          variables,
+          data: conversation(page2),
+        });
+      }
+      steps.push(record());
+
+      // 3. Subsequent payload of the preloader (texts of page 1), completes the execution (commit)
+      cache.writeExecutionResult({
+        query: Preloader,
+        variables,
+        execution: {
+          incremental: [
+            { path: ["conversation", "messages", 0], data: { text: "t1" } },
+            { path: ["conversation", "messages", 1], data: { text: "t2" } },
+          ],
+          hasNext: false,
+        },
+      });
+      steps.push(record());
+      // (no separate commit step: `hasNext: false` commits)
+
+      const dataForest = summarize(diff(OtherList));
+
+      const page1Pending = { messages: ["m1:-", "m2:-"], complete: false };
+      if (variant === "updateQuery") {
+        expect(steps).toEqual([
+          {
+            list: page1Pending,
+            watch: [page1Pending],
+            preloader: page1Pending,
+          },
+          {
+            // NOTE: page 2 is lost for MessageList while streaming, although its own write (with all 4 messages)
+            //   replaced its tree in the in-flight layer: reads re-hydrate Conversation:c1.messages from the
+            //   preloader's chunk in the same layer first. Its own write should win for itself.
+            //   The watch is notified again with the same (partial) data.
+            list: page1Pending,
+            watch: [page1Pending],
+            preloader: page1Pending,
+          },
+          {
+            // NOTE: page 2 is lost: the commit writes the preloader's list over it (no merge policy, last write wins,
+            //   same as a slow non-deferred preloader response arriving after fetchMore)
+            list: { messages: ["m1:t1", "m2:t2"], complete: true },
+            watch: [{ messages: ["m1:t1", "m2:t2"], complete: true }],
+            preloader: { messages: ["m1:t1", "m2:t2"], complete: true },
+          },
+        ]);
+        expect(dataForest).toEqual({
+          messages: ["m1:t1", "m2:t2"],
+          complete: true,
+        });
+      } else {
+        expect(steps).toEqual([
+          {
+            list: page1Pending,
+            watch: [page1Pending],
+            preloader: page1Pending,
+          },
+          {
+            // NOTE: wrong texts and lost page 2: MessageList's own tree (page 2 only, the data forest has no page 1 yet)
+            //   and the preloader's tree (page 1) are both in the in-flight layer. Reads take the list from the
+            //   preloader's chunk and resolve items by position in MessageList's chunk: m1 gets m3's text.
+            list: { messages: ["m1:t3", "m2:t4"], complete: true },
+            watch: [{ messages: ["m1:t3", "m2:t4"], complete: true }],
+            preloader: page1Pending,
+          },
+          {
+            // NOTE: wrong order: the commit is a regular write after fetchMore, so the merge policy appends page 1
+            //   after page 2 (same as a slow non-deferred preloader response arriving after fetchMore)
+            list: {
+              messages: ["m3:t3", "m4:t4", "m1:t1", "m2:t2"],
+              complete: true,
+            },
+            watch: [
+              {
+                messages: ["m3:t3", "m4:t4", "m1:t1", "m2:t2"],
+                complete: true,
+              },
+            ],
+            preloader: {
+              messages: ["m3:t3", "m4:t4", "m1:t1", "m2:t2"],
+              complete: true,
+            },
+          },
+        ]);
+        expect(dataForest).toEqual({
+          messages: ["m3:t3", "m4:t4", "m1:t1", "m2:t2"],
+          complete: true,
+        });
+      }
+    },
+  );
 });
