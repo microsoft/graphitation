@@ -467,8 +467,7 @@ describe("handling nested lists and complex structures", () => {
     `;
     const chunks = [
       `{ users @mock(count: 2) { id, posts @mock(count: 2) { id } } }`,
-      // Items of lists are only hydrated from the same objects (keyed objects are not matched with embedded ones)
-      `{ users @mock(count: 2) { id, posts @mock(count: 2) { id, comments @mock(count: 2) { id, text } } } }`,
+      `{ users @mock(count: 2) { posts @mock(count: 2) { comments @mock(count: 2) { id, text } } } }`,
     ];
 
     const result = draftHelper(query, chunks);

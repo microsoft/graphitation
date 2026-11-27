@@ -144,7 +144,7 @@ export function hydrateDraft(
         if (!("key" in model) || !("key" in other)) {
           return true;
         }
-        if (model.key !== false || other.key !== false) {
+        if (model.key !== false && other.key !== false) {
           return model.key === other.key;
         }
         // Embedded objects of lists are identified by positions (unless of different types)

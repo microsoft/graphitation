@@ -3107,8 +3107,21 @@ test("does not complete list items with values of items of other types at the sa
   const conversation = (items: object[]) => ({
     conversation: { __typename: "Conversation", id: "c1", items },
   });
+  const noticeTexts: unknown[] = [];
   const cache = new ForestRun({
     possibleTypes: { Item: ["Message", "Notice", "Alert"] },
+    typePolicies: {
+      Notice: {
+        fields: {
+          text: {
+            read(existing) {
+              noticeTexts.push(existing);
+              return existing;
+            },
+          },
+        },
+      },
+    },
   });
   cache.writeQuery({
     query: list,
@@ -3130,11 +3143,12 @@ test("does not complete list items with values of items of other types at the sa
     returnPartialData: true,
   });
 
-  // Embedded objects are not matched with keyed objects, or with embedded objects of other types
+  // Items are not matched with items of other types at the same positions (keyed or embedded)
   expect(diff.result).toEqual(
     conversation([{ __typename: "Notice" }, { __typename: "Alert" }]),
   );
   expect(diff.complete).toBe(false);
+  expect(noticeTexts).toEqual([undefined]);
 });
 
 test("does not recycle chunks of lower layers when the operation's tree in a layer does not have the node", () => {
