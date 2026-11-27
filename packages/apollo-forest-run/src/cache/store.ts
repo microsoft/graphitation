@@ -56,6 +56,7 @@ export function createStore(_: CacheEnv): Store {
     atime: new Map(),
     partitions: new WeakMap(),
     pendingEviction: null,
+    executions: new Map(),
   };
   return store;
 }
@@ -500,6 +501,7 @@ export function resetStore(store: Store): void {
   operations.clear();
   optimisticReadResults.clear();
   optimisticLayers.length = 0;
+  store.executions.clear();
 }
 
 const getRootNode = (result: IndexedTree): NodeChunk | undefined =>

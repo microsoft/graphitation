@@ -17,7 +17,10 @@ import type {
   SerializedOperationInfo,
   Store,
   Transaction,
+  Execution,
+  ExecutionWriteOptions,
 } from "./cache/types";
+import type { ResultData } from "./incremental/types";
 import { ApolloCache } from "@apollo/client";
 import { assert } from "./jsutils/assert";
 import { accumulate, deleteAccumulated } from "./jsutils/map";
@@ -38,9 +41,15 @@ import {
 import {
   getDiffDescriptor,
   isFragmentDocument,
+  resolveOperationDescriptor,
+  resolveResultDescriptor,
   transformDocument,
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
+import {
+  isSubsequentResult,
+  spliceIncrementalResults,
+} from "./incremental/data";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -91,6 +100,7 @@ const REFS_POOL = new Map(
   ]),
 );
 const getRef = (ref: string) => REFS_POOL.get(ref) ?? { __ref: ref };
+let executionCount = 0;
 
 export class ForestRun<
   TPartitions extends HistoryPartitions = any,
@@ -217,6 +227,76 @@ export class ForestRun<
     return incoming.nodes.size ? getRef(incoming.rootNodeKey) : undefined;
   }
 
+  /**
+   * Writes an execution result: a complete result, or results of incremental delivery (`@defer`).
+   *
+   * Results of an incremental execution are written to an optimistic layer of the execution until it completes
+   * (`hasNext: false`): optimistic reads see them, like optimistic data. Subsequent results are spliced into the
+   * received result, which is written to the same layer. On completion, the layer is removed and the received result
+   * is written as a regular result. A new execution of the operation cancels the current one.
+   */
+  public writeExecutionResult(
+    options: ExecutionWriteOptions,
+  ): Reference | undefined {
+    const { execution, ...writeOptions } = options;
+    const operation = resolveResultDescriptor(
+      this.env,
+      this.store,
+      resolveOperationDescriptor(
+        this.env,
+        this.store,
+        options.query,
+        options.variables,
+        options.dataId,
+      ),
+    );
+    const current = this.store.executions.get(operation);
+    let data: ResultData;
+    if (isSubsequentResult(execution)) {
+      if (!current || current.key !== execution.key) {
+        // E.g. late results of a superseded execution
+        return undefined;
+      }
+      data = spliceIncrementalResults(current.data, execution);
+    } else {
+      data = execution.data;
+    }
+    const subsequent = isSubsequentResult(execution);
+    const hasNext = "hasNext" in execution && execution.hasNext;
+    // Executions are never optimistic
+    assert(!peek(this.transactionStack)?.optimisticLayer);
+
+    const ref = this.runTransaction({
+      update: () => {
+        if (current && (!subsequent || !hasNext)) {
+          // Completed or cancelled
+          this.removeOptimistic(current.layerTag);
+          this.store.executions.delete(operation);
+        }
+        if (!hasNext) {
+          return this.write({ ...writeOptions, result: data });
+        }
+        const active: Execution =
+          subsequent && current
+            ? current
+            : {
+                operation,
+                key: execution.key,
+                layerTag: `@defer:${operation.debugName}:${++executionCount}`,
+                data,
+              };
+        active.data = data;
+        this.store.executions.set(operation, active);
+        // ApolloCompat: replays of the layer write the data received so far
+        return this.runTransaction({
+          optimistic: active.layerTag,
+          reuseOptimisticLayer: true,
+          update: () => this.write({ ...writeOptions, result: active.data }),
+        });
+      },
+    });
+    return subsequent ? undefined : ref;
+  }
   private collectAffectedOperationsAndNodes(transaction: Transaction) {
     transaction.affectedOperations ??= new Set();
     transaction.affectedNodes ??= new Set();
@@ -516,11 +596,19 @@ export class ForestRun<
     });
   }
 
-  public batch<T>(options: Cache.BatchOptions<this, T>): T {
+  public batch<T>(
+    options: Cache.BatchOptions<this, T> & { reuseOptimisticLayer?: boolean },
+  ): T {
     return this.runTransaction(options);
   }
 
-  private runTransaction<T>(options: Cache.BatchOptions<this, T>): T {
+  /**
+   * `reuseOptimisticLayer`: an optimistic transaction writes to the existing (topmost) optimistic layer with the same tag
+   * instead of creating a new one (replays of the layer replay all transactions written to it)
+   */
+  private runTransaction<T>(
+    options: Cache.BatchOptions<this, T> & { reuseOptimisticLayer?: boolean },
+  ): T {
     const parentTransaction = peek(this.transactionStack);
     const { update, optimistic, removeOptimistic, onWatchUpdated } = options;
 
@@ -529,8 +617,20 @@ export class ForestRun<
     if (typeof optimistic === "string") {
       // See a note in removeOptimisticLayer on why
       const replay = () => this.runTransaction(options);
-      optimisticLayer = createOptimisticLayer(optimistic, replay);
-      this.store.optimisticLayers.push(optimisticLayer);
+      const existing = options.reuseOptimisticLayer
+        ? findLast(this.store.optimisticLayers, optimistic)
+        : undefined;
+      if (existing) {
+        const replayPrevious = existing.replay;
+        existing.replay = (cache: unknown) => {
+          replayPrevious(cache);
+          replay();
+        };
+        optimisticLayer = existing;
+      } else {
+        optimisticLayer = createOptimisticLayer(optimistic, replay);
+        this.store.optimisticLayers.push(optimisticLayer);
+      }
     } else if (optimistic === false) {
       optimisticLayer = parentTransaction?.optimisticLayer ?? null;
       forceOptimistic = false;
@@ -742,4 +842,16 @@ export class ForestRun<
 
 function peek<T>(stack: T[]): T | undefined {
   return stack[stack.length - 1];
+}
+
+function findLast(
+  layers: OptimisticLayer[],
+  layerTag: string,
+): OptimisticLayer | undefined {
+  for (let i = layers.length - 1; i >= 0; i--) {
+    if (layers[i].layerTag === layerTag) {
+      return layers[i];
+    }
+  }
+  return undefined;
 }
