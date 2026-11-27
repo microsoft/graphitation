@@ -1,4 +1,5 @@
 import { gql } from "@apollo/client";
+import type { TypePolicies } from "@apollo/client";
 import type { DocumentNode } from "graphql";
 import { ForestRun } from "../ForestRun";
 import { resolveOperationDescriptor } from "../cache/descriptor";
@@ -872,7 +873,7 @@ describe("covered operations: variables", () => {
   );
 });
 
-describe("merge policies of in-flight writes", () => {
+describe("merge policies of execution writes", () => {
   const query = gql`
     query {
       viewer {
@@ -889,12 +890,23 @@ describe("merge policies of in-flight writes", () => {
   `;
   const user = { __typename: "User", id: "u" };
 
+  // Adapted: standard optimistic merge semantics. Each result merges with the existing tree of the execution's layer,
+  //   so a non-idempotent merge (naive concat) duplicates once per payload while streaming (as on a refetch).
+  //   The commit is a single write to the data forest (the layer is removed first): the same as without @defer.
   it.each([
-    [[], ["x"]],
-    [["a"], ["a", "x"]],
+    [[], [["x"], ["x", "x"], ["x", "x", "x"]], ["x"]],
+    [
+      ["a"],
+      [
+        ["a", "x"],
+        ["a", "x", "x"],
+        ["a", "x", "x", "x"],
+      ],
+      ["a", "x"],
+    ],
   ])(
-    "merge with the data forest (existing: %j) on each result and on completion",
-    (existing, expected) => {
+    "naive merges duplicate while streaming, the commit merges once (existing: %j)",
+    (existing, streaming, committed) => {
       const merge = jest.fn((prev: string[] = [], incoming: string[]) => [
         ...prev,
         ...incoming,
@@ -909,31 +921,115 @@ describe("merge policies of in-flight writes", () => {
         });
         merge.mockClear();
       }
-      const tags = () =>
-        (read(cache, query).result as { viewer: { tags: string[] } }).viewer
-          .tags;
+      const tags = (optimistic = true) =>
+        (
+          read(cache, query, optimistic).result as {
+            viewer: { tags: string[] };
+          }
+        ).viewer.tags;
       const execution = execute(cache, query);
       execution.initial({ viewer: { ...user, tags: ["x"] } });
-      expect(tags()).toEqual(expected);
+      expect(tags()).toEqual(streaming[0]);
 
       execution.subsequent([
         { path: ["viewer"], label: "a", data: { name: "n" } },
       ]);
-      expect(tags()).toEqual(expected);
+      expect(tags()).toEqual(streaming[1]);
       execution.subsequent([
         { path: ["viewer"], label: "b", data: { bio: "b" } },
       ]);
-      expect(tags()).toEqual(expected);
+      expect(tags()).toEqual(streaming[2]);
 
       execution.complete();
-      expect(tags()).toEqual(expected);
-      for (const [prev] of merge.mock.calls) {
-        expect(prev ?? []).toEqual(existing);
-      }
+      expect(tags()).toEqual(committed);
+      expect(tags(false)).toEqual(committed);
+      // The commit merges with the data forest
+      const [lastPrev] = merge.mock.calls[merge.mock.calls.length - 1];
+      expect(lastPrev ?? []).toEqual(existing);
     },
   );
-});
 
+  it("idempotent (offset-based) merges give the same results as without @defer", () => {
+    const listQuery = gql`
+      query ($offset: Int) {
+        feed(offset: $offset) {
+          id
+          ... @defer {
+            title
+          }
+        }
+      }
+    `;
+    const typePolicies: TypePolicies = {
+      Query: {
+        fields: {
+          feed: {
+            keyArgs: false,
+            merge: (
+              existing: unknown[] = [],
+              incoming: unknown[],
+              { args }: { args: Record<string, unknown> | null },
+            ) => {
+              const merged = existing.slice();
+              const offset = Number(args?.offset ?? 0);
+              incoming.forEach((item, i) => (merged[offset + i] = item));
+              return merged;
+            },
+          },
+        },
+      },
+    };
+    const item = (id: string, title?: string) => ({
+      __typename: "Item",
+      id,
+      ...(title !== undefined && { title }),
+    });
+    const feed = (cache: ForestRun) =>
+      cache.diff({
+        query: listQuery,
+        variables: { offset: 2 },
+        optimistic: true,
+        returnPartialData: true,
+      }).result;
+
+    const cache = new ForestRun({ typePolicies });
+    const regular = new ForestRun({ typePolicies });
+    for (const c of [cache, regular]) {
+      c.writeQuery({
+        query: listQuery,
+        variables: { offset: 0 },
+        data: { feed: [item("1", "one"), item("2", "two")] },
+      });
+    }
+    const variables = { offset: 2 };
+    const execution = execute(cache, listQuery, { variables });
+    const page = [item("3"), item("4")];
+    execution.initial({ feed: page });
+    regular.writeQuery({ query: listQuery, variables, data: { feed: page } });
+    expect(feed(cache)).toEqual(feed(regular));
+
+    for (const [index, title] of ["three", "four"].entries()) {
+      execution.subsequent([{ path: ["feed", index], data: { title } }]);
+      page[index] = item(page[index].id, title);
+      regular.writeQuery({
+        query: listQuery,
+        variables,
+        data: { feed: page.slice() },
+      });
+      expect(feed(cache)).toEqual(feed(regular));
+    }
+    execution.complete();
+    expect(feed(cache)).toEqual(feed(regular));
+    expect(feed(cache)).toEqual({
+      feed: [
+        item("1", "one"),
+        item("2", "two"),
+        item("3", "three"),
+        item("4", "four"),
+      ],
+    });
+  });
+});
 describe("timeout and cancellation", () => {
   it.each([
     [false, false],

@@ -153,15 +153,9 @@ export function write(
     incomingResult.rootNodeKey = options.dataId;
   }
 
-  // Results of an execution merge with the layers below its layer (as on completion): each is merged as a whole
-  const mergeLayers = getEffectiveReadLayers(store, targetForest, false);
-  if (current) {
-    mergeLayers.shift(); // its own layer
-    incomingResult.prev = null;
-  }
   const modifiedIncomingResult = applyMergePolicies(
     env,
-    mergeLayers,
+    getEffectiveReadLayers(store, targetForest, false),
     mergePolicies,
     incomingResult,
     options.overwrite ?? false,
