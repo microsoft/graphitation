@@ -204,7 +204,7 @@ export function findRecyclableChunk(
       continue;
     }
     const tree = layer.trees.get(operation.id);
-    const checkedInLayer = tree ? 1 : 0;
+    const checkedInLayer = tree?.nodes.has(ref) ? 1 : 0;
     for (const chunk of tree?.nodes.get(ref) ?? EMPTY_ARRAY) {
       if (resolvedSelectionsAreEqual(chunk.selection, selection)) {
         return chunk;
@@ -311,7 +311,7 @@ export function createChunkMatcher(
   };
 }
 
-function getCoveringOperationIds(
+export function getCoveringOperationIds(
   layers: IndexedForest[],
   operation: OperationDescriptor,
 ): Set<OperationId> | undefined {

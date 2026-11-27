@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Fix optimistic reads recycling parents of nodes written in higher optimistic layers (stale nested data)",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
