@@ -178,7 +178,16 @@ function convertApolloReference(
       chunk.operation === operation &&
       chunk.possibleSelections === selections
     ) {
-      return chunk;
+      // Higher (optimistic) layers may hold newer data for this node in other operations:
+      //   recycle only when the layer-aware matcher picks the same chunk, otherwise hydrate
+      if (
+        !matchChunk ||
+        matchChunk(reference.__ref, operation, chunk.selection) === chunk
+      ) {
+        return chunk;
+      }
+      typeName ||= chunk.type;
+      break;
     }
     typeName ||= chunk.type;
   }

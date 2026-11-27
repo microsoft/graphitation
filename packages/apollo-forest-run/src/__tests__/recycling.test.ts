@@ -317,6 +317,64 @@ describe("cross-operation recycling via @cache(covers)", () => {
   });
 });
 
+describe("references returned by read policies", () => {
+  it("does not recycle a lower layer chunk when an optimistic layer has newer node data", () => {
+    const cache = new ForestRun({
+      typePolicies: {
+        Query: {
+          fields: {
+            featured: {
+              read: (_, { toReference }) =>
+                toReference({ __typename: "Card", id: "c1" }),
+            },
+          },
+        },
+      },
+    });
+    const query = gql`
+      query Featured {
+        featured {
+          id
+          title
+        }
+      }
+    `;
+    const optimisticUpdate = gql`
+      query FeaturedUpdate {
+        featured {
+          id
+          title
+        }
+        card {
+          id
+          title
+        }
+      }
+    `;
+    cache.write({
+      query,
+      result: { featured: { __typename: "Card", id: "c1", title: "old" } },
+    });
+    cache.diff({ query, optimistic: true });
+
+    cache.recordOptimisticTransaction(() => {
+      cache.write({
+        query: optimisticUpdate,
+        result: {
+          featured: null,
+          card: { __typename: "Card", id: "c1", title: "new" },
+        },
+      });
+    }, "test");
+    const diff = cache.diff({ query, optimistic: true });
+
+    expect(diff.result).toEqual({
+      featured: { __typename: "Card", id: "c1", title: "new" },
+    });
+    expect(diff.complete).toBe(true);
+  });
+});
+
 // TODO: recycling when there are:
 //  - variables at different levels (i.e. different operations with the same document)
 //  - merge policies
