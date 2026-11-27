@@ -204,20 +204,20 @@ export function findRecyclableChunk(
       continue;
     }
     const tree = layer.trees.get(operation.id);
-    const checkedInLayer = tree ? 1 : 0;
+    let checkedInLayer = tree ? 1 : 0;
     for (const chunk of tree?.nodes.get(ref) ?? EMPTY_ARRAY) {
       if (resolvedSelectionsAreEqual(chunk.selection, selection)) {
         return chunk;
       }
     }
     // Check covering operations' trees for recyclable chunks
-    //   (not matching ones are partially matching chunks of this layer, see below)
     if (coveringIds) {
       for (const coverId of coveringIds) {
         if (coverId === operation.id) continue;
         if (!opsWithNode?.has(coverId)) continue;
         const coverTree = layer.trees.get(coverId);
         if (!coverTree) continue;
+        checkedInLayer++;
         for (const chunk of coverTree.nodes.get(ref) ?? EMPTY_ARRAY) {
           if (resolvedSelectionsAreEqual(chunk.selection, selection)) {
             return chunk;
