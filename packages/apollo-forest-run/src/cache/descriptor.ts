@@ -265,6 +265,34 @@ export function variablesAreEqual(
   return true;
 }
 
+/**
+ * Covered operations are parts of the covering operation (e.g. fragments spread into a preloader):
+ * covered by name, with a subset of its variables (equal values, defaults applied)
+ *
+ * Note: chunk recycling between covering and covered operations (see findRecyclableChunk) matches by name only,
+ *   its chunks are compared by resolved selections (arguments) instead
+ */
+export function isCoveredBy(
+  covering: OperationDescriptor,
+  covered: OperationDescriptor,
+): boolean {
+  if (covered.name === undefined || !covering.covers.includes(covered.name)) {
+    return false;
+  }
+  const variables = covering.variablesWithDefaults;
+  for (const [name, value] of Object.entries(covered.variablesWithDefaults)) {
+    if (
+      !hasOwnProperty.call(variables, name) ||
+      !equal(variables[name], value)
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+
 export function operationCacheKey(operation: OperationDescriptor): CacheKey {
   return createCacheKeyImpl(operation.variablesKey, operation.rootNodeKey);
 }

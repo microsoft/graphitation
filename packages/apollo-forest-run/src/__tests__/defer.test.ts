@@ -2,7 +2,10 @@ import { gql } from "@apollo/client";
 import type { DocumentNode } from "graphql";
 import { ForestRun } from "../ForestRun";
 import { resolveOperationDescriptor } from "../cache/descriptor";
-import { canReleaseOperationDescriptor } from "../cache/store";
+import {
+  canReleaseOperationDescriptor,
+  getInFlightLayers,
+} from "../cache/store";
 import { assert } from "../jsutils/assert";
 import type {
   ExecutionKey,
@@ -18,6 +21,21 @@ class TestCache extends ForestRun {
   }
   mainTree(query: DocumentNode, variables = {}) {
     return this.store.dataForest.trees.get(this.operation(query, variables).id);
+  }
+  readsThroughLayer(query: DocumentNode, variables = {}) {
+    return (
+      getInFlightLayers(this.store, this.operation(query, variables)).length > 0
+    );
+  }
+  seeded(
+    [query, variables]: [DocumentNode, object],
+    [covering, coveringVariables]: [DocumentNode, object],
+  ) {
+    return Boolean(
+      this.inFlight(covering, coveringVariables)?.forest.trees.has(
+        this.operation(query, variables).id,
+      ),
+    );
   }
   canRelease(query: DocumentNode, variables = {}) {
     return canReleaseOperationDescriptor(
@@ -722,6 +740,109 @@ describe("covered operations (@cache(covers))", () => {
     expect(read(cache, chatQuery).result).toEqual({
       messages: [message("1", "one")],
     });
+  });
+});
+
+describe("covered operations: variables", () => {
+  const preloader = gql`
+    query Preloader($id: ID!) @cache(covers: ["Chat"]) {
+      conversation(id: $id) {
+        id
+        messages {
+          id
+          text
+          ... @defer {
+            name
+          }
+        }
+      }
+    }
+  `;
+  const chat = gql`
+    query Chat($id: ID!) {
+      conversation(id: $id) {
+        id
+        messages {
+          id
+          text
+          name
+        }
+      }
+    }
+  `;
+  const chatWithFirst = gql`
+    query Chat($id: ID!, $first: Int) {
+      conversation(id: $id) {
+        id
+        messages {
+          id
+          text
+          name
+        }
+      }
+    }
+  `;
+  const chatWithoutVariables = gql`
+    query Chat {
+      conversation(id: "c1") {
+        id
+        messages {
+          id
+          text
+          name
+        }
+      }
+    }
+  `;
+  const conversation = (id: string, name: string) => ({
+    conversation: {
+      __typename: "Conversation",
+      id,
+      messages: [{ ...message("1"), name }],
+    },
+  });
+  const preloaderVariables = { id: "c1" };
+
+  it.each([
+    ["the same variables", true, chat, { id: "c1" }, "c1"],
+    ["other values", false, chat, { id: "c2" }, "c2"],
+    ["other variables", false, chatWithFirst, { id: "c1", first: 1 }, "c1"],
+    ["no variables", true, chatWithoutVariables, {}, "c1"],
+  ] as const)("with %s: covered %s", (_, covered, query, variables, id) => {
+    const cache = new TestCache();
+    cache.write({ query, variables, result: conversation(id, "old") });
+    const watch = jest.fn();
+    cache.watch({
+      query,
+      variables,
+      optimistic: true,
+      immediate: true,
+      callback: watch,
+    });
+    watch.mockClear();
+    const execution = execute(cache, preloader, {
+      variables: preloaderVariables,
+    });
+    execution.initial({
+      conversation: {
+        __typename: "Conversation",
+        id: "c1",
+        messages: [message("1")],
+      },
+    });
+
+    expect(
+      cache.seeded([query, variables], [preloader, preloaderVariables]),
+    ).toBe(covered);
+    expect(cache.readsThroughLayer(query, variables)).toBe(covered);
+
+    execution.subsequent([
+      { path: ["conversation", "messages", 0], data: { name: "new" } },
+    ]);
+    expect(cache.diff({ query, variables, optimistic: false }).result).toEqual(
+      conversation(id, covered ? "new" : "old"),
+    );
+    expect(watch).toHaveBeenCalledTimes(covered ? 1 : 0);
   });
 });
 

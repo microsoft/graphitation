@@ -20,7 +20,7 @@ import {
 import { assert } from "../jsutils/assert";
 import { IndexedTree, DefaultPartition } from "../forest/types";
 import { NodeChunk } from "../values/types";
-import { operationCacheKey } from "./descriptor";
+import { isCoveredBy, operationCacheKey } from "./descriptor";
 import { addTree } from "../forest/addTree";
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -580,14 +580,13 @@ function readsThroughInFlightLayer(
 ): boolean {
   return (
     execution.operation === operation ||
-    (operation.name !== undefined &&
-      execution.operation.covers.includes(operation.name))
+    isCoveredBy(execution.operation, operation)
   );
 }
 
 /**
  * Creates an in-flight layer with the current trees (and read results) of the operation and of operations it covers
- * in the data forest. Trees are shared: updates of the layer replace them (copy-on-write).
+ * in the data forest (see isCoveredBy). Trees are shared: updates of the layer replace them (copy-on-write).
  */
 export function addInFlightExecution(
   env: CacheEnv,
@@ -609,7 +608,11 @@ export function addInFlightExecution(
 
   const seed = (id: OperationId) => {
     const tree = dataForest.trees.get(id);
-    if (!tree || forest.trees.has(id)) {
+    if (
+      !tree ||
+      forest.trees.has(id) ||
+      (tree.operation !== operation && !isCoveredBy(operation, tree.operation))
+    ) {
       return;
     }
     addTree(env, forest, tree);
