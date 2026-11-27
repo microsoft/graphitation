@@ -2,7 +2,6 @@ import type { Draft, IndexedTree } from "../forest/types";
 import type {
   CompositeListChunk,
   GraphChunk,
-  GraphChunkReference,
   ObjectChunk,
   SourceObject,
 } from "../values/types";
@@ -38,7 +37,6 @@ import type {
   ResponsePath,
   TypeName,
 } from "../descriptor/types";
-import type { NodeDifferenceMap } from "../diff/types";
 import type { GraphDifference } from "../diff/diffTree";
 import { DiffErrorKind } from "../diff/types";
 import { assert } from "../jsutils/assert";
@@ -47,19 +45,13 @@ import { getExistingResult, shouldCache } from "../cache/store";
 import {
   copySourcesUpToRoot,
   isCompositeListValue,
-  isNodeValue,
   isObjectValue,
   isParentObjectRef,
   isReachable,
-  isRootRef,
   resolveFieldChunk,
   resolveListItemChunk,
 } from "../values";
-import * as Difference from "../diff/difference";
-import {
-  resolveNormalizedField,
-  resolveSelection,
-} from "../descriptor/resolvedSelection";
+import { resolveSelection } from "../descriptor/resolvedSelection";
 import {
   getDataAt,
   isPathPrefix,
@@ -80,7 +72,7 @@ import { equal } from "@wry/equality";
  * Objects data is delivered to are located by placeholders (addresses, see `ObjectAddress`), keyed by response paths
  * of incremental results. Placeholders are captured in data received from the server (the initial result
  * and delivered data, see capturePlaceholders).
- * Merge policies only run for delivered fields (see `DeliveredFields`), diffing is restricted to them too (`seed`).
+ * Merge policies only run for delivered fields (see `DeliveredFields`), transient trees are diffed against their previous state.
  *
  * Returns undefined when there is nothing to write.
  */
@@ -189,51 +181,6 @@ export function createDeliveredFieldFilter({
     !tree.dataMap.has(parent.data);
 }
 
-/**
- * Initial differences of nodes with spliced data (see diffTree), collected when splicing:
- * restricted to delivered fields and paths to them (other fields of copies are the same as in the stored result).
- */
-export function seedDifferences(
-  indexed: IndexedTree,
-  { deliveredFields, seed, incremental, tree }: SplicedIncrementalResult,
-): NodeDifferenceMap | undefined {
-  for (const copy of deliveredFields.keys()) {
-    if (!indexed.dataMap.has(copy)) {
-      // E.g. shared objects were cloned when indexing: diff in full
-      return undefined;
-    }
-  }
-  // Nodes with other chunks (e.g. in delivered data) are diffed in full
-  for (const nodeKey of seed.keys()) {
-    for (const chunk of indexed.nodes.get(nodeKey) ?? EMPTY_ARRAY) {
-      if (!deliveredFields.has(chunk.data) && !tree.dataMap.has(chunk.data)) {
-        seed.delete(nodeKey);
-        break;
-      }
-    }
-  }
-  if (incremental.transientTree) {
-    // Unlike stored trees, a transient tree doesn't receive other writes: its untouched nodes are not compared
-    //   (otherwise they would revert writes made since its previous state)
-    for (const [nodeKey, chunks] of indexed.nodes) {
-      if (!seed.has(nodeKey) && isRecycled(tree, chunks)) {
-        seed.set(nodeKey, Difference.createObjectDifference());
-      }
-    }
-  }
-  return seed;
-}
-
-// Whether all chunks are recycled from the tree
-function isRecycled(tree: IndexedTree, chunks: ObjectChunk[]): boolean {
-  for (const chunk of chunks) {
-    if (!tree.dataMap.has(chunk.data)) {
-      return false;
-    }
-  }
-  return true;
-}
-
 function spliceIncrementalResults(
   tree: IndexedTree,
   incremental: IncrementalExecution,
@@ -253,8 +200,6 @@ function spliceIncrementalResults(
     copies: new Map(),
     deliveredFields: new Map(),
     missingFields: new Map(),
-    seed: new Map(),
-    differences: new Map(),
     skipped: [],
     missingBaseFields: [],
   };
@@ -319,7 +264,6 @@ function spliceIncrementalResults(
     deliveredFields: state.deliveredFields,
     missingFields: state.missingFields,
     missingBaseFields: state.missingBaseFields,
-    seed: state.seed,
   };
 }
 
@@ -401,13 +345,12 @@ function spliceData(
   data: SourceObject,
   server: SourceObject | undefined,
 ) {
-  const { copies, deliveredFields, differences, missingFields } = state;
+  const { copies, deliveredFields, missingFields } = state;
   copySourcesUpToRoot(
     state.tree.dataMap,
     copies,
     chunk,
-    (value, ref, copy, existing) =>
-      visitCopy(state, value, ref, copy, existing),
+    (value, _, copy, existing) => visitCopy(state, value, copy, existing),
   );
   const target = copies.get(chunk.data);
   assert(target && !Array.isArray(target));
@@ -485,24 +428,6 @@ function spliceData(
       }
     }
   }
-  const difference = differences.get(chunk);
-  assert(Difference.isObjectDifference(difference));
-  for (const field of chunk.selection.fieldQueue) {
-    if (delivered.has(field.dataKey)) {
-      if (
-        field.selection &&
-        chunk.type &&
-        state.hasMergePolicy(chunk.type, field.name)
-      ) {
-        // A merge policy may change the whole value (not only delivered fields of it): compare it as a whole
-        difference.fieldState.delete(field.name);
-      }
-      Difference.enqueueField(
-        difference,
-        resolveNormalizedField(chunk.selection, field),
-      );
-    }
-  }
 }
 
 /**
@@ -555,8 +480,7 @@ function markMissingFields(
     state.tree.dataMap,
     state.copies,
     chunk,
-    (value, ref, copy, existing) =>
-      visitCopy(state, value, ref, copy, existing),
+    (value, _, copy, existing) => visitCopy(state, value, copy, existing),
   );
   const target = state.copies.get(chunk.data);
   assert(target && !Array.isArray(target));
@@ -734,11 +658,10 @@ function resolveReceivedObject(
     : findNodeChunk(state.tree, key, selections);
 }
 
-// Collects state of a copied object and seed differences on the path to it (from the root down)
+// Collects state of a copied object (on the path to a delivered object, from the root down)
 function visitCopy(
   state: SpliceState,
   chunk: ObjectChunk | CompositeListChunk,
-  parentRef: GraphChunkReference | undefined,
   copy: Draft,
   existingCopy: Draft | undefined,
 ) {
@@ -753,53 +676,6 @@ function visitCopy(
       state.missingFields.set(copy, new Set(chunk.missingFields));
     }
   }
-  const { seed, differences } = state;
-  if (differences.has(chunk)) {
-    return;
-  }
-  if (isObjectValue(chunk) && isNodeValue(chunk)) {
-    // Fields of parent nodes leading to nested nodes are not compared (nodes are diffed on their own)
-    let difference = seed.get(chunk.key);
-    if (!difference) {
-      difference = Difference.createObjectDifference();
-      seed.set(chunk.key, difference);
-    }
-    differences.set(chunk, difference);
-    return;
-  }
-  assert(parentRef && !isRootRef(parentRef));
-  const parent = differences.get(parentRef.parent);
-  let difference;
-  if (isParentObjectRef(parentRef)) {
-    assert(Difference.isObjectDifference(parent));
-    const entry = resolveNormalizedField(
-      parentRef.parent.selection,
-      parentRef.field,
-    );
-    Difference.enqueueField(parent, entry);
-    difference =
-      Difference.getFieldDifference(parent, entry)?.state ??
-      Difference.addFieldDifference(
-        parent,
-        entry,
-        Difference.createCompositeValueDifference(chunk),
-      ).state;
-  } else {
-    assert(Difference.isCompositeListDifference(parent));
-    Difference.enqueueListItem(parent, parentRef.index);
-    difference =
-      Difference.getListItemDifference(parent, parentRef.index) ??
-      Difference.addListItemDifference(
-        parent,
-        parentRef.index,
-        Difference.createCompositeValueDifference(chunk),
-      );
-  }
-  assert(
-    Difference.isObjectDifference(difference) ||
-      Difference.isCompositeListDifference(difference),
-  );
-  differences.set(chunk, difference);
 }
 
 /**

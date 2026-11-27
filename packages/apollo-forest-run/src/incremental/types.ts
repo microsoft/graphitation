@@ -11,17 +11,11 @@ import type {
 } from "../descriptor/types";
 import type { Draft, IndexedTree, Source } from "../forest/types";
 import type {
-  CompositeListChunk,
   MissingFieldsMap,
   ObjectChunk,
   SourceObject,
 } from "../values/types";
-import type {
-  CompositeListDifference,
-  MissingBaseFieldsError,
-  NodeDifferenceMap,
-  ObjectDifference,
-} from "../diff/types";
+import type { MissingBaseFieldsError } from "../diff/types";
 
 /**
  * Results of incremental delivery (`@defer`) in the 2022-09-17 draft of the `@defer` / `@stream` RFC
@@ -149,8 +143,6 @@ export type SplicedIncrementalResult = {
   missingFields: MissingFieldsMap;
   // Fields of stored objects delivered to other objects (see addMissingBaseFields)
   missingBaseFields: MissingBaseFieldsError[];
-  // Initial differences of nodes, restricted to delivered fields and paths to them (see seedDifferences)
-  seed: NodeDifferenceMap;
 };
 
 /**
@@ -183,10 +175,4 @@ export type SpliceState = {
   deliveredFields: DeliveredFields;
   // Missing fields of copied objects (not delivered)
   missingFields: MissingFieldsMap;
-  seed: NodeDifferenceMap;
-  // Chunks of the stored result on paths to delivered objects -> their (seed) differences
-  differences: Map<
-    ObjectChunk | CompositeListChunk,
-    ObjectDifference | CompositeListDifference
-  >;
 };

@@ -15,7 +15,6 @@ import {
   resolveListItemChunk,
 } from "../values";
 import * as DiffTree from "../diff/diffTree";
-import * as Difference from "../diff/difference";
 
 class TestCache extends ForestRun {
   operation(query: DocumentNode, variables = {}) {
@@ -1845,13 +1844,17 @@ describe("@defer: subsequent results", () => {
 });
 
 describe("@defer: diffing of subsequent results", () => {
-  it("compares only delivered fields and paths to them", () => {
+  it("changes only delivered data (other fields, objects and operations stay the same)", () => {
     const cache = new TestCache();
     const query = gql`
       query {
         user {
           id
           name
+          friends {
+            id
+            name
+          }
           profile {
             bio
             age
@@ -1862,22 +1865,47 @@ describe("@defer: diffing of subsequent results", () => {
         }
       }
     `;
+    const otherQuery = gql`
+      query {
+        other {
+          id
+          name
+        }
+      }
+    `;
     const user = { __typename: "User", id: "u", name: "name" };
+    const friends = [{ __typename: "User", id: "f", name: "friend" }];
     const profile = { __typename: "Profile", bio: "bio", age: 1 };
+    cache.writeQuery({
+      query: otherQuery,
+      data: { other: { __typename: "User", id: "o", name: "other" } },
+    });
     const execution = execute(cache, query);
-    execution.initial({ user: { ...user, profile } });
-    const getFieldEntryQueue = jest.spyOn(Difference, "getFieldEntryQueue");
+    execution.initial({ user: { ...user, friends, profile } });
+    type Result = { user: { friends: unknown } };
+    const before = cache.diff<Result>({ query, optimistic: false }).result;
+    const watches = [query, otherQuery].map((query) => {
+      const callback = jest.fn();
+      cache.watch({ query, optimistic: false, immediate: true, callback });
+      callback.mockClear();
+      return callback;
+    });
 
     execution.subsequent([
       { path: ["user", "profile"], data: { avatar: "avatar" } },
     ]);
 
-    const compared = new Set(getFieldEntryQueue.mock.calls.map(([, f]) => f));
-    getFieldEntryQueue.mockRestore();
-    expect(compared).toEqual(new Set(["profile", "avatar"]));
-    expect(cache.readQuery({ query })).toEqual({
-      user: { ...user, profile: { ...profile, avatar: "avatar" } },
-    });
+    const result = {
+      user: { ...user, friends, profile: { ...profile, avatar: "avatar" } },
+    };
+    const [watch, otherWatch] = watches;
+    expect(watch).toHaveBeenCalledTimes(1);
+    expect(watch.mock.calls[0][0]).toMatchObject({ complete: true, result });
+    expect(otherWatch).not.toHaveBeenCalled();
+    const after = cache.diff<Result>({ query, optimistic: false });
+    expect(after).toMatchObject({ complete: true, result });
+    // Unchanged objects keep their identity
+    expect(after.result?.user.friends).toBe(before?.user.friends);
   });
 
   it("compares all fields of nodes with chunks in delivered data", () => {
