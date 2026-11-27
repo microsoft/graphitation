@@ -173,7 +173,7 @@ export type Transaction = {
 };
 
 export type WriteResult = {
-  options: Cache.WriteOptions;
+  options: WriteOptionsInternal;
   incoming: DataTree;
   affected: Iterable<OperationDescriptor>;
   affectedNodes: Set<NodeKey>; // contains directly updated nodes + parent nodes indirectly affected by nested node update
@@ -378,3 +378,6 @@ export type SerializedCache = Record<
 export type ExecutionWriteOptions = Omit<Cache.WriteOptions, "result"> & {
   execution: ExecutionResult;
 };
+
+// Options of the internal `write`: a result, or an execution result (routed to in-flight layers)
+export type WriteOptionsInternal = Cache.WriteOptions | ExecutionWriteOptions;

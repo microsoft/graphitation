@@ -1,4 +1,3 @@
-import type { Cache } from "@apollo/client";
 import type {
   FragmentSpreadNode,
   InlineFragmentNode,
@@ -7,11 +6,12 @@ import type {
 import type { OperationDescriptor } from "../descriptor/types";
 import type {
   CacheEnv,
+  DataForest,
   ExecutionWriteOptions,
   InFlightExecution,
   Store,
   Transaction,
-  WriteResult,
+  WriteOptionsInternal,
 } from "./types";
 import type {
   ExecutionResult,
@@ -26,61 +26,49 @@ import {
   resolveResultDescriptor,
 } from "./descriptor";
 import { addInFlightExecution, removeInFlightExecution } from "./store";
-import { write } from "./write";
 import { mergeAt } from "../incremental/data";
 
 /**
- * Writes an execution result.
+ * Routing of execution results, resolved by `write` (results are written by the regular write).
  *
  * Results of an incremental execution are written to its in-flight layer (see InFlightExecution) until it completes
  * (`hasNext: false`, also sent by the client on timeout). Then the received result is written to the data forest
- * as a single result (as if it was received at once, without `@defer`).
- *
- * All writes are regular writes, only routed to different layers:
+ * as a single result (as if it was received at once, without `@defer`):
  * - the initial result is written as is to a new in-flight layer
  * - subsequent results are spliced into the received result (copy-on-write, by response paths), which is written
  *   to the in-flight layer as a whole
- * - on completion, the received result is written to the data forest
+ * - on completion, the received result is written to the data forest (and the layer is dropped)
  *
  * A new execution of the operation cancels the current one (its in-flight layer is discarded).
- * Results of unknown or superseded executions are ignored.
  */
-export function writeExecutionResult(
+export type ExecutionWrite = {
+  forest: DataForest;
+  data: ResultData;
+  // The in-flight execution written to (the target forest is its layer)
+  inFlight: InFlightExecution | null;
+};
+
+export function resolveExecutionWrite(
   env: CacheEnv,
   store: Store,
   transaction: Transaction,
   options: ExecutionWriteOptions,
-): WriteResult | undefined {
+): ExecutionWrite {
   // Executions are written to the data forest only (never optimistic)
   assert(!transaction.optimisticLayer);
-  const { execution, ...writeOptions } = options;
-  const operation = resolveResultDescriptor(
-    env,
-    store,
-    resolveOperationDescriptor(
-      env,
-      store,
-      options.query,
-      options.variables,
-      options.dataId,
-    ),
-  );
+  const { execution } = options;
+  const operation = resolveExecutionOperation(env, store, options);
   const current = store.inFlightExecutions.get(operation);
 
   if (isSubsequentResult(execution)) {
-    if (!current || current.key !== execution.key) {
-      return undefined;
-    }
+    assert(current && current.key === execution.key);
     const data = spliceIncrementalResults(current.data, execution);
     if (!execution.hasNext) {
       removeExecution(store, transaction, current);
-      return write(env, store, transaction, { ...writeOptions, result: data });
-    }
-    if (data === current.data) {
-      return undefined;
+      return { forest: store.dataForest, data, inFlight: null };
     }
     current.data = data;
-    return writeToLayer(env, store, transaction, writeOptions, current);
+    return { forest: current.forest, data, inFlight: current };
   }
   if (current) {
     removeExecution(store, transaction, current);
@@ -91,10 +79,7 @@ export function writeExecutionResult(
     !hasEnabledDefer(operation)
   ) {
     // E.g. deferred data resolved inline by the server (a complete result)
-    return write(env, store, transaction, {
-      ...writeOptions,
-      result: execution.data,
-    });
+    return { forest: store.dataForest, data: execution.data, inFlight: null };
   }
   const inFlight = addInFlightExecution(
     env,
@@ -103,28 +88,55 @@ export function writeExecutionResult(
     execution.key,
     execution.data,
   );
-  return writeToLayer(env, store, transaction, writeOptions, inFlight);
+  return { forest: inFlight.forest, data: inFlight.data, inFlight };
 }
 
-function writeToLayer(
+/**
+ * Results of unknown or superseded executions (and subsequent results without data to write) are not written
+ */
+export function shouldWriteExecutionResult(
   env: CacheEnv,
   store: Store,
-  transaction: Transaction,
-  writeOptions: Omit<Cache.WriteOptions, "result">,
-  execution: InFlightExecution,
-): WriteResult {
-  const result = write(
-    env,
-    store,
-    transaction,
-    { ...writeOptions, result: execution.data },
-    execution.forest,
-    execution.incoming ?? undefined,
+  options: ExecutionWriteOptions,
+): boolean {
+  const { execution } = options;
+  if (!isSubsequentResult(execution)) {
+    return true;
+  }
+  const current = store.inFlightExecutions.get(
+    resolveExecutionOperation(env, store, options),
   );
-  execution.incoming = result.incoming;
-  return result;
+  return (
+    current !== undefined &&
+    current.key === execution.key &&
+    (!execution.hasNext || getDeferResults(execution).length > 0)
+  );
 }
 
+export function isExecutionWrite(
+  options: WriteOptionsInternal,
+): options is ExecutionWriteOptions {
+  // An explicit nullish `execution` (e.g. untyped options of `write`) is a regular write of `result`
+  return "execution" in options && options.execution != null;
+}
+
+function resolveExecutionOperation(
+  env: CacheEnv,
+  store: Store,
+  options: ExecutionWriteOptions,
+): OperationDescriptor {
+  return resolveResultDescriptor(
+    env,
+    store,
+    resolveOperationDescriptor(
+      env,
+      store,
+      options.query,
+      options.variables,
+      options.dataId,
+    ),
+  );
+}
 export function isSubsequentResult(
   execution: ExecutionResult,
 ): execution is SubsequentExecutionResult {
@@ -212,15 +224,25 @@ function spliceIncrementalResults(
   data: ResultData,
   execution: SubsequentExecutionResult,
 ): ResultData {
-  const results = (execution.incremental ?? EMPTY_ARRAY).filter(isDeferResult);
-  // Parents first: data of nested @defer may be delivered with its parent in the same payload
-  results.sort((a, b) => (a.path?.length ?? 0) - (b.path?.length ?? 0));
-  for (const result of results) {
-    if (result.data) {
-      data = mergeAt(data, result.path ?? EMPTY_ARRAY, result.data) ?? data;
-    }
+  for (const { path = EMPTY_ARRAY, data: delivered } of getDeferResults(
+    execution,
+  )) {
+    data = mergeAt(data, path, delivered) ?? data;
   }
   return data;
+}
+
+// Results with data, parents first: data of nested @defer may be delivered with its parent in the same payload
+function getDeferResults(
+  execution: SubsequentExecutionResult,
+): (IncrementalDeferResult & { data: ResultData })[] {
+  const results: (IncrementalDeferResult & { data: ResultData })[] = [];
+  for (const result of execution.incremental ?? EMPTY_ARRAY) {
+    if (isDeferResult(result) && result.data) {
+      results.push({ ...result, data: result.data });
+    }
+  }
+  return results.sort((a, b) => (a.path?.length ?? 0) - (b.path?.length ?? 0));
 }
 
 function isDeferResult(

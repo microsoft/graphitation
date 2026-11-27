@@ -42,7 +42,10 @@ import {
   transformDocument,
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
-import { isSubsequentResult, writeExecutionResult } from "./cache/execution";
+import {
+  isSubsequentResult,
+  shouldWriteExecutionResult,
+} from "./cache/execution";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -240,15 +243,11 @@ export class ForestRun<
   ): Reference | undefined {
     const transaction = peek(this.transactionStack);
     assert(transaction);
-    const result = writeExecutionResult(
-      this.env,
-      this.store,
-      transaction,
-      options,
-    );
-    if (!result) {
+    if (!shouldWriteExecutionResult(this.env, this.store, options)) {
+      // E.g. late results of a superseded execution
       return undefined;
     }
+    const result = write(this.env, this.store, transaction, options);
     transaction.changelog.push(result);
 
     const incoming = result.incoming;

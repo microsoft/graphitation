@@ -9,10 +9,13 @@ import type {
   OptimisticLayer,
   Store,
   Transaction,
+  WriteOptionsInternal,
   WriteResult,
 } from "./types";
 import type { NodeKey, OperationDescriptor } from "../descriptor/types";
 import { assert } from "../jsutils/assert";
+import type { ExecutionWrite } from "./execution";
+import { isExecutionWrite, resolveExecutionWrite } from "./execution";
 import {
   resolveResultDescriptor,
   resolveOperationDescriptor,
@@ -41,27 +44,31 @@ import { invalidateReadResults } from "./invalidate";
 import { IndexedForest } from "../forest/types";
 
 /**
- * `previousIncoming` (optional): the previous incoming result of the operation written to the target forest,
- * when the target forest only changed by writing it since then. Objects shared with it (by reference) are unchanged:
- * their chunks are recycled and their nodes are not diffed.
+ * Writes a result, or an execution result (routed to in-flight layers, see resolveExecutionWrite).
  */
 export function write(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
-  options: Cache.WriteOptions,
-  targetForest: DataForest | OptimisticLayer = getActiveForest(
-    store,
-    activeTransaction,
-  ),
-  previousIncoming?: IndexedTree,
+  options: WriteOptionsInternal,
 ): WriteResult {
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
 
-  const writeData =
-    typeof options.result === "object" && options.result !== null
-      ? options.result
-      : {};
+  let execution: ExecutionWrite | null = null;
+  let result: Cache.WriteOptions["result"];
+  if (isExecutionWrite(options)) {
+    execution = resolveExecutionWrite(env, store, activeTransaction, options);
+    result = execution.data;
+  } else {
+    result = options.result;
+  }
+  const targetForest =
+    execution?.forest ?? getActiveForest(store, activeTransaction);
+  // The previous result written to the in-flight layer (only the execution wrote to the layer since then):
+  //   objects shared with it (by reference) are unchanged, their chunks are recycled and their nodes are not diffed
+  const previousIncoming = execution?.inFlight?.incoming ?? undefined;
+
+  const writeData = typeof result === "object" && result !== null ? result : {};
   const rootNodeKey = options.dataId ?? objectKey(writeData);
   assert(rootNodeKey !== false);
 
@@ -231,6 +238,10 @@ export function write(
   );
   incomingResult.prev = null;
   modifiedIncomingResult.prev = null;
+
+  if (execution?.inFlight) {
+    execution.inFlight.incoming = modifiedIncomingResult;
+  }
 
   return {
     options,
