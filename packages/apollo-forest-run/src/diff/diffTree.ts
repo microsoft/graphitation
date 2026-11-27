@@ -6,7 +6,6 @@ import {
   MissingModelFieldsError,
   NodeDifferenceMap,
   ObjectDiffState,
-  ObjectDifference,
 } from "./types";
 import { isComplete, isDirty } from "./difference";
 import { createObjectAggregate } from "../values/create";
@@ -54,34 +53,19 @@ EMPTY_SET.add = () => {
 };
 
 // Re-using state object for multiple nodes
-const nodeDiffState: {
-  difference: ObjectDifference | undefined;
-  errors: DiffError[];
-} = {
+const nodeDiffState = {
   difference: undefined,
   errors: [],
 };
 
-/**
- * `seed` (optional): initial differences of nodes (see ObjectDifference.fieldQueue), e.g. complete (empty) differences
- *   of nodes known to be unchanged. Consumed by diffing.
- */
 export function diffTree(
   forest: IndexedForest,
   model: IndexedTree,
   env: DiffEnv,
-  seed?: NodeDifferenceMap,
 ): GraphDifference {
   const context: Context = { env, forest: forest };
   const currentTreeState = forest.trees.get(model.operation.id);
-  return diffNodesImpl(
-    context,
-    forest,
-    model.nodes,
-    env,
-    currentTreeState,
-    seed,
-  );
+  return diffNodesImpl(context, forest, model.nodes, env, currentTreeState);
 }
 
 export function diffNodes(
@@ -99,7 +83,6 @@ function diffNodesImpl(
   nodes: NodeMap,
   env: DiffEnv,
   currentTreeState?: IndexedTree,
-  seed?: NodeDifferenceMap,
 ): GraphDifference {
   const newNodes: NodeKey[] = [];
   const nodeDifference: NodeDifferenceMap = new Map();
@@ -115,9 +98,6 @@ function diffNodesImpl(
         : createObjectAggregate(nodeChunks);
 
     assert(modelNode.key);
-    if (seed) {
-      nodeDiffState.difference = seed.get(modelNode.key);
-    }
 
     if (currentTreeState?.nodes.has(modelNode.key)) {
       const difference = diffTreeNode(
