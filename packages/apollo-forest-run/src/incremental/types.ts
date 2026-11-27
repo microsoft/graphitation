@@ -15,7 +15,6 @@ import type {
   ObjectChunk,
   SourceObject,
 } from "../values/types";
-import type { TraverseEnv } from "../values/traverse";
 import type {
   CompositeListDifference,
   MissingBaseFieldsError,
@@ -145,39 +144,30 @@ export type SplicedIncrementalResult = {
   // The result data was spliced into (stored or transient, see IncrementalExecution.transientTree)
   tree: IndexedTree;
   data: SourceObject;
-  deliveredFields: DeliveredFields;
+  writes: PayloadWrites;
   missingFields: MissingFieldsMap;
   // Fields of stored objects delivered to other objects (see addMissingBaseFields)
   missingBaseFields: MissingBaseFieldsError[];
   // Initial differences of nodes, restricted to delivered fields and paths to them (see seedDifferences)
   seed: NodeDifferenceMap;
-  // Objects data was spliced into (locate objects with deferred fragments in delivered data)
-  results: SplicedIncrementalResultEntry[];
 };
 
-// An object data was spliced into (each spliced object has its own entry, e.g. objects of containers)
-export type SplicedIncrementalResultEntry = {
-  // Response path of the object (in the server view)
-  path: ResponsePath;
-  // Path to the object in the stored result (may differ from the response path)
-  localPath: ResponsePath;
-  // Fields with values written as a whole (objects and lists)
-  wholeFields: Set<DataKey> | undefined;
+// Keyed by copies (unique per location, even for multiple occurrences of one node).
+export type PayloadWrites = Map<SourceObject, ObjectWrite>;
+export type ObjectWrite = {
+  // The concrete location in the stored result.
+  chunk: ObjectChunk;
+  // Server paths spliced here, empty for objects copied only to reach a target.
+  paths: ResponsePath[];
+  // A key is present if delivered. Its paths are those that wrote the field whole,
+  // not those that spliced into an existing child.
+  fields: Map<DataKey, ResponsePath[]>;
+  // Deliveries aimed here by position that went to another identity (or no object).
+  missed?: SourceObject[];
 };
-
-/**
- * Copies of objects of the stored result with incremental results spliced in -> data keys of delivered fields.
- *
- * Merge policies of a spliced result only run for delivered fields (see createDeliveredFieldFilter).
- *
- * Note: keyed by copies, which are unique per location (as sources of a stored result: shared references
- *   are cloned when indexing, see indexTree).
- */
-export type DeliveredFields = Map<SourceObject, Set<DataKey>>;
 
 export type SpliceState = {
   tree: IndexedTree;
-  incremental: IncrementalExecution;
   // Whether a field of the type has a merge policy (delivered values of such fields are incoming values as is)
   hasMergePolicy: (typeName: TypeName, fieldName: FieldName) => boolean;
   // Key of an object with the selection (identifies server objects)
@@ -185,15 +175,11 @@ export type SpliceState = {
     data: SourceObject,
     selections: PossibleSelections,
   ) => string | false | undefined;
-  pathEnv: TraverseEnv;
-  // Objects data was spliced into
-  results: SplicedIncrementalResultEntry[];
-  // Local objects data was not delivered to (another object received it, see markSkippedFieldsMissing)
-  skipped: { chunk: ObjectChunk; data: SourceObject }[];
+  // Collect by concrete stored chunk; index by copy for consumers of the written result.
+  objects: Map<ObjectChunk, ObjectWrite>;
   missingBaseFields: MissingBaseFieldsError[];
   // Objects and lists of the stored result -> copies (sources of a stored result are unique per location)
   copies: Map<Source, Draft>;
-  deliveredFields: DeliveredFields;
   // Missing fields of copied objects (not delivered)
   missingFields: MissingFieldsMap;
   seed: NodeDifferenceMap;

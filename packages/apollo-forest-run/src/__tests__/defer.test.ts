@@ -439,6 +439,45 @@ describe("@defer: subsequent results", () => {
     });
   });
 
+  it("binds each server path when two results splice into the same local object", () => {
+    const cache = new TestCache();
+    const query = gql`
+      query {
+        messages {
+          id
+          ... @defer {
+            info {
+              size
+              ... @defer {
+                more
+              }
+            }
+          }
+        }
+      }
+    `;
+    const execution = execute(cache, query);
+    execution.initial({ messages: [message("1"), message("1")] });
+    cache.writeQuery({ query, data: { messages: [message("1")] } });
+
+    const info = { __typename: "Info", size: 1 };
+    execution.subsequent(
+      [
+        { path: ["messages", 0], data: { info } },
+        { path: ["messages", 1], data: { info } },
+      ],
+      { hasNext: true },
+    );
+    expect(cache.placeholders(query)).toContain("messages.0.info");
+    expect(cache.placeholders(query)).toContain("messages.1.info");
+    execution.subsequent([
+      { path: ["messages", 1, "info"], data: { more: "from the second path" } },
+    ]);
+    expect(cache.readQuery({ query })).toMatchObject({
+      messages: [{ id: "1", info: { ...info, more: "from the second path" } }],
+    });
+  });
+
   it("does not re-capture placeholders of stored objects outside of delivered data", () => {
     const cache = new TestCache();
     const query = gql`

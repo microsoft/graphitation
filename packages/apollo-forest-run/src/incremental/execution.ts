@@ -25,7 +25,8 @@ import type {
   ObjectAddress,
   ResponsePathKey,
   SplicedIncrementalResult,
-  SplicedIncrementalResultEntry,
+  ObjectWrite,
+  PayloadWrites,
   AddressFieldStep,
   SpliceState,
   SubsequentExecutionResult,
@@ -63,7 +64,7 @@ import {
   resolveNormalizedField,
   resolveSelection,
 } from "../descriptor/resolvedSelection";
-import { accumulate } from "../jsutils/map";
+import { accumulate, getOrCreate } from "../jsutils/map";
 import {
   getDataAt,
   isPathPrefix,
@@ -84,7 +85,7 @@ import { equal } from "@wry/equality";
  * Objects data is delivered to are located by placeholders (addresses, see `ObjectAddress`), keyed by response paths
  * of incremental results. Placeholders are captured for chunks with deferred fragments (`tree.deferredChunks`)
  * of the initial result and of delivered data.
- * Merge policies only run for delivered fields (see `DeliveredFields`), diffing is restricted to them too (`seed`).
+ * Merge policies only run for delivered fields (see `PayloadWrites`), diffing is restricted to them too (`seed`).
  *
  * Returns undefined when there is nothing to write.
  */
@@ -178,14 +179,14 @@ export function captureIncrementalExecution(
  * listed fields of copies of stored objects and all fields of delivered objects (not objects of the stored result).
  */
 export function createDeliveredFieldFilter({
-  deliveredFields,
+  writes,
   tree,
 }: SplicedIncrementalResult): (
   parent: ObjectChunk,
   field: FieldInfo,
 ) => boolean {
   return (parent, field) =>
-    deliveredFields.get(parent.data)?.has(field.dataKey) ??
+    writes.get(parent.data)?.fields.has(field.dataKey) ??
     !tree.dataMap.has(parent.data);
 }
 
@@ -195,9 +196,9 @@ export function createDeliveredFieldFilter({
  */
 export function seedDifferences(
   indexed: IndexedTree,
-  { deliveredFields, seed, incremental, tree }: SplicedIncrementalResult,
+  { writes, seed, incremental, tree }: SplicedIncrementalResult,
 ): NodeDifferenceMap | undefined {
-  for (const copy of deliveredFields.keys()) {
+  for (const copy of writes.keys()) {
     if (!indexed.dataMap.has(copy)) {
       // E.g. shared objects were cloned when indexing: diff in full
       return undefined;
@@ -206,7 +207,7 @@ export function seedDifferences(
   // Nodes with other chunks (e.g. in delivered data) are diffed in full
   for (const nodeKey of seed.keys()) {
     for (const chunk of indexed.nodes.get(nodeKey) ?? EMPTY_ARRAY) {
-      if (!deliveredFields.has(chunk.data) && !tree.dataMap.has(chunk.data)) {
+      if (!writes.has(chunk.data) && !tree.dataMap.has(chunk.data)) {
         seed.delete(nodeKey);
         break;
       }
@@ -247,17 +248,13 @@ function spliceIncrementalResults(
   }
   const state: SpliceState = {
     tree,
-    incremental,
     hasMergePolicy,
     objectKey,
     copies: new Map(),
-    deliveredFields: new Map(),
+    objects: new Map(),
     missingFields: new Map(),
     seed: new Map(),
     differences: new Map(),
-    pathEnv: { findParent: createParentLocator(tree.dataMap) },
-    results: [],
-    skipped: [],
     missingBaseFields: [],
   };
   const { serverData } = incremental;
@@ -277,10 +274,9 @@ function spliceIncrementalResults(
     //   Note: positional (e.g. lists may have changed), only marks missing fields (a refetch at worst, never a write)
     const local = resolveObjectPath(root, path);
     if (local && local !== chunk && !(local.key && local.key === chunk?.key)) {
-      state.skipped.push({ chunk: local, data });
+      recordMiss(state, local, data);
     }
   }
-  markSkippedFieldsMissing(state);
   // Data received from the server (after splicing: data is spliced against data received before)
   for (const { path, data } of results) {
     incremental.serverData = mergeServerData(
@@ -289,7 +285,8 @@ function spliceIncrementalResults(
       data,
     );
   }
-  if (!hasDeliveredFields(state) && !state.missingBaseFields.length) {
+  const writes = finishObjectWrites(state);
+  if (!writes) {
     // E.g. all delivered objects were skipped or all values were received already: nothing to write
     return undefined;
   }
@@ -300,11 +297,10 @@ function spliceIncrementalResults(
     incremental,
     tree,
     data,
-    deliveredFields: state.deliveredFields,
+    writes,
     missingFields: state.missingFields,
     missingBaseFields: state.missingBaseFields,
     seed: state.seed,
-    results: state.results,
   };
 }
 
@@ -386,24 +382,9 @@ function spliceData(
   data: SourceObject,
   server: SourceObject | undefined,
 ) {
-  const { copies, deliveredFields, differences, missingFields } = state;
-  copySourcesUpToRoot(
-    state.tree.dataMap,
-    copies,
-    chunk,
-    (value, ref, copy, existing) =>
-      visitCopy(state, value, ref, copy, existing),
-  );
-  const target = copies.get(chunk.data);
-  assert(target && !Array.isArray(target));
-  const delivered = deliveredFields.get(target);
-  assert(delivered);
-  const result: SplicedIncrementalResultEntry = {
-    path,
-    localPath: getDataPath(state.pathEnv, chunk),
-    wholeFields: undefined,
-  };
-  state.results.push(result);
+  const target = copyObject(state, chunk);
+  const write = getObjectWrite(state, chunk);
+  write.paths.push(path);
 
   for (const key of Object.keys(data)) {
     const incoming = data[key];
@@ -429,7 +410,7 @@ function spliceData(
           isObjectValue(existing)
         ) {
           // Another object at the location (e.g. a link replaced by another write): it didn't receive the data
-          state.skipped.push({ chunk: existing, data: incoming });
+          recordMiss(state, existing, incoming);
         }
         continue;
       } else if (Array.isArray(incoming) && Array.isArray(received)) {
@@ -449,7 +430,7 @@ function spliceData(
     if (
       received !== undefined &&
       equal(received, incoming) &&
-      !isMissingField(missingFields.get(target), key)
+      (write.fields.has(key) || !isMissingField(chunk.missingFields, key))
     ) {
       // Received already
       continue;
@@ -464,37 +445,12 @@ function spliceData(
     ) {
       // First delivery of an object the stored result has already (e.g. written by another operation)
       spliceData(state, existing, [...path, key], incoming, undefined);
+      if (!write.fields.has(key)) {
+        write.fields.set(key, []);
+      }
     } else {
       target[key] = incoming;
-      if (isSourceData(incoming) || Array.isArray(incoming)) {
-        // Nested placeholders are only captured within values written as a whole (see captureDeliveredPlaceholders)
-        (result.wholeFields ??= new Set()).add(key);
-      }
-    }
-    delivered.add(key);
-    const missing = missingFields.get(target);
-    for (const field of missing ?? EMPTY_ARRAY) {
-      if (field.dataKey === key) {
-        missing?.delete(field);
-      }
-    }
-  }
-  const difference = differences.get(chunk);
-  assert(Difference.isObjectDifference(difference));
-  for (const field of chunk.selection.fieldQueue) {
-    if (delivered.has(field.dataKey)) {
-      if (
-        field.selection &&
-        chunk.type &&
-        state.hasMergePolicy(chunk.type, field.name)
-      ) {
-        // A merge policy may change the whole value (not only delivered fields of it): compare it as a whole
-        difference.fieldState.delete(field.name);
-      }
-      Difference.enqueueField(
-        difference,
-        resolveNormalizedField(chunk.selection, field),
-      );
+      accumulate(write.fields, key, path);
     }
   }
 }
@@ -506,8 +462,10 @@ function spliceData(
  * Note: list items are resolved by keys (local lists may legitimately differ), so items skipped there are not marked.
  */
 function markSkippedFieldsMissing(state: SpliceState) {
-  for (const { chunk, data } of state.skipped) {
-    markMissingFields(state, chunk, data);
+  for (const { chunk, missed } of state.objects.values()) {
+    for (const data of missed ?? EMPTY_ARRAY) {
+      markMissingFields(state, chunk, data);
+    }
   }
 }
 
@@ -517,9 +475,7 @@ function markMissingFields(
   data: SourceObject,
 ) {
   // Fields delivered to the object by this payload (e.g. by another result: objects are resolved by keys)
-  const copy = state.copies.get(chunk.data);
-  const delivered =
-    copy && !Array.isArray(copy) ? state.deliveredFields.get(copy) : undefined;
+  const delivered = state.objects.get(chunk)?.fields;
   let missingFields: FieldInfo[] | undefined;
   for (const field of chunk.selection.fieldQueue) {
     const value = data[field.dataKey];
@@ -545,20 +501,8 @@ function markMissingFields(
     chunk,
     missingFields,
   });
-  copySourcesUpToRoot(
-    state.tree.dataMap,
-    state.copies,
-    chunk,
-    (value, ref, copy, existing) =>
-      visitCopy(state, value, ref, copy, existing),
-  );
-  const target = state.copies.get(chunk.data);
-  assert(target && !Array.isArray(target));
-  let missing = state.missingFields.get(target);
-  if (!missing) {
-    missing = new Set();
-    state.missingFields.set(target, missing);
-  }
+  const target = copyObject(state, chunk);
+  const missing = getOrCreate(state.missingFields, target, () => new Set());
   for (const field of missingFields) {
     missing.add(field);
   }
@@ -660,7 +604,7 @@ function findNodeChunk(
 }
 
 function isMissingField(
-  missing: Set<FieldInfo> | undefined,
+  missing: ObjectChunk["missingFields"],
   key: string,
 ): boolean {
   for (const field of missing ?? EMPTY_ARRAY) {
@@ -671,13 +615,50 @@ function isMissingField(
   return false;
 }
 
-function hasDeliveredFields({ deliveredFields }: SpliceState): boolean {
-  for (const fields of deliveredFields.values()) {
-    if (fields.size) {
-      return true;
+// Finalize missing fields and seed the diff once per copy, after all deliveries are known.
+function finishObjectWrites(state: SpliceState): PayloadWrites | undefined {
+  markSkippedFieldsMissing(state);
+  const writes: PayloadWrites = new Map();
+  let hasWrites = false;
+  for (const write of state.objects.values()) {
+    const { chunk, fields } = write;
+    const copy = state.copies.get(chunk.data);
+    if (!copy) {
+      // A miss alone need not change the stored object.
+      continue;
+    }
+    assert(!Array.isArray(copy));
+    writes.set(copy, write);
+    for (const field of chunk.missingFields ?? EMPTY_ARRAY) {
+      if (!fields.has(field.dataKey)) {
+        getOrCreate(state.missingFields, copy, () => new Set()).add(field);
+      }
+    }
+    if (!fields.size) {
+      continue;
+    }
+    hasWrites = true;
+    const difference = state.differences.get(chunk);
+    assert(Difference.isObjectDifference(difference));
+    for (const field of chunk.selection.fieldQueue) {
+      if (!fields.has(field.dataKey)) {
+        continue;
+      }
+      if (
+        field.selection &&
+        chunk.type &&
+        state.hasMergePolicy(chunk.type, field.name)
+      ) {
+        // A merge policy may change the whole value, not only the delivered fields.
+        difference.fieldState.delete(field.name);
+      }
+      Difference.enqueueField(
+        difference,
+        resolveNormalizedField(chunk.selection, field),
+      );
     }
   }
-  return false;
+  return hasWrites || state.missingBaseFields.length ? writes : undefined;
 }
 
 // Whether the object is of the type (when both are known)
@@ -728,6 +709,35 @@ function resolveReceivedObject(
     : findNodeChunk(state.tree, key, selections);
 }
 
+function getObjectWrite(state: SpliceState, chunk: ObjectChunk): ObjectWrite {
+  return getOrCreate(state.objects, chunk, () => ({
+    chunk,
+    fields: new Map(),
+    paths: [],
+  }));
+}
+
+function recordMiss(
+  state: SpliceState,
+  chunk: ObjectChunk,
+  data: SourceObject,
+) {
+  (getObjectWrite(state, chunk).missed ??= []).push(data);
+}
+
+function copyObject(state: SpliceState, chunk: ObjectChunk): SourceObject {
+  copySourcesUpToRoot(
+    state.tree.dataMap,
+    state.copies,
+    chunk,
+    (value, ref, copy, existing) =>
+      visitCopy(state, value, ref, copy, existing),
+  );
+  const copy = state.copies.get(chunk.data);
+  assert(copy && !Array.isArray(copy));
+  return copy;
+}
+
 // Collects state of a copied object and seed differences on the path to it (from the root down)
 function visitCopy(
   state: SpliceState,
@@ -738,13 +748,12 @@ function visitCopy(
 ) {
   if (!existingCopy && isObjectValue(chunk) && !Array.isArray(copy)) {
     // Objects of the stored result have no delivered fields yet
-    state.deliveredFields.set(copy, new Set());
+    getObjectWrite(state, chunk);
     if (chunk.missingFields?.size) {
       // Data of missing fields may be stale (e.g. fields deleted by cache.modify)
       for (const field of chunk.missingFields) {
         delete copy[field.dataKey];
       }
-      state.missingFields.set(copy, new Set(chunk.missingFields));
     }
   }
   const { seed, differences } = state;
@@ -859,18 +868,24 @@ function updateIncrementalExecution(
  * of the spliced result + the path within its data.
  */
 function captureDeliveredPlaceholders(
-  { incremental, results }: SplicedIncrementalResult,
+  { incremental, tree, writes }: SplicedIncrementalResult,
   indexed: IndexedTree,
   merged: IndexedTree,
 ) {
   const root = indexed.dataMap.get(indexed.result.data)?.value;
   assert(root && isObjectValue(root));
-  // Objects results were delivered to (by chunks: unlike sources, chunks are unique per location)
-  const targets = new Map<ObjectChunk, SplicedIncrementalResultEntry[]>();
-  for (const result of results) {
-    const chunk = resolveObjectPath(root, result.localPath);
-    if (chunk) {
-      accumulate(targets, chunk, result);
+  const stored = { findParent: createParentLocator(tree.dataMap) };
+  const targets = new Map<ObjectChunk, ObjectWrite>();
+  for (const [copy, write] of writes) {
+    if (!write.paths.length) {
+      continue;
+    }
+    // Indexing may clone shared sources. In that case locate the target by its local path.
+    const chunk =
+      indexed.dataMap.get(copy)?.value ??
+      resolveObjectPath(root, getDataPath(stored, write.chunk));
+    if (chunk && isObjectValue(chunk)) {
+      targets.set(chunk, write);
     }
   }
   const findParent = createParentLocator(indexed.dataMap);
@@ -878,29 +893,26 @@ function captureDeliveredPlaceholders(
   for (const chunk of indexed.deferredChunks ?? EMPTY_ARRAY) {
     // The closest object results were delivered to
     let target: ObjectChunk | CompositeListChunk = chunk;
-    let entries = targets.get(chunk);
-    while (!entries) {
+    let write = targets.get(chunk);
+    while (!write) {
       const ref = findParent(target);
       if (isRootRef(ref)) {
         break;
       }
       target = ref.parent;
-      entries = isObjectValue(target) ? targets.get(target) : undefined;
+      write = isObjectValue(target) ? targets.get(target) : undefined;
     }
-    const pathFromTarget = entries
-      ? getDataPath({ findParent }, chunk, target)
-      : EMPTY_ARRAY;
-    // Only objects spliced or within values written as a whole: paths of other objects in the stored result
-    //   may differ from server paths (e.g. a local write replaced a link)
-    const step = pathFromTarget[0];
-    const result = entries?.find(
-      ({ wholeFields }) =>
-        !pathFromTarget.length ||
-        (typeof step === "string" && Boolean(wholeFields?.has(step))),
-    );
-    if (result) {
+    if (!write) {
+      continue;
+    }
+    const pathFromTarget = getDataPath({ findParent }, chunk, target);
+    // Bind the spliced object itself, or a descendant of a field written whole at that server location.
+    const field = pathFromTarget[0];
+    assert(field === undefined || typeof field === "string");
+    const paths = field === undefined ? write.paths : write.fields.get(field);
+    for (const path of paths ?? EMPTY_ARRAY) {
       addPlaceholder(incremental, merged, findParent, findMergedParent, chunk, [
-        ...result.path,
+        ...path,
         ...pathFromTarget,
       ]);
     }
