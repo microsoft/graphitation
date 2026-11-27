@@ -2259,6 +2259,107 @@ describe("@defer: merge policies of subsequent results", () => {
     });
   });
 
+  // Defer on items (the list is a container) or elsewhere (the list is outside of delivered data).
+  //   An offset-based merge is idempotent for repeated server pages (a refetch), but not for its own output:
+  //   merge policies only run for delivered values (stored values outside of them are merge outputs)
+  it.each(["items", "elsewhere"] as const)(
+    "produces the same result with an offset-based merge policy as without @defer (defer %s)",
+    (site) => {
+      const typePolicies = {
+        Query: {
+          fields: {
+            messages: {
+              keyArgs: false as const,
+              merge(
+                existing: unknown[] = [],
+                incoming: unknown[],
+                { args }: { args: Record<string, unknown> | null },
+              ) {
+                const merged = existing.slice();
+                const offset = Number(args?.offset ?? 0);
+                incoming.forEach((item, index) => {
+                  merged[offset + index] = item;
+                });
+                return merged;
+              },
+            },
+          },
+        },
+      };
+      const deferred =
+        site === "items"
+          ? gql`
+              query ($offset: Int) {
+                messages(offset: $offset) {
+                  id
+                  text
+                  ... @defer {
+                    name
+                  }
+                }
+              }
+            `
+          : gql`
+              query ($offset: Int) {
+                messages(offset: $offset) {
+                  id
+                  text
+                  name
+                }
+                viewer {
+                  id
+                  ... @defer {
+                    name
+                  }
+                }
+              }
+            `;
+      const plain = gql`
+        query ($offset: Int) {
+          messages(offset: $offset) {
+            id
+            text
+            name
+          }
+        }
+      `;
+      const viewer = { __typename: "User", id: "v" };
+      const pages = [["1", "2"], ["3"]];
+      const withDefer = new TestCache({ typePolicies });
+      const withoutDefer = new TestCache({ typePolicies });
+      // The first page is fetched again (e.g. a refetch)
+      for (const index of [0, 1, 0]) {
+        const variables = { offset: index * 2 };
+        const ids = pages[index];
+        const execution = execute(withDefer, deferred, { variables });
+        if (site === "items") {
+          execution.initial({ messages: ids.map((id) => message(id)) });
+          execution.subsequent(
+            ids.map((id, i) => ({ path: ["messages", i], data: { name: id } })),
+          );
+        } else {
+          execution.initial({
+            messages: ids.map((id) => message(id, id)),
+            viewer,
+          });
+          execution.subsequent([{ path: ["viewer"], data: { name: "v" } }]);
+        }
+        withoutDefer.writeQuery({
+          query: plain,
+          variables,
+          data: { messages: ids.map((id) => message(id, id)) },
+        });
+      }
+
+      const read = (cache: TestCache) =>
+        cache.readQuery({ query: plain, variables: { offset: 0 } });
+      expect(read(withDefer)).toEqual({
+        messages: ["1", "2", "3"].map((id) => message(id, id)),
+      });
+      expect(read(withDefer)).toEqual(read(withoutDefer));
+    },
+  );
+
   describe("a deferred fragment re-selecting a list with a merge policy", () => {
     const queries = {
       site: gql`
