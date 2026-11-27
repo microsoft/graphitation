@@ -137,6 +137,8 @@ export type OperationDescriptor =
 
 export type FormattedError = GraphQLFormattedError;
 
+export type ResponsePath = ReadonlyArray<string | number>;
+
 export type FieldInfo = {
   name: FieldName;
   dataKey: FieldAlias | FieldName;

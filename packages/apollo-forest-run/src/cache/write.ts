@@ -9,10 +9,13 @@ import type {
   OptimisticLayer,
   Store,
   Transaction,
+  WriteOptionsInternal,
   WriteResult,
 } from "./types";
 import type { NodeKey, OperationDescriptor } from "../descriptor/types";
 import { assert } from "../jsutils/assert";
+import type { ExecutionWrite } from "./execution";
+import { isExecutionWrite, resolveExecutionWrite } from "./execution";
 import {
   resolveResultDescriptor,
   resolveOperationDescriptor,
@@ -26,6 +29,7 @@ import {
   touchOperation,
 } from "./store";
 import { diffTree, GraphDifference } from "../diff/diffTree";
+import { createObjectDifference } from "../diff/difference";
 import {
   resolveAffectedOperations,
   updateAffectedTrees,
@@ -38,19 +42,30 @@ import { replaceTree } from "../forest/addTree";
 import { invalidateReadResults } from "./invalidate";
 import { IndexedForest } from "../forest/types";
 
+/**
+ * Writes a result, or an execution result (routed to the execution's layer, see resolveExecutionWrite).
+ */
 export function write(
   env: CacheEnv,
   store: Store,
   activeTransaction: Transaction,
-  options: Cache.WriteOptions,
+  options: WriteOptionsInternal,
 ): WriteResult {
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
-  const targetForest = getActiveForest(store, activeTransaction);
 
-  const writeData =
-    typeof options.result === "object" && options.result !== null
-      ? options.result
-      : {};
+  let execution: ExecutionWrite | null = null;
+  let result: Cache.WriteOptions["result"];
+  if (isExecutionWrite(options)) {
+    execution = resolveExecutionWrite(env, store, activeTransaction, options);
+    result = execution.data;
+  } else {
+    result = options.result;
+  }
+  const targetForest =
+    execution?.forest ?? getActiveForest(store, activeTransaction);
+  const current = execution?.current;
+
+  const writeData = typeof result === "object" && result !== null ? result : {};
   const rootNodeKey = options.dataId ?? objectKey(writeData);
   assert(rootNodeKey !== false);
 
@@ -92,6 +107,13 @@ export function write(
   // Safeguard: make sure previous state doesn't leak outside write operation
   assert(!existingResult?.prev);
 
+  // The previous result of the execution, while its tree in the layer is unchanged (e.g. by an optimistic `modify`):
+  //   objects shared with it (by reference) are unchanged, their chunks are recycled and their nodes are not diffed
+  const previousIncoming =
+    current?.tree && current.tree === existingResult
+      ? current.incoming ?? undefined
+      : undefined;
+
   if (writeData === existingData && existingResult) {
     return {
       options,
@@ -125,7 +147,7 @@ export function write(
     operationDescriptor,
     operationResult,
     undefined,
-    existingResult,
+    previousIncoming ?? existingResult,
   );
 
   // ApolloCompat: necessary for fragment writes with custom ids
@@ -137,15 +159,27 @@ export function write(
     incomingResult.rootNodeKey = options.dataId;
   }
 
+  // Results of an execution merge with the layers below its layer (as on completion): each is merged as a whole
+  const mergeLayers = getEffectiveReadLayers(store, targetForest, false);
+  if (current) {
+    const ownLayer = mergeLayers.shift();
+    assert(ownLayer === targetForest);
+    incomingResult.prev =
+      findExistingResult(env, store, mergeLayers, operationDescriptor) ?? null;
+  }
   const modifiedIncomingResult = applyMergePolicies(
     env,
-    getEffectiveReadLayers(store, targetForest, false),
+    mergeLayers,
     mergePolicies,
     incomingResult,
     options.overwrite ?? false,
   );
 
-  const difference = diffTree(targetForest, modifiedIncomingResult, env);
+  // Nodes unchanged since the previous result: changes nothing in any layer (also in optimistic reads)
+  const seed =
+    previousIncoming &&
+    seedUnchangedNodes(modifiedIncomingResult, previousIncoming);
+  const difference = diffTree(targetForest, modifiedIncomingResult, env, seed);
 
   if (difference.errors.length) {
     processDiffErrors(targetForest, modifiedIncomingResult, difference);
@@ -194,6 +228,7 @@ export function write(
     affectedOperations,
     targetForest,
     modifiedIncomingResult,
+    seed,
   );
 
   invalidateReadResults(
@@ -206,6 +241,12 @@ export function write(
   );
   incomingResult.prev = null;
   modifiedIncomingResult.prev = null;
+
+  if (current) {
+    current.incoming = modifiedIncomingResult;
+    current.tree =
+      getExistingResult(env, store, targetForest, operationDescriptor) ?? null;
+  }
 
   return {
     options,
@@ -223,6 +264,7 @@ function appendAffectedOperationsFromOtherLayers(
   affectedForestOperationsMutable: Map<OperationDescriptor, NodeDifferenceMap>,
   targetForest: DataForest | OptimisticLayer,
   incomingResult: IndexedTree,
+  seed?: NodeDifferenceMap,
 ) {
   // Optimistic reads go through all existing layers
   //  And those layers may be affected by incoming results too, so we actually need to diff all other layers too
@@ -233,7 +275,7 @@ function appendAffectedOperationsFromOtherLayers(
     }
     resolveAffectedOperations(
       layer,
-      diffTree(layer, incomingResult, env),
+      diffTree(layer, incomingResult, env, seed),
       affectedForestOperationsMutable,
     );
   }
@@ -296,6 +338,21 @@ function getExistingResult(
   return targetForest.trees.get(op.id);
 }
 
+function findExistingResult(
+  env: CacheEnv,
+  store: Store,
+  layers: IndexedForest[],
+  operation: OperationDescriptor,
+): DataTree | undefined {
+  for (const layer of layers) {
+    const tree = getExistingResult(env, store, layer, operation);
+    if (tree) {
+      return tree;
+    }
+  }
+  return undefined;
+}
+
 function shouldCache(
   targetForest: DataForest | OptimisticLayer,
   operation: OperationDescriptor,
@@ -350,6 +407,22 @@ function resolveExtraRootNodeType(
   }
   return undefined;
 }
+
+function seedUnchangedNodes(
+  model: IndexedTree,
+  previous: IndexedTree,
+): NodeDifferenceMap {
+  const seed: NodeDifferenceMap = new Map();
+  for (const [nodeKey, chunks] of model.nodes) {
+    if (chunks.every((chunk) => previous.dataMap.has(chunk.data))) {
+      seed.set(nodeKey, UNCHANGED);
+    }
+  }
+  return seed;
+}
+
+// Complete: diffing returns it as is (never mutated)
+const UNCHANGED = createObjectDifference();
 
 const inspect = JSON.stringify.bind(JSON);
 const EMPTY_ARRAY = Object.freeze([]);

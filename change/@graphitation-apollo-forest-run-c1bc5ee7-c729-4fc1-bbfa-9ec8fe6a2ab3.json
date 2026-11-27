@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Add writeExecutionResult: incremental executions (@defer) are written to optimistic layers",
+  "packageName": "@graphitation/apollo-forest-run",
+  "email": "vrazuvaev@microsoft.com_msteamsmdb",
+  "dependentChangeType": "patch"
+}
