@@ -117,7 +117,7 @@ export class ForestRun<
   };
 
   protected invalidatedDiffs = new WeakSet<Cache.DiffResult<any>>();
-  private previewWatches = new WeakSet<Cache.WatchOptions>();
+  private previewWatches?: WeakSet<Cache.WatchOptions>;
   protected extractedObjects = new WeakMap<any, SerializedOperationInfo>();
 
   public constructor(public config?: CacheConfig<TPartitions>) {
@@ -340,9 +340,11 @@ export class ForestRun<
   }
 
   private diffWatch(watch: Cache.WatchOptions): Cache.DiffResult<any> {
-    const preview = this.previewWatch(watch);
-    if (preview) return preview;
-    this.previewWatches.delete(watch);
+    if (this.store.incrementalExecutions.size) {
+      const preview = this.previewWatch(watch);
+      if (preview) return preview;
+    }
+    this.previewWatches?.delete(watch);
     return this.diff(watch);
   }
 
@@ -360,7 +362,7 @@ export class ForestRun<
       onlyIfChangedFromBase,
     );
     if (!projected) return;
-    this.previewWatches.add(watch);
+    (this.previewWatches ??= new WeakSet()).add(watch);
     const diff = diffResult(projected);
     // Different chunks/streams can change without changing this consumer's projection.
     if (
@@ -691,6 +693,38 @@ export class ForestRun<
     // Note: activeTransaction.watchesToNotify may already contain watches delegated by completed nested transactions
     //   so this may not only add watches, but also remove them from accumulator (depending on onWatchUpdated callback)
     const accumulator = transaction.watchesToNotify ?? new Set();
+    if (transaction.previewOperations?.size) {
+      this.collectPreviewWatches(transaction, accumulator, onWatchUpdated);
+    }
+    for (const operation of transaction.affectedOperations ?? EMPTY_ARRAY) {
+      for (const watch of this.store.watches.get(operation) ?? EMPTY_ARRAY) {
+        if (
+          this.shouldNotifyWatch(watch, this.diffWatch(watch), onWatchUpdated)
+        ) {
+          accumulator.add(watch);
+        } else {
+          accumulator.delete(watch);
+        }
+      }
+    }
+    for (const nodeKey of transaction.affectedNodes ?? EMPTY_ARRAY) {
+      for (const watch of this.store.fragmentWatches.get(nodeKey) ??
+        EMPTY_ARRAY) {
+        if (this.shouldNotifyWatch(watch, this.diff(watch), onWatchUpdated)) {
+          accumulator.add(watch);
+        } else {
+          accumulator.delete(watch);
+        }
+      }
+    }
+    return accumulator;
+  }
+
+  private collectPreviewWatches(
+    transaction: Transaction,
+    accumulator: Set<Cache.WatchOptions>,
+    onWatchUpdated?: Cache.BatchOptions<this>["onWatchUpdated"],
+  ) {
     const consider = (
       watch: Cache.WatchOptions,
       diff: Cache.DiffResult<unknown>,
@@ -730,24 +764,12 @@ export class ForestRun<
           )
             continue;
           const preview = this.previewWatch(watch, !watch.lastDiff);
-          if (!preview && !this.previewWatches.delete(watch)) continue;
+          if (!preview && !this.previewWatches?.delete(watch)) continue;
           this.newWatches.delete(watch);
           consider(watch, preview ?? this.diff(watch));
         }
       }
     }
-    for (const operation of transaction.affectedOperations ?? EMPTY_ARRAY) {
-      for (const watch of this.store.watches.get(operation) ?? EMPTY_ARRAY) {
-        consider(watch, this.diffWatch(watch));
-      }
-    }
-    for (const nodeKey of transaction.affectedNodes ?? EMPTY_ARRAY) {
-      const fragmentWatches = this.store.fragmentWatches.get(nodeKey);
-      for (const watch of fragmentWatches ?? EMPTY_ARRAY) {
-        consider(watch, this.diff(watch));
-      }
-    }
-    return accumulator;
   }
 
   private shouldNotifyWatch(

@@ -75,33 +75,35 @@ export function read<TData>(
     options,
   );
 
-  // FIXME: this may break with optimistic layers - partialReadResults should be per layer?
-  if (outputTree.incompleteChunks.size) {
-    store.partialReadResults.add(outputTree.operation);
-  } else {
-    store.partialReadResults.delete(outputTree.operation);
-  }
-  return diffResult<TData>(outputTree);
+  return diffResult<TData>(outputTree, store.partialReadResults);
 }
 
 export function diffResult<TData>(
   outputTree: IndexedTree,
+  partialReadResults?: Set<OperationDescriptor>,
 ): Cache.DiffResult<TData> & { dangling?: Set<string> } {
+  // FIXME: this may break with optimistic layers - partialReadResults should be per layer?
   if (outputTree.incompleteChunks.size) {
-    let missing: MissingFieldError[] | undefined;
-    return {
-      result: outputTree.result.data as TData,
-      complete: false as const,
-      get missing() {
-        return (missing ??= [reportFirstMissingField(outputTree)]);
-      },
-      dangling: outputTree.danglingReferences,
-    };
+    partialReadResults?.add(outputTree.operation);
+    return incompleteDiffResult<TData>(outputTree);
   }
-
+  partialReadResults?.delete(outputTree.operation);
   return {
     result: outputTree.result.data as TData,
     complete: true,
+  };
+}
+
+// Only incomplete reads need a closure for the lazy missing-field error.
+function incompleteDiffResult<TData>(tree: IndexedTree) {
+  let missing: MissingFieldError[] | undefined;
+  return {
+    result: tree.result.data as TData,
+    complete: false as const,
+    get missing() {
+      return (missing ??= [reportFirstMissingField(tree)]);
+    },
+    dangling: tree.danglingReferences,
   };
 }
 
