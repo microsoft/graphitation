@@ -33,6 +33,11 @@ import type { TelemetryEvent } from "../telemetry/types";
 import { ExtendedLogger, Logger } from "../jsutils/logger";
 import { GraphDifference, GraphDiffError } from "../diff/diffTree";
 import { ObjectDifference } from "../diff/types";
+import type {
+  ExecutionKey,
+  ExecutionResult,
+  ResultData,
+} from "../incremental/types";
 
 export type PartitionOptions = {
   maxOperationCount: number;
@@ -109,6 +114,22 @@ export type OptimisticLayer = ExtendedForest & {
   replay: <T>(cache: T) => any; // ApolloCompat
 };
 
+/**
+ * An incremental execution (`@defer`) with pending results.
+ *
+ * Its results are written to an isolated in-flight layer (a data forest of its own) until the execution completes:
+ * only the operation itself and operations it covers (`@cache(covers: [...])`) read through the layer.
+ * On completion, the received data is written to the data forest as a single result.
+ */
+export type InFlightExecution = {
+  operation: OperationDescriptor;
+  key: ExecutionKey | undefined;
+  // Starts with trees of the operation and of covered operations in the data forest (shared, immutable)
+  forest: DataForest;
+  // Data received so far (in the server view)
+  data: ResultData;
+};
+
 export type CacheKey = string;
 
 export type Store = {
@@ -127,6 +148,8 @@ export type Store = {
   partitions: WeakMap<IndexedTree, ResolvedPartition>;
   // Pending scheduled auto-eviction
   pendingEviction: ScheduledEvictionHandle | null;
+  // Keyed by result descriptors (at most one execution of an operation at a time)
+  inFlightExecutions: Map<OperationDescriptor, InFlightExecution>;
 };
 
 export type Transaction = {
@@ -344,3 +367,8 @@ export type SerializedCache = Record<
   SerializedOperationKey,
   SerializedOperationInfo
 >;
+
+// Options of ForestRun.writeExecutionResult: the same as of `write`, but with an execution result (instead of `result`)
+export type ExecutionWriteOptions = Omit<Cache.WriteOptions, "result"> & {
+  execution: ExecutionResult;
+};

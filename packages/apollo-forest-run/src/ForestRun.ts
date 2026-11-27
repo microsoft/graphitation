@@ -17,6 +17,7 @@ import type {
   SerializedOperationInfo,
   Store,
   Transaction,
+  ExecutionWriteOptions,
 } from "./cache/types";
 import { ApolloCache } from "@apollo/client";
 import { assert } from "./jsutils/assert";
@@ -41,6 +42,7 @@ import {
   transformDocument,
 } from "./cache/descriptor";
 import { isWrite, write } from "./cache/write";
+import { isSubsequentResult, writeExecutionResult } from "./cache/execution";
 import { fieldToStringKey, identify } from "./cache/keys";
 import { createCacheEnvironment } from "./cache/env";
 import { SourceObject } from "./values/types";
@@ -215,6 +217,44 @@ export class ForestRun<
 
     const incoming = result.incoming;
     return incoming.nodes.size ? getRef(incoming.rootNodeKey) : undefined;
+  }
+
+  /**
+   * Writes an execution result: a complete result, or results of incremental delivery (`@defer`).
+   *
+   * Results of an incremental execution are only visible to the operation itself and operations it covers
+   * (`@cache(covers: [...])`) until the execution completes. Then they are written as a single regular result.
+   */
+  public writeExecutionResult(
+    options: ExecutionWriteOptions,
+  ): Reference | undefined {
+    return this.transactionStack.length
+      ? this.runWriteExecutionResult(options)
+      : this.runTransaction({
+          update: () => this.runWriteExecutionResult(options),
+        });
+  }
+
+  private runWriteExecutionResult(
+    options: ExecutionWriteOptions,
+  ): Reference | undefined {
+    const transaction = peek(this.transactionStack);
+    assert(transaction);
+    const result = writeExecutionResult(
+      this.env,
+      this.store,
+      transaction,
+      options,
+    );
+    if (!result) {
+      return undefined;
+    }
+    transaction.changelog.push(result);
+
+    const incoming = result.incoming;
+    return !isSubsequentResult(options.execution) && incoming.nodes.size
+      ? getRef(incoming.rootNodeKey)
+      : undefined;
   }
 
   private collectAffectedOperationsAndNodes(transaction: Transaction) {

@@ -23,7 +23,9 @@ import { applyMergePolicies } from "./policies";
 import {
   getActiveForest,
   getEffectiveReadLayers,
+  isInFlightForest,
   touchOperation,
+  updateCoveredInFlightTrees,
 } from "./store";
 import { diffTree, GraphDifference } from "../diff/diffTree";
 import {
@@ -43,9 +45,12 @@ export function write(
   store: Store,
   activeTransaction: Transaction,
   options: Cache.WriteOptions,
+  targetForest: DataForest | OptimisticLayer = getActiveForest(
+    store,
+    activeTransaction,
+  ),
 ): WriteResult {
   const { mergePolicies, objectKey, addTypename, keyMap } = env;
-  const targetForest = getActiveForest(store, activeTransaction);
 
   const writeData =
     typeof options.result === "object" && options.result !== null
@@ -207,6 +212,18 @@ export function write(
   incomingResult.prev = null;
   modifiedIncomingResult.prev = null;
 
+  if (targetForest === store.dataForest && store.inFlightExecutions.size) {
+    const tree = getExistingResult(
+      env,
+      store,
+      targetForest,
+      operationDescriptor,
+    );
+    if (tree) {
+      updateCoveredInFlightTrees(env, store, tree);
+    }
+  }
+
   return {
     options,
     incoming: modifiedIncomingResult,
@@ -224,6 +241,10 @@ function appendAffectedOperationsFromOtherLayers(
   targetForest: DataForest | OptimisticLayer,
   incomingResult: IndexedTree,
 ) {
+  if (isInFlightForest(store, targetForest)) {
+    // In-flight layers are isolated: other layers never read through them
+    return;
+  }
   // Optimistic reads go through all existing layers
   //  And those layers may be affected by incoming results too, so we actually need to diff all other layers too
   //  TODO: just write to all effective layers?

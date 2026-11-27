@@ -2,12 +2,15 @@ import {
   CacheEnv,
   DataForest,
   DataTree,
+  DirtyNodeMap,
+  InFlightExecution,
   OptimisticLayer,
   ResultTree,
   Store,
   Transaction,
   TransformedResult,
 } from "./types";
+import type { ExecutionKey, ResultData } from "../incremental/types";
 import {
   NodeKey,
   OperationDescriptor,
@@ -18,25 +21,13 @@ import { assert } from "../jsutils/assert";
 import { IndexedTree, DefaultPartition } from "../forest/types";
 import { NodeChunk } from "../values/types";
 import { operationCacheKey } from "./descriptor";
+import { addTree, replaceTree } from "../forest/addTree";
 
 const EMPTY_ARRAY = Object.freeze([]);
 const DEFAULT_PARTITION: DefaultPartition = "__default__";
 
 export function createStore(_: CacheEnv): Store {
-  const dataForest: DataForest = {
-    trees: new Map(),
-    operationsByNodes: new Map<NodeKey, Set<OperationId>>(),
-    operationsByName: new Map(),
-    operationsByCoveredName: new Map(),
-    operationsByPartitions: new Map(),
-    operationsWithErrors: new Set<OperationDescriptor>(),
-    extraRootIds: new Map<NodeKey, TypeName>(),
-    layerTag: null, // not an optimistic layer
-    readResults: new Map(),
-    mutations: new Set<OperationDescriptor>(),
-    operationsWithDanglingRefs: new Map(),
-    deletedNodes: new Set(),
-  };
+  const dataForest = createDataForest();
 
   const optimisticReadResults = new Map<
     OperationDescriptor,
@@ -56,8 +47,26 @@ export function createStore(_: CacheEnv): Store {
     atime: new Map(),
     partitions: new WeakMap(),
     pendingEviction: null,
+    inFlightExecutions: new Map(),
   };
   return store;
+}
+
+function createDataForest(): DataForest {
+  return {
+    trees: new Map(),
+    operationsByNodes: new Map<NodeKey, Set<OperationId>>(),
+    operationsByName: new Map(),
+    operationsByCoveredName: new Map(),
+    operationsByPartitions: new Map(),
+    operationsWithErrors: new Set<OperationDescriptor>(),
+    extraRootIds: new Map<NodeKey, TypeName>(),
+    layerTag: null, // not an optimistic layer
+    readResults: new Map(),
+    mutations: new Set<OperationDescriptor>(),
+    operationsWithDanglingRefs: new Map(),
+    deletedNodes: new Set(),
+  };
 }
 
 export function touchOperation(
@@ -207,6 +216,7 @@ export function canReleaseOperationDescriptor(
   }
   if (
     store.watches.has(operation) ||
+    store.inFlightExecutions.has(operation) ||
     store.optimisticReadResults.has(operation) ||
     store.partialReadResults.has(operation)
   ) {
@@ -217,6 +227,11 @@ export function canReleaseOperationDescriptor(
   }
   for (const layer of store.optimisticLayers) {
     if (isReferencedByForest(layer, operation)) {
+      return false;
+    }
+  }
+  for (const { forest } of store.inFlightExecutions.values()) {
+    if (isReferencedByForest(forest, operation)) {
       return false;
     }
   }
@@ -389,11 +404,19 @@ export function getActiveForest(
   return transaction?.optimisticLayer ?? store.dataForest;
 }
 
+/**
+ * Layers to read from, in priority order: optimistic layers, in-flight layers, the data forest.
+ *
+ * `activeForest` may be an in-flight layer (when writing to it). `inFlightLayers` are in-flight layers
+ * an operation reads through (see getInFlightLayers).
+ */
 export function getEffectiveReadLayers(
-  { optimisticLayers, dataForest }: Store,
+  store: Store,
   activeForest: DataForest | OptimisticLayer,
   optimistic: boolean,
+  inFlightLayers: readonly DataForest[] = EMPTY_ARRAY,
 ): (DataForest | OptimisticLayer)[] {
+  const { optimisticLayers, dataForest } = store;
   const appliedOptimisticLayers = optimistic
     ? optimisticLayers.length - 1 // All layers
     : optimisticLayers.indexOf(activeForest as OptimisticLayer); // Up to current one
@@ -401,6 +424,14 @@ export function getEffectiveReadLayers(
   const layers: (DataForest | OptimisticLayer)[] = [];
   for (let i = appliedOptimisticLayers; i >= 0; i--) {
     layers.push(optimisticLayers[i]);
+  }
+  if (isInFlightForest(store, activeForest)) {
+    layers.push(activeForest);
+  }
+  for (const layer of inFlightLayers) {
+    if (layer !== activeForest) {
+      layers.push(layer);
+    }
   }
   layers.push(dataForest);
 
@@ -500,7 +531,173 @@ export function resetStore(store: Store): void {
   operations.clear();
   optimisticReadResults.clear();
   optimisticLayers.length = 0;
+  store.inFlightExecutions.clear();
 }
 
 const getRootNode = (result: IndexedTree): NodeChunk | undefined =>
   result.nodes.get(result.rootNodeKey)?.[0];
+
+// In-flight layers
+
+export function isInFlightForest(
+  store: Store,
+  forest: DataForest | OptimisticLayer,
+): forest is DataForest {
+  return forest.layerTag === null && forest !== store.dataForest;
+}
+
+/**
+ * Only the executed operation and operations it covers (by name, with any variables) read through in-flight layers.
+ */
+export function getInFlightLayers(
+  store: Store,
+  operation: OperationDescriptor,
+): readonly DataForest[] {
+  if (!store.inFlightExecutions.size) {
+    return EMPTY_ARRAY;
+  }
+  let layers: DataForest[] | undefined;
+  for (const execution of store.inFlightExecutions.values()) {
+    if (readsThroughInFlightLayer(execution, operation)) {
+      layers ??= [];
+      layers.push(execution.forest);
+    }
+  }
+  return layers ?? EMPTY_ARRAY;
+}
+
+export function getInFlightForests(store: Store): DataForest[] {
+  const forests: DataForest[] = [];
+  for (const { forest } of store.inFlightExecutions.values()) {
+    forests.push(forest);
+  }
+  return forests;
+}
+
+function readsThroughInFlightLayer(
+  execution: InFlightExecution,
+  operation: OperationDescriptor,
+): boolean {
+  return (
+    execution.operation === operation ||
+    (operation.name !== undefined &&
+      execution.operation.covers.includes(operation.name))
+  );
+}
+
+/**
+ * Creates an in-flight layer with the current trees (and read results) of the operation and of operations it covers
+ * in the data forest. Trees are shared: updates of the layer replace them (copy-on-write).
+ */
+export function addInFlightExecution(
+  env: CacheEnv,
+  store: Store,
+  operation: OperationDescriptor,
+  key: ExecutionKey | undefined,
+  data: ResultData,
+): InFlightExecution {
+  assert(!store.inFlightExecutions.has(operation));
+  const { dataForest } = store;
+  const forest = createDataForest();
+  const execution: InFlightExecution = { operation, key, forest, data };
+
+  const seed = (id: OperationId) => {
+    const tree = dataForest.trees.get(id);
+    if (!tree || forest.trees.has(id)) {
+      return;
+    }
+    addTree(env, forest, tree);
+    const readResult = dataForest.readResults.get(tree.operation);
+    if (readResult) {
+      // Same data until the layer changes: keeps results (and their identity) of watches
+      forest.readResults.set(tree.operation, {
+        outputTree: readResult.outputTree,
+        dirtyNodes: copyDirtyNodes(readResult.dirtyNodes),
+      });
+    }
+  };
+  seed(operation.id);
+  for (const coveredName of operation.covers) {
+    for (const id of dataForest.operationsByName.get(coveredName) ??
+      EMPTY_ARRAY) {
+      seed(id);
+    }
+  }
+  store.inFlightExecutions.set(operation, execution);
+  deleteOptimisticReadResults(store, execution);
+  return execution;
+}
+
+/**
+ * Drops the in-flight layer, returns operations which read through it (now reading from the data forest)
+ */
+export function removeInFlightExecution(
+  store: Store,
+  execution: InFlightExecution,
+): Set<OperationDescriptor> {
+  assert(store.inFlightExecutions.get(execution.operation) === execution);
+  store.inFlightExecutions.delete(execution.operation);
+  deleteOptimisticReadResults(store, execution);
+
+  const { forest } = execution;
+  const readers = new Set<OperationDescriptor>([execution.operation]);
+  for (const tree of forest.trees.values()) {
+    readers.add(tree.operation);
+  }
+  for (const operation of forest.readResults.keys()) {
+    readers.add(operation);
+  }
+  return readers;
+}
+
+/**
+ * When a covered operation gets its own result (in the data forest), it replaces its tree in in-flight layers too
+ */
+export function updateCoveredInFlightTrees(
+  env: CacheEnv,
+  store: Store,
+  tree: DataTree,
+) {
+  const { operation } = tree;
+  if (!store.inFlightExecutions.size || operation.name === undefined) {
+    return;
+  }
+  for (const execution of store.inFlightExecutions.values()) {
+    if (
+      execution.operation === operation ||
+      !execution.operation.covers.includes(operation.name)
+    ) {
+      continue;
+    }
+    replaceTree(env, execution.forest, tree);
+    execution.forest.readResults.delete(operation);
+    store.optimisticReadResults.delete(operation);
+  }
+}
+
+// Read results of readers of an in-flight layer, which are not stored in the layer itself
+function deleteOptimisticReadResults(
+  store: Store,
+  execution: InFlightExecution,
+) {
+  for (const operation of store.optimisticReadResults.keys()) {
+    if (readsThroughInFlightLayer(execution, operation)) {
+      store.optimisticReadResults.delete(operation);
+    }
+  }
+  for (const layer of store.optimisticLayers) {
+    for (const operation of layer.readResults.keys()) {
+      if (readsThroughInFlightLayer(execution, operation)) {
+        layer.readResults.delete(operation);
+      }
+    }
+  }
+}
+
+function copyDirtyNodes(dirtyNodes: DirtyNodeMap): DirtyNodeMap {
+  const copy: DirtyNodeMap = new Map();
+  for (const [nodeKey, fields] of dirtyNodes) {
+    copy.set(nodeKey, new Set(fields));
+  }
+  return copy;
+}
