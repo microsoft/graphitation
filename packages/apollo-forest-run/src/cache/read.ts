@@ -30,7 +30,11 @@ import {
 } from "../values";
 import { applyReadPolicies } from "./policies";
 import { indexTree } from "../forest/indexTree";
-import { createChunkMatcher, createChunkProvider } from "./draftHelpers";
+import {
+  createChunkMatcher,
+  createChunkProvider,
+  getCoveringOperationIds,
+} from "./draftHelpers";
 import {
   getDiffDescriptor,
   getFragmentNode,
@@ -106,15 +110,18 @@ function readOperation(
   const { optimisticLayers, optimisticReadResults } = store;
 
   const optimistic = activeTransaction?.forceOptimistic ?? options.optimistic;
+  const readsAllLayers = optimistic && optimisticLayers.length > 0;
 
-  // Normally, this is a data forest, but when executed within transaction - could be one of the optimistic layers
-  const forest = getActiveForest(store, activeTransaction);
+  // Normally, this is a data forest, but when executed within transaction - could be one of the optimistic layers.
+  // Reads of all layers share results, also within transactions: they must be computed the same way (not in the layer)
+  const forest = readsAllLayers
+    ? store.dataForest
+    : getActiveForest(store, activeTransaction);
   touchOperation(env, store, operationDescriptor);
 
-  const resultsMap =
-    options.optimistic && optimisticLayers.length
-      ? optimisticReadResults
-      : forest.readResults;
+  const resultsMap = readsAllLayers
+    ? optimisticReadResults
+    : forest.readResults;
 
   let readState = resultsMap.get(operationDescriptor);
 
@@ -356,9 +363,11 @@ function applyTransformations(
   }
 
   // For dirty nodes we should not recycle existing chunks
-  const dirtyNodes =
-    previous?.dirtyNodes ??
-    resolveAffectedOptimisticNodes(inputTree, dataLayers);
+  const dirtyNodes = resolveAffectedOptimisticNodes(
+    inputTree,
+    dataLayers,
+    previous?.dirtyNodes,
+  );
 
   if (!inputTree.incompleteChunks.size && !dirtyNodes.size) {
     // Fast-path: skip optimistic transforms
@@ -463,36 +472,68 @@ function reportFirstMissingField(tree: IndexedTree): MissingFieldError {
   );
 }
 
+/**
+ * Resolves nodes which must not be recycled: nodes with data in optimistic layers, and their parents.
+ *
+ * Chunks are recycled from trees of the operation (and of covering operations) in all layers (see findRecyclableChunk),
+ *   and writes to higher layers do not update trees of lower layers. So affected nodes and their parents are resolved
+ *   in all of those trees (e.g. a node written in a higher layer, nested in a tree which only exists in a lower layer).
+ */
 function resolveAffectedOptimisticNodes(
   inputTree: ResultTree,
   dataLayers: (OptimisticLayer | DataForest)[],
+  previous?: DirtyNodeMap,
 ): DirtyNodeMap {
   if (dataLayers.length <= 1) {
-    return EMPTY_MAP;
+    return previous ?? EMPTY_MAP;
   }
   const result: DirtyNodeMap = new Map();
-
-  for (let i = 0; i < dataLayers.length - 1; i++) {
-    // Note: last layer is the data layer
-    const optimisticLayer = dataLayers[i];
-    const nodeKeys =
-      inputTree.nodes.size < optimisticLayer.operationsByNodes.size
-        ? inputTree.nodes.keys()
-        : optimisticLayer.operationsByNodes.keys();
-
-    for (const nodeKey of nodeKeys) {
-      if (
-        optimisticLayer.operationsByNodes.has(nodeKey) &&
-        inputTree.nodes.has(nodeKey)
-      ) {
-        result.set(nodeKey, EMPTY_SET as Set<FieldName>);
+  for (const [nodeKey, dirtyFields] of previous ?? EMPTY_MAP) {
+    // Empty set means all fields are dirty: must not be narrowed down by parent fields added below
+    result.set(nodeKey, dirtyFields.size ? new Set(dirtyFields) : EMPTY_SET);
+  }
+  const operation = inputTree.operation;
+  const operationIds = [
+    operation.id,
+    ...(getCoveringOperationIds(dataLayers, operation) ?? EMPTY_ARRAY),
+  ];
+  // Note: last layer is the data layer
+  markOptimisticNodes(inputTree, dataLayers.slice(0, -1), result);
+  const trees: ResultTree[] = [inputTree];
+  for (let i = 0; i < dataLayers.length; i++) {
+    for (const id of operationIds) {
+      const tree = dataLayers[i].trees.get(id);
+      if (tree && !trees.includes(tree)) {
+        markOptimisticNodes(tree, dataLayers.slice(0, i), result);
+        trees.push(tree);
       }
     }
   }
   // Add parent nodes to make sure they are not recycled
   //   (when parents are recycled, nested affected nodes won't be updated properly)
-  appendParentNodes(inputTree, result);
+  for (const tree of trees) {
+    appendParentNodes(tree, result);
+  }
   return result;
+}
+
+function markOptimisticNodes(
+  tree: ResultTree,
+  higherLayers: (OptimisticLayer | DataForest)[],
+  dirtyNodes: DirtyNodeMap,
+) {
+  for (const layer of higherLayers) {
+    const nodeKeys =
+      tree.nodes.size < layer.operationsByNodes.size
+        ? tree.nodes.keys()
+        : layer.operationsByNodes.keys();
+
+    for (const nodeKey of nodeKeys) {
+      if (layer.operationsByNodes.has(nodeKey) && tree.nodes.has(nodeKey)) {
+        dirtyNodes.set(nodeKey, EMPTY_SET);
+      }
+    }
+  }
 }
 
 function appendParentNodes(inputTree: ResultTree, dirtyNodes: DirtyNodeMap) {
@@ -545,7 +586,7 @@ const isConditionallyEnabled = (
 
 const inspect = JSON.stringify.bind(JSON);
 const EMPTY_ARRAY = Object.freeze([]);
-const EMPTY_SET = new Set();
+const EMPTY_SET = new Set<FieldName>();
 const EMPTY_MAP = new Map();
 EMPTY_SET.add = () => EMPTY_SET;
 EMPTY_MAP.set = () => EMPTY_MAP;

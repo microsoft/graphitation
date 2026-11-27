@@ -311,7 +311,7 @@ export function createChunkMatcher(
   };
 }
 
-function getCoveringOperationIds(
+export function getCoveringOperationIds(
   layers: IndexedForest[],
   operation: OperationDescriptor,
 ): Set<OperationId> | undefined {

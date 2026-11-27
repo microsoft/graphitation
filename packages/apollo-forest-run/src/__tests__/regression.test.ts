@@ -1,6 +1,7 @@
 import { gql } from "../__tests__/helpers/descriptor";
 // The test helper does not support interpolation, so fragments-by-template need the real tag.
 import { gql as gqlWithInterpolation } from "@apollo/client";
+import type { Cache } from "@apollo/client";
 import { ForestRun } from "../ForestRun";
 
 test.each([undefined, false, true])(
@@ -3212,4 +3213,184 @@ test("does not recycle chunks of lower layers when the operation's tree in a lay
 
   // The tree of Chat in the layer has no c1: the chunk of Other has precedence over the chunk of Chat in the data forest
   expect(diff.result?.featured).toEqual(conversation("c1", "new"));
+});
+
+describe("optimistic reads within transactions", () => {
+  const query = gql`
+    query Messages {
+      messages {
+        id
+        text
+        name
+      }
+    }
+  `;
+  const names = gql`
+    query Names {
+      messages {
+        id
+        name
+      }
+    }
+  `;
+  const message = (id: string, fields: object = {}) => ({
+    __typename: "Message",
+    id,
+    text: `text ${id}`,
+    ...fields,
+  });
+  const read = (cache: ForestRun) =>
+    view(cache.diff({ query, optimistic: true, returnPartialData: true }));
+  const view = ({ complete, result }: Cache.DiffResult<unknown>) => ({
+    complete,
+    result,
+  });
+
+  const runOptimisticTransaction = (
+    watched: boolean,
+    setup: (cache: ForestRun) => void = () => {},
+  ) => {
+    const cache = new ForestRun();
+    setup(cache);
+    const callback = jest.fn();
+    if (watched) {
+      cache.watch({ query, optimistic: true, callback });
+    }
+    cache.recordOptimisticTransaction(() => {
+      // Without "name"
+      cache.writeQuery({ query, data: { messages: [message("1")] } });
+    }, "layer");
+    return { cache, callback };
+  };
+
+  test("are the same as optimistic reads after an optimistic transaction", () => {
+    const expected = read(runOptimisticTransaction(false).cache);
+    const { cache, callback } = runOptimisticTransaction(true);
+
+    // Current contract, as for top-level reads: missing scalar fields of written results are not tracked,
+    //   so this result is complete without "name" (asserts consistency with top-level reads, not correctness)
+    expect(expected).toMatchObject({
+      complete: true,
+      result: { messages: [message("1")] },
+    });
+    expect(view(callback.mock.calls[0][0])).toEqual(expected);
+    expect(read(cache)).toEqual(expected);
+  });
+
+  test("read fields missing in the layer from lower layers after an optimistic transaction", () => {
+    const setup = (cache: ForestRun) =>
+      cache.writeQuery({
+        query: names,
+        data: { messages: [{ __typename: "Message", id: "1", name: "a" }] },
+      });
+    const expected = read(runOptimisticTransaction(false, setup).cache);
+    const { cache, callback } = runOptimisticTransaction(true, setup);
+
+    expect(expected).toEqual({
+      complete: true,
+      result: { messages: [message("1", { name: "a" })] },
+    });
+    expect(view(callback.mock.calls[0][0])).toEqual(expected);
+    expect(read(cache)).toEqual(expected);
+  });
+
+  test("are the same as optimistic reads after a non-optimistic transaction", () => {
+    const run = (watched: boolean) => {
+      const cache = new ForestRun();
+      cache.writeQuery({ query, data: { messages: [message("1")] } });
+      cache.recordOptimisticTransaction(() => {
+        cache.writeQuery({
+          query: names,
+          data: { messages: [{ __typename: "Message", id: "1", name: "a" }] },
+        });
+      }, "layer");
+      const callback = jest.fn();
+      if (watched) {
+        cache.watch({ query, optimistic: true, callback });
+      }
+      cache.batch({
+        optimistic: false,
+        update: () =>
+          cache.writeQuery({
+            query,
+            data: { messages: [message("1", { text: "new", name: "b" })] },
+          }),
+      });
+      return { cache, callback };
+    };
+    const expected = read(run(false).cache);
+    const { cache, callback } = run(true);
+
+    expect(expected).toMatchObject({
+      complete: true,
+      result: { messages: [message("1", { text: "new", name: "a" })] },
+    });
+    expect(view(callback.mock.calls[0][0])).toEqual(expected);
+    expect(read(cache)).toEqual(expected);
+  });
+});
+
+describe("optimistic reads of nodes written in higher layers", () => {
+  const chat = gql`
+    query Chat {
+      chat {
+        id
+        message {
+          id
+          text
+        }
+      }
+    }
+  `;
+  const text = gql`
+    fragment MessageText on Message {
+      id
+      text
+    }
+  `;
+  const writeChat = (cache: ForestRun) =>
+    cache.writeQuery({
+      query: chat,
+      data: {
+        chat: {
+          __typename: "Chat",
+          id: "c1",
+          message: { __typename: "Message", id: "m1", text: "first" },
+        },
+      },
+    });
+  const writeText = (cache: ForestRun) =>
+    cache.writeFragment({
+      id: "Message:m1",
+      fragment: text,
+      data: { __typename: "Message", id: "m1", text: "second" },
+    });
+  const readText = (cache: ForestRun) =>
+    cache.readQuery<{ chat: { message: { text: string } } }>(
+      { query: chat },
+      true,
+    )?.chat.message.text;
+
+  // Chat:c1 only exists in the lower layer
+  test("are up-to-date within the transaction", () => {
+    const cache = new ForestRun();
+    cache.recordOptimisticTransaction(() => writeChat(cache), "layer1");
+    let text;
+    cache.recordOptimisticTransaction(() => {
+      writeText(cache);
+      text = readText(cache);
+    }, "layer2");
+
+    expect(text).toBe("second");
+    expect(readText(cache)).toBe("second");
+  });
+
+  test("are up-to-date after the transaction", () => {
+    const cache = new ForestRun();
+    cache.recordOptimisticTransaction(() => writeChat(cache), "layer1");
+    expect(readText(cache)).toBe("first");
+
+    cache.recordOptimisticTransaction(() => writeText(cache), "layer2");
+    expect(readText(cache)).toBe("second");
+  });
 });
