@@ -1,0 +1,15 @@
+[
+  {
+    "path": ["post"],
+    "label": "PostStats",
+    "data": {
+      "stats": {
+        "__typename": "PostStats",
+        "viewCount": 1234,
+        "likeCount": 56,
+        "commentCount": 7,
+        "shareCount": 8
+      }
+    }
+  }
+]

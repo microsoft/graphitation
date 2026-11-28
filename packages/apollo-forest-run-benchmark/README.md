@@ -102,6 +102,18 @@ Example skeleton:
 }
 ```
 
+### `@defer` Scenarios
+
+Incremental delivery scenarios write the initial result in `prepare` and measure only writes of subsequent results (2022 draft format: `{ incremental: [{ path, label, data }], hasNext }`):
+
+| Scenario              | Query                                                   | Measured                                                                     |
+| --------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `defer-list-batched`  | `defer-list`: 60 items, each with a deferred fragment   | One subsequent result with all 60 items                                      |
+| `defer-list-streamed` | `defer-list`                                            | 6 subsequent results of 10 items, with the query watched (write + broadcast) |
+| `defer-header`        | `defer-header`: one deferred fragment on a small object | One subsequent result (fixed cost of an incremental write)                   |
+
+When the cache has `writeExecutionResult`, results are written with it. Otherwise (baseline versions without it), the scenarios emulate Apollo Client: subsequent results are merged into the result data outside the cache, and the merged data is written with `cache.write` (the same number of cache calls).
+
 ## 📊 How to Read Results
 
 Each run produces two timestamped artifacts in `results/`:

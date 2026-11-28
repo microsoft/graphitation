@@ -1,0 +1,12 @@
+{
+  "post": {
+    "__typename": "Post",
+    "id": "post_1",
+    "title": "Deferred post header",
+    "author": {
+      "__typename": "User",
+      "id": "user_0",
+      "name": "User 0"
+    }
+  }
+}

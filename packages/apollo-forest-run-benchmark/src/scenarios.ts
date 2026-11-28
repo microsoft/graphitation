@@ -1,6 +1,7 @@
 import type { ForestRun } from "@graphitation/apollo-forest-run";
 import type { Scenario, ScenarioContext } from "./types";
 import { parse } from "graphql";
+import type { DocumentNode } from "graphql";
 
 // Pre-parse 50 unique named queries to simulate a real app with many active operations.
 // Each has its own operation name and data, creating separate trees in the forest.
@@ -37,6 +38,106 @@ const addWatchers = (
     unsubscribes.push(unsub);
   }
   return unsubscribes;
+};
+
+// @defer: subsequent results of incremental delivery (the 2022 draft format: `{ incremental, hasNext }`)
+type IncrementalResult = {
+  path: Array<string | number>;
+  label?: string;
+  data: Record<string, unknown>;
+};
+type SubsequentResult = {
+  incremental: IncrementalResult[];
+  hasNext: boolean;
+};
+
+const toSubsequentResults = (
+  incremental: IncrementalResult[],
+  payloadCount: number,
+): SubsequentResult[] => {
+  const size = Math.ceil(incremental.length / payloadCount);
+  return Array.from({ length: payloadCount }, (_, i) => ({
+    incremental: incremental.slice(i * size, (i + 1) * size),
+    hasNext: i < payloadCount - 1,
+  }));
+};
+
+// Objects and arrays of result data
+type Composite = Record<string | number, unknown>;
+
+const isComposite = (value: unknown): value is Composite =>
+  value !== null && typeof value === "object";
+
+// Merges incremental results into result data outside the cache, as Apollo Client does
+// (copy-on-write deep merge, each object is copied at most once per merge, like Apollo's DeepMerger)
+const mergeIncrementalData = (
+  data: Record<string, unknown>,
+  incremental: IncrementalResult[],
+): Record<string, unknown> => {
+  const copies = new Set<object>();
+  const merge = (target: unknown, source: unknown): unknown => {
+    if (!isComposite(target) || !isComposite(source)) {
+      return source;
+    }
+    let result = target;
+    if (!copies.has(target)) {
+      result = (
+        Array.isArray(target) ? [...target] : { ...target }
+      ) as Composite;
+      copies.add(result);
+    }
+    for (const key of Object.keys(source)) {
+      result[key] = merge(result[key], source[key]);
+    }
+    return result;
+  };
+  let result: unknown = data;
+  for (const { path, data: patch } of incremental) {
+    let nested: unknown = patch;
+    for (let i = path.length - 1; i >= 0; i--) {
+      const parent = (typeof path[i] === "number" ? [] : {}) as Composite;
+      parent[path[i]] = nested;
+      nested = parent;
+    }
+    result = merge(result, nested);
+  }
+  return result as Record<string, unknown>;
+};
+
+/**
+ * Writes the initial result (outside of measurement) and returns a function writing all subsequent results.
+ *
+ * Uses `writeExecutionResult` when available. Otherwise (baseline versions without it) emulates Apollo Client:
+ * incremental results are merged into the result data outside the cache and the merged data is written with `write`.
+ * Both paths make the same number of cache calls.
+ */
+const prepareIncrementalWrites = (
+  cache: ForestRun,
+  query: DocumentNode,
+  variables: Record<string, unknown>,
+  initialData: Record<string, unknown>,
+  subsequentResults: SubsequentResult[],
+) => {
+  if (typeof cache.writeExecutionResult === "function") {
+    cache.writeExecutionResult({
+      query,
+      variables,
+      execution: { data: initialData, hasNext: true },
+    });
+    return () => {
+      for (const execution of subsequentResults) {
+        cache.writeExecutionResult({ query, variables, execution });
+      }
+    };
+  }
+  cache.write({ query, variables, result: initialData });
+  return () => {
+    let result = initialData;
+    for (const { incremental } of subsequentResults) {
+      result = mergeIncrementalData(result, incremental);
+      cache.write({ query, variables, result });
+    }
+  };
 };
 
 export const scenarios = [
@@ -494,6 +595,70 @@ export const scenarios = [
           });
         },
       };
+    },
+  },
+  {
+    // Initial result of a 60-item list with a deferred fragment per item, then all items in one subsequent result
+    name: "defer-list-batched",
+    prepare: (ctx: ScenarioContext) => {
+      const { operations, CacheFactory, configuration, watcherCount } = ctx;
+      const cache = new CacheFactory(configuration);
+
+      const { data, query } = operations["defer-list"];
+      const variables = { feedId: "feed_1" };
+      addWatchers(watcherCount, cache, query, variables);
+      const run = prepareIncrementalWrites(
+        cache,
+        query,
+        variables,
+        data["defer-list-initial"],
+        toSubsequentResults(data["defer-list-incremental"], 1),
+      );
+
+      return { run };
+    },
+  },
+  {
+    // Same as defer-list-batched, but items are delivered in 6 subsequent results of 10 items,
+    // while the query is watched (as Apollo QueryInfo does): per-result write + broadcast cost
+    name: "defer-list-streamed",
+    prepare: (ctx: ScenarioContext) => {
+      const { operations, CacheFactory, configuration, watcherCount } = ctx;
+      const cache = new CacheFactory(configuration);
+
+      const { data, query } = operations["defer-list"];
+      const variables = { feedId: "feed_1" };
+      addWatchers(watcherCount + 1, cache, query, variables);
+      const run = prepareIncrementalWrites(
+        cache,
+        query,
+        variables,
+        data["defer-list-initial"],
+        toSubsequentResults(data["defer-list-incremental"], 6),
+      );
+
+      return { run };
+    },
+  },
+  {
+    // A single deferred fragment on a small object, delivered in one subsequent result (fixed cost of an incremental write)
+    name: "defer-header",
+    prepare: (ctx: ScenarioContext) => {
+      const { operations, CacheFactory, configuration, watcherCount } = ctx;
+      const cache = new CacheFactory(configuration);
+
+      const { data, query } = operations["defer-header"];
+      const variables = { postId: "post_1" };
+      addWatchers(watcherCount, cache, query, variables);
+      const run = prepareIncrementalWrites(
+        cache,
+        query,
+        variables,
+        data["defer-header-initial"],
+        toSubsequentResults(data["defer-header-incremental"], 1),
+      );
+
+      return { run };
     },
   },
 ] as const satisfies Scenario[];

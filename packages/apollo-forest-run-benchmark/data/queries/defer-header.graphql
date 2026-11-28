@@ -1,0 +1,21 @@
+query DeferHeader($postId: ID!) {
+  post(id: $postId) {
+    __typename
+    id
+    title
+    author {
+      __typename
+      id
+      name
+    }
+    ... @defer(label: "PostStats") {
+      stats {
+        __typename
+        viewCount
+        likeCount
+        commentCount
+        shareCount
+      }
+    }
+  }
+}
