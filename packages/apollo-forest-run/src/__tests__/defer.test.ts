@@ -7,9 +7,7 @@ import type {
   ExecutionKey,
   IncrementalDeferResult,
 } from "../incremental/types";
-import type { IndexedTree } from "../forest/types";
 import type { ExecutionWriteOptions } from "../cache/types";
-import type { GraphChunk, ObjectChunk } from "../values/types";
 import { assert } from "../jsutils/assert";
 import {
   isCompositeListValue,
@@ -18,7 +16,6 @@ import {
   resolveListItemChunk,
 } from "../values";
 import * as DiffTree from "../diff/diffTree";
-import * as Difference from "../diff/difference";
 
 class TestCache extends ForestRun {
   operation(query: DocumentNode, variables = {}) {
@@ -722,6 +719,20 @@ describe("@defer: subsequent results", () => {
     expect(cache.readQuery({ query: messagesQuery })).toEqual({
       messages: [],
     });
+  });
+
+  it("ignores results for objects deleted in place (cache.modify)", () => {
+    const cache = new TestCache();
+    const execution = execute(cache, messagesQuery);
+    execution.initial({ messages: [message("1")] });
+
+    cache.modify({ fields: { messages: (_, { DELETE }) => DELETE } });
+
+    // The deleted object is not written to
+    execution.subsequent([{ path: ["messages", 0], data: { name: "one" } }]);
+    expect(cache.storedTree(messagesQuery)?.result.data.messages).toEqual([
+      message("1"),
+    ]);
   });
 
   it("ignores results without data", () => {
@@ -1833,202 +1844,18 @@ describe("@defer: subsequent results", () => {
   });
 });
 
-describe("@defer: deferred chunks of trees", () => {
-  // All chunks with deferred fragments reachable from the root of the tree
-  function collectDeferredChunks(tree: IndexedTree): ObjectChunk[] {
-    const chunks: ObjectChunk[] = [];
-    const visit = (value: GraphChunk) => {
-      if (isObjectValue(value)) {
-        if (value.selection.deferredFragments) {
-          chunks.push(value);
-        }
-        for (const ref of value.fieldChunks.values()) {
-          visit(ref.value);
-        }
-      } else if (isCompositeListValue(value)) {
-        for (let index = 0; index < value.data.length; index++) {
-          visit(resolveListItemChunk(value, index));
-        }
-      }
-    };
-    const root = tree.dataMap.get(tree.result.data)?.value;
-    assert(root);
-    visit(root);
-    return chunks;
-  }
-
-  function expectCurrentDeferredChunks(tree: IndexedTree | undefined) {
-    assert(tree?.deferredChunks);
-    for (const chunk of tree.deferredChunks) {
-      expect(tree.dataMap.get(chunk.data)?.value).toBe(chunk);
-    }
-    expect(new Set(tree.deferredChunks)).toEqual(
-      new Set(collectDeferredChunks(tree)),
-    );
-    expect(tree.deferredChunks).toHaveLength(new Set(tree.deferredChunks).size);
-    return tree.deferredChunks;
-  }
-
-  const textQuery = gql`
-    query {
-      messages {
-        id
-        text
-      }
-    }
-  `;
-
-  it("are not collected for operations without @defer", () => {
-    const cache = new TestCache();
-    cache.writeQuery({ query: textQuery, data: { messages: [message("1")] } });
-    expect(cache.storedTree(textQuery)?.deferredChunks).toBeUndefined();
-  });
-
-  it("are current after the initial write", () => {
-    const cache = new TestCache();
-    execute(cache, messagesQuery).initial({
-      messages: [message("1"), message("2")],
-    });
-    expect(
-      expectCurrentDeferredChunks(cache.storedTree(messagesQuery)),
-    ).toHaveLength(2);
-  });
-
-  it("are current after re-indexing with recycled chunks (updateTree)", () => {
-    const cache = new TestCache();
-    execute(cache, messagesQuery).initial({
-      messages: [message("1"), message("2")],
-    });
-    const before = cache.storedTree(messagesQuery);
-    const [, second] = before?.deferredChunks ?? [];
-
-    // Another operation changes a node of the tree
-    cache.writeQuery({
-      query: gql`
-        query {
-          message {
-            id
-            text
-          }
-        }
-      `,
-      data: { message: { ...message("1"), text: "changed" } },
-    });
-
-    const after = cache.storedTree(messagesQuery);
-    expect(after).not.toBe(before);
-    const chunks = expectCurrentDeferredChunks(after);
-    expect(chunks).toHaveLength(2);
-    // The unchanged chunk is recycled (and current), the changed one is new
-    expect(chunks).toContain(second);
-    expect(chunks.map((chunk) => chunk.data.text)).toEqual([
-      "changed",
-      "text 2",
-    ]);
-  });
-
-  it("are current after merge policies are applied", () => {
-    const cache = new TestCache({
-      typePolicies: {
-        Query: {
-          fields: {
-            messages: {
-              merge: (existing: unknown[] = [], incoming: unknown[]) => [
-                ...existing,
-                ...incoming,
-              ],
-            },
-          },
-        },
-      },
-    });
-    cache.writeQuery({
-      query: messagesQuery,
-      data: { messages: [message("1", "one")] },
-    });
-    execute(cache, messagesQuery).initial({ messages: [message("2")] });
-
-    const chunks = expectCurrentDeferredChunks(cache.storedTree(messagesQuery));
-    expect(chunks.map((chunk) => chunk.key)).toEqual([
-      "Message:1",
-      "Message:2",
-    ]);
-  });
-
-  it("are current after repair of shared references", () => {
-    const cache = new TestCache();
-    const query = gql`
-      query {
-        message {
-          id
-          rows: grid {
-            __typename
-            ... @defer {
-              name
-            }
-          }
-        }
-      }
-    `;
-    const cell = { __typename: "Cell" };
-    execute(cache, query).initial({
-      message: { ...message("1"), rows: [[cell], [cell]] },
-    });
-
-    const chunks = expectCurrentDeferredChunks(cache.storedTree(query));
-    expect(chunks).toHaveLength(2);
-    expect(chunks[0].data).not.toBe(chunks[1].data);
-  });
-
-  it("are current after splicing", () => {
-    const cache = new TestCache();
-    const execution = execute(cache, nestedQuery);
-    execution.initial({ user });
-
-    execution.subsequent(
-      [
-        {
-          path: ["user"],
-          data: { name: "user", friends: [friend("1"), friend("2")] },
-        },
-      ],
-      { hasNext: true },
-    );
-
-    const chunks = expectCurrentDeferredChunks(cache.storedTree(nestedQuery));
-    expect(chunks.map((chunk) => chunk.key)).toEqual([
-      "User:u",
-      "User:1",
-      "User:2",
-    ]);
-  });
-
-  it("are current after deleting fields in place (cache.modify)", () => {
-    const cache = new TestCache();
-    const execution = execute(cache, messagesQuery);
-    execution.initial({ messages: [message("1")] });
-
-    cache.modify({ fields: { messages: (_, { DELETE }) => DELETE } });
-
-    expect(
-      expectCurrentDeferredChunks(cache.storedTree(messagesQuery)),
-    ).toEqual([]);
-    // The deleted object is not written to
-    execution.subsequent([{ path: ["messages", 0], data: { name: "one" } }]);
-    expect(cache.storedTree(messagesQuery)?.result.data.messages).toEqual([
-      message("1"),
-    ]);
-  });
-});
-
 describe("@defer: diffing of subsequent results", () => {
-  it("compares only delivered fields and paths to them", () => {
+  it("changes only delivered data (other fields, objects and operations stay the same)", () => {
     const cache = new TestCache();
     const query = gql`
       query {
         user {
           id
           name
+          friends {
+            id
+            name
+          }
           profile {
             bio
             age
@@ -2039,22 +1866,47 @@ describe("@defer: diffing of subsequent results", () => {
         }
       }
     `;
+    const otherQuery = gql`
+      query {
+        other {
+          id
+          name
+        }
+      }
+    `;
     const user = { __typename: "User", id: "u", name: "name" };
+    const friends = [{ __typename: "User", id: "f", name: "friend" }];
     const profile = { __typename: "Profile", bio: "bio", age: 1 };
+    cache.writeQuery({
+      query: otherQuery,
+      data: { other: { __typename: "User", id: "o", name: "other" } },
+    });
     const execution = execute(cache, query);
-    execution.initial({ user: { ...user, profile } });
-    const getFieldEntryQueue = jest.spyOn(Difference, "getFieldEntryQueue");
+    execution.initial({ user: { ...user, friends, profile } });
+    type Result = { user: { friends: unknown } };
+    const before = cache.diff<Result>({ query, optimistic: false }).result;
+    const watches = [query, otherQuery].map((query) => {
+      const callback = jest.fn();
+      cache.watch({ query, optimistic: false, immediate: true, callback });
+      callback.mockClear();
+      return callback;
+    });
 
     execution.subsequent([
       { path: ["user", "profile"], data: { avatar: "avatar" } },
     ]);
 
-    const compared = new Set(getFieldEntryQueue.mock.calls.map(([, f]) => f));
-    getFieldEntryQueue.mockRestore();
-    expect(compared).toEqual(new Set(["profile", "avatar"]));
-    expect(cache.readQuery({ query })).toEqual({
-      user: { ...user, profile: { ...profile, avatar: "avatar" } },
-    });
+    const result = {
+      user: { ...user, friends, profile: { ...profile, avatar: "avatar" } },
+    };
+    const [watch, otherWatch] = watches;
+    expect(watch).toHaveBeenCalledTimes(1);
+    expect(watch.mock.calls[0][0]).toMatchObject({ complete: true, result });
+    expect(otherWatch).not.toHaveBeenCalled();
+    const after = cache.diff<Result>({ query, optimistic: false });
+    expect(after).toMatchObject({ complete: true, result });
+    // Unchanged objects keep their identity
+    expect(after.result?.user.friends).toBe(before?.user.friends);
   });
 
   it("compares all fields of nodes with chunks in delivered data", () => {
@@ -2407,6 +2259,107 @@ describe("@defer: merge policies of subsequent results", () => {
       viewer: { ...user, tags: ["x"], name: "name" },
     });
   });
+
+  // Defer on items (the list is a container) or elsewhere (the list is outside of delivered data).
+  //   An offset-based merge is idempotent for repeated server pages (a refetch), but not for its own output:
+  //   merge policies only run for delivered values (stored values outside of them are merge outputs)
+  it.each(["items", "elsewhere"] as const)(
+    "produces the same result with an offset-based merge policy as without @defer (defer %s)",
+    (site) => {
+      const typePolicies = {
+        Query: {
+          fields: {
+            messages: {
+              keyArgs: false as const,
+              merge(
+                existing: unknown[] = [],
+                incoming: unknown[],
+                { args }: { args: Record<string, unknown> | null },
+              ) {
+                const merged = existing.slice();
+                const offset = Number(args?.offset ?? 0);
+                incoming.forEach((item, index) => {
+                  merged[offset + index] = item;
+                });
+                return merged;
+              },
+            },
+          },
+        },
+      };
+      const deferred =
+        site === "items"
+          ? gql`
+              query ($offset: Int) {
+                messages(offset: $offset) {
+                  id
+                  text
+                  ... @defer {
+                    name
+                  }
+                }
+              }
+            `
+          : gql`
+              query ($offset: Int) {
+                messages(offset: $offset) {
+                  id
+                  text
+                  name
+                }
+                viewer {
+                  id
+                  ... @defer {
+                    name
+                  }
+                }
+              }
+            `;
+      const plain = gql`
+        query ($offset: Int) {
+          messages(offset: $offset) {
+            id
+            text
+            name
+          }
+        }
+      `;
+      const viewer = { __typename: "User", id: "v" };
+      const pages = [["1", "2"], ["3"]];
+      const withDefer = new TestCache({ typePolicies });
+      const withoutDefer = new TestCache({ typePolicies });
+      // The first page is fetched again (e.g. a refetch)
+      for (const index of [0, 1, 0]) {
+        const variables = { offset: index * 2 };
+        const ids = pages[index];
+        const execution = execute(withDefer, deferred, { variables });
+        if (site === "items") {
+          execution.initial({ messages: ids.map((id) => message(id)) });
+          execution.subsequent(
+            ids.map((id, i) => ({ path: ["messages", i], data: { name: id } })),
+          );
+        } else {
+          execution.initial({
+            messages: ids.map((id) => message(id, id)),
+            viewer,
+          });
+          execution.subsequent([{ path: ["viewer"], data: { name: "v" } }]);
+        }
+        withoutDefer.writeQuery({
+          query: plain,
+          variables,
+          data: { messages: ids.map((id) => message(id, id)) },
+        });
+      }
+
+      const read = (cache: TestCache) =>
+        cache.readQuery({ query: plain, variables: { offset: 0 } });
+      expect(read(withDefer)).toEqual({
+        messages: ["1", "2", "3"].map((id) => message(id, id)),
+      });
+      expect(read(withDefer)).toEqual(read(withoutDefer));
+    },
+  );
 
   describe("a deferred fragment re-selecting a list with a merge policy", () => {
     const queries = {

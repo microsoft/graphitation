@@ -43,7 +43,6 @@ import {
   addMissingBaseFields,
   createDeliveredFieldFilter,
   isSplicedIncrementalResult,
-  seedDifferences,
 } from "../incremental/execution";
 import { getNodeChunks } from "./draftHelpers";
 import { replaceTree } from "../forest/addTree";
@@ -115,6 +114,7 @@ export function write(
   if (writeData === existingData && existingResult) {
     // E.g. a new execution (or a complete result) with data of the stored result
     captureIncrementalExecution(
+      env,
       store,
       targetForest,
       operationDescriptor,
@@ -180,6 +180,7 @@ export function write(
   );
 
   captureIncrementalExecution(
+    env,
     store,
     targetForest,
     operationDescriptor,
@@ -192,7 +193,10 @@ export function write(
     targetForest,
     modifiedIncomingResult,
     env,
-    splicedResult && seedDifferences(incomingResult, splicedResult),
+    // A transient tree (not in the forest) is the base of results spliced into it
+    splicedResult && splicedResult.tree !== existingResult
+      ? splicedResult.tree
+      : undefined,
   );
 
   if (splicedResult && splicedResult.tree === existingResult) {
@@ -309,14 +313,16 @@ function processDiffErrors(
       for (const baseChunkError of diffError.base ?? EMPTY_ARRAY) {
         // Missing chunks
         const chunk = baseChunkError.chunk;
+        const tree = forest.trees.get(chunk.operation.id);
+        if (!tree) {
+          // A base tree which is not in the forest (see diffTree)
+          continue;
+        }
         chunk.missingFields ??= new Set();
         for (const field of baseChunkError.missingFields) {
           chunk.missingFields.add(field);
         }
-        const tree = forest.trees.get(chunk.operation.id);
-        if (tree) {
-          tree.incompleteChunks.add(chunk);
-        }
+        tree.incompleteChunks.add(chunk);
         const parentInfo = pathEnv.findParent(chunk);
         markAsPartial(pathEnv, parentInfo);
       }

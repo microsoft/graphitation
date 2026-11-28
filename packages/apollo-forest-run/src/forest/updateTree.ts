@@ -24,7 +24,7 @@ import {
   copySourcesUpToRoot,
   createDraft,
   createParentLocator,
-  getDataPath,
+  getDataPathForDebugging,
   hydrateDraft,
   isNodeValue,
   isObjectValue,
@@ -211,7 +211,7 @@ function debugPathClause(
   chunk: ObjectChunk | CompositeListChunk,
 ): string {
   try {
-    const path = getDataPath(env, chunk);
+    const path = getDataPathForDebugging(env, chunk);
     return path.length ? ` at path ${path.join(".")}` : "";
   } catch {
     return "";
