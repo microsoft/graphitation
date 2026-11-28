@@ -744,7 +744,7 @@ type CaptureContext = {
 
 /**
  * Captures placeholders of objects with deferred fragments (enabled for the operation variables) in data received
- * from the server, walking only selections leading to them (see hasDeferredFragments).
+ * from the server, walking only selections leading to them (see hasDeferSites).
  *
  * `data` is the value in the server view (identifies objects), `delivered` - the part of it to walk (e.g. data
  * of a subsequent result). Addresses are captured on the spot: the closest keyed object (or the root) + the path
@@ -813,7 +813,7 @@ function capturePlaceholders(
     }
   }
   for (const field of selection.fieldQueue) {
-    if (field.selection && hasDeferredFragments(operation, field.selection)) {
+    if (field.selection && hasDeferSites(field.selection)) {
       capturePlaceholders(
         context,
         data[field.dataKey],
@@ -842,43 +842,39 @@ function getAddressSelections({
   return nodeSelections;
 }
 
-// Whether objects with the selections (or below) may have deferred fragments enabled for the operation variables
-//   (lazily computed once per operation)
-function hasDeferredFragments(
-  operation: OperationDescriptor,
-  selections: PossibleSelections,
-): boolean {
-  let known = deferredSelections.get(operation);
-  if (!known) {
-    known = new Map();
-    deferredSelections.set(operation, known);
-  }
-  let result = known.get(selections);
+/**
+ * Whether objects with the selections (or below) may have defer sites (computed once per document).
+ *
+ * Static (possible selections): resolving selections of types the data doesn't have would change resolved hashes
+ * of the operation (see getResolvedHash), so only selections of objects in the data are resolved (as when indexing).
+ * Sites disabled by variables are checked on resolved selections when capturing.
+ */
+function hasDeferSites(selections: PossibleSelections): boolean {
+  let result = selectionsWithDeferSites.get(selections);
   if (result === undefined) {
-    result = false;
-    for (const typeName of selections.keys()) {
-      const selection = resolveSelection(operation, selections, typeName);
-      if (
-        selection.deferredFragments ||
-        selection.fieldQueue.some(
-          (field) =>
-            field.selection !== undefined &&
-            hasDeferredFragments(operation, field.selection),
-        )
-      ) {
-        result = true;
-        break;
-      }
-    }
-    known.set(selections, result);
+    result = findDeferSites(selections);
+    selectionsWithDeferSites.set(selections, result);
   }
   return result;
 }
 
-const deferredSelections = new WeakMap<
-  OperationDescriptor,
-  Map<PossibleSelections, boolean>
->();
+function findDeferSites(selections: PossibleSelections): boolean {
+  for (const selection of selections.values()) {
+    if (selection.deferSites?.length) {
+      return true;
+    }
+    for (const fields of selection.fields.values()) {
+      for (const field of fields) {
+        if (field.selection && hasDeferSites(field.selection)) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+const selectionsWithDeferSites = new WeakMap<PossibleSelections, boolean>();
 
 /**
  * Resolves an object by list indexes and fields: response keys (e.g. paths of incremental results) or fields
